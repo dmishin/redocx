@@ -3,9 +3,9 @@
 % The spike sample examples/spike/01-design-spec.wgx, ported to language v0.2.
 % Build: wordgenx build examples/design-spec/design-spec.wgx
 %
-% Features that arrive in M2 (headers and footers, TOC, captions, footnotes,
-% cross-references, fields, several sections) are already written here; until
-% then they produce warnings and the document still builds.
+% Features that arrive later in M2 (TOC, captions, footnotes, cross-references)
+% are already written here; until then they produce warnings and the document
+% still builds.
 % ============================================================================
 
 \document[lang=en-GB]
@@ -20,12 +20,14 @@
 \use{std:callout}
 \use{std:signature}
 
-\section[size=A4, margins=(top=2.5cm, bottom=2.5cm, left=2.5cm, right=2cm), title-page]
-\header{\field{TITLE} \tab ACME-PGI-SDS-004}
-\footer{Internal \tab Page \pagenum}
-
 \let{docid}{ACME-PGI-SDS-004}
 \let{gateway}{PayFlow}
+
+% Front matter: no header on the title page, roman page numbers.
+\section[size=A4, margins=(top=2.5cm, bottom=2.5cm, left=2.5cm, right=2cm), title-page,
+         page-numbers=lower-roman]
+\header{\field{TITLE} \tab \docid}
+\footer{Internal \tab Page \pagenum}
 
 % Requirements: \req{...} -> "REQ-n [Must] text". The Requirement style is linked to
 % the REQ-%1 list level in acme-spec.wgxs, so Word numbers these paragraphs itself,
@@ -54,9 +56,11 @@
 
 \toc[levels=1-3, title="Contents"]
 
-\pagebreak
-
 % ---------------------------------------------------------------------------- body
+% A new section: page numbers restart at 1, and the header shows the current chapter.
+\section[page-numbers=(format=decimal, start=1)]
+\header{\field{STYLEREF "Heading 1" \n} \field{STYLEREF "Heading 1"} \tab \docid}
+\footer{Internal \tab Page \pagenum{} of \numpages}
 = Introduction {#sec:intro}
 
 == Purpose
@@ -99,14 +103,7 @@ browser by the \gateway SDK, and only tokens reach ACME systems.
 
 == Error Handling
 
-Gateway errors are mapped to adapter behaviour as follows:
-
-\table[header-rows=1, widths=(4cm, 1.4cm, 1fr, 1fr, 1.6cm), columns=(left, center, left, left, center)]{
-  | Gateway code       | HTTP | Meaning                 | Adapter action       | Retry |
-  | `card_declined`    | 402  | Issuer declined         | Show decline message | No    |
-  | `rate_limited`     | 429  | Too many requests       | Back off             | Yes   |
-  | `processing_error` | 500  | Gateway internal error  | Retry with same key  | Yes   |
-}
+Gateway errors are mapped to adapter behaviour in the appendix (@app:errors).
 
 = Functional Requirements {#sec:reqs}
 
@@ -141,6 +138,21 @@ def verify(payload: bytes, header: str, secret: bytes) -> bool:
 
 \tip[title="Testing"]{\gateway's sandbox can replay any event from its dashboard,
 which makes signature failures easy to reproduce.}
+
+% ---------------------------------------------------------------------------- appendix
+% A landscape section for the wide table; headers and footers carry on.
+\section[orientation=landscape]
+
+=* Appendix A: Error Mapping {#app:errors}
+
+\table[header-rows=1, widths=(5cm, 1.6cm, 1fr, 1fr, 2cm, 1fr), columns=(left, center, left, left, center, left)]{
+  | Gateway code       | HTTP | Meaning                 | Adapter action       | Retry | Logged as        |
+  | `card_declined`    | 402  | Issuer declined         | Show decline message | No    | `payment.declined` |
+  | `rate_limited`     | 429  | Too many requests       | Back off             | Yes   | `gateway.throttled` |
+  | `processing_error` | 500  | Gateway internal error  | Retry with same key  | Yes   | `gateway.error`  |
+}
+
+\section[orientation=portrait]
 
 =* Approval
 

@@ -285,9 +285,18 @@
       </w:tr>
     </w:tbl>
     <w:p>
-      <w:r>
-        <w:br w:type="page"/>
-      </w:r>
+      <w:pPr>
+        <w:sectPr>
+          <w:headerReference xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId6" w:type="default"/>
+          <w:footerReference xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId7" w:type="default"/>
+          <w:pgSz w:h="16838" w:w="11906"/>
+          <w:pgMar w:bottom="1417" w:footer="709" w:gutter="0" w:header="709" w:left="1417" w:right="1134" w:top="1417"/>
+          <w:pgNumType w:fmt="lowerRoman"/>
+          <w:cols w:space="708"/>
+          <w:titlePg/>
+          <w:docGrid w:linePitch="360"/>
+        </w:sectPr>
+      </w:pPr>
     </w:p>
     <w:p>
       <w:pPr>
@@ -309,7 +318,7 @@
       <w:r>
         <w:t xml:space="preserve">This document specifies the design of the integration between the ACME checkout service and the PayFlow payment gateway. It is intended for developers, testers and the security review board. The vendor documentation is at </w:t>
       </w:r>
-      <w:hyperlink xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId6" w:history="1">
+      <w:hyperlink xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId8" w:history="1">
         <w:r>
           <w:rPr>
             <w:rStyle w:val="Hyperlink"/>
@@ -483,7 +492,7 @@
                     <pic:cNvPicPr/>
                   </pic:nvPicPr>
                   <pic:blipFill>
-                    <a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId7"/>
+                    <a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId9"/>
                     <a:stretch>
                       <a:fillRect/>
                     </a:stretch>
@@ -581,304 +590,9 @@
     </w:p>
     <w:p>
       <w:r>
-        <w:t>Gateway errors are mapped to adapter behaviour as follows:</w:t>
+        <w:t>Gateway errors are mapped to adapter behaviour in the appendix (app:errors).</w:t>
       </w:r>
     </w:p>
-    <w:tbl>
-      <w:tblPr>
-        <w:tblStyle w:val="TableGrid"/>
-        <w:tblW w:type="dxa" w:w="9355"/>
-        <w:tblLayout w:type="fixed"/>
-        <w:tblLook w:firstColumn="1" w:firstRow="1" w:lastColumn="0" w:lastRow="0" w:noHBand="0" w:noVBand="1" w:val="04A0"/>
-      </w:tblPr>
-      <w:tblGrid>
-        <w:gridCol w:w="2268"/>
-        <w:gridCol w:w="794"/>
-        <w:gridCol w:w="2693"/>
-        <w:gridCol w:w="2693"/>
-        <w:gridCol w:w="907"/>
-      </w:tblGrid>
-      <w:tr>
-        <w:trPr>
-          <w:tblHeader/>
-        </w:trPr>
-        <w:tc>
-          <w:tcPr>
-            <w:tcW w:type="dxa" w:w="2268"/>
-          </w:tcPr>
-          <w:p>
-            <w:pPr>
-              <w:jc w:val="left"/>
-            </w:pPr>
-            <w:r>
-              <w:t>Gateway code</w:t>
-            </w:r>
-          </w:p>
-        </w:tc>
-        <w:tc>
-          <w:tcPr>
-            <w:tcW w:type="dxa" w:w="794"/>
-          </w:tcPr>
-          <w:p>
-            <w:pPr>
-              <w:jc w:val="center"/>
-            </w:pPr>
-            <w:r>
-              <w:t>HTTP</w:t>
-            </w:r>
-          </w:p>
-        </w:tc>
-        <w:tc>
-          <w:tcPr>
-            <w:tcW w:type="dxa" w:w="2693"/>
-          </w:tcPr>
-          <w:p>
-            <w:pPr>
-              <w:jc w:val="left"/>
-            </w:pPr>
-            <w:r>
-              <w:t>Meaning</w:t>
-            </w:r>
-          </w:p>
-        </w:tc>
-        <w:tc>
-          <w:tcPr>
-            <w:tcW w:type="dxa" w:w="2693"/>
-          </w:tcPr>
-          <w:p>
-            <w:pPr>
-              <w:jc w:val="left"/>
-            </w:pPr>
-            <w:r>
-              <w:t>Adapter action</w:t>
-            </w:r>
-          </w:p>
-        </w:tc>
-        <w:tc>
-          <w:tcPr>
-            <w:tcW w:type="dxa" w:w="907"/>
-          </w:tcPr>
-          <w:p>
-            <w:pPr>
-              <w:jc w:val="center"/>
-            </w:pPr>
-            <w:r>
-              <w:t>Retry</w:t>
-            </w:r>
-          </w:p>
-        </w:tc>
-      </w:tr>
-      <w:tr>
-        <w:tc>
-          <w:tcPr>
-            <w:tcW w:type="dxa" w:w="2268"/>
-          </w:tcPr>
-          <w:p>
-            <w:pPr>
-              <w:jc w:val="left"/>
-            </w:pPr>
-            <w:r>
-              <w:rPr>
-                <w:rStyle w:val="Code"/>
-              </w:rPr>
-              <w:t>card_declined</w:t>
-            </w:r>
-          </w:p>
-        </w:tc>
-        <w:tc>
-          <w:tcPr>
-            <w:tcW w:type="dxa" w:w="794"/>
-          </w:tcPr>
-          <w:p>
-            <w:pPr>
-              <w:jc w:val="center"/>
-            </w:pPr>
-            <w:r>
-              <w:t>402</w:t>
-            </w:r>
-          </w:p>
-        </w:tc>
-        <w:tc>
-          <w:tcPr>
-            <w:tcW w:type="dxa" w:w="2693"/>
-          </w:tcPr>
-          <w:p>
-            <w:pPr>
-              <w:jc w:val="left"/>
-            </w:pPr>
-            <w:r>
-              <w:t>Issuer declined</w:t>
-            </w:r>
-          </w:p>
-        </w:tc>
-        <w:tc>
-          <w:tcPr>
-            <w:tcW w:type="dxa" w:w="2693"/>
-          </w:tcPr>
-          <w:p>
-            <w:pPr>
-              <w:jc w:val="left"/>
-            </w:pPr>
-            <w:r>
-              <w:t>Show decline message</w:t>
-            </w:r>
-          </w:p>
-        </w:tc>
-        <w:tc>
-          <w:tcPr>
-            <w:tcW w:type="dxa" w:w="907"/>
-          </w:tcPr>
-          <w:p>
-            <w:pPr>
-              <w:jc w:val="center"/>
-            </w:pPr>
-            <w:r>
-              <w:t>No</w:t>
-            </w:r>
-          </w:p>
-        </w:tc>
-      </w:tr>
-      <w:tr>
-        <w:tc>
-          <w:tcPr>
-            <w:tcW w:type="dxa" w:w="2268"/>
-          </w:tcPr>
-          <w:p>
-            <w:pPr>
-              <w:jc w:val="left"/>
-            </w:pPr>
-            <w:r>
-              <w:rPr>
-                <w:rStyle w:val="Code"/>
-              </w:rPr>
-              <w:t>rate_limited</w:t>
-            </w:r>
-          </w:p>
-        </w:tc>
-        <w:tc>
-          <w:tcPr>
-            <w:tcW w:type="dxa" w:w="794"/>
-          </w:tcPr>
-          <w:p>
-            <w:pPr>
-              <w:jc w:val="center"/>
-            </w:pPr>
-            <w:r>
-              <w:t>429</w:t>
-            </w:r>
-          </w:p>
-        </w:tc>
-        <w:tc>
-          <w:tcPr>
-            <w:tcW w:type="dxa" w:w="2693"/>
-          </w:tcPr>
-          <w:p>
-            <w:pPr>
-              <w:jc w:val="left"/>
-            </w:pPr>
-            <w:r>
-              <w:t>Too many requests</w:t>
-            </w:r>
-          </w:p>
-        </w:tc>
-        <w:tc>
-          <w:tcPr>
-            <w:tcW w:type="dxa" w:w="2693"/>
-          </w:tcPr>
-          <w:p>
-            <w:pPr>
-              <w:jc w:val="left"/>
-            </w:pPr>
-            <w:r>
-              <w:t>Back off</w:t>
-            </w:r>
-          </w:p>
-        </w:tc>
-        <w:tc>
-          <w:tcPr>
-            <w:tcW w:type="dxa" w:w="907"/>
-          </w:tcPr>
-          <w:p>
-            <w:pPr>
-              <w:jc w:val="center"/>
-            </w:pPr>
-            <w:r>
-              <w:t>Yes</w:t>
-            </w:r>
-          </w:p>
-        </w:tc>
-      </w:tr>
-      <w:tr>
-        <w:tc>
-          <w:tcPr>
-            <w:tcW w:type="dxa" w:w="2268"/>
-          </w:tcPr>
-          <w:p>
-            <w:pPr>
-              <w:jc w:val="left"/>
-            </w:pPr>
-            <w:r>
-              <w:rPr>
-                <w:rStyle w:val="Code"/>
-              </w:rPr>
-              <w:t>processing_error</w:t>
-            </w:r>
-          </w:p>
-        </w:tc>
-        <w:tc>
-          <w:tcPr>
-            <w:tcW w:type="dxa" w:w="794"/>
-          </w:tcPr>
-          <w:p>
-            <w:pPr>
-              <w:jc w:val="center"/>
-            </w:pPr>
-            <w:r>
-              <w:t>500</w:t>
-            </w:r>
-          </w:p>
-        </w:tc>
-        <w:tc>
-          <w:tcPr>
-            <w:tcW w:type="dxa" w:w="2693"/>
-          </w:tcPr>
-          <w:p>
-            <w:pPr>
-              <w:jc w:val="left"/>
-            </w:pPr>
-            <w:r>
-              <w:t>Gateway internal error</w:t>
-            </w:r>
-          </w:p>
-        </w:tc>
-        <w:tc>
-          <w:tcPr>
-            <w:tcW w:type="dxa" w:w="2693"/>
-          </w:tcPr>
-          <w:p>
-            <w:pPr>
-              <w:jc w:val="left"/>
-            </w:pPr>
-            <w:r>
-              <w:t>Retry with same key</w:t>
-            </w:r>
-          </w:p>
-        </w:tc>
-        <w:tc>
-          <w:tcPr>
-            <w:tcW w:type="dxa" w:w="907"/>
-          </w:tcPr>
-          <w:p>
-            <w:pPr>
-              <w:jc w:val="center"/>
-            </w:pPr>
-            <w:r>
-              <w:t>Yes</w:t>
-            </w:r>
-          </w:p>
-        </w:tc>
-      </w:tr>
-    </w:tbl>
     <w:p>
       <w:pPr>
         <w:pStyle w:val="Heading1"/>
@@ -1104,6 +818,399 @@
     </w:tbl>
     <w:p>
       <w:pPr>
+        <w:sectPr>
+          <w:headerReference xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId10" w:type="default"/>
+          <w:footerReference xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId11" w:type="default"/>
+          <w:pgSz w:h="16838" w:w="11906"/>
+          <w:pgMar w:bottom="1417" w:footer="709" w:gutter="0" w:header="709" w:left="1417" w:right="1134" w:top="1417"/>
+          <w:pgNumType w:fmt="decimal" w:start="1"/>
+          <w:cols w:space="708"/>
+          <w:docGrid w:linePitch="360"/>
+        </w:sectPr>
+      </w:pPr>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading1"/>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="0"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:t>Appendix A: Error Mapping</w:t>
+      </w:r>
+    </w:p>
+    <w:tbl>
+      <w:tblPr>
+        <w:tblStyle w:val="TableGrid"/>
+        <w:tblW w:type="dxa" w:w="14287"/>
+        <w:tblLayout w:type="fixed"/>
+        <w:tblLook w:firstColumn="1" w:firstRow="1" w:lastColumn="0" w:lastRow="0" w:noHBand="0" w:noVBand="1" w:val="04A0"/>
+      </w:tblPr>
+      <w:tblGrid>
+        <w:gridCol w:w="2835"/>
+        <w:gridCol w:w="907"/>
+        <w:gridCol w:w="3137"/>
+        <w:gridCol w:w="3137"/>
+        <w:gridCol w:w="1134"/>
+        <w:gridCol w:w="3137"/>
+      </w:tblGrid>
+      <w:tr>
+        <w:trPr>
+          <w:tblHeader/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2835"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Gateway code</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="907"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="center"/>
+            </w:pPr>
+            <w:r>
+              <w:t>HTTP</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3137"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Meaning</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3137"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Adapter action</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1134"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="center"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Retry</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3137"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Logged as</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2835"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rStyle w:val="Code"/>
+              </w:rPr>
+              <w:t>card_declined</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="907"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="center"/>
+            </w:pPr>
+            <w:r>
+              <w:t>402</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3137"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Issuer declined</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3137"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Show decline message</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1134"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="center"/>
+            </w:pPr>
+            <w:r>
+              <w:t>No</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3137"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rStyle w:val="Code"/>
+              </w:rPr>
+              <w:t>payment.declined</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2835"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rStyle w:val="Code"/>
+              </w:rPr>
+              <w:t>rate_limited</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="907"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="center"/>
+            </w:pPr>
+            <w:r>
+              <w:t>429</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3137"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Too many requests</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3137"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Back off</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1134"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="center"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Yes</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3137"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rStyle w:val="Code"/>
+              </w:rPr>
+              <w:t>gateway.throttled</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2835"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rStyle w:val="Code"/>
+              </w:rPr>
+              <w:t>processing_error</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="907"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="center"/>
+            </w:pPr>
+            <w:r>
+              <w:t>500</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3137"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Gateway internal error</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3137"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Retry with same key</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1134"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="center"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Yes</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3137"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rStyle w:val="Code"/>
+              </w:rPr>
+              <w:t>gateway.error</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+    </w:tbl>
+    <w:p>
+      <w:pPr>
+        <w:sectPr>
+          <w:pgSz w:h="11906" w:orient="landscape" w:w="16838"/>
+          <w:pgMar w:bottom="1417" w:footer="709" w:gutter="0" w:header="709" w:left="1417" w:right="1134" w:top="1417"/>
+          <w:pgNumType w:fmt="decimal"/>
+          <w:cols w:space="708"/>
+          <w:docGrid w:linePitch="360"/>
+        </w:sectPr>
+      </w:pPr>
+    </w:p>
+    <w:p>
+      <w:pPr>
         <w:pStyle w:val="Heading1"/>
         <w:numPr>
           <w:ilvl w:val="0"/>
@@ -1251,6 +1358,7 @@
     <w:sectPr>
       <w:pgSz w:h="16838" w:w="11906"/>
       <w:pgMar w:bottom="1417" w:footer="709" w:gutter="0" w:header="709" w:left="1417" w:right="1134" w:top="1417"/>
+      <w:pgNumType w:fmt="decimal"/>
       <w:cols w:space="708"/>
       <w:docGrid w:linePitch="360"/>
     </w:sectPr>

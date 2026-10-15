@@ -112,13 +112,15 @@ def metadata() -> ir.Document:
         settings=ir.Settings(
             default_tab_stop=Length.cm(1), update_fields_on_open=True, even_and_odd_headers=True
         ),
-        page=ir.PageSetup(
-            width=Length.inch(11),
-            height=Length.inch("8.5"),
-            margin_top=Length.inch(1),
-            margin_bottom=Length.inch(1),
-            margin_left=Length.inch("0.75"),
-            margin_right=Length.inch("0.75"),
+        section=ir.Section(
+            ir.PageSetup(
+                width=Length.inch(11),
+                height=Length.inch("8.5"),
+                margin_top=Length.inch(1),
+                margin_bottom=Length.inch(1),
+                margin_left=Length.inch("0.75"),
+                margin_right=Length.inch("0.75"),
+            )
         ),
     )
 

@@ -35,7 +35,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Line spacing (multiple, at-least, exact) | M1 | ● |
 | Keep with next, keep lines, page break before, widow control | M1 | ● |
 | Outline level | M1 | ● |
-| Tab stops (alignment, leaders, clear) | M2 | ● |
+| Tab stops (alignment, leaders, clear) | M2 ✓ | ● |
 | Paragraph borders (incl. between, bar), shading | M2 | ● |
 | Suppress line numbers, suppress auto-hyphens | M2 | ● |
 | Drop caps, text frames | M4 | ●● |
@@ -72,11 +72,11 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Feature | Tier | Diff. |
 |---------|------|-------|
 | Page size, orientation, margins | M1 | ● |
-| Multiple sections, break types | M2 | ●● |
-| Gutter, mirror margins | M2 | ● |
-| Columns (equal / custom, separator) | M2 | ● |
-| Headers/footers: default, first, even; link-to-previous | M2 | ●● |
-| Page numbering format & restart per section | M2 | ● |
+| Multiple sections, break types | M2 ✓ | ●● |
+| Gutter, mirror margins | M2 (partly: gutter done) | ● |
+| Columns (equal / custom, separator) | M2 (partly: equal columns and separator done) | ● |
+| Headers/footers: default, first, even; link-to-previous | M2 ✓ | ●● |
+| Page numbering format & restart per section | M2 ✓ | ● |
 | Line numbering | M2 | ● |
 | Vertical alignment | M2 | ● |
 | Page borders | M4 | ● |
@@ -109,8 +109,8 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Cross-references (REF, PAGEREF, with pre-computed cached text) | M2 | ●●● |
 | Captions (SEQ, chapter numbering) | M2 | ●● |
 | TOC (with pre-rendered entries), list of figures/tables | M2 | ●● |
-| Simple fields (PAGE, NUMPAGES, SECTIONPAGES, DATE, TITLE, AUTHOR, STYLEREF…) | M2 | ● |
-| Arbitrary / nested fields | M2 | ●● |
+| Simple fields (PAGE, NUMPAGES, SECTIONPAGES, DATE, TITLE, AUTHOR, STYLEREF…) | M2 ✓ | ● |
+| Arbitrary / nested fields | M2 ✓ | ●● |
 | Footnotes, endnotes (numbering format, restart, position) | M2 | ●● |
 | Index (XE + INDEX) | M3 | ●● |
 | Citations & bibliography (`\cite`, CSL rendering via citeproc) | M3 | ●● |

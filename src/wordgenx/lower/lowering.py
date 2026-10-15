@@ -31,6 +31,13 @@ from PIL import UnidentifiedImageError
 
 from wordgenx import ir
 from wordgenx.lower.builtins import BUILTIN_STYLES
+from wordgenx.lower.fields import (
+    build_time,
+    field_name,
+    format_date,
+    merge_text,
+    parse_instruction,
+)
 from wordgenx.lower.macros import Binding, Macro, Substitution, define_macro, let_macro
 from wordgenx.lower.typography import smarten
 from wordgenx.ooxml.style_names import style_id
@@ -48,16 +55,24 @@ from wordgenx.stylesheet.syntax import parse_stylesheet
 from wordgenx.syntax import ParseResult, ast, parse
 from wordgenx.syntax.diagnostics import Code, Diagnostic, Severity
 from wordgenx.syntax.source import Source, Span
-from wordgenx.values import Color, InvalidValueError, Length
+from wordgenx.values import Color, InvalidValueError, Length, TabStop
 
 Located = tuple[Source, Diagnostic]
 
 BLOCK_COMMANDS = frozenset(
-    "p align list include use styles document meta settings section table".split()
+    (
+        "p align list include use styles document meta settings section table header footer tabs"
+    ).split()
 )
 INLINE_COMMANDS = frozenset(
-    "b i u s sup sub hl font style lang hidden strong emph code link url br tab image".split()
+    (
+        "b i u s sup sub hl font style lang hidden strong emph code link url br tab image "
+        "pagenum numpages sectionpages field date"
+    ).split()
 )
+FIELD_COMMANDS = {"pagenum": "PAGE", "numpages": "NUMPAGES", "sectionpages": "SECTIONPAGES"}
+DATE_FIELDS = {"today": "DATE", "saved": "SAVEDATE", "created": "CREATEDATE"}
+META_FIELDS = {"TITLE": "title", "SUBJECT": "subject", "AUTHOR": "author", "KEYWORDS": "keywords"}
 BREAK_COMMANDS = frozenset({"pagebreak", "columnbreak"})
 """Allowed both inline and as a block of their own."""
 TABLE_PARTS = frozenset({"row", "cell"})
@@ -74,14 +89,6 @@ PLANNED: dict[str, str] = {
             "endnote",
             "ref",
             "pageref",
-            "field",
-            "pagenum",
-            "numpages",
-            "sectionpages",
-            "date",
-            "header",
-            "footer",
-            "tabs",
             "seq",
             "raw",
         ],
@@ -107,7 +114,7 @@ PLANNED: dict[str, str] = {
 """Commands of the language that are not implemented yet -> the milestone that adds them."""
 
 PLANNED_BLOCKS = frozenset(
-    "figure caption toc listof header footer watermark bibliography printbibliography index".split()
+    "figure caption toc listof watermark bibliography printbibliography index".split()
 )
 CELL_ALIGN = {"top": "top", "center": "center", "middle": "center", "bottom": "bottom"}
 DEFAULT_DPI = 96
@@ -146,6 +153,7 @@ class Piece:
     """text (smart punctuation, whitespace collapse) | code (verbatim) | tab | line | page
     | column | image."""
     image: ir.Image | None = None
+    field: ir.Field | None = None
 
 
 @dataclass
@@ -212,9 +220,15 @@ class Lowering:
     macros: dict[str, Macro] = field(default_factory=lambda: {})
     meta: ir.Meta = field(default_factory=ir.Meta)
     settings: ir.Settings = field(default_factory=ir.Settings)
-    page: ir.PageSetup = field(default_factory=ir.PageSetup)
+    section: ir.Section = field(default_factory=ir.Section)
+    """The section being written (earlier ones are closed by SectionBreak blocks)."""
     smart_quotes: bool = True
     has_content: bool = False
+    even_headers: bool = False
+    header_kinds: set[str] = field(default_factory=lambda: set[str]())
+    """Header/footer kinds defined so far ("header:first", ...): what a new section inherits."""
+    _container_depth: int = 0
+    """> 0 while lowering a table cell, header or footer (no section breaks there)."""
     style_uses: list[StyleUse] = field(default_factory=lambda: [])
     list_uses: list[tuple[str, Span, Source]] = field(default_factory=lambda: [])
     _instances: int = 0
@@ -464,6 +478,9 @@ class Lowering:
             "settings": self.cmd_settings,
             "section": self.cmd_section,
             "table": self.cmd_table,
+            "header": self.cmd_header,
+            "footer": self.cmd_header,
+            "tabs": self.cmd_tabs,
         }.get(name)
         if handler is not None:
             return handler(command)
@@ -787,38 +804,49 @@ class Lowering:
         return []
 
     def cmd_section(self, command: ast.Command) -> list[ir.Block]:
-        if self.has_content:
-            self.warn(
-                Code.NOT_SUPPORTED_YET,
-                "multiple sections are not supported yet; this \\section is ignored",
+        """Page setup of the current section; after content, also a section break."""
+        if self._container_depth > 0:
+            self.report(
+                Code.MISPLACED,
+                "\\section cannot appear inside a table, header or footer",
                 command.span,
-                help="planned for milestone M2",
             )
             return []
-        page = self.page
+        out: list[ir.Block] = []
+        breaking = self.has_content
+        if breaking:
+            out.append(ir.SectionBreak(self.section))
+            # A new section keeps the page setup; headers and footers are inherited (not
+            # repeated), page numbering continues unless restarted, and a different first
+            # page applies only where it is asked for.
+            self.section = replace(
+                self.section,
+                headers=(),
+                footers=(),
+                page_number_start=None,
+                start="next-page",
+                title_page=False,
+            )
+        section = self.section
+        page = section.page
         orientation: str | None = None
+        link_headers = True
         for option in command.options.items if command.options else ():
             key, value = option.key, option.value
-            if key == "size":
-                if isinstance(value, ast.TupleValue) and len(value.items) == 2:
-                    w = self.length(
-                        self.text_value(value.items[0].value, command, "size") or "", value.span
-                    )
-                    h = self.length(
-                        self.text_value(value.items[1].value, command, "size") or "", value.span
-                    )
-                    if w and h:
-                        page = replace(page, width=w, height=h)
-                elif (name := self.text_value(value, command, "size")) in PAGE_SIZES:
-                    w, h = PAGE_SIZES[name]  # type: ignore[index]
-                    page = replace(page, width=w, height=h)
+            if key is None:
+                flag = self.text_value(value, command, "option")
+                if flag == "title-page":
+                    section = replace(section, title_page=True)
+                elif flag == "separator":
+                    section = replace(section, column_separator=True)
                 else:
-                    self.report(
-                        Code.INVALID_ARGUMENT,
-                        "unknown page size",
-                        value.span,
-                        help=f"{', '.join(PAGE_SIZES)} or (width, height)",
+                    self.warn(
+                        Code.NOT_SUPPORTED_YET,
+                        f"section option `{flag}` is not supported yet",
+                        option.span,
                     )
+            elif key == "size":
+                page = self.page_size(page, value, command)
             elif key == "orientation":
                 orientation = self.text_value(value, command, "orientation")
                 if orientation not in ("portrait", "landscape"):
@@ -828,23 +856,184 @@ class Lowering:
                     orientation = None
             elif key == "margins":
                 page = self.margins(page, value, command)
-            elif key == "gutter":
-                if (
-                    gutter := self.length(self.text_value(value, command, key) or "", value.span)
-                ) is not None:
-                    page = replace(page, gutter=gutter)
+            elif key in ("gutter", "header-distance", "footer-distance"):
+                length = self.length(self.text_value(value, command, key) or "", value.span)
+                if length is not None:
+                    page = replace(page, **{key.replace("-", "_"): length})
+            elif key == "break":
+                start = self.text_value(value, command, key)
+                if start in ir.SECTION_STARTS:
+                    section = replace(section, start=start)
+                else:
+                    self.report(
+                        Code.INVALID_ARGUMENT,
+                        "unknown section break",
+                        value.span,
+                        help=", ".join(ir.SECTION_STARTS),
+                    )
+            elif key == "page-numbers":
+                section = self.page_numbers(section, value, command)
+            elif key == "columns":
+                section = self.columns(section, value, command)
+            elif key == "link-headers":
+                link_headers = self.text_value(value, command, key) not in ("false", "off", "no")
             else:
                 self.warn(
                     Code.NOT_SUPPORTED_YET,
-                    f"section option `{key or self.text_value(value, command, '')}` "
-                    "is not supported yet",
+                    f"section option `{key}` is not supported yet",
                     option.span,
-                    help="planned for milestone M2",
                 )
         if orientation is not None and (orientation == "landscape") != page.landscape:
             page = replace(page, width=page.height, height=page.width)
-        self.page = page
+        if breaking and not link_headers:
+            # Unlinked: every kind defined so far gets an explicit empty part (unless redefined).
+            section = replace(
+                section, headers=self.empty_parts("header"), footers=self.empty_parts("footer")
+            )
+        self.section = replace(section, page=page)
+        return out
+
+    def empty_parts(self, family: str) -> ir.HeaderFooterParts:
+        kinds = [k.split(":")[1] for k in self.header_kinds if k.startswith(family + ":")]
+        return tuple((kind, ()) for kind in ir.HEADER_KINDS if kind in kinds)
+
+    def page_size(self, page: ir.PageSetup, value: ast.Value, command: ast.Command) -> ir.PageSetup:
+        if isinstance(value, ast.TupleValue) and len(value.items) == 2:
+            w = self.length(
+                self.text_value(value.items[0].value, command, "size") or "", value.span
+            )
+            h = self.length(
+                self.text_value(value.items[1].value, command, "size") or "", value.span
+            )
+            return replace(page, width=w, height=h) if w and h else page
+        name = self.text_value(value, command, "size")
+        if name in PAGE_SIZES:
+            width, height = PAGE_SIZES[name]
+            return replace(page, width=width, height=height)
+        self.report(
+            Code.INVALID_ARGUMENT,
+            "unknown page size",
+            value.span,
+            help=f"{', '.join(PAGE_SIZES)} or (width, height)",
+        )
+        return page
+
+    def page_numbers(
+        self, section: ir.Section, value: ast.Value, command: ast.Command
+    ) -> ir.Section:
+        """page-numbers=lower-roman or page-numbers=(format=decimal, start=1)."""
+        items = (
+            value.items
+            if isinstance(value, ast.TupleValue)
+            else (ast.Option(None, value, span=value.span),)
+        )
+        for item in items:
+            text = self.text_value(item.value, command, "page-numbers") or ""
+            if item.key in (None, "format") and text in ir.PAGE_NUMBER_FORMATS:
+                section = replace(section, page_number_format=text)
+            elif item.key == "start" and text.isdigit():
+                section = replace(section, page_number_start=int(text))
+            else:
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    "invalid page-numbers",
+                    item.span,
+                    help="e.g. page-numbers=(format=lower-roman, start=1); formats: "
+                    + ", ".join(ir.PAGE_NUMBER_FORMATS),
+                )
+        return section
+
+    def columns(self, section: ir.Section, value: ast.Value, command: ast.Command) -> ir.Section:
+        """columns=2 or columns=(count=2, gap=1cm, separator)."""
+        items = (
+            value.items
+            if isinstance(value, ast.TupleValue)
+            else (ast.Option("count", value, span=value.span),)
+        )
+        for item in items:
+            text = self.text_value(item.value, command, "columns") or ""
+            if item.key == "count" and text.isdigit() and 1 <= int(text) <= 45:
+                section = replace(section, columns=int(text))
+            elif item.key == "gap" and (gap := self.length(text, item.span)) is not None:
+                section = replace(section, column_gap=gap)
+            elif item.key is None and text == "separator":
+                section = replace(section, column_separator=True)
+            else:
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    "invalid columns",
+                    item.span,
+                    help="columns=2 or columns=(count=2, gap=1cm, separator)",
+                )
+        return section
+
+    def cmd_header(self, command: ast.Command) -> list[ir.Block]:
+        """\\header[kind]{...} and \\footer[kind]{...} for the current section."""
+        family = command.name
+        positional = self.positional(command, 1)
+        kind = positional[0] if positional else "default"
+        if kind not in ir.HEADER_KINDS:
+            self.report(
+                Code.INVALID_ARGUMENT,
+                f"unknown {family} kind `{kind}`",
+                command.options.span if command.options else command.span,
+                help="default, first or even",
+            )
+            return []
+        self._container_depth += 1
+        try:
+            blocks = self.blocks(self.markup_blocks(command)) if command.body is not None else []
+        finally:
+            self._container_depth -= 1
+        style = "Header" if family == "header" else "Footer"
+        self.use_style(style, ir.StyleKind.PARAGRAPH, command.span)
+        content = ir.map_paragraphs(
+            tuple(blocks), lambda p: p if p.style else replace(p, style=style)
+        )
+        existing = self.section.headers if family == "header" else self.section.footers
+        parts = dict(existing)
+        parts[kind] = content
+        ordered = tuple((k, parts[k]) for k in ir.HEADER_KINDS if k in parts)
+        section = replace(self.section, **{f"{family}s": ordered})
+        if kind == "first":
+            section = replace(section, title_page=True)
+        if kind == "even":
+            self.even_headers = True
+        self.header_kinds.add(f"{family}:{kind}")
+        self.section = section
         return []
+
+    def cmd_tabs(self, command: ast.Command) -> list[ir.Block]:
+        """\\tabs[(8cm, center), (16cm, right, leader=dot)]{...}: tab stops for the paragraphs."""
+        texts: list[str] = []
+        for option in command.options.items if command.options else ():
+            if option.key is not None:
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    "\\tabs takes tab stops: \\tabs[(8cm, center), (16cm, right)]",
+                    option.span,
+                )
+                continue
+            if isinstance(option.value, ast.TupleValue):
+                words = [
+                    (f"{item.key}=" if item.key else "")
+                    + (self.text_value(item.value, command, "tab") or "")
+                    for item in option.value.items
+                ]
+                texts.append(" ".join(words))
+            elif (text := self.text_value(option.value, command, "tab")) is not None:
+                texts.append(text)
+        paragraphs = self.blocks(self.markup_blocks(command))
+        try:
+            stops = TabStop.parse_list(", ".join(texts))
+        except InvalidValueError as e:
+            span = command.options.span if command.options else command.span
+            self.report(Code.INVALID_ARGUMENT, str(e), span)
+            return paragraphs
+        tabs = PropertySet(Target.PARAGRAPH, {"tabs": stops})
+        return list(
+            ir.map_paragraphs(tuple(paragraphs), lambda p: replace(p, props=tabs.merged(p.props)))
+        )
 
     def margins(self, page: ir.PageSetup, value: ast.Value, command: ast.Command) -> ir.PageSetup:
         sides = {
@@ -1144,7 +1333,11 @@ class Lowering:
                     help="colspan, rowspan, shade, valign, align",
                 )
         if command.body is not None:
-            cell.content = self.blocks(self.markup_blocks(command))
+            self._container_depth += 1
+            try:
+                cell.content = self.blocks(self.markup_blocks(command))
+            finally:
+                self._container_depth -= 1
         return cell
 
     def make_table(self, spec: TableSpec, rows: list[RowSpec], span: Span) -> ir.Table | None:
@@ -1211,6 +1404,10 @@ class Lowering:
             self.report(Code.INVALID_ARGUMENT, str(e), span, help="check colspan and rowspan")
             return None
 
+    @property
+    def page(self) -> ir.PageSetup:
+        return self.section.page
+
     def text_width(self) -> Length:
         page = self.page
         return Length(
@@ -1255,6 +1452,71 @@ class Lowering:
             self.report(Code.INVALID_ARGUMENT, "column widths must be positive", span)
             return None
         return tuple(widths)
+
+    # --- fields --------------------------------------------------------------------------------
+
+    def inline_field(self, command: ast.Command, fmt: Format) -> list[Piece]:
+        """\\field[result="..."]{CODE}: any Word field; nested fields in { } as in Word."""
+        code = command.body.text.strip() if isinstance(command.body, ast.VerbatimBody) else ""
+        if not code:
+            self.report(
+                Code.INVALID_ARGUMENT, "\\field needs a field code: \\field{PAGE}", command.span
+            )
+            return []
+        result: str | None = None
+        for option in command.options.items if command.options else ():
+            if option.key == "result":
+                result = self.text_value(option.value, command, "result")
+            else:
+                self.report(
+                    Code.INVALID_ARGUMENT, "unknown \\field option", option.span, help="result"
+                )
+        try:
+            instruction = parse_instruction(code)
+        except ValueError as e:
+            self.report(Code.INVALID_ARGUMENT, str(e), command.span)
+            return []
+        name = field_name(code)
+        dirty = False
+        if result is None:
+            known = self.known_field_result(name)
+            dirty = known is None  # Word computes it when the document opens
+            result = known or ""
+        field = ir.Field(merge_text((" ", *instruction, " ")), result, fmt.props, fmt.style, dirty)
+        return [Piece("", fmt, "field", field=field)]
+
+    def known_field_result(self, name: str) -> str | None:
+        if name in ("PAGE", "SECTIONPAGES", "NUMPAGES"):
+            return "1"
+        if name in META_FIELDS:
+            value: object = getattr(self.meta, META_FIELDS[name])
+            if isinstance(value, tuple):
+                return ", ".join(str(v) for v in value)  # pyright: ignore[reportUnknownVariableType, reportUnknownArgumentType]
+            return value if isinstance(value, str) else None
+        return None
+
+    def inline_date(self, command: ast.Command, fmt: Format) -> list[Piece]:
+        """\\date[kind=fixed|today|saved|created, format="d MMMM yyyy"]."""
+        kind, picture = "fixed", "d MMMM yyyy"
+        for option in command.options.items if command.options else ():
+            text = self.text_value(option.value, command, option.key or "option") or ""
+            if option.key == "kind" and text in ("fixed", *DATE_FIELDS):
+                kind = text
+            elif option.key == "format" and text:
+                picture = text
+            else:
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    "invalid \\date option",
+                    option.span,
+                    help='kind=fixed|today|saved|created, format="d MMMM yyyy"',
+                )
+        self.no_body(command)
+        text = format_date(build_time(), picture)
+        if kind == "fixed":
+            return [Piece(text, fmt, "code")]
+        code = f' {DATE_FIELDS[kind]} \\@ "{picture}" '
+        return [Piece("", fmt, "field", field=ir.Field((code,), text, fmt.props, fmt.style))]
 
     # --- images --------------------------------------------------------------------------------
 
@@ -1485,6 +1747,15 @@ class Lowering:
             return []
         if name == "image":
             return self.inline_image(command, fmt)
+        if name in FIELD_COMMANDS:
+            self.no_body(command)
+            self.no_options(command)
+            field = ir.Field((f" {FIELD_COMMANDS[name]} ",), "1", fmt.props, fmt.style)
+            return [Piece("", fmt, "field", field=field)]
+        if name == "field":
+            return self.inline_field(command, fmt)
+        if name == "date":
+            return self.inline_date(command, fmt)
         if name == "url":
             url = command.body.text.strip() if isinstance(command.body, ast.VerbatimBody) else ""
             self.no_options(command)
@@ -1662,9 +1933,9 @@ class Lowering:
                 flush_link()
                 inlines.append(ir.Break(piece.kind))
                 continue
-            if piece.image is not None:  # pictures are not part of hyperlinks (yet)
+            if piece.image is not None or piece.field is not None:  # not inside hyperlinks (yet)
                 flush_link()
-                inlines.append(piece.image)
+                inlines.append(piece.image or piece.field)  # type: ignore[arg-type]
                 continue
             if not piece.text:
                 continue

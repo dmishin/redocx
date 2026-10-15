@@ -659,6 +659,24 @@ Lowering (`wordgenx.lower`) turns the AST into the document IR. It fixes these b
   comes from the pixel size and resolution (96 dpi if unknown). Giving one dimension keeps the aspect ratio, and
   `width=50%` is relative to the text width. Pictures wider than the text are shrunk to fit. Identical files are
   stored once.
+- **Sections.** `\section[...]` before any content sets up the first section. After content it ends the current
+  section, and the new one starts with the same page setup. Headers and footers continue (Word's "link to previous")
+  unless redefined or `link-headers=false`. Page numbering continues unless restarted. `title-page` applies only to the
+  section that asks for it. Options: `size`, `orientation`, `margins`, `gutter`, `header-distance`,
+  `footer-distance`, `break=next-page|continuous|even-page|odd-page|next-column`,
+  `page-numbers=lower-roman` or `(format=…, start=1)`, `columns=2` or `(count=2, gap=1cm, separator)`, `title-page`,
+  `link-headers=false`. `\section` cannot appear inside tables, headers or footers.
+- **Headers and footers.** `\header[default|first|even]{…}` and `\footer[…]{…}` belong to the current section. Their
+  paragraphs use Word's `Header`/`Footer` styles, which come with centre and right tab stops matching the text width,
+  so `Left \tab Centre \tab Right` lines up. A `first` part implies a different first page. An `even` part turns on
+  odd/even headers for the document.
+- **Fields.** `\pagenum`, `\numpages` and `\sectionpages` are PAGE, NUMPAGES and SECTIONPAGES. `\field[result=…]{CODE}`
+  is any Word field, with nested fields in `{ }` as in Word's field-code view. Results known in advance (document
+  properties such as TITLE) are filled in; the others are marked for Word to update when the document opens.
+  `\date[kind=fixed|today|saved|created, format="d MMMM yyyy"]` takes Word date pictures. `fixed` is plain text at
+  build time and honours `SOURCE_DATE_EPOCH`.
+- **Tab stops.** `\tabs[(8cm, center), (16cm, right, leader=dot)]{…}`, or the `tabs` property in style sheets and
+  `\p`: `tabs: 8cm center, 16cm right leader=dot;`.
 - **Text options** (`title`, `alt`, `style`, …) take a word, a `"string"` (which ends on its line), or plain text in
   braces, which may span lines: `alt={a long description …}`. In option values, `#` plus six hex digits is always a
   colour, even inside `\define`.

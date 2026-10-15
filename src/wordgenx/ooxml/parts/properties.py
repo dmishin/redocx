@@ -8,8 +8,16 @@ from wordgenx.props import EmitContext, PropertySet, Target
 
 
 def _children(props: PropertySet, ctx: EmitContext) -> dict[str, Element]:
+    nested = props.emit_children()
     return {
-        name: E(f"w:{name}", {f"w:{key}": value for key, value in attrs.items()})
+        name: E(
+            f"w:{name}",
+            {f"w:{key}": value for key, value in attrs.items()},
+            *(
+                E(f"w:{child}", {f"w:{k}": v for k, v in child_attrs.items()})
+                for child, child_attrs in nested.get(name, [])
+            ),
+        )
         for name, attrs in props.emit(ctx).items()
     }
 

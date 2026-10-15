@@ -25,14 +25,13 @@ callouts and approval lines.
 
 In order of how much the spec misses them:
 
-1. **Headers and footers**, with page numbers and document properties (`\header`, `\footer`, `\pagenum`,
-   `\field{TITLE}`).
+1. ~~Headers and footers~~, ~~several sections~~. **Done in M2 step 1:** the spec now has a title page without a
+   header, roman page numbers for the front matter, decimal numbers restarting at the body, a running header with
+   the current chapter (`STYLEREF`), "Page n of m", and a landscape appendix.
 2. **Table of contents** (`\toc`). For a specification this is essential.
 3. **Cross-references** (`@sec:refunds` currently prints the label).
 4. **Captions** for the definitions table and the context diagram (`\caption`, `\figure`).
 5. **Footnotes.**
-6. **Several sections**: a title page without a header, roman page numbers for the front matter, a landscape
-   appendix.
 
 The spec is 4 pages. The M1 exit criterion ("a real 20-page document") is met in kind but not in length: nothing in
 the port suggests a longer document would hit new problems, but it has not been tried.

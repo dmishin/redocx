@@ -224,7 +224,30 @@ class Image:
             raise ValueError("image size must be positive")
 
 
-Inline = Run | Break | Hyperlink | Image
+@dataclass(frozen=True)
+class Field:
+    """A Word field (w:fldChar begin/separate/end), e.g. PAGE or STYLEREF "Heading 1".
+
+    `instruction` alternates text and nested fields: ``IF { MERGEFIELD x } = 1 "y"``.
+    """
+
+    instruction: tuple[str | Field, ...]
+    result: str = ""
+    """The cached result Word shows until it updates the field."""
+    props: PropertySet = EMPTY_RUN
+    style: str | None = None
+    dirty: bool = False
+    """Ask Word to update the field when the document opens (result not known in advance)."""
+
+    @property
+    def code(self) -> str:
+        """The instruction as Word displays it (Alt+F9), nested fields in braces."""
+        return "".join(
+            part if isinstance(part, str) else "{ " + part.code + " }" for part in self.instruction
+        )
+
+
+Inline = Run | Break | Hyperlink | Image | Field
 
 
 @dataclass(frozen=True)
@@ -311,7 +334,88 @@ class Table:
         table_layout(self)  # raises ValueError when spans do not fit the grid
 
 
-Block = Paragraph | Table
+# --- sections ------------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class PageSetup:
+    width: Length = _A4_WIDTH
+    height: Length = _A4_HEIGHT
+    margin_top: Length = _ONE_INCH
+    margin_bottom: Length = _ONE_INCH
+    margin_left: Length = _ONE_INCH
+    margin_right: Length = _ONE_INCH
+    header_distance: Length = _HEADER_FOOTER_DISTANCE
+    footer_distance: Length = _HEADER_FOOTER_DISTANCE
+    gutter: Length = _NO_GUTTER
+
+    @property
+    def landscape(self) -> bool:
+        return self.width > self.height
+
+    @property
+    def text_width(self) -> Length:
+        return Length(
+            self.width.emu - self.margin_left.emu - self.margin_right.emu - self.gutter.emu
+        )
+
+
+HEADER_KINDS = ("default", "first", "even")
+SECTION_STARTS = {
+    "next-page": "nextPage",
+    "continuous": "continuous",
+    "even-page": "evenPage",
+    "odd-page": "oddPage",
+    "next-column": "nextColumn",
+}
+PAGE_NUMBER_FORMATS = {
+    "decimal": "decimal",
+    "lower-roman": "lowerRoman",
+    "upper-roman": "upperRoman",
+    "lower-letter": "lowerLetter",
+    "upper-letter": "upperLetter",
+}
+_DEFAULT_COLUMN_GAP = Length.cm("1.25")
+
+HeaderFooterParts = tuple[tuple[str, tuple["Block", ...]], ...]
+"""(kind, blocks) pairs; kinds a section does not list are inherited from the previous one."""
+
+
+@dataclass(frozen=True)
+class Section:
+    page: PageSetup = field(default_factory=PageSetup)
+    start: str = "next-page"
+    """How the section starts (a key of SECTION_STARTS); ignored for the first section."""
+    headers: HeaderFooterParts = ()
+    footers: HeaderFooterParts = ()
+    title_page: bool = False
+    """Use the "first" header and footer on the first page (w:titlePg)."""
+    page_number_format: str | None = None
+    page_number_start: int | None = None
+    columns: int = 1
+    column_gap: Length = _DEFAULT_COLUMN_GAP
+    column_separator: bool = False
+
+    def __post_init__(self) -> None:
+        if self.start not in SECTION_STARTS:
+            raise ValueError(f"section start must be one of {', '.join(SECTION_STARTS)}")
+        if self.page_number_format not in (None, *PAGE_NUMBER_FORMATS):
+            raise ValueError(f"page number format must be one of {', '.join(PAGE_NUMBER_FORMATS)}")
+        for kind, _ in (*self.headers, *self.footers):
+            if kind not in HEADER_KINDS:
+                raise ValueError(f"header/footer kind must be one of {', '.join(HEADER_KINDS)}")
+        if not 1 <= self.columns <= 45:
+            raise ValueError("columns must be 1-45")
+
+
+@dataclass(frozen=True)
+class SectionBreak:
+    """Ends a section in the body; `section` describes the content before it."""
+
+    section: Section
+
+
+Block = Paragraph | Table | SectionBreak
 
 
 @dataclass(frozen=True)
@@ -374,7 +478,7 @@ def iter_paragraphs(blocks: tuple[Block, ...]) -> Iterator[Paragraph]:
     for block in blocks:
         if isinstance(block, Paragraph):
             yield block
-        else:
+        elif isinstance(block, Table):
             for row in block.rows:
                 for cell in row.cells:
                     yield from iter_paragraphs(cell.content)
@@ -398,6 +502,8 @@ def map_paragraphs(
     for block in blocks:
         if isinstance(block, Paragraph):
             out.append(fn(block))
+        elif isinstance(block, SectionBreak):
+            out.append(SectionBreak(map_section(block.section, fn)))
         else:
             rows = tuple(
                 replace(
@@ -412,21 +518,13 @@ def map_paragraphs(
     return tuple(out)
 
 
-@dataclass(frozen=True)
-class PageSetup:
-    width: Length = _A4_WIDTH
-    height: Length = _A4_HEIGHT
-    margin_top: Length = _ONE_INCH
-    margin_bottom: Length = _ONE_INCH
-    margin_left: Length = _ONE_INCH
-    margin_right: Length = _ONE_INCH
-    header_distance: Length = _HEADER_FOOTER_DISTANCE
-    footer_distance: Length = _HEADER_FOOTER_DISTANCE
-    gutter: Length = _NO_GUTTER
-
-    @property
-    def landscape(self) -> bool:
-        return self.width > self.height
+def map_section(section: Section, fn: Callable[[Paragraph], Paragraph]) -> Section:
+    """`section` with `fn` applied to the paragraphs of its headers and footers."""
+    return replace(
+        section,
+        headers=tuple((kind, map_paragraphs(blocks, fn)) for kind, blocks in section.headers),
+        footers=tuple((kind, map_paragraphs(blocks, fn)) for kind, blocks in section.footers),
+    )
 
 
 @dataclass(frozen=True)
@@ -440,7 +538,29 @@ class Document:
     """Document defaults for runs (docDefaults/rPrDefault)."""
     default_paragraph: PropertySet = EMPTY_PARAGRAPH
     """Document defaults for paragraphs (docDefaults/pPrDefault)."""
-    page: PageSetup = field(default_factory=PageSetup)
+    section: Section = field(default_factory=lambda: Section())
+    """The last (or only) section; earlier sections end at SectionBreak blocks in the body."""
+
+    @property
+    def page(self) -> PageSetup:
+        return self.section.page
+
+    def sections(self) -> list[Section]:
+        """All sections in order."""
+        return [b.section for b in self.body if isinstance(b, SectionBreak)] + [self.section]
+
+    def all_paragraphs(self) -> Iterator[Paragraph]:
+        """Paragraphs of the body, table cells, and every header and footer."""
+        yield from iter_paragraphs(self.body)
+        for section in self.sections():
+            for _, blocks in (*section.headers, *section.footers):
+                yield from iter_paragraphs(blocks)
+
+    def all_tables(self) -> Iterator[Table]:
+        yield from iter_tables(self.body)
+        for section in self.sections():
+            for _, blocks in (*section.headers, *section.footers):
+                yield from iter_tables(blocks)
 
 
 # --- convenience constructors for the Python API ----------------------------------

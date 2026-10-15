@@ -10,18 +10,17 @@ from os import PathLike
 
 from wordgenx.ir import (
     IMAGE_FORMATS,
+    Block,
     Document,
     Image,
     Numbering,
     NumberingRef,
     StyleKind,
-    iter_paragraphs,
-    iter_tables,
 )
 from wordgenx.ooxml.constants import CT, RT
-from wordgenx.ooxml.opc import Package
+from wordgenx.ooxml.opc import Package, Part
 from wordgenx.ooxml.parts.docprops import app_xml, core_xml
-from wordgenx.ooxml.parts.document import BodyContext, document_xml
+from wordgenx.ooxml.parts.document import BodyContext, document_xml, header_footer_xml
 from wordgenx.ooxml.parts.fonts import font_table_xml
 from wordgenx.ooxml.parts.numbering import default_level, list_num_ids, numbering_xml
 from wordgenx.ooxml.parts.settings import settings_xml
@@ -59,7 +58,7 @@ def _link_numbering(document: Document) -> Document:
         ref = style.numbering
         if ref is not None and ref.name not in definitions:
             raise StyleError(f"style {style.name!r}: numbering {ref.name!r} is not defined")
-    for paragraph in iter_paragraphs(document.body):
+    for paragraph in document.all_paragraphs():
         item = paragraph.list_item
         if item is not None and item.numbering not in definitions:
             raise StyleError(f"list numbering {item.numbering!r} is not defined")
@@ -108,12 +107,12 @@ IMAGE_CONTENT_TYPES = {"png": CT.PNG, "jpeg": CT.JPEG, "gif": CT.GIF, "bmp": CT.
 
 def _check_style_references(document: Document) -> None:
     styles = resolve_styles(document)
-    for table in iter_tables(document.body):
+    for table in document.all_tables():
         if table.style is not None:
             style = styles.get(style_id(table.style))
             if style is None or style.kind is not StyleKind.TABLE:
                 raise StyleError(f"table style {table.style!r} is not defined")
-    for paragraph in iter_paragraphs(document.body):
+    for paragraph in document.all_paragraphs():
         refs = [(paragraph.style, StyleKind.PARAGRAPH)]
         refs += [(run.style, StyleKind.CHARACTER) for run in paragraph.runs()]
         for name, kind in refs:
@@ -131,7 +130,7 @@ def _font_names(document: Document, theme: Theme) -> Iterator[str]:
     yield theme.minor_font
     property_sets = [document.default_run, *(s.run for s in document.styles)]
     property_sets += [level.run for n in document.numbering for level in n.levels]
-    property_sets += [run.props for p in iter_paragraphs(document.body) for run in p.runs()]
+    property_sets += [run.props for p in document.all_paragraphs() for run in p.runs()]
     for props in property_sets:
         font = props.get("font")
         if isinstance(font, str) and not font.startswith("theme."):
@@ -173,7 +172,7 @@ def build_package(document: Document, theme: Theme | None = None) -> Package:
 
     used_lists = [
         (p.list_item.numbering, p.list_item.instance, p.list_item.start)
-        for p in iter_paragraphs(document.body)
+        for p in document.all_paragraphs()
         if p.list_item is not None
     ]
     instances = list_num_ids(document.numbering, used_lists)
@@ -185,35 +184,46 @@ def build_package(document: Document, theme: Theme | None = None) -> Package:
         )
         main.relate(numbering, RT.NUMBERING)
 
-    links: dict[str, str] = {}
-
-    def hyperlink(url: str) -> str:
-        if url not in links:
-            links[url] = main.relate_external(url, RT.HYPERLINK)
-        return links[url]
-
-    media: dict[bytes, str] = {}  # sha256 -> relationship id (identical images are stored once)
-
-    def image(picture: Image) -> str:
-        digest = hashlib.sha256(picture.data).digest()
-        if digest not in media:
-            extension = IMAGE_FORMATS[picture.format]
-            part = pkg.add_part(
-                f"/word/media/image{len(media) + 1}.{extension}",
-                IMAGE_CONTENT_TYPES[picture.format],
-                picture.data,
-            )
-            media[digest] = main.relate(part, RT.IMAGE)
-        return media[digest]
-
+    media: dict[bytes, Part] = {}  # sha256 -> media part (identical images are stored once)
+    list_ids = {(i.numbering, i.instance): i.num_id for i in instances}
     drawing_ids = itertools.count(1)
-    body = BodyContext(
-        theme,
-        hyperlink,
-        {(i.numbering, i.instance): i.num_id for i in instances},
-        image,
-        lambda: next(drawing_ids),
-    )
+    part_counts = {"header": 0, "footer": 0}
+
+    def context(part: Part) -> BodyContext:
+        """Relationships for hyperlinks and images belong to the part that uses them."""
+        links: dict[str, str] = {}
+        images: dict[bytes, str] = {}
+
+        def hyperlink(url: str) -> str:
+            if url not in links:
+                links[url] = part.relate_external(url, RT.HYPERLINK)
+            return links[url]
+
+        def image(picture: Image) -> str:
+            digest = hashlib.sha256(picture.data).digest()
+            if digest not in media:
+                media[digest] = pkg.add_part(
+                    f"/word/media/image{len(media) + 1}.{IMAGE_FORMATS[picture.format]}",
+                    IMAGE_CONTENT_TYPES[picture.format],
+                    picture.data,
+                )
+            if digest not in images:
+                images[digest] = part.relate(media[digest], RT.IMAGE)
+            return images[digest]
+
+        return BodyContext(
+            theme, hyperlink, list_ids, image, lambda: next(drawing_ids), header_footer
+        )
+
+    def header_footer(family: str, blocks: tuple[Block, ...]) -> str:
+        part_counts[family] += 1
+        content_type = CT.WML_HEADER if family == "header" else CT.WML_FOOTER
+        part = pkg.add_part(f"/word/{family}{part_counts[family]}.xml", content_type)
+        rel_id = main.relate(part, RT.HEADER if family == "header" else RT.FOOTER)
+        part.data = serialize(header_footer_xml(family, blocks, context(part)))
+        return rel_id
+
+    body = context(main)
     main.data = serialize(document_xml(document, body))
     return pkg
 

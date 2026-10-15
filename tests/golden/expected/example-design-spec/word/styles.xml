@@ -183,6 +183,30 @@
       <w:szCs w:val="18"/>
     </w:rPr>
   </w:style>
+  <w:style w:styleId="Header" w:type="paragraph">
+    <w:name w:val="header"/>
+    <w:basedOn w:val="Normal"/>
+    <w:qFormat/>
+    <w:pPr>
+      <w:tabs>
+        <w:tab w:pos="4677" w:val="center"/>
+        <w:tab w:pos="9354" w:val="right"/>
+      </w:tabs>
+      <w:spacing w:after="0" w:line="240" w:lineRule="auto"/>
+    </w:pPr>
+  </w:style>
+  <w:style w:styleId="Footer" w:type="paragraph">
+    <w:name w:val="footer"/>
+    <w:basedOn w:val="Normal"/>
+    <w:qFormat/>
+    <w:pPr>
+      <w:tabs>
+        <w:tab w:pos="4677" w:val="center"/>
+        <w:tab w:pos="9354" w:val="right"/>
+      </w:tabs>
+      <w:spacing w:after="0" w:line="240" w:lineRule="auto"/>
+    </w:pPr>
+  </w:style>
   <w:style w:styleId="TableGrid" w:type="table">
     <w:name w:val="Table Grid"/>
     <w:basedOn w:val="TableNormal"/>

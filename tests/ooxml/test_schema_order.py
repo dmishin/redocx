@@ -78,6 +78,7 @@ def _sample(name: str, target: Target) -> object:
         "align": "center",
         "outline-level": 1,
         "line-spacing": LineSpacing.lines(1),
+        "tabs": "8cm center",
     }
     if name in special:
         return special[name]

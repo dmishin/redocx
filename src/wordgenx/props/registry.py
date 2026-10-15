@@ -15,7 +15,15 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Protocol
 
-from wordgenx.values import Color, InvalidValueError, Length, LineSpacing, apply_tint_shade
+from wordgenx.values import (
+    TAB_LEADERS,
+    Color,
+    InvalidValueError,
+    Length,
+    LineSpacing,
+    TabStop,
+    apply_tint_shade,
+)
 
 
 class Target(Enum):
@@ -47,6 +55,8 @@ class PropSpec:
     doc: str
     values: str
     """Human-readable description of accepted values (docs, error messages)."""
+    children: Callable[[object], list[tuple[str, Attrs]]] | None = None
+    """Child elements of the emitted element (e.g. w:tab inside w:tabs)."""
 
 
 class UnknownPropertyError(KeyError):
@@ -192,6 +202,37 @@ def _attr(
 def _twips(value: object) -> str:
     assert isinstance(value, Length)
     return str(value.in_twips)
+
+
+def _tab_stops(value: object) -> tuple[TabStop, ...]:
+    if isinstance(value, TabStop):
+        return (value,)
+    if isinstance(value, tuple) and all(isinstance(v, TabStop) for v in value):  # pyright: ignore[reportUnknownVariableType]
+        return value  # type: ignore[return-value]
+    if isinstance(value, str):
+        return TabStop.parse_list(value)
+    raise InvalidValueError(
+        f"expected tab stops such as `8cm center, 16cm right leader=dot`, got {value!r}"
+    )
+
+
+def _tab_elements(value: object) -> list[tuple[str, Attrs]]:
+    stops = [stop for stop in _tab_stops(value)]
+    elements: list[tuple[str, Attrs]] = []
+    for stop in sorted(stops, key=lambda s: s.position.emu):
+        attrs: Attrs = {"val": stop.align, "pos": str(stop.position.in_twips)}
+        if stop.leader != "none":
+            attrs["leader"] = TAB_LEADERS[stop.leader]
+        elements.append(("tab", attrs))
+    return elements
+
+
+class _NoContext:
+    def theme_color_rgb(self, name: str) -> str:
+        raise AssertionError("child elements do not need the theme")
+
+
+_NO_CONTEXT = _NoContext()
 
 
 def _zero_based(value: object) -> str:
@@ -407,6 +448,15 @@ _SPECS: tuple[PropSpec, ...] = (
         "Ignore spacing between paragraphs of the same style.",
         _BOOL,
     ),
+    PropSpec(
+        "tabs",
+        P,
+        _tab_stops,
+        lambda value, ctx: [("tabs", {})],
+        "Tab stops: position, alignment and leader.",
+        "e.g. 8cm center, 16cm right leader=dot",
+        children=_tab_elements,
+    ),
     PropSpec("align", P, _alignment, _val("jc"), "Horizontal alignment.", " | ".join(_ALIGNMENTS)),
     PropSpec(
         "outline-level",
@@ -511,6 +561,16 @@ class PropertySet(Mapping[str, object]):
             for element, attrs in REGISTRY[self._target][name].emit(value, ctx):
                 elements.setdefault(element, {}).update(attrs)
         return elements
+
+    def emit_children(self) -> dict[str, list[tuple[str, Attrs]]]:
+        """Element local name -> child elements, for properties that have them (w:tabs)."""
+        children: dict[str, list[tuple[str, Attrs]]] = {}
+        for name, value in self._values.items():
+            spec = REGISTRY[self._target][name]
+            if spec.children is not None:
+                for element, _ in spec.emit(value, _NO_CONTEXT):
+                    children.setdefault(element, []).extend(spec.children(value))
+        return children
 
 
 def _python_names(kwargs: Mapping[str, object]) -> dict[str, object]:

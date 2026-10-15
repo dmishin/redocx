@@ -208,3 +208,59 @@ class LineSpacing:
             return _round(self.multiple * 240)
         assert self.height is not None
         return self.height.in_twips
+
+
+TAB_ALIGNMENTS = ("left", "center", "right", "decimal", "bar")
+TAB_LEADERS = {
+    "none": "none",
+    "dot": "dot",
+    "hyphen": "hyphen",
+    "underscore": "underscore",
+    "heavy": "heavy",
+    "middle-dot": "middleDot",
+}
+
+
+@dataclass(frozen=True)
+class TabStop:
+    position: Length
+    align: str = "left"
+    leader: str = "none"
+    """A key of TAB_LEADERS."""
+
+    def __post_init__(self) -> None:
+        if self.align not in TAB_ALIGNMENTS:
+            raise InvalidValueError(f"tab alignment must be one of {', '.join(TAB_ALIGNMENTS)}")
+        if self.leader not in TAB_LEADERS:
+            raise InvalidValueError(f"tab leader must be one of {', '.join(TAB_LEADERS)}")
+
+    @classmethod
+    def parse_list(cls, text: str) -> tuple[TabStop, ...]:
+        """Parse ``8cm center, 16cm right leader=dot`` (parentheses around stops are optional)."""
+        groups: list[list[str]] = []
+        for word in re.sub(r"[(),]", " ", text).split():
+            if _LENGTH_RE.fullmatch(word) or word == "0":
+                groups.append([word])  # each length starts a new stop
+            elif groups:
+                groups[-1].append(word)
+            else:
+                raise InvalidValueError(f"a tab stop starts with its position, got {word!r}")
+        stops: list[TabStop] = []
+        for words in groups:
+            align, leader = "left", "none"
+            for word in words[1:]:
+                if word.startswith("leader="):
+                    leader = word.removeprefix("leader=")
+                elif word in TAB_LEADERS and word != "none":
+                    leader = word
+                else:
+                    align = word
+            stops.append(cls(Length.parse(words[0]), align, leader))
+        if not stops:
+            raise InvalidValueError(
+                "expected tab stops such as `8cm center, 16cm right leader=dot`"
+            )
+        return tuple(stops)
+
+    def __str__(self) -> str:
+        return f"({self.position}, {self.align}, leader={self.leader})"

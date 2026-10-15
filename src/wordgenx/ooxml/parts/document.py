@@ -1,4 +1,4 @@
-"""The main document part (word/document.xml)."""
+"""The main document part (word/document.xml) and header/footer parts (word/headerN.xml)."""
 
 from __future__ import annotations
 
@@ -7,17 +7,20 @@ from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 
 from wordgenx.ir import (
+    PAGE_NUMBER_FORMATS,
+    SECTION_STARTS,
     Block,
     Break,
     Cell,
     Document,
-    Hyperlink,
+    Field,
     Image,
     Inline,
-    PageSetup,
     Paragraph,
     Row,
     Run,
+    Section,
+    SectionBreak,
     Slot,
     Table,
     table_layout,
@@ -25,15 +28,22 @@ from wordgenx.ir import (
 from wordgenx.ooxml.parts.properties import paragraph_properties, run_properties
 from wordgenx.ooxml.schema_order import SECT_PR, TBL_BORDERS, TBL_PR, TC_PR, TR_PR, ordered
 from wordgenx.ooxml.style_names import style_id
-from wordgenx.ooxml.xml import E, Element, nsmap
+from wordgenx.ooxml.xml import E, Element, nsmap, qn
 from wordgenx.props import EmitContext
 
 _SPLIT_RE = re.compile(r"(\t|\n)")
 PICTURE_URI = "http://schemas.openxmlformats.org/drawingml/2006/picture"
+PART_NAMESPACES = ("w", "r", "wp", "a", "pic")
 
 
 @dataclass(frozen=True)
 class BodyContext:
+    """Everything a part's content needs from the package being built.
+
+    Relationships (hyperlinks, images) belong to the part being written, so the main
+    document and each header or footer get their own context.
+    """
+
     emit: EmitContext
     hyperlink: Callable[[str], str]
     """Returns the relationship id for an external hyperlink target."""
@@ -43,6 +53,8 @@ class BodyContext:
     """Stores the image as a media part; returns its relationship id."""
     drawing_id: Callable[[], int] = lambda: 1
     """A new document-wide unique id for wp:docPr."""
+    header_footer: Callable[[str, tuple[Block, ...]], str] = lambda family, blocks: ""
+    """Writes a header ("header") or footer ("footer") part; returns its relationship id."""
 
 
 # --- runs and inline content --------------------------------------------------------------
@@ -62,6 +74,29 @@ def _run_content(text: str) -> Iterator[Element]:
 def _run(run: Run, ctx: BodyContext) -> Element:
     style = style_id(run.style) if run.style else None
     return E("w:r", run_properties(run.props, ctx.emit, style_id=style), *_run_content(run.text))
+
+
+def _field(field: Field, ctx: BodyContext) -> list[Element]:
+    """A complex field: begin, instruction (with nested fields), separate, result, end."""
+    style = style_id(field.style) if field.style else None
+
+    def run(*content: Element) -> Element:
+        return E("w:r", run_properties(field.props, ctx.emit, style_id=style), *content)
+
+    begin = {"w:fldCharType": "begin"}
+    if field.dirty:
+        begin["w:dirty"] = "true"
+    out = [run(E("w:fldChar", begin))]
+    for part in field.instruction:
+        if isinstance(part, str):
+            out.append(run(E("w:instrText", {"xml:space": "preserve"}, text=part)))
+        else:
+            out.extend(_field(part, ctx))
+    out.append(run(E("w:fldChar", {"w:fldCharType": "separate"})))
+    if field.result:
+        out.append(run(*_run_content(field.result)))
+    out.append(run(E("w:fldChar", {"w:fldCharType": "end"})))
+    return out
 
 
 def _drawing(image: Image, ctx: BodyContext) -> Element:
@@ -100,19 +135,22 @@ def _drawing(image: Image, ctx: BodyContext) -> Element:
     return E("w:r", E("w:drawing", inline))
 
 
-def _inline(item: Inline, ctx: BodyContext) -> Element:
+def _inline(item: Inline, ctx: BodyContext) -> list[Element]:
     if isinstance(item, Run):
-        return _run(item, ctx)
+        return [_run(item, ctx)]
     if isinstance(item, Break):
-        return E("w:r", E("w:br", {"w:type": item.kind}))
+        return [E("w:r", E("w:br", {"w:type": item.kind}))]
     if isinstance(item, Image):
-        return _drawing(item, ctx)
-    assert isinstance(item, Hyperlink)
-    return E(
-        "w:hyperlink",
-        {"r:id": ctx.hyperlink(item.url), "w:history": "1"},
-        *(_run(run, ctx) for run in item.content),
-    )
+        return [_drawing(item, ctx)]
+    if isinstance(item, Field):
+        return _field(item, ctx)
+    return [
+        E(
+            "w:hyperlink",
+            {"r:id": ctx.hyperlink(item.url), "w:history": "1"},
+            *(_run(run, ctx) for run in item.content),
+        )
+    ]
 
 
 def _paragraph(paragraph: Paragraph, ctx: BodyContext) -> Element:
@@ -126,31 +164,102 @@ def _paragraph(paragraph: Paragraph, ctx: BodyContext) -> Element:
     return E(
         "w:p",
         paragraph_properties(paragraph.props, ctx.emit, style_id=style, numbering=numbering),
-        *(_inline(item, ctx) for item in paragraph.content),
+        *(element for item in paragraph.content for element in _inline(item, ctx)),
     )
 
 
-# --- tables -----------------------------------------------------------------------------------
+# --- blocks and sections -------------------------------------------------------------------------
 
 
-def _blocks(blocks: tuple[Block, ...], ctx: BodyContext) -> list[Element]:
-    """Blocks of a body or cell.
+def _blocks(blocks: tuple[Block, ...], ctx: BodyContext, *, final: bool = False) -> list[Element]:
+    """Blocks of a body, cell, header or footer.
 
-    Word needs a paragraph between two tables (adjacent tables merge into one) and after
-    a table that ends a cell or the body, so empty paragraphs are added there.
+    A section break goes into the last paragraph of its section (an empty paragraph is
+    added when the section ends with a table). Word also needs a paragraph between two
+    tables (adjacent tables merge into one) and after a table that ends a part. `final`
+    marks the body, whose own w:sectPr follows the blocks.
     """
     elements: list[Element] = []
     previous: Block | None = None
+    last_paragraph: Element | None = None
     for block in blocks:
-        if isinstance(block, Table) and isinstance(previous, Table):
-            elements.append(E("w:p"))
-        elements.append(
-            _paragraph(block, ctx) if isinstance(block, Paragraph) else _table(block, ctx)
-        )
+        if isinstance(block, SectionBreak):
+            if last_paragraph is None:
+                last_paragraph = _paragraph(Paragraph(), ctx)
+                elements.append(last_paragraph)
+            _attach_section(last_paragraph, _section_properties(block.section, ctx))
+            last_paragraph = None
+            previous = None
+            continue
+        if isinstance(block, Table):
+            if isinstance(previous, Table):
+                elements.append(E("w:p"))
+            elements.append(_table(block, ctx))
+            last_paragraph = None
+        else:
+            last_paragraph = _paragraph(block, ctx)
+            elements.append(last_paragraph)
         previous = block
-    if previous is None or isinstance(previous, Table):
+    if isinstance(previous, Table) or (not elements and not final):
         elements.append(E("w:p"))
     return elements
+
+
+def _attach_section(paragraph: Element, section: Element) -> None:
+    """Put w:sectPr at the end of the paragraph's w:pPr (after the paragraph properties proper)."""
+    if len(paragraph) and paragraph[0].tag == qn("w:pPr"):
+        paragraph[0].append(section)
+    else:
+        paragraph.insert(0, E("w:pPr", section))
+
+
+def _section_properties(section: Section, ctx: BodyContext) -> Element:
+    page = section.page
+    references: list[Element] = []
+    for family, parts in (("header", section.headers), ("footer", section.footers)):
+        for kind, blocks in parts:
+            rel_id = ctx.header_footer(family, blocks)
+            references.append(E(f"w:{family}Reference", {"w:type": kind, "r:id": rel_id}))
+    size = {"w:w": str(page.width.in_twips), "w:h": str(page.height.in_twips)}
+    if page.landscape:
+        size["w:orient"] = "landscape"
+    children: dict[str, Element] = {
+        "pgSz": E("w:pgSz", size),
+        "pgMar": E(
+            "w:pgMar",
+            {
+                "w:top": str(page.margin_top.in_twips),
+                "w:right": str(page.margin_right.in_twips),
+                "w:bottom": str(page.margin_bottom.in_twips),
+                "w:left": str(page.margin_left.in_twips),
+                "w:header": str(page.header_distance.in_twips),
+                "w:footer": str(page.footer_distance.in_twips),
+                "w:gutter": str(page.gutter.in_twips),
+            },
+        ),
+        "docGrid": E("w:docGrid", {"w:linePitch": "360"}),
+    }
+    if section.start != "next-page":
+        children["type"] = E("w:type", {"w:val": SECTION_STARTS[section.start]})
+    if section.page_number_format or section.page_number_start is not None:
+        numbering: dict[str, str] = {}
+        if section.page_number_format:
+            numbering["w:fmt"] = PAGE_NUMBER_FORMATS[section.page_number_format]
+        if section.page_number_start is not None:
+            numbering["w:start"] = str(section.page_number_start)
+        children["pgNumType"] = E("w:pgNumType", numbering)
+    columns = {"w:space": str(section.column_gap.in_twips) if section.columns > 1 else "708"}
+    if section.columns > 1:
+        columns["w:num"] = str(section.columns)
+        if section.column_separator:
+            columns["w:sep"] = "1"
+    children["cols"] = E("w:cols", columns)
+    if section.title_page:
+        children["titlePg"] = E("w:titlePg")
+    return E("w:sectPr", *references, *ordered(children, SECT_PR))
+
+
+# --- tables -----------------------------------------------------------------------------------
 
 
 def _twips(value: int) -> dict[str, str]:
@@ -179,15 +288,10 @@ def _table(table: Table, ctx: BodyContext) -> Element:
         properties["tblStyle"] = E("w:tblStyle", {"w:val": style_id(table.style)})
     else:
         border = {"w:val": "nil"}
+        sides = ("top", "left", "bottom", "right", "insideH", "insideV")
         properties["tblBorders"] = E(
             "w:tblBorders",
-            *ordered(
-                {
-                    side: E(f"w:{side}", border)
-                    for side in ("top", "left", "bottom", "right", "insideH", "insideV")
-                },
-                TBL_BORDERS,
-            ),
+            *ordered({side: E(f"w:{side}", border) for side in sides}, TBL_BORDERS),
         )
     if table.align:
         properties["jc"] = E("w:jc", {"w:val": table.align})
@@ -232,37 +336,16 @@ def _cell(slot: Slot, widths: list[int], ctx: BodyContext) -> Element:
     return E("w:tc", E("w:tcPr", *ordered(properties, TC_PR)), *content)
 
 
-# --- the document ----------------------------------------------------------------------------
-
-
-def _section_properties(page: PageSetup) -> Element:
-    size = {"w:w": str(page.width.in_twips), "w:h": str(page.height.in_twips)}
-    if page.landscape:
-        size["w:orient"] = "landscape"
-    children = {
-        "pgSz": E("w:pgSz", size),
-        "pgMar": E(
-            "w:pgMar",
-            {
-                "w:top": str(page.margin_top.in_twips),
-                "w:right": str(page.margin_right.in_twips),
-                "w:bottom": str(page.margin_bottom.in_twips),
-                "w:left": str(page.margin_left.in_twips),
-                "w:header": str(page.header_distance.in_twips),
-                "w:footer": str(page.footer_distance.in_twips),
-                "w:gutter": str(page.gutter.in_twips),
-            },
-        ),
-        "cols": E("w:cols", {"w:space": "708"}),
-        "docGrid": E("w:docGrid", {"w:linePitch": "360"}),
-    }
-    return E("w:sectPr", *ordered(children, SECT_PR))
+# --- parts -----------------------------------------------------------------------------------
 
 
 def document_xml(document: Document, ctx: BodyContext) -> Element:
-    body = _blocks(document.body, ctx) if document.body else []
-    return E(
-        "w:document",
-        E("w:body", *body, _section_properties(document.page)),
-        nsmap=nsmap("w", "r", "wp", "a", "pic"),
-    )
+    body = _blocks(document.body, ctx, final=True)
+    final = _section_properties(document.section, ctx)
+    return E("w:document", E("w:body", *body, final), nsmap=nsmap(*PART_NAMESPACES))
+
+
+def header_footer_xml(family: str, blocks: tuple[Block, ...], ctx: BodyContext) -> Element:
+    """A w:hdr or w:ftr part. It must contain at least one paragraph."""
+    tag = "w:hdr" if family == "header" else "w:ftr"
+    return E(tag, *_blocks(blocks, ctx), nsmap=nsmap(*PART_NAMESPACES))

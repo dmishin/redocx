@@ -15,6 +15,7 @@ from wordgenx.props import PropertySet, Target
 from wordgenx.syntax import ParseResult
 from wordgenx.syntax.diagnostics import Code, Diagnostic, Severity
 from wordgenx.syntax.source import Source, Span
+from wordgenx.values import Length, TabStop
 
 _BUILTIN_BY_ID = {style_id(name): name for name in BUILTIN_STYLES}
 
@@ -77,6 +78,10 @@ def lower(result: ParseResult, base_dir: Path | None = None) -> tuple[ir.Documen
         return replace(paragraph, list_item=None, style=style, props=props)
 
     resolved_body = ir.map_paragraphs(tuple(body), resolve_list_item)
+    resolved_section = ir.map_section(lowering.section, resolve_list_item)
+    first_page = next(
+        (b.section.page for b in body if isinstance(b, ir.SectionBreak)), lowering.section.page
+    )
 
     # Styles: defined by style sheets, else Word built-ins the markup relies on.
     styles = {style_id(s.name): s for s in compiled.styles}
@@ -84,7 +89,7 @@ def lower(result: ParseResult, base_dir: Path | None = None) -> tuple[ir.Documen
         sid = style_id(use.name)
         style = styles.get(sid)
         if style is None and sid in _BUILTIN_BY_ID:
-            style = styles[sid] = BUILTIN_STYLES[_BUILTIN_BY_ID[sid]]()
+            style = styles[sid] = _builtin(_BUILTIN_BY_ID[sid], first_page)
             for related in (style.based_on, style.next):
                 if (
                     related is not None
@@ -104,14 +109,28 @@ def lower(result: ParseResult, base_dir: Path | None = None) -> tuple[ir.Documen
     document = ir.Document(
         body=tuple(resolved_body),
         meta=lowering.meta,
-        settings=lowering.settings,
+        settings=replace(lowering.settings, even_and_odd_headers=True)
+        if lowering.even_headers
+        else lowering.settings,
         styles=tuple(styles.values()),
         numbering=tuple(numbering.values()),
         default_run=compiled.default_run,
         default_paragraph=compiled.default_paragraph,
-        page=lowering.page,
+        section=resolved_section,
     )
     return document, diagnostics
+
+
+def _builtin(name: str, page: ir.PageSetup) -> ir.Style:
+    """A built-in style; Header and Footer get centre and right tab stops for the page, as
+    Word's own Header and Footer styles have."""
+    style = BUILTIN_STYLES[name]()
+    if name in ("Header", "Footer"):
+        width = page.text_width
+        tabs = (TabStop(Length(width.emu // 2), "center"), TabStop(width, "right"))
+        tab_props = PropertySet(Target.PARAGRAPH, {"tabs": tabs})
+        style = replace(style, paragraph=style.paragraph.merged(tab_props))
+    return style
 
 
 __all__ = ["Located", "lower"]
