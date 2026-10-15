@@ -14,7 +14,16 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime
 from enum import Enum
 
-from wordgenx.props import EMPTY_PARAGRAPH, EMPTY_RUN, PropertySet, Target, para_props, run_props
+from wordgenx.props import (
+    EMPTY_CELL,
+    EMPTY_PARAGRAPH,
+    EMPTY_RUN,
+    EMPTY_TABLE,
+    PropertySet,
+    Target,
+    para_props,
+    run_props,
+)
 from wordgenx.values import Length
 
 # Defaults: A4 with 1-inch margins, as in a new Word document outside North America.
@@ -95,7 +104,6 @@ class StyleKind(Enum):
     PARAGRAPH = "paragraph"
     CHARACTER = "character"
     TABLE = "table"
-    """Only Word's built-in "Table Grid" so far; custom table styles arrive in M2."""
 
 
 @dataclass(frozen=True)
@@ -114,14 +122,54 @@ class Style:
     """The linked style of the other kind (a paragraph style and its "... Char" style)."""
     numbering: NumberingRef | None = None
     """Paragraphs in this style are numbered by this list level (heading numbering)."""
+    table: PropertySet = EMPTY_TABLE
+    """Table styles: borders, cell margins, ... of the whole table (w:tblPr)."""
+    cell: PropertySet = EMPTY_CELL
+    """Table styles: shading, borders, ... of every cell (w:tcPr)."""
+    conditions: tuple[TableCondition, ...] = ()
+    """Table styles: formatting of the header row, banded rows, ... (w:tblStylePr)."""
+    repeat_header: bool = False
+    """Table styles: tables in this style repeat their first row on each page."""
 
     def __post_init__(self) -> None:
-        if self.paragraph.target is not Target.PARAGRAPH or self.run.target is not Target.RUN:
-            raise ValueError("Style.paragraph / Style.run have the wrong property targets")
+        if (
+            self.paragraph.target is not Target.PARAGRAPH
+            or self.run.target is not Target.RUN
+            or self.table.target is not Target.TABLE
+            or self.cell.target is not Target.CELL
+        ):
+            raise ValueError("Style property sets have the wrong targets")
         if self.kind is StyleKind.CHARACTER and (self.paragraph or self.numbering):
             raise ValueError(f"character style {self.name!r} cannot have paragraph properties")
-        if self.kind is StyleKind.TABLE and self.name != "Table Grid":
-            raise ValueError("only the built-in table style 'Table Grid' is supported so far")
+        if self.kind is not StyleKind.TABLE and (
+            self.table or self.cell or self.conditions or self.repeat_header
+        ):
+            raise ValueError(f"only table styles have table formatting ({self.name!r})")
+        kinds = [c.kind for c in self.conditions]
+        if len(set(kinds)) != len(kinds):
+            raise ValueError(f"table style {self.name!r} formats a table part twice")
+
+
+TABLE_CONDITIONS = (
+    "firstRow lastRow firstCol lastCol band1Vert band2Vert band1Horz band2Horz "
+    "neCell nwCell seCell swCell"
+).split()
+"""ST_TblStyleOverrideType values (wholeTable is the style itself), in the order Word writes."""
+
+
+@dataclass(frozen=True)
+class TableCondition:
+    """Formatting a table style gives one part of the table (w:tblStylePr)."""
+
+    kind: str
+    """A value of TABLE_CONDITIONS."""
+    paragraph: PropertySet = EMPTY_PARAGRAPH
+    run: PropertySet = EMPTY_RUN
+    cell: PropertySet = EMPTY_CELL
+
+    def __post_init__(self) -> None:
+        if self.kind not in TABLE_CONDITIONS:
+            raise ValueError(f"unknown table style part {self.kind!r}")
 
 
 # --- numbering (lists) -------------------------------------------------------------
@@ -386,21 +434,32 @@ class Paragraph:
 # --- tables ------------------------------------------------------------------------------
 
 
+TABLE_LOOK = (
+    "header-row",
+    "last-row",
+    "first-column",
+    "last-column",
+    "banded-rows",
+    "banded-columns",
+)
+"""Table style options shown in Word's Table Design tab (w:tblLook)."""
+DEFAULT_TABLE_LOOK = frozenset({"header-row", "first-column", "banded-rows"})
+"""What Word turns on for a new table."""
+
+
 @dataclass(frozen=True)
 class Cell:
     content: tuple[Block, ...] = ()
     colspan: int = 1
     rowspan: int = 1
-    shading: str | None = None
-    """Background as RRGGBB."""
-    valign: str | None = None
-    """``top``, ``center`` or ``bottom``."""
+    props: PropertySet = EMPTY_CELL
+    """Shading, borders, vertical alignment (registry target CELL)."""
 
     def __post_init__(self) -> None:
         if self.colspan < 1 or self.rowspan < 1:
             raise ValueError("colspan and rowspan must be at least 1")
-        if self.valign not in (None, "top", "center", "bottom"):
-            raise ValueError(f"valign must be top, center or bottom, got {self.valign!r}")
+        if self.props.target is not Target.CELL:
+            raise ValueError("Cell.props must hold cell properties")
 
 
 @dataclass(frozen=True)
@@ -422,12 +481,20 @@ class Table:
     style: str | None = "Table Grid"
     align: str | None = None
     """``left``, ``center`` or ``right`` (the table's position)."""
+    props: PropertySet = EMPTY_TABLE
+    """Borders and cell margins that override the table style (registry target TABLE)."""
+    look: frozenset[str] = DEFAULT_TABLE_LOOK
+    """Which parts of the table style apply (values of TABLE_LOOK)."""
 
     def __post_init__(self) -> None:
         if not self.widths or any(w.emu <= 0 for w in self.widths):
             raise ValueError("a table needs positive column widths")
         if self.align not in (None, "left", "center", "right"):
             raise ValueError(f"table align must be left, center or right, got {self.align!r}")
+        if self.props.target is not Target.TABLE:
+            raise ValueError("Table.props must hold table properties")
+        if not self.look <= set(TABLE_LOOK):
+            raise ValueError(f"unknown table look flags: {sorted(self.look - set(TABLE_LOOK))}")
         table_layout(self)  # raises ValueError when spans do not fit the grid
 
 

@@ -1,14 +1,14 @@
-"""Emit w:rPr / w:pPr elements from property sets, in schema order."""
+"""Emit w:rPr / w:pPr / w:tblPr / w:tcPr elements from property sets, in schema order."""
 
 from __future__ import annotations
 
-from wordgenx.ooxml.schema_order import NUM_PR, PPR, RPR, ordered
+from wordgenx.ooxml.schema_order import NUM_PR, PPR, RPR, TBL_PR, TC_PR, ordered
 from wordgenx.ooxml.xml import E, Element
 from wordgenx.props import EmitContext, PropertySet, Target
 
 
 def _children(props: PropertySet, ctx: EmitContext) -> dict[str, Element]:
-    nested = props.emit_children()
+    nested = props.emit_children(ctx)
     return {
         name: E(
             f"w:{name}",
@@ -61,3 +61,21 @@ def paragraph_properties(
             ),
         )
     return E("w:pPr", *ordered(children, PPR)) if children else None
+
+
+def table_properties(
+    props: PropertySet, ctx: EmitContext, structure: dict[str, Element] | None = None
+) -> Element | None:
+    """A w:tblPr element: `structure` (w:tblW, w:tblLook, ...) plus the properties."""
+    assert props.target is Target.TABLE
+    children = {**(structure or {}), **_children(props, ctx)}
+    return E("w:tblPr", *ordered(children, TBL_PR)) if children else None
+
+
+def cell_properties(
+    props: PropertySet, ctx: EmitContext, structure: dict[str, Element] | None = None
+) -> Element | None:
+    """A w:tcPr element: `structure` (w:tcW, w:gridSpan, w:vMerge) plus the properties."""
+    assert props.target is Target.CELL
+    children = {**(structure or {}), **_children(props, ctx)}
+    return E("w:tcPr", *ordered(children, TC_PR)) if children else None

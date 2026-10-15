@@ -7,6 +7,7 @@ import pytest
 from tests.support.xsd import validate_package
 from wordgenx import ir
 from wordgenx.compiler import build, compile_source
+from wordgenx.values import Length, TabStop
 
 HEADINGS = (
     '\\styles{ paragraph "Heading 1" { outline-level: 1; } paragraph "Heading 2" { outline-level: 2; }\n'
@@ -234,6 +235,13 @@ def test_toc_entries_link_to_headings() -> None:
     assert toc.field.code == ' TOC \\o "1-2" \\h \\z \\u '
     entries = [(p.style, p.text()) for p in toc.content]
     assert entries == [("TOC 1", "1\tOne\t"), ("TOC 2", "1.1\tSub\t"), ("TOC 1", "Annex\t")]
+    # numbered entries get Word's tab stop for the text after the number
+    stops = [p.props.get("tabs") for p in toc.content]
+    assert stops == [
+        (TabStop(Length.twips(440), "left"),),
+        (TabStop(Length.twips(880), "left"),),
+        None,
+    ]
     link = toc.content[0].content[0]
     assert isinstance(link, ir.Hyperlink)
     heading = doc.body[2]

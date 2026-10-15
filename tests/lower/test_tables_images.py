@@ -7,9 +7,8 @@ from PIL import Image as PILImage
 from tests.support.xsd import validate_package
 from wordgenx import ir
 from wordgenx.compiler import build, compile_source
-from wordgenx.props import para_props
-from wordgenx.syntax.diagnostics import Code
-from wordgenx.values import Length
+from wordgenx.props import cell_props, para_props
+from wordgenx.values import Border, Color, Length
 
 A4_TEXT_WIDTH = Length.mm(210).emu - 2 * Length.cm("2.54").emu
 
@@ -94,9 +93,9 @@ def test_table_options_widths_and_columns() -> None:
     ]  # fmt: skip
     (cell,) = wide.cells
     (paragraph,) = ir.iter_paragraphs(cell.content)
-    assert (cell.colspan, cell.shading, paragraph.props) == (
+    assert (cell.colspan, cell.props.get("shading"), paragraph.props) == (
         3,
-        "FFF2CC",
+        Color.parse("#FFF2CC"),
         para_props(align="justify"),
     )
 
@@ -118,7 +117,7 @@ def test_block_form_rows_and_cells() -> None:
         True,
         True,
     )
-    assert (second.cells[0].rowspan, second.cells[0].valign) == (2, "center")
+    assert (second.cells[0].rowspan, second.cells[0].props.get("valign")) == (2, "center")
     list_paragraph = [p for p in ir.iter_paragraphs(second.cells[1].content) if p.list_item]
     assert len(list_paragraph) == 1
     assert list_paragraph[0].style == "List Paragraph"
@@ -143,7 +142,11 @@ def test_short_pipe_rows_are_padded() -> None:
         ("\\table{\\row{\\cell[rowspan=3]{a}}}", "past the last row"),
         ("\\row{x}", "`\\row` is only valid directly inside \\table"),
         ("\\table{\\row{text}}", "a \\row contains \\cell commands"),
-        ("\\table{| \\cell[shade=theme.accent1]{a} |}", "RGB colour"),
+        ("\\table{| \\cell[shade=blue]{a} |}", "not a color"),
+        ("\\table{| \\cell[borders=(top=wiggly)]{a} |}", "not a border part"),
+        ("\\table[look=(header-row, zebra)]{| a |}", "invalid look"),
+        ("\\table[cell-margins=(middle=1cm)]{| a |}", "cell-margins parts"),
+        ("\\table[style=Fancy]{| a |}", "table style `Fancy` is not defined"),
     ],
 )
 def test_table_errors(text: str, message: str) -> None:
@@ -157,12 +160,47 @@ def test_borderless_table() -> None:
     assert table.style is None
 
 
-def test_custom_table_style_falls_back_with_warning() -> None:
-    result = compile_source("\\table[style=Fancy]{| a |}")
-    assert result.document is not None
-    (table,) = tables(result.document)
-    assert table.style == "Table Grid"
-    assert [d.code for _, d in result.diagnostics] == [Code.NOT_SUPPORTED_YET]
+def test_table_and_cell_formatting_options() -> None:
+    (table,) = tables(
+        document(
+            "\\table[look=(header-row, banded-columns), borders=(outer=(double, 1.5pt, #C00000), "
+            "inner=none), cell-margins=0.2cm]{\n"
+            "| \\cell[shade=theme.accent1.lighter(80%), borders=(bottom=(thick, 3pt)), "
+            "valign=bottom]{a} |\n}"
+        )
+    )
+    assert table.look == frozenset({"header-row", "banded-columns"})
+    assert table.props["border-top"] == Border("double", Length.pt("1.5"), Color.parse("#C00000"))
+    assert table.props["border-inside-v"] == Border("nil")
+    assert table.props["cell-margin-left"] == Length.cm("0.2")
+    (cell,) = table.rows[0].cells
+    assert cell.props == cell_props(
+        shading="theme.accent1.lighter(80%)", border_bottom="(thick, 3pt)", valign="bottom"
+    )
+
+
+def test_table_style_repeats_its_header_row() -> None:
+    doc = document(
+        '\\styles{ table Data : "Table Grid" { header-row { bold; repeat; } } }\n\n'
+        "\\table[style=Data]{| h |\n| a |}"
+    )
+    (table,) = tables(doc)
+    assert [row.header for row in table.rows] == [True, False]
+    assert {"Data", "Table Grid"} <= {s.name for s in doc.styles}  # the built-in base comes along
+
+
+def test_styled_tables_build_valid_docx() -> None:
+    data, result = build(
+        '\\styles{ table Data : "Table Grid" {\n'
+        "  borders: (all=(single, 0.5pt, #BFBFBF)); cell-margins: (left=0.15cm, right=0.15cm);\n"
+        "  header-row { bold; shading: theme.accent1; border-bottom: (single, 1.5pt); }\n"
+        "  banded-rows { odd { shading: #F2F2F2; } }\n"
+        "} }\n\n"
+        "\\table[style=Data, look=(header-row, banded-rows, last-row)]{| h | i |\n| a | b |}\n\n"
+        "\\table[style=none, borders=(bottom=(double, 1pt))]{| \\cell[borders=none]{x} |}"
+    )
+    assert data is not None, result.render_diagnostics()
+    assert validate_package(data) == {}
 
 
 # --- images ------------------------------------------------------------------------------------

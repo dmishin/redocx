@@ -742,7 +742,12 @@ class _CellBuilder:
     row: int
 
     def build(self) -> ir.Cell:
-        return ir.Cell(self.content, self.colspan, self.rowspan, self.shading, self.valign)
+        values: dict[str, object] = {}
+        if self.shading:
+            values["shading"] = "#" + self.shading
+        if self.valign:
+            values["valign"] = self.valign
+        return ir.Cell(self.content, self.colspan, self.rowspan, PropertySet(Target.CELL, values))
 
 
 def _read_table(element: Element, ctx: _Ctx) -> ir.Table | None:
@@ -819,7 +824,7 @@ def _cell_shading(tc_pr: Element | None) -> str | None:
     if tc_pr is None or (shd := tc_pr.find(_w("shd"))) is None:
         return None
     fill = shd.get(_w("fill"))
-    return fill if fill and fill != "auto" else None
+    return fill if fill and re.fullmatch(r"[0-9A-Fa-f]{6}", fill) else None
 
 
 def _cell_valign(tc_pr: Element | None) -> str | None:

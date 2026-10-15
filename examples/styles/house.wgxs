@@ -42,8 +42,22 @@ linked Quote : Normal {                   % linked paragraph + character style
   indent: (left=1cm, right=1cm); italic; color: theme.text2;
 }
 
-table "Data Grid" {                       % table styles arrive in M2 (warning)
-  header-row { bold; }
+table "Data Grid" : "Table Grid" {
+  borders: (all=(single, 0.5pt, #BFBFBF));
+  cell-margins: (left=0.15cm, right=0.15cm);
+  space-after: 0pt;
+  header-row {                            % the first row; also repeated on each page
+    bold; color: #FFFFFF; shading: theme.accent1; repeat;
+    border-bottom: (single, 1.5pt, theme.accent1.darker(25%));
+  }
+  banded-rows { odd { shading: #F2F2F2; } }
+  first-column { bold; }
+}
+
+table Callout {                           % a shaded box without borders
+  borders: none;
+  cell-margins: (all=0.2cm);
+  shading: theme.accent1.lighter(80%);
 }
 
 numbering Headings {

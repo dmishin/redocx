@@ -42,7 +42,7 @@
 
 =* Revision History
 
-\table[header-rows=1, widths=(1.5cm, 2.5cm, 3.5cm, 1fr)]{
+\table[style="Spec Table", widths=(1.5cm, 2.5cm, 3.5cm, 1fr)]{
   | Rev | Date       | Author       | Changes                                   |
   | 1.0 | 2026-06-02 | J. Okafor    | Initial release                           |
   | 1.1 | 2026-07-19 | M. Lindqvist | Added the refund flow                     |
@@ -81,7 +81,7 @@ and will be addressed in a separate specification.
 @tbl:terms lists the terms used in this specification.
 
 \caption[id=tbl:terms]{Terms and definitions}
-\table[header-rows=1, widths=(4cm, 1fr)]{
+\table[style="Spec Table", widths=(4cm, 1fr)]{
   | Term            | Definition                                                     |
   | Authorisation   | A hold placed on the cardholder's funds.                        |
   | Capture         | Settlement of a previously authorised amount.                   |
@@ -153,7 +153,7 @@ which makes signature failures easy to reproduce.}
 
 =* Appendix A: Error Mapping {#app:errors}
 
-\table[header-rows=1, widths=(5cm, 1.6cm, 1fr, 1fr, 2cm, 1fr), columns=(left, center, left, left, center, left)]{
+\table[style="Spec Table", widths=(5cm, 1.6cm, 1fr, 1fr, 2cm, 1fr), columns=(left, center, left, left, center, left)]{
   | Gateway code       | HTTP | Meaning                 | Adapter action       | Retry | Logged as        |
   | `card_declined`    | 402  | Issuer declined         | Show decline message | No    | `payment.declined` |
   | `rate_limited`     | 429  | Too many requests       | Back off             | Yes   | `gateway.throttled` |

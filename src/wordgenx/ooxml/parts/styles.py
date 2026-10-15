@@ -4,9 +4,14 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from wordgenx.ir import Document, Style, StyleKind
+from wordgenx.ir import TABLE_CONDITIONS, Document, Style, StyleKind, TableCondition
 from wordgenx.ooxml.parts.numbering import numbering_ids
-from wordgenx.ooxml.parts.properties import paragraph_properties, run_properties
+from wordgenx.ooxml.parts.properties import (
+    cell_properties,
+    paragraph_properties,
+    run_properties,
+    table_properties,
+)
 from wordgenx.ooxml.schema_order import STYLE, ordered
 from wordgenx.ooxml.style_names import UI_PRIORITY, is_builtin, stored_name, style_id
 from wordgenx.ooxml.xml import E, Element, nsmap
@@ -110,32 +115,32 @@ def _check_cycles(styles: dict[str, Style]) -> None:
             current = styles[sid].based_on
 
 
-def _table_grid() -> Element:
-    """Word's built-in "Table Grid": single thin borders around and between all cells."""
-    border = {"w:val": "single", "w:sz": "4", "w:space": "0", "w:color": "auto"}
+def _table_parts(style: Style, ctx: EmitContext) -> dict[str, Element | None]:
+    """w:tblPr, w:tcPr of a table style; banding needs band sizes in w:tblPr."""
+    kinds = {c.kind for c in style.conditions}
+    bands: dict[str, Element] = {}
+    if kinds & {"band1Horz", "band2Horz"}:
+        bands["tblStyleRowBandSize"] = E("w:tblStyleRowBandSize", {"w:val": "1"})
+    if kinds & {"band1Vert", "band2Vert"}:
+        bands["tblStyleColBandSize"] = E("w:tblStyleColBandSize", {"w:val": "1"})
+    return {
+        "tblPr": table_properties(style.table, ctx, bands),
+        "tcPr": cell_properties(style.cell, ctx),
+    }
+
+
+def _condition(condition: TableCondition, ctx: EmitContext) -> Element:
+    """One w:tblStylePr: pPr, rPr, tcPr (schema order)."""
     return E(
-        "w:style",
-        {"w:type": "table", "w:styleId": "TableGrid"},
-        E("w:name", {"w:val": "Table Grid"}),
-        E("w:basedOn", {"w:val": "TableNormal"}),
-        E("w:uiPriority", {"w:val": "39"}),
-        E("w:pPr", E("w:spacing", {"w:after": "0", "w:line": "240", "w:lineRule": "auto"})),
-        E(
-            "w:tblPr",
-            E(
-                "w:tblBorders",
-                *(
-                    E(f"w:{side}", border)
-                    for side in ("top", "left", "bottom", "right", "insideH", "insideV")
-                ),
-            ),
-        ),
+        "w:tblStylePr",
+        {"w:type": condition.kind},
+        paragraph_properties(condition.paragraph, ctx),
+        run_properties(condition.run, ctx),
+        cell_properties(condition.cell, ctx),
     )
 
 
 def _style(style: Style, sid: str, ctx: EmitContext, num_ids: Mapping[str, int]) -> Element:
-    if style.kind is StyleKind.TABLE:
-        return _table_grid()
     name = stored_name(style.name)
     attrs = {"w:type": style.kind.value, "w:styleId": sid}
     if sid == "Normal":
@@ -147,9 +152,12 @@ def _style(style: Style, sid: str, ctx: EmitContext, num_ids: Mapping[str, int])
     if style.numbering is not None:
         numbering = (num_ids[style.numbering.name], style.numbering.level - 1)
 
+    based_on = style.based_on
+    if style.kind is StyleKind.TABLE and based_on is None:
+        based_on = "Normal Table"
     children: dict[str, Element | None] = {
         "name": E("w:name", {"w:val": name}),
-        "basedOn": E("w:basedOn", {"w:val": style_id(style.based_on)}) if style.based_on else None,
+        "basedOn": E("w:basedOn", {"w:val": style_id(based_on)}) if based_on else None,
         "next": E("w:next", {"w:val": style_id(style.next)}) if style.next else None,
         "link": E("w:link", {"w:val": style_id(style.link)}) if style.link else None,
         "uiPriority": E("w:uiPriority", {"w:val": str(priority)}) if priority else None,
@@ -157,8 +165,17 @@ def _style(style: Style, sid: str, ctx: EmitContext, num_ids: Mapping[str, int])
         "pPr": paragraph_properties(style.paragraph, ctx, numbering=numbering),
         "rPr": run_properties(style.run, ctx),
     }
+    if style.kind is StyleKind.TABLE:
+        children.update(_table_parts(style, ctx))
     present = {key: value for key, value in children.items() if value is not None}
-    return E("w:style", attrs, *ordered(present, STYLE))
+    order = {kind: i for i, kind in enumerate(TABLE_CONDITIONS)}
+    conditions = sorted(style.conditions, key=lambda c: order[c.kind])
+    return E(
+        "w:style",
+        attrs,
+        *ordered(present, STYLE),
+        *(_condition(condition, ctx) for condition in conditions),
+    )
 
 
 def styles_xml(document: Document, ctx: EmitContext) -> Element:

@@ -33,12 +33,18 @@ from wordgenx.ir import (
     Table,
     table_layout,
 )
-from wordgenx.ooxml.parts.properties import paragraph_properties, run_properties
+from wordgenx.ooxml.parts.properties import (
+    cell_properties,
+    paragraph_properties,
+    run_properties,
+    table_properties,
+)
 from wordgenx.ooxml.parts.settings import note_properties
-from wordgenx.ooxml.schema_order import SECT_PR, TBL_BORDERS, TBL_PR, TC_PR, TR_PR, ordered
+from wordgenx.ooxml.schema_order import SECT_PR, TR_PR, ordered
 from wordgenx.ooxml.style_names import style_id
 from wordgenx.ooxml.xml import E, Element, nsmap, qn
-from wordgenx.props import EMPTY_RUN, EmitContext
+from wordgenx.props import EMPTY_RUN, EmitContext, PropertySet, Target
+from wordgenx.values import Border
 
 _SPLIT_RE = re.compile(r"(\t|\n)")
 PICTURE_URI = "http://schemas.openxmlformats.org/drawingml/2006/picture"
@@ -328,37 +334,51 @@ def _twips(value: int) -> dict[str, str]:
 
 def _table(table: Table, ctx: BodyContext) -> Element:
     widths = [w.in_twips for w in table.widths]
-    properties: dict[str, Element] = {
+    structure: dict[str, Element] = {
         "tblW": E("w:tblW", _twips(sum(widths))),
         "tblLayout": E("w:tblLayout", {"w:type": "fixed"}),
-        "tblLook": E(
-            "w:tblLook",
-            {
-                "w:val": "04A0",
-                "w:firstRow": "1",
-                "w:lastRow": "0",
-                "w:firstColumn": "1",
-                "w:lastColumn": "0",
-                "w:noHBand": "0",
-                "w:noVBand": "1",
-            },
-        ),
+        "tblLook": _table_look(table.look),
     }
+    props = table.props
     if table.style:
-        properties["tblStyle"] = E("w:tblStyle", {"w:val": style_id(table.style)})
-    else:
-        border = {"w:val": "nil"}
-        sides = ("top", "left", "bottom", "right", "insideH", "insideV")
-        properties["tblBorders"] = E(
-            "w:tblBorders",
-            *ordered({side: E(f"w:{side}", border) for side in sides}, TBL_BORDERS),
-        )
+        structure["tblStyle"] = E("w:tblStyle", {"w:val": style_id(table.style)})
+    else:  # no style: no borders, except those the table sets itself
+        props = _NO_BORDERS.merged(props)
     if table.align:
-        properties["jc"] = E("w:jc", {"w:val": table.align})
+        structure["jc"] = E("w:jc", {"w:val": table.align})
     grid = E("w:tblGrid", *(E("w:gridCol", {"w:w": str(w)}) for w in widths))
     layout = table_layout(table)
     rows = [_row(row, slots, widths, ctx) for row, slots in zip(table.rows, layout, strict=True)]
-    return E("w:tbl", E("w:tblPr", *ordered(properties, TBL_PR)), grid, *rows)
+    return E("w:tbl", table_properties(props, ctx.emit, structure), grid, *rows)
+
+
+_NO_BORDERS = PropertySet(
+    Target.TABLE,
+    {
+        f"border-{side}": Border("nil")
+        for side in ("top", "left", "bottom", "right", "inside-h", "inside-v")
+    },
+)
+_LOOK_BITS = {
+    "header-row": ("firstRow", 0x0020),
+    "last-row": ("lastRow", 0x0040),
+    "first-column": ("firstColumn", 0x0080),
+    "last-column": ("lastColumn", 0x0100),
+}
+
+
+def _table_look(look: frozenset[str]) -> Element:
+    """w:tblLook: which table-style parts apply (with the legacy w:val bit mask)."""
+    attrs: dict[str, str] = {}
+    mask = 0
+    for flag, (attr, bit) in _LOOK_BITS.items():
+        attrs[f"w:{attr}"] = "1" if flag in look else "0"
+        mask |= bit if flag in look else 0
+    attrs["w:noHBand"] = "0" if "banded-rows" in look else "1"
+    attrs["w:noVBand"] = "0" if "banded-columns" in look else "1"
+    mask |= 0 if "banded-rows" in look else 0x0200
+    mask |= 0 if "banded-columns" in look else 0x0400
+    return E("w:tblLook", {"w:val": f"{mask:04X}", **attrs})
 
 
 def _row(row: Row, slots: list[Slot], widths: list[int], ctx: BodyContext) -> Element:
@@ -379,21 +399,15 @@ def _row(row: Row, slots: list[Slot], widths: list[int], ctx: BodyContext) -> El
 def _cell(slot: Slot, widths: list[int], ctx: BodyContext) -> Element:
     cell: Cell = slot.cell
     width = sum(widths[slot.column : slot.column + cell.colspan])
-    properties: dict[str, Element] = {"tcW": E("w:tcW", _twips(width))}
+    structure: dict[str, Element] = {"tcW": E("w:tcW", _twips(width))}
     if cell.colspan > 1:
-        properties["gridSpan"] = E("w:gridSpan", {"w:val": str(cell.colspan)})
+        structure["gridSpan"] = E("w:gridSpan", {"w:val": str(cell.colspan)})
     if cell.rowspan > 1:
-        properties["vMerge"] = (
+        structure["vMerge"] = (
             E("w:vMerge") if slot.continues else E("w:vMerge", {"w:val": "restart"})
         )
-    if cell.shading:
-        properties["shd"] = E(
-            "w:shd", {"w:val": "clear", "w:color": "auto", "w:fill": cell.shading}
-        )
-    if cell.valign:
-        properties["vAlign"] = E("w:vAlign", {"w:val": cell.valign})
     content = [E("w:p")] if slot.continues else _blocks(cell.content, ctx)
-    return E("w:tc", E("w:tcPr", *ordered(properties, TC_PR)), *content)
+    return E("w:tc", cell_properties(cell.props, ctx.emit, structure), *content)
 
 
 # --- parts -----------------------------------------------------------------------------------

@@ -166,6 +166,93 @@
       <w:color w:themeColor="text2" w:val="1F2A44"/>
     </w:rPr>
   </w:style>
+  <w:style w:customStyle="1" w:styleId="DataGrid" w:type="table">
+    <w:name w:val="Data Grid"/>
+    <w:basedOn w:val="TableGrid"/>
+    <w:qFormat/>
+    <w:pPr>
+      <w:spacing w:after="0"/>
+    </w:pPr>
+    <w:tblPr>
+      <w:tblStyleRowBandSize w:val="1"/>
+      <w:tblBorders>
+        <w:top w:color="BFBFBF" w:space="0" w:sz="4" w:val="single"/>
+        <w:left w:color="BFBFBF" w:space="0" w:sz="4" w:val="single"/>
+        <w:bottom w:color="BFBFBF" w:space="0" w:sz="4" w:val="single"/>
+        <w:right w:color="BFBFBF" w:space="0" w:sz="4" w:val="single"/>
+        <w:insideH w:color="BFBFBF" w:space="0" w:sz="4" w:val="single"/>
+        <w:insideV w:color="BFBFBF" w:space="0" w:sz="4" w:val="single"/>
+      </w:tblBorders>
+      <w:tblCellMar>
+        <w:left w:type="dxa" w:w="85"/>
+        <w:right w:type="dxa" w:w="85"/>
+      </w:tblCellMar>
+    </w:tblPr>
+    <w:tblStylePr w:type="firstRow">
+      <w:rPr>
+        <w:b/>
+        <w:color w:val="FFFFFF"/>
+      </w:rPr>
+      <w:tcPr>
+        <w:tcBorders>
+          <w:bottom w:color="175385" w:space="0" w:sz="12" w:themeColor="accent1" w:themeShade="BF" w:val="single"/>
+        </w:tcBorders>
+        <w:shd w:color="auto" w:fill="1F6FB2" w:themeFill="accent1" w:val="clear"/>
+      </w:tcPr>
+    </w:tblStylePr>
+    <w:tblStylePr w:type="firstCol">
+      <w:rPr>
+        <w:b/>
+      </w:rPr>
+    </w:tblStylePr>
+    <w:tblStylePr w:type="band1Horz">
+      <w:tcPr>
+        <w:shd w:color="auto" w:fill="F2F2F2" w:val="clear"/>
+      </w:tcPr>
+    </w:tblStylePr>
+  </w:style>
+  <w:style w:customStyle="1" w:styleId="Callout" w:type="table">
+    <w:name w:val="Callout"/>
+    <w:basedOn w:val="TableNormal"/>
+    <w:qFormat/>
+    <w:tblPr>
+      <w:tblBorders>
+        <w:top w:val="nil"/>
+        <w:left w:val="nil"/>
+        <w:bottom w:val="nil"/>
+        <w:right w:val="nil"/>
+        <w:insideH w:val="nil"/>
+        <w:insideV w:val="nil"/>
+      </w:tblBorders>
+      <w:tblCellMar>
+        <w:top w:type="dxa" w:w="113"/>
+        <w:left w:type="dxa" w:w="113"/>
+        <w:bottom w:type="dxa" w:w="113"/>
+        <w:right w:type="dxa" w:w="113"/>
+      </w:tblCellMar>
+    </w:tblPr>
+    <w:tcPr>
+      <w:shd w:color="auto" w:fill="D2E2F0" w:themeFill="accent1" w:themeFillTint="33" w:val="clear"/>
+    </w:tcPr>
+  </w:style>
+  <w:style w:styleId="TableGrid" w:type="table">
+    <w:name w:val="Table Grid"/>
+    <w:basedOn w:val="TableNormal"/>
+    <w:uiPriority w:val="39"/>
+    <w:pPr>
+      <w:spacing w:after="0" w:line="240" w:lineRule="auto"/>
+    </w:pPr>
+    <w:tblPr>
+      <w:tblBorders>
+        <w:top w:color="auto" w:space="0" w:sz="4" w:val="single"/>
+        <w:left w:color="auto" w:space="0" w:sz="4" w:val="single"/>
+        <w:bottom w:color="auto" w:space="0" w:sz="4" w:val="single"/>
+        <w:right w:color="auto" w:space="0" w:sz="4" w:val="single"/>
+        <w:insideH w:color="auto" w:space="0" w:sz="4" w:val="single"/>
+        <w:insideV w:color="auto" w:space="0" w:sz="4" w:val="single"/>
+      </w:tblBorders>
+    </w:tblPr>
+  </w:style>
   <w:style w:styleId="Title" w:type="paragraph">
     <w:name w:val="Title"/>
     <w:basedOn w:val="Normal"/>

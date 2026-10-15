@@ -1,22 +1,26 @@
+from collections.abc import Callable, Mapping
 from pathlib import Path
 
 import pytest
 
 from wordgenx import ir
+from wordgenx.lower.builtins import BUILTIN_STYLES
 from wordgenx.ooxml.writer import to_docx_bytes
-from wordgenx.props import para_props, run_props
+from wordgenx.props import cell_props, para_props, run_props
 from wordgenx.stylesheet import CompiledStyles, compile_stylesheets, parse_stylesheet
 from wordgenx.stylesheet.collect import document_styles
 from wordgenx.stylesheet.syntax import Block, Declaration, StyleRule
 from wordgenx.syntax import Source, parse
-from wordgenx.syntax.diagnostics import Code, Severity
-from wordgenx.values import Length, LineSpacing
+from wordgenx.syntax.diagnostics import Code
+from wordgenx.values import Border, Color, Length, LineSpacing
 
 EXAMPLES = Path(__file__).resolve().parents[2] / "examples"
 
 
-def compile_text(text: str) -> CompiledStyles:
-    return compile_stylesheets([parse_stylesheet(Source("t.wgxs", text))])
+def compile_text(
+    text: str, builtins: Mapping[str, Callable[[], ir.Style]] | None = None
+) -> CompiledStyles:
+    return compile_stylesheets([parse_stylesheet(Source("t.wgxs", text))], builtins)
 
 
 def compiled_ok(text: str) -> CompiledStyles:
@@ -200,11 +204,53 @@ def test_suggestion_for_unknown_property() -> None:
     assert diagnostic.label == "did you mean `space-before`?"
 
 
-def test_table_styles_warn_and_are_ignored() -> None:
-    result = compile_text('table "Grid" { header-row { bold; } }')
-    assert result.ok
-    assert [d.severity for _, d in result.diagnostics] == [Severity.WARNING]
-    assert result.styles == ()
+def test_table_styles() -> None:
+    result = compile_text(
+        'table "Data Grid" : "Table Grid" {\n'
+        "  borders: (all=(single, 0.5pt, #BFBFBF)); cell-margins: (left=0.1cm, right=0.1cm);\n"
+        "  space-after: 0pt; shading: #FAFAFA;\n"
+        "  header-row { bold; shading: theme.accent1; border-bottom: (single, 1.5pt); repeat; }\n"
+        "  banded-rows { odd { shading: #F2F2F2; } even { shading: #FFFFFF; } }\n"
+        "  banded-columns { italic; }\n"
+        "}\n"
+        'modify table "Data Grid" { last-row { bold; } }',
+        builtins=BUILTIN_STYLES,
+    )
+    assert result.ok, result.render_diagnostics()
+    style, grid = result.styles
+    assert grid.name == "Table Grid"  # the built-in base comes along
+    assert (style.kind, style.based_on, style.repeat_header) == (
+        ir.StyleKind.TABLE,
+        "Table Grid",
+        True,
+    )
+    border = Border("single", Length.pt("0.5"), Color.parse("#BFBFBF"))
+    assert style.table["border-inside-h"] == border
+    assert style.table["cell-margin-right"] == Length.cm("0.1")
+    assert style.paragraph == para_props(space_after="0pt")
+    assert style.cell == cell_props(shading="#FAFAFA")
+    parts = {c.kind: c for c in style.conditions}
+    assert set(parts) == {"firstRow", "band1Horz", "band2Horz", "band1Vert", "lastRow"}
+    header = parts["firstRow"]
+    assert header.run == run_props(bold=True)
+    assert header.cell == cell_props(shading="theme.accent1", border_bottom="(single, 1.5pt)")
+    assert parts["band1Vert"].run == run_props(italic=True)
+
+
+@pytest.mark.parametrize(
+    ("text", "message"),
+    [
+        ("table T { zebra { bold; } }", "unknown table part `zebra`"),
+        ("table T { borders: (top=squiggle); }", "not a border part"),
+        ("table T { last-row { repeat; } }", "`repeat` applies to the header row"),
+        ("table T : Missing { }", "based-on style `Missing` is not defined"),
+        ("paragraph P { } table T : P { }", "is not a table style"),
+        ("character C { borders: none; }", "is a table property and is not allowed here"),
+    ],
+)
+def test_table_style_errors(text: str, message: str) -> None:
+    result = compile_text(text)
+    assert any(message in d.message for _, d in result.diagnostics), result.render_diagnostics()
 
 
 # --- documents ---------------------------------------------------------------------------

@@ -39,3 +39,12 @@ character Term { italic; }
 paragraph "Code Block" : Normal {
   font: "Consolas"; size: 9pt; space-after: 0; line-spacing: 1; indent: (left=0.4cm); contextual-spacing;
 }
+
+% Tables: a thin grid, a dark header row repeated on each page, light banding.
+table "Spec Table" : "Table Grid" {
+  borders: (outer=(single, 0.75pt, theme.accent1.darker(25%)), inner=(single, 0.5pt, #BFBFBF));
+  cell-margins: (top=0.05cm, bottom=0.05cm, left=0.15cm, right=0.15cm);
+  size: 9.5pt;
+  header-row { bold; color: #FFFFFF; shading: theme.accent1.darker(25%); repeat; }
+  banded-rows { odd { shading: #F3F6FA; } }
+}

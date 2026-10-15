@@ -107,6 +107,21 @@ def lower(result: ParseResult, base_dir: Path | None = None) -> tuple[ir.Documen
         elif style.kind is not use.kind:
             error(use, f"`{use.name}` is a {style.kind.value} style, not a {use.kind.value} style")
 
+    # Built-ins that style sheets refer to (`table X : "Table Grid"`, `style: "Heading 1"`).
+    added = True
+    while added:
+        added = False
+        referenced = [r for s in styles.values() for r in (s.based_on, s.next, s.link)]
+        referenced += [lvl.style for n in numbering.values() for lvl in n.levels]
+        for name in referenced:
+            if (
+                name is not None
+                and style_id(name) not in styles
+                and style_id(name) in _BUILTIN_BY_ID
+            ):
+                styles[style_id(name)] = _builtin(_BUILTIN_BY_ID[style_id(name)], first_page)
+                added = True
+
     # Cross-references, counters and tables of contents, now that styles and numbering are final.
     resolved_body, toc_styles, needs_update = resolve(
         resolved_body,

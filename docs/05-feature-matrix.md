@@ -49,7 +49,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Doc defaults (rPrDefault/pPrDefault) | M1 | ● |
 | Paragraph & character styles, basedOn, next | M1 ✓ | ● |
 | Linked styles | M2 ✓ | ● |
-| Table styles with conditional formatting (tblStylePr: firstRow, lastRow, bands, corners…) | M2 | ●●● |
+| Table styles with conditional formatting (tblStylePr: firstRow, lastRow, bands, corners…) | M2 ✓ | ●●● |
 | Numbering styles | M2 | ●● |
 | Latent styles, quick-style gallery flags, priorities | M2 | ● |
 | Modify/replace template styles; localized built-in style names | M2 | ●● |
@@ -92,10 +92,10 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Column widths (fixed, %, fr, auto), layout fixed/auto | M1 ✓ | ●● |
 | Cell block content (multiple paragraphs, lists) | M1 ✓ | ● |
 | Horizontal / vertical merges | M2 ✓ | ●● |
-| Borders (table, cell, inside), shading | M2 (partly: shading done; borders via Table Grid) | ●● |
-| Cell margins, vertical alignment, text direction | M2 (partly: vertical alignment done) | ● |
+| Borders (table, cell, inside), shading | M2 ✓ (theme colours too) | ●● |
+| Cell margins, vertical alignment, text direction | M2 (partly: table-wide cell margins and vertical alignment done) | ● |
 | Row height, can't-split, repeat header rows | M2 ✓ | ● |
-| Table alignment, indent, look flags | M2 (partly: alignment done) | ● |
+| Table alignment, indent, look flags | M2 ✓ | ● |
 | Nested tables | M2 ✓ | ● |
 | Floating tables (tblpPr) | M4 | ●● |
 | Diagonal cell borders | Later | ● |

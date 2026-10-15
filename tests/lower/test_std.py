@@ -3,6 +3,7 @@ from wordgenx.compiler import compile_source
 from wordgenx.lower.lowering import std_modules
 from wordgenx.syntax import ast, parse
 from wordgenx.syntax.diagnostics import Code
+from wordgenx.values import Color
 
 
 def compiled(text: str) -> ir.Document:
@@ -21,7 +22,8 @@ def test_callouts() -> None:
         "\\callout[shade=#EDE7F6]{Custom.}"
     )
     tables = [b for b in doc.body if isinstance(b, ir.Table)]
-    assert [t.rows[0].cells[0].shading for t in tables] == ["E8F0FA", "FFF2CC", "EDE7F6"]
+    shades = [t.rows[0].cells[0].props.get("shading") for t in tables]
+    assert shades == [Color.parse(c) for c in ("#E8F0FA", "#FFF2CC", "#EDE7F6")]
     assert all(t.style is None for t in tables)  # borderless
     texts = [
         ["".join(r.text for r in p.runs()) for p in ir.iter_paragraphs(t.rows[0].cells[0].content)]

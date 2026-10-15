@@ -178,7 +178,7 @@ linked "Quote" : Normal {                 % linked paragraph+character style
 table "Data Grid" : "Table Grid" {
   borders: (all = (single, 0.5pt, #BFBFBF));
   cell-margins: (left=0.1cm, right=0.1cm);
-  header-row { bold; shading: theme.accent1; color: white; repeat; }
+  header-row { bold; shading: theme.accent1; color: #FFFFFF; repeat; }
   banded-rows { odd { shading: #F2F2F2; } }
   first-column { bold; }
 }
@@ -219,8 +219,22 @@ relative to the document. Sheets apply in document order.
   Undefined levels of the nine are filled in, continuing an outline pattern (`%1.%2` → `%1.%2.%3`). Linking a level to a
   style (`style: "Heading 1"`) and linking a style to a level (`numbering: Headings level 1`) are equivalent. The
   compiler completes the other side.
-- **Not yet:** table styles (rules are parsed, ignored with warning `WGX0205`; planned for M2). Composite borders and
-  shading. The `ooxml.*` escape hatch. Unlike documents, style sheets are parsed straight to an AST, not a lossless CST.
+- **Table styles** (M2): `table NAME [: BASE] { … }` is a Word table style. At the top level, run and paragraph
+  properties format all cell text; `borders`, `cell-margins`, `table-align` and `table-indent` go to the table
+  (`w:tblPr`); `shading` and `valign` to every cell. Blocks format parts of the table (`w:tblStylePr`): `header-row`
+  (alias `first-row`; `repeat;` also repeats it on each page), `last-row`, `first-column`, `last-column`,
+  `banded-rows { odd { … } even { … } }`, `banded-columns { … }` and the corner cells `top-left-cell` …
+  `bottom-right-cell`. Inside a block, `borders` and `border-*` are cell borders. A style without a base is based on
+  Normal Table. Which parts apply is the table's `look` (Word's default: header row, first column, banded rows).
+- **Borders and shading:** a border is `(style, width, colour, space=…)` in any order, with defaults single, 0.5pt
+  and auto, or `none`. Styles are Word's line styles in kebab case (`single`, `double`, `dotted`, `dashed`, `thick`,
+  `thin-thick-small-gap`, …). `borders: (…)` sets all six sides (top, left, bottom, right, inside-h, inside-v).
+  `borders: (outer=…, inner=…, top=none)` sets groups and sides in order. `border-top: …` sets one side.
+  `cell-margins` takes one length or `(top=…, left=…, bottom=…, right=…, horizontal=…, vertical=…, all=…)`.
+  Shading takes RGB or theme colours (`theme.accent1.lighter(80%)`).
+- **Built-ins:** referring to a Word built-in style (`: "Table Grid"`, `style: "Heading 1"`) is valid without
+  defining it, and the compiler adds it. `modify` of an undefined built-in starts from the built-in definition.
+- **Not yet:** paragraph borders and shading. The `ooxml.*` escape hatch. Unlike documents, style sheets are parsed straight to an AST, not a lossless CST.
   A formatter for `.wgxs` will need one.
 - **Diagnostics:** `WGX02xx`. Unknown properties suggest the nearest name. Unresolved style and numbering references are
   reported where they occur.
@@ -678,14 +692,16 @@ Lowering (`wordgenx.lower`) turns the AST into the document IR. It fixes these b
   levels is an error.
 - **Tables.** A pipe table on its own is a table with the defaults. `\table[...]{...}` takes pipe rows and/or
   `\row{\cell{...} ...}`, and a pipe row may start right after the `{` (`\table{| a | b |}`). Defaults: Word's
-  `Table Grid` style (`style=none` for no borders; other table styles fall back to Table Grid with a warning until M2),
+  `Table Grid` style (`style=none` for no borders, `style="Data Grid"` for a style-sheet table style),
   equal column widths filling the text width, fixed layout. `widths=(4cm, 25%, 1fr, auto)` mixes lengths, percentages
   of the text width, and fractions of what remains. A cell with `colspan=N` in a pipe row covers the next N-1 cells,
   which must be empty (`| \cell[colspan=3]{x} |||`). `rowspan` cells take the position in the rows below. Short rows
   are padded with empty cells. `header-rows=N` or `\row[header]` repeat rows on each page. `columns=(left, right, …)`
   sets the default paragraph alignment per column (`decimal` is shown right-aligned until tab stops arrive in M2).
-  Cells take `colspan`, `rowspan`, `shade=#RRGGBB`, `valign`, `align`, and any block content, including lists and
-  nested tables. Adjacent tables get a paragraph between them, as Word requires.
+  Tables also take `borders`, `border-*`, `cell-margins`, `table-indent` (overriding the style) and
+  `look=(header-row, last-row, first-column, last-column, banded-rows, banded-columns)` or `look=none`.
+  Cells take `colspan`, `rowspan`, `shade` (RGB or theme colour), `valign`, `align`, `borders`/`border-*`, and any
+  block content, including lists and nested tables. Adjacent tables get a paragraph between them, as Word requires.
 - **Images.** `\image[width=…, height=…, alt="…"]{file}` embeds PNG, JPEG, GIF or BMP as an inline picture. The size
   comes from the pixel size and resolution (96 dpi if unknown). Giving one dimension keeps the aspect ratio, and
   `width=50%` is relative to the text width. Pictures wider than the text are shrunk to fit. Identical files are

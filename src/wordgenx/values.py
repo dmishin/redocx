@@ -264,3 +264,77 @@ class TabStop:
 
     def __str__(self) -> str:
         return f"({self.position}, {self.align}, leader={self.leader})"
+
+
+BORDER_STYLES = (
+    "single thick double dotted dashed dotDash dotDotDash triple thinThickSmallGap "
+    "thickThinSmallGap thinThickThinSmallGap thinThickMediumGap thickThinMediumGap "
+    "thinThickThinMediumGap thinThickLargeGap thickThinLargeGap thinThickThinLargeGap wave "
+    "doubleWave dashSmallGap dashDotStroked threeDEmboss threeDEngrave outset inset"
+).split()
+"""ST_Border line styles (the art borders are left out)."""
+_BORDER_WORDS = {re.sub(r"(?<!^)([A-Z])", r"-\1", s).lower(): s for s in BORDER_STYLES}
+_DEFAULT_BORDER_WIDTH = Length.pt("0.5")
+
+
+@dataclass(frozen=True)
+class Border:
+    """One border line: ``(single, 0.5pt, #BFBFBF)``, ``(double, 1.5pt, theme.accent1,
+    space=4pt)`` or ``none``. Width defaults to 0.5pt, colour to auto."""
+
+    style: str = "single"
+    """A value of BORDER_STYLES, or ``nil`` for no border."""
+    width: Length = _DEFAULT_BORDER_WIDTH
+    color: Color = Color()
+    space: Length = Length(0)
+
+    def __post_init__(self) -> None:
+        if self.style != "nil" and self.style not in BORDER_STYLES:
+            raise InvalidValueError(f"unknown border style {self.style!r}")
+        if self.style != "nil" and not 2 <= self.eighths <= 96:
+            raise InvalidValueError(f"border width must be 0.25pt-12pt, got {self.width}")
+
+    @property
+    def eighths(self) -> int:
+        """The width in eighths of a point (w:sz)."""
+        return _round(Decimal(self.width.emu) * 8 / EMU_PER_UNIT["pt"])
+
+    @property
+    def space_points(self) -> int:
+        return _round(Decimal(self.space.emu) / EMU_PER_UNIT["pt"])
+
+    @classmethod
+    def parse(cls, text: str) -> Border:
+        """Parse ``none``, or a style, width, colour and ``space=…`` in any order, separated
+        by commas or spaces and optionally in parentheses."""
+        words = [
+            w for w in re.split(r"[\s,]+", text.strip().removeprefix("(").removesuffix(")")) if w
+        ]
+        if words in (["none"], ["nil"]):
+            return cls("nil")
+        style, width, color, space = "single", _DEFAULT_BORDER_WIDTH, Color(), Length(0)
+        for word in words:
+            if word in _BORDER_WORDS:
+                style = _BORDER_WORDS[word]
+            elif word.startswith("space="):
+                space = Length.parse(word.removeprefix("space="))
+            elif word.startswith(("#", "theme.")) or word == "auto":
+                color = Color.parse(word)
+            else:
+                try:
+                    width = Length.parse(word)
+                except InvalidValueError:
+                    raise InvalidValueError(
+                        f"not a border part: {word!r} (expected a style such as single, a "
+                        "width, a colour or space=…)"
+                    ) from None
+        return cls(style, width, color, space)
+
+    def __str__(self) -> str:
+        if self.style == "nil":
+            return "none"
+        return f"({_camel_words(self.style)}, {self.width}, {self.color})"
+
+
+def _camel_words(text: str) -> str:
+    return re.sub(r"(?<!^)([A-Z])", r"-\1", text).lower()

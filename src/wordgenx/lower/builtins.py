@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from wordgenx.ir import Numbering, NumberingLevel, Style, StyleKind
-from wordgenx.props import para_props, run_props
+from wordgenx.props import para_props, run_props, table_props
 
 _HEADING_SIZES = {1: "16pt", 2: "13pt", 3: "12pt"}
 
@@ -86,7 +86,13 @@ BUILTIN_STYLES: dict[str, Callable[[], Style]] = {
         paragraph=para_props(space_after="0pt", line_spacing=1, contextual_spacing=True),
         run=run_props(font="Consolas", size="9.5pt"),
     ),
-    "Table Grid": lambda: Style(StyleKind.TABLE, "Table Grid"),
+    "Table Grid": lambda: Style(  # single thin borders around and between all cells
+        StyleKind.TABLE,
+        "Table Grid",
+        paragraph=para_props(space_after="0pt", line_spacing=1),
+        table=table_props(borders="(single, 0.5pt, auto)"),
+        quick_format=False,
+    ),
     "Header": lambda: Style(
         StyleKind.PARAGRAPH,
         "Header",

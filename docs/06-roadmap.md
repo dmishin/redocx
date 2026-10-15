@@ -51,7 +51,8 @@ with no repair prompt, pass both validators, and match their golden snapshots.
   `\figure`, code-block captions); `\seq` counters; TOC and lists of figures/tables with pre-rendered entries.
 - [x] Footnotes and endnotes (`\footnote`, `\endnote`, labels and `NOTEREF`, numbering format, start, restart and
   position settings).
-- Full tables: merges, borders, shading, repeat headers, table styles with conditional formatting.
+- [x] Full tables: merges, borders, shading (theme colours), repeat headers, cell margins, look flags, table styles with
+  conditional formatting (header row, last row, first/last column, banded rows/columns, corner cells).
 - Templates: compile into `.dotx` or `.docx`, merge styles and numbering.
 - Heading numbering, legal numbering, tab stops, paragraph borders.
 - Document properties; general `\field`.

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import difflib
 import re
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 
 from wordgenx.ir import (
@@ -19,14 +19,19 @@ from wordgenx.ir import (
     NumberingRef,
     Style,
     StyleKind,
+    TableCondition,
 )
 from wordgenx.ooxml.style_names import style_id
 from wordgenx.props import (
+    EMPTY_CELL,
     EMPTY_PARAGRAPH,
     EMPTY_RUN,
+    EMPTY_TABLE,
     REGISTRY,
+    SHORTHANDS,
     PropertySet,
     Target,
+    expand_shorthand,
 )
 from wordgenx.stylesheet.syntax import (
     Block,
@@ -53,6 +58,25 @@ INDENT_KEYS = {
     "first-line": "first-line-indent",
     "hanging": "hanging-indent",
 }
+TABLE_META = ("ui-priority", "quick-format")
+TABLE_PARTS: dict[str, str] = {
+    "header-row": "firstRow",
+    "first-row": "firstRow",
+    "last-row": "lastRow",
+    "first-column": "firstCol",
+    "last-column": "lastCol",
+    "top-left-cell": "nwCell",
+    "top-right-cell": "neCell",
+    "bottom-left-cell": "swCell",
+    "bottom-right-cell": "seCell",
+}
+"""Table-style blocks -> w:tblStylePr types."""
+BANDS: dict[str, tuple[str, str]] = {
+    "banded-rows": ("band1Horz", "band2Horz"),
+    "banded-columns": ("band1Vert", "band2Vert"),
+}
+"""Banding blocks -> (odd, even) w:tblStylePr types."""
+CONDITION_TARGETS = (Target.RUN, Target.PARAGRAPH, Target.CELL)
 NUMBERING_REF_RE = re.compile(r'\s*(?:"([^"]*)"|(\S+))(?:\s+level\s+(\d))?\s*')
 
 
@@ -120,7 +144,7 @@ class CompiledStyles:
 class _Reference:
     """A name that must resolve once all sheets are compiled."""
 
-    kind: str  # "style", "paragraph-style" or "numbering"
+    kind: str  # "style", "paragraph-style", "table-style" or "numbering"
     name: str
     what: str
     span: Span
@@ -138,6 +162,9 @@ class StyleSheetCompiler:
     _diagnostics: list[tuple[Source, Diagnostic]] = field(default_factory=lambda: [])
     _references: list[_Reference] = field(default_factory=lambda: [])
     _source: Source | None = None
+    builtins: Mapping[str, Callable[[], Style]] = field(default_factory=lambda: {})
+    """Word built-in styles by name: `modify` starts from them, and references to them are
+    valid (the document gets them when it uses them)."""
 
     # --- reporting ----------------------------------------------------------------
 
@@ -171,12 +198,28 @@ class StyleSheetCompiler:
     def result(self) -> CompiledStyles:
         self._check_references()
         return CompiledStyles(
-            tuple(self._styles.values()),
+            (*self._styles.values(), *self._referenced_builtins()),
             tuple(self._numbering.values()),
             self._run,
             self._paragraph,
             tuple(self._diagnostics),
         )
+
+    def _referenced_builtins(self) -> list[Style]:
+        """Built-in styles that defined styles are based on (or link to, or follow with),
+        so the result is complete on its own: `table X : "Table Grid"` brings Table Grid."""
+        known = set(self._styles)
+        added: list[Style] = []
+        pending = list(self._styles.values())
+        while pending:
+            style = pending.pop()
+            for name in (style.based_on, style.next, style.link):
+                if name is not None and style_id(name) not in known and name in self.builtins:
+                    builtin = self.builtins[name]()
+                    known.add(style_id(name))
+                    added.append(builtin)
+                    pending.append(builtin)
+        return added
 
     # --- declarations -----------------------------------------------------------------
 
@@ -186,10 +229,9 @@ class StyleSheetCompiler:
         targets: Sequence[Target],
         meta: Sequence[str] = (),
         context: str = "",
-    ) -> tuple[dict[str, object], dict[str, object], dict[str, Declaration]]:
-        """Split declarations into run values, paragraph values and meta declarations."""
-        run: dict[str, object] = {}
-        paragraph: dict[str, object] = {}
+    ) -> tuple[dict[Target, dict[str, object]], dict[str, Declaration]]:
+        """Split declarations into values per target and meta declarations."""
+        values: dict[Target, dict[str, object]] = {target: {} for target in Target}
         meta_found: dict[str, Declaration] = {}
         for item in items:
             if isinstance(item, Block):
@@ -203,8 +245,8 @@ class StyleSheetCompiler:
                 meta_found[item.key] = item
                 continue
             for key, value, span in self._expand(item):
-                self._assign(key, value, span, item, targets, meta, run, paragraph)
-        return run, paragraph, meta_found
+                self._assign(key, value, span, item, targets, meta, values)
+        return values, meta_found
 
     def _expand(self, decl: Declaration) -> list[tuple[str, object, Span]]:
         """Composite and shorthand declarations -> (registry key, value, span) triples."""
@@ -217,6 +259,13 @@ class StyleSheetCompiler:
         raw = decl.value
         if decl.key == "indent":
             return self._indent(raw, value_span)
+        if decl.key in SHORTHANDS:
+            try:
+                expanded = expand_shorthand(decl.key, _unquote(raw)) or {}
+            except InvalidValueError as e:
+                self._report(Code.INVALID_VALUE, f"{decl.key}: {e}", value_span, "invalid value")
+                return []
+            return [(key, value, value_span) for key, value in expanded.items()]
         if decl.key == "line-spacing" and (parts := _split_tuple(raw)) is not None:
             spacing = self._line_spacing(parts, value_span)
             return [("line-spacing", spacing, value_span)] if spacing else []
@@ -280,19 +329,22 @@ class StyleSheetCompiler:
         decl: Declaration,
         targets: Sequence[Target],
         meta: Sequence[str],
-        run: dict[str, object],
-        paragraph: dict[str, object],
+        values: dict[Target, dict[str, object]],
     ) -> None:
-        for target, bucket in ((Target.RUN, run), (Target.PARAGRAPH, paragraph)):
+        # The first listed target that knows the key wins (in table styles, borders are
+        # table borders at the top level and cell borders in a header-row block).
+        ordered = [*targets, *(t for t in Target if t not in targets)]
+        for target in ordered:
             if key not in REGISTRY[target]:
                 continue
+            bucket = values[target]
             if target not in targets:
-                kind = "run" if target is Target.RUN else "paragraph"
                 self._report(
                     Code.UNKNOWN_PROPERTY,
-                    f"`{key}` is a {kind} property and is not allowed here",
+                    f"`{key}` is a {target.label} property and is not allowed here",
                     decl.key_span,
-                    help="character styles take run properties only",
+                    help="character styles take run properties only; table and cell "
+                    "properties belong in table styles",
                 )
                 return
             try:
@@ -316,33 +368,32 @@ class StyleSheetCompiler:
             return PropertySet(target, values)
         except InvalidValueError as e:
             self._report(Code.INVALID_VALUE, str(e), span)
-            return EMPTY_RUN if target is Target.RUN else EMPTY_PARAGRAPH
+            return {
+                Target.RUN: EMPTY_RUN,
+                Target.PARAGRAPH: EMPTY_PARAGRAPH,
+                Target.TABLE: EMPTY_TABLE,
+                Target.CELL: EMPTY_CELL,
+            }[target]
 
     # --- rules -----------------------------------------------------------------------
 
     def _defaults(self, rule: DefaultsRule) -> None:
-        run, paragraph, _ = self._properties(
-            rule.items, (Target.RUN, Target.PARAGRAPH), context="defaults"
-        )
-        self._run = self._run.merged(self._property_set(Target.RUN, run, rule.span))
+        values, _ = self._properties(rule.items, (Target.RUN, Target.PARAGRAPH), context="defaults")
+        self._run = self._run.merged(self._property_set(Target.RUN, values[Target.RUN], rule.span))
         self._paragraph = self._paragraph.merged(
-            self._property_set(Target.PARAGRAPH, paragraph, rule.span)
+            self._property_set(Target.PARAGRAPH, values[Target.PARAGRAPH], rule.span)
         )
 
     def _style_rule(self, rule: StyleRule) -> None:
-        if rule.kind == "table":
-            self._report(
-                Code.UNSUPPORTED,
-                "table styles are not supported yet; this rule is ignored",
-                rule.span,
-                help="table styles are planned for milestone M2",
-                severity=Severity.WARNING,
-            )
-            return
         name = rule.name.text
         sid = style_id(name)
-        kind = StyleKind.CHARACTER if rule.kind == "character" else StyleKind.PARAGRAPH
+        kind = {
+            "character": StyleKind.CHARACTER,
+            "table": StyleKind.TABLE,
+        }.get(rule.kind, StyleKind.PARAGRAPH)
         existing = self._styles.get(sid)
+        if existing is None and rule.action == "modify" and name in self.builtins:
+            existing = self.builtins[name]()  # modify Word's own definition
         if rule.action == "define" and existing is not None:
             self._report(
                 Code.STYLE_DEFINITION,
@@ -362,14 +413,15 @@ class StyleSheetCompiler:
             )
             return
         base = existing if rule.action == "modify" else None
+        if kind is StyleKind.TABLE:
+            self._table_style(rule, name, base)
+            return
 
         targets = (Target.RUN,) if kind is StyleKind.CHARACTER else (Target.RUN, Target.PARAGRAPH)
         meta_keys = CHARACTER_META if kind is StyleKind.CHARACTER else STYLE_META
-        run, paragraph, meta = self._properties(
-            rule.items, targets, meta_keys, f"{rule.kind} style"
-        )
-        run_props = self._property_set(Target.RUN, run, rule.span)
-        para_props = self._property_set(Target.PARAGRAPH, paragraph, rule.span)
+        values, meta = self._properties(rule.items, targets, meta_keys, f"{rule.kind} style")
+        run_props = self._property_set(Target.RUN, values[Target.RUN], rule.span)
+        para_props = self._property_set(Target.PARAGRAPH, values[Target.PARAGRAPH], rule.span)
 
         if rule.based_on is not None:
             based_on: str | None = rule.based_on.text
@@ -399,6 +451,121 @@ class StyleSheetCompiler:
             self._linked(style, rule)
             return
         self._styles[sid] = style
+
+    def _table_style(self, rule: StyleRule, name: str, base: Style | None) -> None:
+        """table NAME [: BASE] { borders: ...; header-row { bold; } banded-rows { odd { ... } } }"""
+        declarations = [item for item in rule.items if isinstance(item, Declaration)]
+        blocks = [item for item in rule.items if isinstance(item, Block)]
+        values, meta = self._properties(
+            declarations,
+            (Target.RUN, Target.PARAGRAPH, Target.TABLE, Target.CELL),
+            TABLE_META,
+            "a table style",
+        )
+        style = base or Style(StyleKind.TABLE, name)
+        if rule.based_on is not None:
+            style = replace(style, based_on=rule.based_on.text)
+            self._references.append(
+                _Reference(
+                    "table-style",
+                    rule.based_on.text,
+                    f"style `{name}`: based-on style",
+                    rule.based_on.span,
+                    self._require_source(),
+                )
+            )
+        conditions = {c.kind: c for c in style.conditions}
+        repeat = style.repeat_header
+        for block in blocks:
+            for kind, items, meta_block in self._table_part(block):
+                if kind is None:
+                    continue
+                if meta_block.get("repeat") is not None:
+                    flag = self._bool(meta_block["repeat"])
+                    repeat = repeat if flag is None else flag
+                part_values, _ = self._properties(
+                    items, CONDITION_TARGETS, ("repeat",) if kind == "firstRow" else (), block.name
+                )
+                old = conditions.get(kind, TableCondition(kind))
+                conditions[kind] = TableCondition(
+                    kind,
+                    old.paragraph.merged(
+                        self._property_set(
+                            Target.PARAGRAPH, part_values[Target.PARAGRAPH], block.span
+                        )
+                    ),
+                    old.run.merged(
+                        self._property_set(Target.RUN, part_values[Target.RUN], block.span)
+                    ),
+                    old.cell.merged(
+                        self._property_set(Target.CELL, part_values[Target.CELL], block.span)
+                    ),
+                )
+        style = replace(
+            style,
+            run=style.run.merged(self._property_set(Target.RUN, values[Target.RUN], rule.span)),
+            paragraph=style.paragraph.merged(
+                self._property_set(Target.PARAGRAPH, values[Target.PARAGRAPH], rule.span)
+            ),
+            table=style.table.merged(
+                self._property_set(Target.TABLE, values[Target.TABLE], rule.span)
+            ),
+            cell=style.cell.merged(self._property_set(Target.CELL, values[Target.CELL], rule.span)),
+            conditions=tuple(conditions.values()),
+            repeat_header=repeat,
+            **self._style_meta(meta, name),
+        )
+        self._styles[style_id(name)] = style
+
+    def _table_part(
+        self, block: Block
+    ) -> list[tuple[str | None, list[Declaration | Block], dict[str, Declaration]]]:
+        """(tblStylePr type, declarations, meta) for a table-style block; banding blocks give
+        one entry per odd/even sub-block (declarations directly inside mean odd)."""
+        if block.args:
+            self._report(Code.STYLESHEET_SYNTAX, f"`{block.name}` takes no arguments", block.span)
+        if block.name in TABLE_PARTS:
+            meta = {
+                item.key: item
+                for item in block.items
+                if isinstance(item, Declaration) and item.key == "repeat"
+            }
+            if meta and block.name not in ("header-row", "first-row"):
+                self._report(
+                    Code.UNKNOWN_PROPERTY, "`repeat` applies to the header row", block.span
+                )
+                meta = {}
+            items = [
+                i for i in block.items if not (isinstance(i, Declaration) and i.key == "repeat")
+            ]
+            return [(TABLE_PARTS[block.name], items, meta)]
+        if block.name in BANDS:
+            odd, even = BANDS[block.name]
+            parts: list[tuple[str | None, list[Declaration | Block], dict[str, Declaration]]] = []
+            direct = [i for i in block.items if isinstance(i, Declaration)]
+            if direct:
+                parts.append((odd, list(direct), {}))
+            for sub in block.items:
+                if isinstance(sub, Block):
+                    if sub.name in ("odd", "even") and not sub.args:
+                        parts.append((odd if sub.name == "odd" else even, list(sub.items), {}))
+                    else:
+                        self._report(
+                            Code.STYLESHEET_SYNTAX,
+                            f"`{block.name}` contains `odd {{ ... }}` and `even {{ ... }}`",
+                            sub.span,
+                        )
+            return parts
+        close = difflib.get_close_matches(block.name, [*TABLE_PARTS, *BANDS], n=1)
+        self._report(
+            Code.STYLESHEET_SYNTAX,
+            f"unknown table part `{block.name}`",
+            block.span,
+            f"did you mean `{close[0]}`?" if close else "",
+            help="header-row, last-row, first-column, last-column, banded-rows, banded-columns, "
+            "top-left-cell, top-right-cell, bottom-left-cell, bottom-right-cell",
+        )
+        return [(None, [], {})]
 
     def _require_source(self) -> Source:
         assert self._source is not None
@@ -492,9 +659,10 @@ class StyleSheetCompiler:
         self._numbering[name] = Numbering(name, tuple(levels[k] for k in sorted(levels)))
 
     def _level(self, block: Block, number: int, numbering: str) -> NumberingLevel | None:
-        run, paragraph, meta = self._properties(
+        values, meta = self._properties(
             block.items, (Target.RUN, Target.PARAGRAPH), LEVEL_META, "a list level"
         )
+        run, paragraph = values[Target.RUN], values[Target.PARAGRAPH]
         fields: dict[str, object] = {}
         if (decl := meta.get("format")) is not None and decl.value is not None:
             fmt = _kebab_to_camel(_unquote(decl.value))
@@ -587,6 +755,8 @@ class StyleSheetCompiler:
                     )
                 continue
             style = self._styles.get(style_id(ref.name))
+            if style is None and ref.name in self.builtins:
+                style = self.builtins[ref.name]()
             if style is None and style_id(ref.name) != "Normal":
                 close = difflib.get_close_matches(
                     ref.name, [s.name for s in self._styles.values()], n=1
@@ -607,10 +777,24 @@ class StyleSheetCompiler:
                     f"{ref.what} `{ref.name}` is not a paragraph style",
                     ref.span,
                 )
+            elif (
+                ref.kind == "table-style"
+                and style is not None
+                and style.kind is not StyleKind.TABLE
+            ):
+                self._report(
+                    Code.STYLE_DEFINITION, f"{ref.what} `{ref.name}` is not a table style", ref.span
+                )
 
 
-def compile_stylesheets(sheets: Iterable[StyleSheet]) -> CompiledStyles:
-    compiler = StyleSheetCompiler()
+def compile_stylesheets(
+    sheets: Iterable[StyleSheet], builtins: Mapping[str, Callable[[], Style]] | None = None
+) -> CompiledStyles:
+    if builtins is None:
+        from wordgenx.lower.builtins import BUILTIN_STYLES
+
+        builtins = BUILTIN_STYLES
+    compiler = StyleSheetCompiler(builtins=builtins)
     for sheet in sheets:
         compiler.add(sheet)
     return compiler.result()

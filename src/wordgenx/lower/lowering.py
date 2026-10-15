@@ -43,9 +43,12 @@ from wordgenx.lower.references import REF_FORMS, Label, PendingRef, PendingToc, 
 from wordgenx.lower.typography import smarten
 from wordgenx.ooxml.style_names import style_id
 from wordgenx.props import (
+    EMPTY_CELL,
     EMPTY_PARAGRAPH,
     EMPTY_RUN,
+    EMPTY_TABLE,
     REGISTRY,
+    SHORTHANDS,
     PropertySet,
     Target,
     UnknownPropertyError,
@@ -56,7 +59,7 @@ from wordgenx.stylesheet.syntax import parse_stylesheet
 from wordgenx.syntax import ParseResult, ast, parse
 from wordgenx.syntax.diagnostics import Code, Diagnostic, Severity
 from wordgenx.syntax.source import Source, Span
-from wordgenx.values import Color, InvalidValueError, Length, TabStop
+from wordgenx.values import InvalidValueError, Length, TabStop
 
 Located = tuple[Source, Diagnostic]
 
@@ -154,12 +157,15 @@ class TableSpec:
     """Table options from \\table[...] (defaults for a stand-alone pipe table)."""
 
     style: str | None = "Table Grid"
+    style_span: Span | None = None
     widths: list[tuple[str, Length | Decimal]] | None = None
     """("length", Length) | ("percent", Decimal) | ("fraction", Decimal) per column."""
     header_rows: int = 0
     align: str | None = None
     columns: list[str] = field(default_factory=lambda: [])
     """Paragraph alignment per column (left, center, right, justify, decimal)."""
+    props: PropertySet = EMPTY_TABLE
+    look: frozenset[str] | None = None
 
 
 @dataclass
@@ -168,8 +174,7 @@ class CellSpec:
     span: Span
     colspan: int = 1
     rowspan: int = 1
-    shading: str | None = None
-    valign: str | None = None
+    props: PropertySet = EMPTY_CELL
     align: str | None = None
 
 
@@ -233,7 +238,9 @@ class Lowering:
     source: Source
     base_dir: Path
     diagnostics: list[Located] = field(default_factory=lambda: [])
-    stylesheets: StyleSheetCompiler = field(default_factory=StyleSheetCompiler)
+    stylesheets: StyleSheetCompiler = field(
+        default_factory=lambda: StyleSheetCompiler(builtins=BUILTIN_STYLES)
+    )
     macros: dict[str, Macro] = field(default_factory=lambda: {})
     meta: ir.Meta = field(default_factory=ir.Meta)
     settings: ir.Settings = field(default_factory=ir.Settings)
@@ -1229,14 +1236,9 @@ class Lowering:
                 name = self.text_value(value, command, key)
                 if name == "none":
                     spec.style = None
-                elif name and name != "Table Grid":
-                    self.warn(
-                        Code.NOT_SUPPORTED_YET,
-                        f"custom table styles are not supported yet; `{name}` is drawn "
-                        "as Table Grid",
-                        value.span,
-                        help="planned for milestone M2",
-                    )
+                elif name:
+                    spec.style = name
+                    spec.style_span = value.span
             elif key == "header-rows":
                 text = self.text_value(value, command, key) or ""
                 if text.isdigit():
@@ -1268,23 +1270,52 @@ class Lowering:
                     )
                 else:
                     spec.columns = words
-            elif key == "id":
-                pass  # labels become bookmarks in M2
-            elif key == "caption":
-                self.warn(
-                    Code.NOT_SUPPORTED_YET,
-                    "table captions are not supported yet",
-                    option.span,
-                    help="planned for milestone M2",
-                )
+            elif key == "look":
+                spec.look = self.table_look(value, command)
+            elif key is not None and (key in SHORTHANDS or key in REGISTRY[Target.TABLE]):
+                spec.props = self.registry_option(Target.TABLE, key, value, spec.props)
             else:
                 self.report(
                     Code.INVALID_ARGUMENT,
                     f"unknown \\table option `{key}`",
                     option.span,
-                    help="style, header-rows, widths, align, columns",
+                    help="style, header-rows, widths, align, columns, look, borders, "
+                    "cell-margins, border-top, ... (use \\caption for captions)",
                 )
         return spec
+
+    def table_look(self, value: ast.Value, command: ast.Command) -> frozenset[str] | None:
+        """look=(header-row, banded-rows) or look=none: which table-style parts apply."""
+        items = (
+            value.items
+            if isinstance(value, ast.TupleValue)
+            else (ast.Option(None, value, span=value.span),)
+        )
+        flags: set[str] = set()
+        for item in items:
+            word = self.text_value(item.value, command, "look") or ""
+            word = {"first-row": "header-row"}.get(word, word)
+            if item.key is None and word in ir.TABLE_LOOK:
+                flags.add(word)
+            elif not (item.key is None and word == "none" and len(items) == 1):
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    f"invalid look `{word}`",
+                    item.span,
+                    help=f"look=none or a tuple of {', '.join(ir.TABLE_LOOK)}",
+                )
+                return None
+        return frozenset(flags)
+
+    def registry_option(
+        self, target: Target, key: str, value: ast.Value, props: PropertySet
+    ) -> PropertySet:
+        """`props` plus a table or cell property (or shorthand) given as a command option."""
+        try:
+            return props.merged(PropertySet(target, {key: _value_text(value)}))
+        except (InvalidValueError, UnknownPropertyError) as e:
+            self.report(Code.INVALID_ARGUMENT, str(e), value.span)
+            return props
 
     def width_list(
         self, value: ast.Value, command: ast.Command
@@ -1394,7 +1425,11 @@ class Lowering:
         cell = CellSpec([], command.span)
         for option in command.options.items if command.options else ():
             key, value = option.key, option.value
-            text = self.text_value(value, command, key or "option") or ""
+            text = (
+                ""
+                if isinstance(value, ast.TupleValue)
+                else self.text_value(value, command, key or "option") or ""
+            )
             if key in ("colspan", "rowspan"):
                 if text.isdigit() and int(text) >= 1:
                     setattr(cell, key, int(text))
@@ -1404,28 +1439,18 @@ class Lowering:
                         f"{key} must be a whole number of at least 1",
                         value.span,
                     )
-            elif key == "shade":
-                try:
-                    color = Color.parse(text)
-                except InvalidValueError as e:
-                    self.report(Code.INVALID_ARGUMENT, str(e), value.span)
-                    continue
-                if color.rgb is None:
-                    self.report(
-                        Code.INVALID_ARGUMENT,
-                        "cell shading takes an RGB colour (#RRGGBB)",
-                        value.span,
-                        help="theme colours for shading are planned for M2",
-                    )
-                else:
-                    cell.shading = color.rgb
+            elif key in ("shade", "shading"):
+                cell.props = self.registry_option(Target.CELL, "shading", value, cell.props)
             elif key == "valign":
                 if text in CELL_ALIGN:
-                    cell.valign = CELL_ALIGN[text]
+                    valign = PropertySet(Target.CELL, {"valign": CELL_ALIGN[text]})
+                    cell.props = cell.props.merged(valign)
                 else:
                     self.report(
                         Code.INVALID_ARGUMENT, "valign is top, center or bottom", value.span
                     )
+            elif key is not None and (key in SHORTHANDS or key in REGISTRY[Target.CELL]):
+                cell.props = self.registry_option(Target.CELL, key, value, cell.props)
             elif key == "align":
                 if text in ALIGN_WORDS:
                     cell.align = text
@@ -1438,7 +1463,7 @@ class Lowering:
                     Code.INVALID_ARGUMENT,
                     "unknown \\cell option",
                     option.span,
-                    help="colspan, rowspan, shade, valign, align",
+                    help="colspan, rowspan, shade, valign, align, borders, border-top, ...",
                 )
         if command.body is not None:
             self._container_depth += 1
@@ -1452,8 +1477,11 @@ class Lowering:
         if not rows:
             self.report(Code.INVALID_ARGUMENT, "a table needs at least one row", span)
             return None
-        if spec.style == "Table Grid":
-            self.use_style("Table Grid", ir.StyleKind.TABLE, span)
+        repeat_header = False
+        if spec.style is not None:
+            self.use_style(spec.style, ir.StyleKind.TABLE, spec.style_span or span)
+            style = self.compiled_style(spec.style)
+            repeat_header = style is not None and style.repeat_header
         # Each row's extent on an unbounded grid (rowspans from rows above take positions).
         covered: set[tuple[int, int]] = set()
         extents: list[int] = []
@@ -1500,14 +1528,13 @@ class Lowering:
                 content = tuple(cell.content)
                 if align is not None:
                     content = _align_paragraphs(content, align)
-                cells.append(
-                    ir.Cell(content, cell.colspan, cell.rowspan, cell.shading, cell.valign)
-                )
+                cells.append(ir.Cell(content, cell.colspan, cell.rowspan, cell.props))
                 column += cell.colspan
-            header = row.header or r < spec.header_rows
+            header = row.header or r < spec.header_rows or (repeat_header and r == 0)
             ir_rows.append(ir.Row(tuple(cells), header, row.height, row.exact, row.cant_split))
         try:
-            return ir.Table(tuple(ir_rows), widths, spec.style, spec.align)
+            look = ir.DEFAULT_TABLE_LOOK if spec.look is None else spec.look
+            return ir.Table(tuple(ir_rows), widths, spec.style, spec.align, spec.props, look)
         except ValueError as e:
             self.report(Code.INVALID_ARGUMENT, str(e), span, help="check colspan and rowspan")
             return None
@@ -2355,11 +2382,15 @@ class Lowering:
         return replace(fmt, link=(self._links, url), style=fmt.style or "Hyperlink")
 
     def style_run_props(self, name: str) -> PropertySet:
-        compiled = {style_id(s.name): s for s in self.stylesheets._styles.values()}  # pyright: ignore[reportPrivateUsage]
-        style = compiled.get(style_id(name))
+        style = self.compiled_style(name)
+        return style.run if style is not None else EMPTY_RUN
+
+    def compiled_style(self, name: str) -> ir.Style | None:
+        """A style defined by the style sheets so far, or the built-in one of that name."""
+        style = self.stylesheets._styles.get(style_id(name))  # pyright: ignore[reportPrivateUsage]
         if style is None and name in BUILTIN_STYLES:
             style = BUILTIN_STYLES[name]()
-        return style.run if style is not None else EMPTY_RUN
+        return style
 
     # --- paragraph assembly ------------------------------------------------------------------
 
@@ -2566,6 +2597,20 @@ class Lowering:
 
     def use_style(self, name: str, kind: ir.StyleKind, span: Span) -> None:
         self.style_uses.append(StyleUse(name, kind, span, self.source))
+
+
+def _value_text(value: ast.Value) -> str:
+    """An option value as style-sheet text: ``(all=(single, 0.5pt), top=none)``."""
+    if isinstance(value, ast.TupleValue):
+        parts = (
+            (f"{item.key}=" if item.key else "") + _value_text(item.value) for item in value.items
+        )
+        return "(" + ", ".join(parts) + ")"
+    if isinstance(value, ast.BareValue | ast.StringValue):
+        return value.text
+    if isinstance(value, ast.MarkupBody):
+        return _plain_text(value) or ""
+    return ""
 
 
 def _plain_text(body: ast.MarkupBody) -> str | None:

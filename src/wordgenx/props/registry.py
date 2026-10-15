@@ -17,6 +17,7 @@ from typing import Protocol
 
 from wordgenx.values import (
     TAB_LEADERS,
+    Border,
     Color,
     InvalidValueError,
     Length,
@@ -31,6 +32,12 @@ class Target(Enum):
 
     RUN = "rPr"
     PARAGRAPH = "pPr"
+    TABLE = "tblPr"
+    CELL = "tcPr"
+
+    @property
+    def label(self) -> str:
+        return {"rPr": "run", "pPr": "paragraph", "tblPr": "table", "tcPr": "cell"}[self.value]
 
 
 class EmitContext(Protocol):
@@ -55,15 +62,15 @@ class PropSpec:
     doc: str
     values: str
     """Human-readable description of accepted values (docs, error messages)."""
-    children: Callable[[object], list[tuple[str, Attrs]]] | None = None
-    """Child elements of the emitted element (e.g. w:tab inside w:tabs)."""
+    children: Callable[[object, EmitContext], list[tuple[str, Attrs]]] | None = None
+    """Child elements of the emitted element (w:tab inside w:tabs, w:top inside w:tblBorders).
+    Properties emitting the same element contribute children in registry order."""
 
 
 class UnknownPropertyError(KeyError):
     def __init__(self, name: str, target: Target, suggestion: str | None) -> None:
-        kind = "run" if target is Target.RUN else "paragraph"
         hint = f"; did you mean `{suggestion}`?" if suggestion else ""
-        super().__init__(f"unknown {kind} property `{name}`{hint}")
+        super().__init__(f"unknown {target.label} property `{name}`{hint}")
         self.name = name
         self.suggestion = suggestion
 
@@ -216,7 +223,7 @@ def _tab_stops(value: object) -> tuple[TabStop, ...]:
     )
 
 
-def _tab_elements(value: object) -> list[tuple[str, Attrs]]:
+def _tab_elements(value: object, ctx: EmitContext) -> list[tuple[str, Attrs]]:
     stops = [stop for stop in _tab_stops(value)]
     elements: list[tuple[str, Attrs]] = []
     for stop in sorted(stops, key=lambda s: s.position.emu):
@@ -225,14 +232,6 @@ def _tab_elements(value: object) -> list[tuple[str, Attrs]]:
             attrs["leader"] = TAB_LEADERS[stop.leader]
         elements.append(("tab", attrs))
     return elements
-
-
-class _NoContext:
-    def theme_color_rgb(self, name: str) -> str:
-        raise AssertionError("child elements do not need the theme")
-
-
-_NO_CONTEXT = _NoContext()
 
 
 def _zero_based(value: object) -> str:
@@ -277,6 +276,67 @@ def _emit_color(value: object, ctx: EmitContext) -> Emitted:
     return [("color", {"val": value.rgb or "auto"})]
 
 
+def _color_attrs(color: Color, ctx: EmitContext, prefix: str = "") -> Attrs:
+    """val/color, themeColor, themeTint, themeShade (or fill, themeFill, ... with a prefix)."""
+    main = "fill" if prefix else "color"
+    if color.theme is None:
+        return {main: color.rgb or "auto"}
+    attrs = {
+        main: apply_tint_shade(ctx.theme_color_rgb(color.theme), color.tint, color.shade),
+        f"theme{prefix or 'Color'}": color.theme,
+    }
+    if color.tint is not None:
+        attrs[f"theme{prefix}Tint"] = f"{color.tint:02X}"
+    if color.shade is not None:
+        attrs[f"theme{prefix}Shade"] = f"{color.shade:02X}"
+    return attrs
+
+
+def _border(value: object) -> Border:
+    if isinstance(value, Border):
+        return value
+    if isinstance(value, str):
+        return Border.parse(value)
+    raise InvalidValueError(f"expected a border such as (single, 0.5pt, #BFBFBF), got {value!r}")
+
+
+def _border_side(
+    container: str, side: str
+) -> tuple[
+    Callable[[object, EmitContext], Emitted],
+    Callable[[object, EmitContext], list[tuple[str, Attrs]]],
+]:
+    def emit(value: object, ctx: EmitContext) -> Emitted:
+        return [(container, {})]
+
+    def children(value: object, ctx: EmitContext) -> list[tuple[str, Attrs]]:
+        assert isinstance(value, Border)
+        if value.style == "nil":
+            return [(side, {"val": "nil"})]
+        attrs: Attrs = {
+            "val": value.style,
+            "sz": str(value.eighths),
+            "space": str(value.space_points),
+            **_color_attrs(value.color, ctx),
+        }
+        return [(side, attrs)]
+
+    return emit, children
+
+
+def _margin_side(side: str) -> Callable[[object, EmitContext], list[tuple[str, Attrs]]]:
+    def children(value: object, ctx: EmitContext) -> list[tuple[str, Attrs]]:
+        assert isinstance(value, Length)
+        return [(side, {"w": str(value.in_twips), "type": "dxa"})]
+
+    return children
+
+
+def _emit_shading(value: object, ctx: EmitContext) -> Emitted:
+    assert isinstance(value, Color)
+    return [("shd", {"val": "clear", "color": "auto", **_color_attrs(value, ctx, "Fill")})]
+
+
 def _emit_line_spacing(value: object, ctx: EmitContext) -> Emitted:
     assert isinstance(value, LineSpacing)
     rule = {"auto": "auto", "exact": "exact", "at-least": "atLeast"}[value.rule]
@@ -308,7 +368,7 @@ def _alignment(value: object) -> object:
     raise InvalidValueError(f"expected one of {', '.join(_ALIGNMENTS)}, got {value!r}")
 
 
-R, P = Target.RUN, Target.PARAGRAPH
+R, P, T, C = Target.RUN, Target.PARAGRAPH, Target.TABLE, Target.CELL
 _BOOL = "true | false"
 _LEN = "length (e.g. 12pt, 0.5cm)"
 
@@ -468,8 +528,92 @@ _SPECS: tuple[PropSpec, ...] = (
     ),
 )
 
+BORDER_SIDES = {
+    "top": "top",
+    "left": "left",
+    "bottom": "bottom",
+    "right": "right",
+    "inside-h": "insideH",
+    "inside-v": "insideV",
+}
+"""wordgenx side -> OOXML element, in schema order."""
+MARGIN_SIDES = ("top", "left", "bottom", "right")
+
+
+def _border_specs(target: Target, container: str, what: str) -> tuple[PropSpec, ...]:
+    specs: list[PropSpec] = []
+    for side, element in BORDER_SIDES.items():
+        emit, children = _border_side(container, element)
+        specs.append(
+            PropSpec(
+                f"border-{side}",
+                target,
+                _border,
+                emit,
+                f"{what} border: {side.replace('-', ' ')}.",
+                "(style, width, colour, space=…) | none",
+                children=children,
+            )
+        )
+    return tuple(specs)
+
+
+_TABLE_SPECS: tuple[PropSpec, ...] = (
+    *_border_specs(T, "tblBorders", "Table"),
+    *(
+        PropSpec(
+            f"cell-margin-{side}",
+            T,
+            _nonnegative_length,
+            lambda value, ctx: [("tblCellMar", {})],
+            f"Default {side} margin inside cells.",
+            _LEN,
+            children=_margin_side(side),
+        )
+        for side in MARGIN_SIDES
+    ),
+    PropSpec(
+        "table-align",
+        T,
+        _choice(("left", "center", "right")),
+        _val("jc"),
+        "Position of the table between the margins.",
+        "left | center | right",
+    ),
+    PropSpec(
+        "table-indent",
+        T,
+        _length,
+        lambda value, ctx: [("tblInd", {"w": _twips(value), "type": "dxa"})],
+        "Indent of the table from the left margin.",
+        _LEN,
+    ),
+)
+
+_CELL_SPECS: tuple[PropSpec, ...] = (
+    *_border_specs(C, "tcBorders", "Cell"),
+    PropSpec(
+        "shading",
+        C,
+        _color,
+        _emit_shading,
+        "Background colour of the cell.",
+        "#RRGGBB | theme.<name>",
+    ),
+    PropSpec(
+        "valign",
+        C,
+        _choice(("top", "center", "bottom")),
+        _val("vAlign"),
+        "Vertical alignment of the cell content.",
+        "top | center | bottom",
+    ),
+)
+
+_ALL_SPECS = (*_SPECS, *_TABLE_SPECS, *_CELL_SPECS)
+
 REGISTRY: dict[Target, dict[str, PropSpec]] = {
-    target: {spec.name: spec for spec in _SPECS if spec.target is target} for target in Target
+    target: {spec.name: spec for spec in _ALL_SPECS if spec.target is target} for target in Target
 }
 
 
@@ -491,7 +635,7 @@ class PropertySet(Mapping[str, object]):
 
     def __init__(self, target: Target, values: Mapping[str, object] | None = None) -> None:
         coerced: dict[str, object] = {}
-        for name, value in (values or {}).items():
+        for name, value in _expand_shorthands(target, values or {}).items():
             spec = lookup(target, name)
             try:
                 coerced[name] = spec.coerce(value)
@@ -562,14 +706,15 @@ class PropertySet(Mapping[str, object]):
                 elements.setdefault(element, {}).update(attrs)
         return elements
 
-    def emit_children(self) -> dict[str, list[tuple[str, Attrs]]]:
-        """Element local name -> child elements, for properties that have them (w:tabs)."""
+    def emit_children(self, ctx: EmitContext) -> dict[str, list[tuple[str, Attrs]]]:
+        """Element local name -> child elements, for properties that have them (w:tabs,
+        w:tblBorders, ...)."""
         children: dict[str, list[tuple[str, Attrs]]] = {}
         for name, value in self._values.items():
             spec = REGISTRY[self._target][name]
             if spec.children is not None:
-                for element, _ in spec.emit(value, _NO_CONTEXT):
-                    children.setdefault(element, []).extend(spec.children(value))
+                for element, _ in spec.emit(value, ctx):
+                    children.setdefault(element, []).extend(spec.children(value, ctx))
         return children
 
 
@@ -587,5 +732,111 @@ def para_props(**kwargs: object) -> PropertySet:
     return PropertySet(Target.PARAGRAPH, _python_names(kwargs))
 
 
+def table_props(**kwargs: object) -> PropertySet:
+    return PropertySet(Target.TABLE, _python_names(kwargs))
+
+
+def cell_props(**kwargs: object) -> PropertySet:
+    return PropertySet(Target.CELL, _python_names(kwargs))
+
+
+# --- shorthands --------------------------------------------------------------------
+
+_BORDER_GROUPS: dict[str, tuple[str, ...]] = {
+    **{side: (side,) for side in BORDER_SIDES},
+    "outer": ("top", "left", "bottom", "right"),
+    "inner": ("inside-h", "inside-v"),
+    "all": tuple(BORDER_SIDES),
+}
+_MARGIN_GROUPS: dict[str, tuple[str, ...]] = {
+    **{side: (side,) for side in MARGIN_SIDES},
+    "horizontal": ("left", "right"),
+    "vertical": ("top", "bottom"),
+    "all": MARGIN_SIDES,
+}
+SHORTHANDS = ("borders", "cell-margins")
+"""Keys that stand for several properties (expanded by `expand_shorthand`)."""
+
+
+def _expand_shorthands(target: Target, values: Mapping[str, object]) -> dict[str, object]:
+    """`values` with shorthand keys (given as text) replaced by the properties they set."""
+    out: dict[str, object] = {}
+    for name, value in values.items():
+        if name in SHORTHANDS and name not in REGISTRY[target] and isinstance(value, str):
+            try:
+                expanded = expand_shorthand(name, value) or {}
+            except InvalidValueError as e:
+                raise InvalidValueError(f"{name}: {e}") from None
+            if any(key not in REGISTRY[target] for key in expanded):
+                raise UnknownPropertyError(name, target, None)
+            out.update(expanded)
+        else:
+            out[name] = value
+    return out
+
+
+def split_parts(text: str) -> list[tuple[str | None, str]]:
+    """``(a=1, b=(x, y), z)`` -> [("a", "1"), ("b", "(x, y)"), (None, "z")]."""
+    text = text.strip()
+    if text.startswith("(") and text.endswith(")"):
+        text = text[1:-1]
+    parts: list[str] = []
+    depth, current = 0, ""
+    for ch in text:
+        if ch == "," and depth == 0:
+            parts.append(current.strip())
+            current = ""
+            continue
+        depth += {"(": 1, ")": -1}.get(ch, 0)
+        current += ch
+    if current.strip():
+        parts.append(current.strip())
+    out: list[tuple[str | None, str]] = []
+    for part in parts:
+        match = re.fullmatch(r"([a-z][a-z-]*)\s*=\s*(.+)", part, re.DOTALL)
+        out.append((match.group(1), match.group(2).strip()) if match else (None, part))
+    return out
+
+
+def expand_shorthand(key: str, raw: str) -> dict[str, object] | None:
+    """`borders` and `cell-margins` -> the per-side properties they stand for (None when
+    `key` is not a shorthand). Raises InvalidValueError for a bad value.
+
+    ``borders: (single, 0.5pt, #BFBFBF)`` sets all six sides; ``borders: none`` clears them;
+    ``borders: (all=(single, 0.5pt), inside-v=none)`` sets groups (all, outer, inner) and
+    sides (top, left, bottom, right, inside-h, inside-v) in order.
+    """
+    if key == "borders":
+        parts = split_parts(raw)
+        keys = [k for k, _ in parts if k]
+        if not keys or not all(k in _BORDER_GROUPS for k in keys):  # one border for all sides
+            parts = [("all", raw)]
+        elif any(k is None for k, _ in parts):
+            raise InvalidValueError("write borders as one border or as side=border pairs, not both")
+        out: dict[str, object] = {}
+        for group, value in parts:
+            border = Border.parse(value)
+            for side in _BORDER_GROUPS[group or "all"]:
+                out[f"border-{side}"] = border
+        return out
+    if key == "cell-margins":
+        parts = split_parts(raw)
+        if len(parts) == 1 and parts[0][0] is None:
+            parts = [("all", parts[0][1])]
+        out = {}
+        for group, value in parts:
+            if group not in _MARGIN_GROUPS:
+                raise InvalidValueError(
+                    f"cell-margins parts are {', '.join(_MARGIN_GROUPS)}; got {group or value!r}"
+                )
+            length = _nonnegative_length(value)
+            for side in _MARGIN_GROUPS[group]:
+                out[f"cell-margin-{side}"] = length
+        return out
+    return None
+
+
 EMPTY_RUN = PropertySet(Target.RUN)
 EMPTY_PARAGRAPH = PropertySet(Target.PARAGRAPH)
+EMPTY_TABLE = PropertySet(Target.TABLE)
+EMPTY_CELL = PropertySet(Target.CELL)

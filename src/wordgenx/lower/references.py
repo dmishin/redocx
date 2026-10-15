@@ -18,8 +18,10 @@ from dataclasses import dataclass, field, replace
 from wordgenx import ir
 from wordgenx.ooxml.parts.numbering import complete_levels
 from wordgenx.ooxml.style_names import style_id
+from wordgenx.props import EMPTY_PARAGRAPH, PropertySet, Target
 from wordgenx.syntax.diagnostics import Code, Diagnostic, Severity
 from wordgenx.syntax.source import Source, Span
+from wordgenx.values import Length, TabStop
 
 Located = tuple[Source, Diagnostic]
 
@@ -32,6 +34,8 @@ SEQ_SWITCHES = {
     "ROMAN": "upperRoman",
 }
 """SEQ \\* format switches -> list number formats."""
+TOC_NUMBER_TAB = 440
+"""Twips per level for the tab after a heading number in a TOC entry (Word's own value)."""
 SEQ_RE = re.compile(r"^\s*SEQ\s+(\S+)(.*)$", re.IGNORECASE)
 
 
@@ -444,6 +448,7 @@ def _toc_entries(
 ) -> tuple[ir.Paragraph, ...]:
     result: list[ir.Paragraph] = []
     for _, paragraph, number in entries:
+        props = EMPTY_PARAGRAPH
         first = paragraph.content[0] if paragraph.content else None
         if not isinstance(first, ir.BookmarkStart):
             continue
@@ -458,6 +463,10 @@ def _toc_entries(
             text = paragraph.text()
             if number:  # as Word writes it: the number, then the level's tab or space
                 text = number + text
+            if number and number.endswith("\t"):
+                # Word gives such entries a tab stop for the text after the number.
+                stop = TabStop(Length.twips(TOC_NUMBER_TAB * level), "left")
+                props = PropertySet(Target.PARAGRAPH, {"tabs": (stop,)})
             style = f"TOC {level}"
         else:
             if paragraph.style != "Caption" or not _is_caption_of(
@@ -470,7 +479,7 @@ def _toc_entries(
         page = ir.Field((f" PAGEREF {bookmark} \\h ",), "", dirty=True)
         link = ir.Hyperlink("", (ir.Run(text), ir.Run("\t"), page), anchor=bookmark)
         used_styles.add(style)
-        result.append(ir.Paragraph((link,), style))
+        result.append(ir.Paragraph((link,), style, props))
     if not result:
         result.append(ir.Paragraph((ir.Run("No entries found: update the field (F9) in Word."),)))
     return tuple(result)
