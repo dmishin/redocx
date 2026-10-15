@@ -111,6 +111,12 @@ and `w:themeShade`, so they follow theme changes in Word.
 Everything before the first content is the *preamble*. `\document`, `\meta`, `\settings`, `\use` and `\styles` are
 preamble-only. In the preamble, `\section` configures the first section. After content, it starts a new one (§3.10).
 
+`\document[template="corp.dotx"]` (or `wordgenx build --template corp.dotx`) compiles into a Word template or
+document. The output takes the template's styles, theme, page setup, headers and footers, and body content (a cover
+page). Style sheets modify its styles. A built-in the markup needs is the template's own when it has one. Details:
+architecture §4.6. `wordgenx build corp.wgx -o corp.dotx` writes a template;
+[examples/templates/corporate.wgx](../examples/templates/corporate.wgx) is one.
+
 ### Document settings (F-14)
 
 `\settings[…]` maps to `settings.xml`. Examples: `protection=(mode=forms|read-only|comments|tracked-changes, enforce)`,

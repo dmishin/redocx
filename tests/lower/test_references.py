@@ -235,12 +235,13 @@ def test_toc_entries_link_to_headings() -> None:
     assert toc.field.code == ' TOC \\o "1-2" \\h \\z \\u '
     entries = [(p.style, p.text()) for p in toc.content]
     assert entries == [("TOC 1", "1\tOne\t"), ("TOC 2", "1.1\tSub\t"), ("TOC 1", "Annex\t")]
-    # numbered entries get Word's tab stop for the text after the number
+    # as Word writes them: a tab stop after a heading number, and the dotted page-number one
+    page = TabStop(ir.PageSetup().text_width, "right", "dot")
     stops = [p.props.get("tabs") for p in toc.content]
     assert stops == [
-        (TabStop(Length.twips(440), "left"),),
-        (TabStop(Length.twips(880), "left"),),
-        None,
+        (TabStop(Length.twips(440), "left"), page),
+        (TabStop(Length.twips(880), "left"), page),
+        (page,),
     ]
     link = toc.content[0].content[0]
     assert isinstance(link, ir.Hyperlink)

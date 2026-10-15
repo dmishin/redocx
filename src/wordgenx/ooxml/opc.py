@@ -94,15 +94,22 @@ class _Relationships:
     def __len__(self) -> int:
         return len(self._items)
 
-    def add_internal(self, target: Part, reltype: str) -> str:
+    def add_internal(self, target: Part, reltype: str, rel_id: str | None = None) -> str:
         base = "/" if self._source is None else posixpath.dirname(self._source)
-        return self._add(reltype, posixpath.relpath(target.name, base), external=False)
+        return self._add(reltype, posixpath.relpath(target.name, base), False, rel_id)
 
-    def add_external(self, url: str, reltype: str) -> str:
-        return self._add(reltype, url, external=True)
+    def add_external(self, url: str, reltype: str, rel_id: str | None = None) -> str:
+        return self._add(reltype, url, True, rel_id)
 
-    def _add(self, reltype: str, target: str, *, external: bool) -> str:
-        rel_id = f"rId{len(self._items) + 1}"
+    def _add(self, reltype: str, target: str, external: bool, rel_id: str | None) -> str:
+        taken = {rel.id for rel in self._items}
+        if rel_id is None:
+            number = len(self._items) + 1
+            while f"rId{number}" in taken:
+                number += 1
+            rel_id = f"rId{number}"
+        elif rel_id in taken:
+            raise ValueError(f"duplicate relationship id {rel_id!r}")
         self._items.append(Relationship(rel_id, reltype, target, external))
         return rel_id
 
@@ -127,13 +134,14 @@ class Part:
         self.data = data
         self.rels = _Relationships(name)
 
-    def relate(self, target: Part, reltype: str) -> str:
-        """Add a relationship from this part to `target`; return its id (rId1, rId2, ...)."""
-        return self.rels.add_internal(target, reltype)
+    def relate(self, target: Part, reltype: str, rel_id: str | None = None) -> str:
+        """Add a relationship from this part to `target`; return its id (rId1, rId2, ...,
+        or `rel_id` when given, as when copying a part with its relationships)."""
+        return self.rels.add_internal(target, reltype, rel_id)
 
-    def relate_external(self, url: str, reltype: str) -> str:
+    def relate_external(self, url: str, reltype: str, rel_id: str | None = None) -> str:
         """Add a relationship to an external URI (e.g. a hyperlink); return its id."""
-        return self.rels.add_external(url, reltype)
+        return self.rels.add_external(url, reltype, rel_id)
 
     def __repr__(self) -> str:
         return f"Part({self.name!r}, {self.content_type!r}, {len(self.data)} bytes)"
@@ -163,6 +171,9 @@ class Package:
 
     def part(self, name: str) -> Part:
         return self._parts[name.lower()]
+
+    def has_part(self, name: str) -> bool:
+        return name.lower() in self._parts
 
     @property
     def parts(self) -> list[Part]:

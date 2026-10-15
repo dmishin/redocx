@@ -37,12 +37,15 @@ class CompileResult:
         return "\n".join(render(d, source) for source, d in self.diagnostics)
 
 
-def compile_source(source: Source | str, base_dir: Path | None = None) -> CompileResult:
-    """Parse and lower a document; the IR is returned only when there are no errors."""
+def compile_source(
+    source: Source | str, base_dir: Path | None = None, template: Path | None = None
+) -> CompileResult:
+    """Parse and lower a document; the IR is returned only when there are no errors.
+    `template` (.dotx or .docx) overrides the document's own \\document[template=...]."""
     if isinstance(source, str):
         source = Source("<input>", source)
         base_dir = base_dir or Path.cwd()
-    document, diagnostics = lower(parse(source), base_dir)
+    document, diagnostics = lower(parse(source), base_dir, template)
     ordered = tuple(
         sorted(
             diagnostics,
@@ -53,16 +56,22 @@ def compile_source(source: Source | str, base_dir: Path | None = None) -> Compil
     return CompileResult(None if has_errors else document, ordered)
 
 
-def compile_file(path: str | PathLike[str]) -> CompileResult:
-    return compile_source(Source.from_path(path))
+def compile_file(path: str | PathLike[str], template: Path | None = None) -> CompileResult:
+    return compile_source(Source.from_path(path), template=template)
 
 
-def build(source: Source | str, base_dir: Path | None = None) -> tuple[bytes | None, CompileResult]:
-    """Compile to .docx bytes (None when there are errors)."""
-    result = compile_source(source, base_dir)
+def build(
+    source: Source | str,
+    base_dir: Path | None = None,
+    template: Path | None = None,
+    *,
+    as_template: bool = False,
+) -> tuple[bytes | None, CompileResult]:
+    """Compile to .docx bytes, or .dotx with `as_template` (None when there are errors)."""
+    result = compile_source(source, base_dir, template)
     if result.document is None:
         return None, result
     try:
-        return to_docx_bytes(result.document), result
+        return to_docx_bytes(result.document, as_template=as_template), result
     except StyleError as e:  # a consistency problem the lowering did not catch
         raise RuntimeError(f"internal error while writing the document: {e}") from e

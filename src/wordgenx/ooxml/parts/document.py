@@ -73,9 +73,14 @@ class BodyContext:
     bookmark_id: Callable[[str], int] = lambda name: 0
     """The document-wide w:id of a bookmark name (the same for its start and end)."""
     note: Callable[[Note], int] = lambda note: 0
+    """Writes a footnote or endnote into its part; returns its w:id."""
     settings: Settings = field(default_factory=Settings)
     """Document settings; sections repeat the footnote and endnote numbering."""
-    """Writes a footnote or endnote into its part; returns its w:id."""
+    inherited: Callable[[Section], list[Element]] = lambda section: []
+    """Header/footer references a section takes from the template (the first section, for
+    the kinds it does not define)."""
+    template_body: Callable[[], list[Element]] = lambda: []
+    """The template's body content, rewritten for this package; it precedes the document's."""
 
 
 # --- runs and inline content --------------------------------------------------------------
@@ -283,6 +288,7 @@ def _section_properties(section: Section, ctx: BodyContext) -> Element:
         for kind, blocks in parts:
             rel_id = ctx.header_footer(family, blocks)
             references.append(E(f"w:{family}Reference", {"w:type": kind, "r:id": rel_id}))
+    references += ctx.inherited(section)
     size = {"w:w": str(page.width.in_twips), "w:h": str(page.height.in_twips)}
     if page.landscape:
         size["w:orient"] = "landscape"
@@ -413,10 +419,15 @@ def _cell(slot: Slot, widths: list[int], ctx: BodyContext) -> Element:
 # --- parts -----------------------------------------------------------------------------------
 
 
-def document_xml(document: Document, ctx: BodyContext) -> Element:
-    body = _blocks(document.body, ctx, final=True)
+def document_xml(document: Document, ctx: BodyContext, root: Element | None = None) -> Element:
+    """The w:document; `root` is an empty w:document to fill (a template's, with its
+    namespace declarations), else a new one."""
+    body = [*ctx.template_body(), *_blocks(document.body, ctx, final=True)]
     final = _section_properties(document.section, ctx)
-    return E("w:document", E("w:body", *body, final), nsmap=nsmap(*PART_NAMESPACES))
+    if root is None:
+        root = E("w:document", nsmap=nsmap(*PART_NAMESPACES))
+    root.append(E("w:body", *body, final))
+    return root
 
 
 def note_xml(note: Note, note_id: int, ctx: BodyContext) -> Element:

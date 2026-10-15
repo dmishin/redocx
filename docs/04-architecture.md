@@ -126,12 +126,36 @@ Rules:
 
 ## 4.6 Templates
 
-`wordgenx build doc.wgx --template corp.dotx` (or `\document[template=…]`):
+`wordgenx build doc.wgx --template corp.dotx` (or `\document[template=…]` in the preamble; the command line wins).
+Implemented in M2 (`ooxml/template.py`, `ooxml/merge.py`):
 
-1. Read the template package and keep all parts we don't manage, such as theme, fonts, glossary and customXml.
-2. Replace `document.xml` body content with ours. Keep the template's final `sectPr` as the base page setup unless overridden.
-3. Merge styles and numbering (see resolve).
-4. Write the result as `.docx` (`.dotx` content type changed to document).
+1. **Read the template** (`load_template`). Its styles, numbering, settings, font table and theme are kept as XML. For
+   lookups, its styles and numbering are also read into the IR (best effort), with the final section's page setup.
+2. **Page setup:** the template's final section (size, margins, columns, title page) is the starting point of the
+   document's first section. `\section` changes it as usual.
+3. **Styles:** the template's `styles.xml` is the base.
+   - Template styles can be used without being defined.
+   - A style-sheet style the template already has is merged into it: our property elements replace the template's
+     (`w:spacing` and `w:ind` merge attribute by attribute), while its name, base, links and gallery settings stay.
+     `replace` and a new `: BASE` therefore act like `modify` for template styles.
+   - Built-ins the markup relies on (Strong, Caption, TOC 1–9, …) are added only when the template lacks them.
+   - Template styles are matched by name, so localized templates work (Word's German "heading 1" has the ID
+     `berschrift1`): our style references are rewritten to the template's IDs.
+4. **Numbering:** the template's lists keep their IDs, so its styles' and body's numbering stays valid. The document's
+   definitions are appended after them.
+5. **Settings:** the template's, with what the document sets (field updates, even/odd headers, note settings, default
+   tab stop, language). The theme is the template's, and its colours resolve `theme.*` colours.
+6. **Headers and footers:** each kind (default, first, even) the first section does not define comes from the
+   template. Later sections inherit them, as in Word.
+7. **Body content** (a cover page, boilerplate) comes before the document's, as in a new document Word creates from
+   the template. Relationships, drawing IDs and bookmark IDs are renumbered. A body that refers to footnotes,
+   comments or tracked changes is not carried over (warning `WGX0310`).
+8. **Other parts** of the main document (glossary/building blocks, customXml, web settings) and custom document
+   properties are copied with everything they relate to.
+9. **Output:** `.docx`, or a template (`-o out.dotx`: the main part gets the template content type).
+
+Not yet: using a template's list definitions by name in `\list[...]` (template styles that are numbered do work),
+and a template's own footnote separators.
 
 ## 4.7 Finalize step (optional)
 

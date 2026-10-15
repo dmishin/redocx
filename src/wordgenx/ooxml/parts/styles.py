@@ -82,17 +82,26 @@ def resolve_styles(document: Document) -> dict[str, Style]:
             raise StyleError(f"{style.name!r} is a fixed default style and cannot be redefined")
         styles[sid] = style
 
+    template = document.template
     for style in styles.values():
         for kind, ref in (("based-on", style.based_on), ("next", style.next)):
             if ref is None:
                 continue
             target = styles.get(style_id(ref))
+            if target is None and template is not None and (found := template.style(ref)):
+                if found.kind != style.kind.value:
+                    raise StyleError(
+                        f"style {style.name!r}: {kind} style {ref!r} is a different kind"
+                    )
+                continue
             if target is None:
                 raise StyleError(f"style {style.name!r}: {kind} style {ref!r} is not defined")
             if target.kind is not style.kind:
                 raise StyleError(f"style {style.name!r}: {kind} style {ref!r} is a different kind")
         if style.link is not None:
             linked = styles.get(style_id(style.link))
+            if linked is None and template is not None and template.style(style.link):
+                continue
             if linked is None:
                 raise StyleError(
                     f"style {style.name!r}: linked style {style.link!r} is not defined"
@@ -111,6 +120,8 @@ def _check_cycles(styles: dict[str, Style]) -> None:
             sid = style_id(current)
             if sid in seen:
                 raise StyleError(f"style {styles[start].name!r} has a cyclic based-on chain")
+            if sid not in styles:  # a template style
+                break
             seen.add(sid)
             current = styles[sid].based_on
 
@@ -178,7 +189,7 @@ def _style(style: Style, sid: str, ctx: EmitContext, num_ids: Mapping[str, int])
     )
 
 
-def styles_xml(document: Document, ctx: EmitContext) -> Element:
+def styles_xml(document: Document, ctx: EmitContext, num_offset: int = 0) -> Element:
     styles = resolve_styles(document)
     rpr = run_properties(document.default_run, ctx)
     ppr = paragraph_properties(document.default_paragraph, ctx)
@@ -187,7 +198,7 @@ def styles_xml(document: Document, ctx: EmitContext) -> Element:
         E("w:rPrDefault", rpr) if rpr is not None else None,
         E("w:pPrDefault", ppr) if ppr is not None else None,
     )
-    ids = numbering_ids(document.numbering)
+    ids = numbering_ids(document.numbering, num_offset)
     normal = _style(styles.pop("Normal"), "Normal", ctx, ids)
     return E(
         "w:styles",

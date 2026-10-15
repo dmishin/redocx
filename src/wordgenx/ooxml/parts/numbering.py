@@ -22,9 +22,9 @@ _INDENT_STEP = Length.twips(360)  # Word's default: 0.25" per level, 0.25" hangi
 _BULLETS = ("•", "◦", "▪")
 
 
-def numbering_ids(definitions: Sequence[Numbering]) -> dict[str, int]:
-    """Numbering name -> w:numId (1-based). abstractNumId is numId - 1."""
-    return {numbering.name: i + 1 for i, numbering in enumerate(definitions)}
+def numbering_ids(definitions: Sequence[Numbering], offset: int = 0) -> dict[str, int]:
+    """Numbering name -> w:numId (offset + 1, 2, ...; a template's own ids come first)."""
+    return {numbering.name: offset + i + 1 for i, numbering in enumerate(definitions)}
 
 
 def default_level(numbering: Numbering, level: int) -> NumberingLevel:
@@ -91,14 +91,16 @@ class ListInstance:
 
 
 def list_num_ids(
-    definitions: Sequence[Numbering], used: Iterable[tuple[str, int, int | None]]
+    definitions: Sequence[Numbering],
+    used: Iterable[tuple[str, int, int | None]],
+    offset: int = 0,
 ) -> list[ListInstance]:
     """Allocate w:numIds for list instances (numbering, instance, start) in first-use order.
 
     Ids 1..len(definitions) belong to the definitions themselves (used by styles).
     """
     instances: dict[tuple[str, int], ListInstance] = {}
-    next_id = len(definitions) + 1
+    next_id = offset + len(definitions) + 1
     for name, instance, start in used:
         if (name, instance) not in instances:
             instances[(name, instance)] = ListInstance(next_id, name, instance, start)
@@ -110,10 +112,14 @@ def numbering_xml(
     definitions: Sequence[Numbering],
     ctx: EmitContext,
     instances: Sequence[ListInstance] = (),
+    offsets: tuple[int, int] = (0, 0),
 ) -> Element:
+    """`offsets` (numId, abstractNumId) shift the ids past a template's own."""
+    num_offset, abstract_offset = offsets
     abstract: list[Element] = []
     nums: list[Element] = []
-    for num_id, numbering in enumerate(definitions, start=1):
+    for index, numbering in enumerate(definitions):
+        num_id, abstract_id = num_offset + index + 1, abstract_offset + index
         abstract_children = {
             "multiLevelType": E("w:multiLevelType", {"w:val": "multilevel"}),
             "name": E("w:name", {"w:val": numbering.name}),
@@ -121,7 +127,7 @@ def numbering_xml(
         abstract.append(
             E(
                 "w:abstractNum",
-                {"w:abstractNumId": str(num_id - 1)},
+                {"w:abstractNumId": str(abstract_id)},
                 *ordered(abstract_children, ABSTRACT_NUM),
                 *(_level(level, ctx) for level in complete_levels(numbering)),
             )
@@ -130,12 +136,12 @@ def numbering_xml(
             E(
                 "w:num",
                 {"w:numId": str(num_id)},
-                E("w:abstractNumId", {"w:val": str(num_id - 1)}),
+                E("w:abstractNumId", {"w:val": str(abstract_id)}),
             )
         )
-    abstract_ids = {numbering.name: i for i, numbering in enumerate(definitions)}
+    abstract_ids = {numbering.name: abstract_offset + i for i, numbering in enumerate(definitions)}
     for instance in instances:
-        definition = definitions[abstract_ids[instance.numbering]]
+        definition = definitions[abstract_ids[instance.numbering] - abstract_offset]
         first = definition.level(1)
         start = instance.start if instance.start is not None else (first.start if first else 1)
         nums.append(

@@ -269,6 +269,7 @@ def resolve(
     settings: ir.Settings,
     references: References,
     report: Callable[[Source, Span, str, str], None],
+    text_width: Length | None = None,
 ) -> tuple[tuple[ir.Block, ...], set[str], bool]:
     """Resolve references and fill TOCs. Returns (body, styles used by TOC entries, whether
     Word should update fields when the document opens)."""
@@ -381,7 +382,7 @@ def resolve(
     filled: list[ir.Block] = []
     for block in body:
         if isinstance(block, PendingToc):
-            content = _toc_entries(block, entries, simulator, used_styles)
+            content = _toc_entries(block, entries, simulator, used_styles, text_width)
             filled.append(ir.FieldBlock(replace(block.field), content))
         else:
             filled.append(block)
@@ -445,10 +446,14 @@ def _toc_entries(
     entries: list[tuple[int, ir.Paragraph, str | None]],
     simulator: _Numbering,
     used_styles: set[str],
+    text_width: Length | None,
 ) -> tuple[ir.Paragraph, ...]:
+    """Entry paragraphs, with the tab stops Word writes into each: one after a heading
+    number, and the dotted one for the page number (template TOC styles have none)."""
+    page_tab = (TabStop(text_width, "right", "dot"),) if text_width is not None else ()
     result: list[ir.Paragraph] = []
     for _, paragraph, number in entries:
-        props = EMPTY_PARAGRAPH
+        number_tab: tuple[TabStop, ...] = ()
         first = paragraph.content[0] if paragraph.content else None
         if not isinstance(first, ir.BookmarkStart):
             continue
@@ -465,8 +470,7 @@ def _toc_entries(
                 text = number + text
             if number and number.endswith("\t"):
                 # Word gives such entries a tab stop for the text after the number.
-                stop = TabStop(Length.twips(TOC_NUMBER_TAB * level), "left")
-                props = PropertySet(Target.PARAGRAPH, {"tabs": (stop,)})
+                number_tab = (TabStop(Length.twips(TOC_NUMBER_TAB * level), "left"),)
             style = f"TOC {level}"
         else:
             if paragraph.style != "Caption" or not _is_caption_of(
@@ -479,6 +483,8 @@ def _toc_entries(
         page = ir.Field((f" PAGEREF {bookmark} \\h ",), "", dirty=True)
         link = ir.Hyperlink("", (ir.Run(text), ir.Run("\t"), page), anchor=bookmark)
         used_styles.add(style)
+        tabs = (*number_tab, *page_tab)
+        props = PropertySet(Target.PARAGRAPH, {"tabs": tabs}) if tabs else EMPTY_PARAGRAPH
         result.append(ir.Paragraph((link,), style, props))
     if not result:
         result.append(ir.Paragraph((ir.Run("No entries found: update the field (F9) in Word."),)))

@@ -53,7 +53,8 @@ with no repair prompt, pass both validators, and match their golden snapshots.
   position settings).
 - [x] Full tables: merges, borders, shading (theme colours), repeat headers, cell margins, look flags, table styles with
   conditional formatting (header row, last row, first/last column, banded rows/columns, corner cells).
-- Templates: compile into `.dotx` or `.docx`, merge styles and numbering.
+- [x] Templates: compile into a `.dotx` or `.docx` (styles, numbering, theme, page setup, headers and footers, body
+  content, other parts); write `.dotx` templates.
 - Heading numbering, legal numbering, tab stops, paragraph borders.
 - Document properties; general `\field`.
 - **Exit:** wordgenx's own design docs are rebuilt in wordgenx with a corporate-style template and look professionally typeset in Word.

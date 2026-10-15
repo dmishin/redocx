@@ -63,6 +63,7 @@ class Code(Enum):
     UNDEFINED_STYLE = "WGX0307"
     UNDEFINED_LABEL = "WGX0308"
     DUPLICATE_LABEL = "WGX0309"
+    TEMPLATE = "WGX0310"
 
 
 @dataclass(frozen=True)

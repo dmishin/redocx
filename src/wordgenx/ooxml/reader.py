@@ -12,6 +12,7 @@ gives a frequency-ranked list of language features that are still missing (the
 
 from __future__ import annotations
 
+import copy
 import posixpath
 import re
 import zipfile
@@ -30,7 +31,7 @@ from wordgenx import ir
 from wordgenx.ooxml.constants import NS, RT
 from wordgenx.ooxml.xml import Element
 from wordgenx.props import EMPTY_PARAGRAPH, EMPTY_RUN, PropertySet, Target
-from wordgenx.values import TAB_LEADERS, Color, Length, LineSpacing, TabStop
+from wordgenx.values import TAB_ALIGNMENTS, TAB_LEADERS, Color, Length, LineSpacing, TabStop
 
 _A = "http://schemas.openxmlformats.org/drawingml/2006/main"
 _WP = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
@@ -318,6 +319,10 @@ def _decode_tabs(element: Element, ctx: _Ctx) -> tuple[TabStop, ...] | None:
             ctx.stats.note("w:tab without a position")
             continue
         align = tab.get(_w("val")) or "left"
+        align = {"start": "left", "end": "right"}.get(align, align)
+        if align not in TAB_ALIGNMENTS:  # clear (removes an inherited stop), num (lists)
+            ctx.stats.note(f"tab stop {align!r}")
+            continue
         leader = _LEADER_NAMES.get(tab.get(_w("leader")) or "none", "none")
         stops.append(TabStop(Length.twips(_int(position)), align, leader))
     return tuple(stops) if stops else None
@@ -1238,4 +1243,64 @@ def _package_part(opc: _Opc, reltype: str, fallback: str) -> Element | None:
     return opc.parse(fallback)
 
 
-__all__ = ["ImportReport", "ImportResult", "NotADocxError", "read_docx"]
+__all__ = [
+    "ImportReport",
+    "ImportResult",
+    "NotADocxError",
+    "PackageDefinitions",
+    "PackageReader",
+    "open_package",
+    "read_definitions",
+    "read_docx",
+]
+
+
+# --- reading definitions only (templates) ----------------------------------------------------
+
+PackageReader = _Opc
+"""Read-only access to a package's parts and relationships."""
+
+
+@dataclass(frozen=True)
+class PackageDefinitions:
+    """What a template defines, in IR form (best effort: for lookups, not for writing)."""
+
+    styles: tuple[ir.Style, ...]
+    numbering: tuple[ir.Numbering, ...]
+    section: ir.Section
+    """The final section's page setup (headers and footers are not read)."""
+    report: ImportReport
+
+
+def open_package(data: bytes) -> tuple[PackageReader, str]:
+    """The package and its main document part (raises NotADocxError)."""
+    opc = _Opc(data)
+    document_part = _document_part(opc)
+    if document_part is None:
+        raise NotADocxError("no word/document.xml part found; not a Word document or template")
+    return opc, document_part
+
+
+def read_definitions(opc: PackageReader, document_part: str) -> PackageDefinitions:
+    styles_root = _related(opc, document_part, RT.STYLES, "word/styles.xml")
+    numbering_root = _related(opc, document_part, RT.NUMBERING, "word/numbering.xml")
+    stats = _Stats()
+    ctx = _Ctx(opc, document_part, stats, style_names=_style_name_map(styles_root))
+    numbering, defs, instances = (
+        _read_numbering(numbering_root, ctx) if numbering_root is not None else ((), {}, {})
+    )
+    ctx = replace(ctx, numbering_defs=defs, numbering_instances=instances)
+    styles = _read_styles(styles_root, ctx) if styles_root is not None else ()
+    section = ir.Section()
+    root = opc.parse(document_part)
+    body = root.find(_w("body")) if root is not None else None
+    final = body.find(_w("sectPr")) if body is not None else None
+    if final is not None:
+        page_only = copy.deepcopy(final)
+        for reference in [
+            *page_only.findall(_w("headerReference")),
+            *page_only.findall(_w("footerReference")),
+        ]:
+            page_only.remove(reference)
+        section = _read_section(page_only, ctx)
+    return PackageDefinitions(styles, numbering, section, stats.report())

@@ -52,7 +52,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Table styles with conditional formatting (tblStylePr: firstRow, lastRow, bands, corners…) | M2 ✓ | ●●● |
 | Numbering styles | M2 | ●● |
 | Latent styles, quick-style gallery flags, priorities | M2 | ● |
-| Modify/replace template styles; localized built-in style names | M2 | ●● |
+| Modify/replace template styles; localized built-in style names | M2 ✓ (`replace` acts as `modify` on template styles) | ●● |
 | Theme colors/fonts references | M1 | ● |
 | Custom theme (generate theme1.xml) | M4 | ●● |
 
@@ -151,7 +151,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 
 | Feature | Tier | Diff. |
 |---------|------|-------|
-| Templates (.dotx/.docx base) | M2 | ●●● |
+| Templates (.dotx/.docx base); writing .dotx | M2 ✓ | ●●● |
 | Compatibility mode settings | M1 | ● |
 | updateFields on open | M2 | ● |
 | Embedded fonts | Later | ●● |

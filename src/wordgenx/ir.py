@@ -13,6 +13,7 @@ from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field, replace
 from datetime import datetime
 from enum import Enum
+from typing import TYPE_CHECKING
 
 from wordgenx.props import (
     EMPTY_CELL,
@@ -25,6 +26,9 @@ from wordgenx.props import (
     run_props,
 )
 from wordgenx.values import Length
+
+if TYPE_CHECKING:
+    from wordgenx.ooxml.template import Template
 
 # Defaults: A4 with 1-inch margins, as in a new Word document outside North America.
 _A4_WIDTH = Length.mm(210)
@@ -751,6 +755,8 @@ class Document:
     """Document defaults for paragraphs (docDefaults/pPrDefault)."""
     section: Section = field(default_factory=lambda: Section())
     """The last (or only) section; earlier sections end at SectionBreak blocks in the body."""
+    template: Template | None = None
+    """The .dotx or .docx this document is compiled into (its styles, theme, headers, ...)."""
 
     @property
     def page(self) -> PageSetup:

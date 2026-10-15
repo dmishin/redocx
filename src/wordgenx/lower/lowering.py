@@ -42,6 +42,7 @@ from wordgenx.lower.macros import Binding, Macro, Substitution, define_macro, le
 from wordgenx.lower.references import REF_FORMS, Label, PendingRef, PendingToc, References
 from wordgenx.lower.typography import smarten
 from wordgenx.ooxml.style_names import style_id
+from wordgenx.ooxml.template import Template, TemplateError, load_template
 from wordgenx.props import (
     EMPTY_CELL,
     EMPTY_PARAGRAPH,
@@ -253,6 +254,10 @@ class Lowering:
     """Header/footer kinds defined so far ("header:first", ...): what a new section inherits."""
     _container_depth: int = 0
     _part: str | None = None
+    template: Template | None = None
+    """The .dotx or .docx the document is compiled into."""
+    _template_fixed: bool = False
+    """The template came from the command line (it wins over \\document[template=...])."""
     """header | footer | footnote | endnote while lowering one (notes are not allowed there)."""
     """> 0 while lowering a table cell, header or footer (no section breaks there)."""
     style_uses: list[StyleUse] = field(default_factory=lambda: [])
@@ -790,13 +795,16 @@ class Lowering:
                 self.meta = replace(self.meta, language=text)
             elif option.key == "smart-quotes" and text in ("on", "off", "true", "false"):
                 self.smart_quotes = text in ("on", "true")
-            elif option.key == "template":
-                self.warn(
-                    Code.NOT_SUPPORTED_YET,
-                    "templates are not supported yet",
-                    option.span,
-                    help="planned for milestone M2",
-                )
+            elif option.key == "template" and text:
+                if self.has_content:
+                    self.report(
+                        Code.TEMPLATE,
+                        "the template must be set before any content",
+                        option.span,
+                        help="put \\document[template=...] at the top of the document",
+                    )
+                elif not self._template_fixed:
+                    self.use_template(self.base_dir / text, option.value.span)
             else:
                 self.report(
                     Code.INVALID_ARGUMENT,
@@ -805,6 +813,24 @@ class Lowering:
                     help='lang=en-US, smart-quotes=on|off, template="file.dotx"',
                 )
         return []
+
+    def use_template(self, path: Path, span: Span, *, from_command_line: bool = False) -> None:
+        """Compile into a .dotx or .docx: its page setup is the first section's starting point."""
+        try:
+            template = load_template(path)
+        except TemplateError as e:
+            self.report(Code.TEMPLATE, str(e), span, help=f"paths are relative to {self.base_dir}")
+            return
+        self.template = template
+        self._template_fixed = from_command_line
+        self.section = replace(template.section, headers=(), footers=())
+        if template.body_issue is not None:
+            self.warn(
+                Code.TEMPLATE,
+                f"the body content of `{template.name}` is not carried over: {template.body_issue}",
+                span,
+                help="only its styles, theme, page setup, headers and footers are used",
+            )
 
     def cmd_meta(self, command: ast.Command) -> list[ir.Block]:
         self.no_body(command)

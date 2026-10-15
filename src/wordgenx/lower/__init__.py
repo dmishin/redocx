@@ -21,12 +21,17 @@ from wordgenx.values import Length, TabStop
 _BUILTIN_BY_ID = {style_id(name): name for name in BUILTIN_STYLES}
 
 
-def lower(result: ParseResult, base_dir: Path | None = None) -> tuple[ir.Document, list[Located]]:
+def lower(
+    result: ParseResult, base_dir: Path | None = None, template_path: Path | None = None
+) -> tuple[ir.Document, list[Located]]:
     """Lower a parsed document. Diagnostics include the parse diagnostics; the document is
-    only meaningful when none of them is an error."""
+    only meaningful when none of them is an error. `template_path` (a .dotx or .docx) takes
+    precedence over a \\document[template=...] option."""
     if base_dir is None:
         base_dir = Path(result.source.name).resolve().parent
     lowering = Lowering(result.source, base_dir)
+    if template_path is not None:
+        lowering.use_template(template_path, Span(0, 0), from_command_line=True)
     body = lowering.document(result.ast)
     compiled = lowering.stylesheets.result()
     diagnostics: list[Located] = [(result.source, d) for d in result.diagnostics]
@@ -84,11 +89,27 @@ def lower(result: ParseResult, base_dir: Path | None = None) -> tuple[ir.Documen
         (b.section.page for b in body if isinstance(b, ir.SectionBreak)), lowering.section.page
     )
 
-    # Styles: defined by style sheets, else Word built-ins the markup relies on.
-    styles = {style_id(s.name): s for s in compiled.styles}
+    # Styles: defined by style sheets, else the template's, else Word built-ins the markup
+    # relies on. A built-in the template has is the template's (unchanged built-ins that
+    # style sheets brought along are dropped).
+    template = lowering.template
+
+    def in_template(name: str) -> bool:
+        return template is not None and template.style(name) is not None
+
+    styles = {
+        style_id(s.name): s
+        for s in compiled.styles
+        if not (in_template(s.name) and s.name in BUILTIN_STYLES and s == BUILTIN_STYLES[s.name]())
+    }
     for use in style_uses:
         sid = style_id(use.name)
         style = styles.get(sid)
+        if style is None and template is not None and (found := template.style(use.name)):
+            if found.kind != use.kind.value:
+                error(use, f"`{use.name}` is a {found.kind} style in the template, not a "
+                      f"{use.kind.value} style")  # fmt: skip
+            continue
         if style is None and sid in _BUILTIN_BY_ID:
             style = styles[sid] = _builtin(_BUILTIN_BY_ID[sid], first_page)
             for related in (style.based_on, style.next):
@@ -96,6 +117,7 @@ def lower(result: ParseResult, base_dir: Path | None = None) -> tuple[ir.Documen
                     related is not None
                     and style_id(related) not in styles
                     and style_id(related) in _BUILTIN_BY_ID
+                    and not in_template(related)
                 ):
                     styles[style_id(related)] = BUILTIN_STYLES[_BUILTIN_BY_ID[style_id(related)]]()
         if style is None:
@@ -118,21 +140,28 @@ def lower(result: ParseResult, base_dir: Path | None = None) -> tuple[ir.Documen
                 name is not None
                 and style_id(name) not in styles
                 and style_id(name) in _BUILTIN_BY_ID
+                and not in_template(name)
             ):
                 styles[style_id(name)] = _builtin(_BUILTIN_BY_ID[style_id(name)], first_page)
                 added = True
 
-    # Cross-references, counters and tables of contents, now that styles and numbering are final.
+    # Cross-references, counters and tables of contents, now that styles and numbering are
+    # final. The template's definitions count too (its headings are numbered by its lists).
+    known_styles, known_numbering = dict(styles), dict(numbering)
+    if template is not None:
+        known_styles = {style_id(s.name): s for s in template.definitions.styles} | styles
+        known_numbering = {n.name: n for n in template.definitions.numbering} | numbering
     resolved_body, toc_styles, needs_update = resolve(
         resolved_body,
-        styles,
-        numbering,
+        known_styles,
+        known_numbering,
         lowering.settings,
         lowering.references,
         report_to(diagnostics),
+        first_page.text_width,
     )
     for name in sorted(toc_styles):
-        if style_id(name) not in styles:
+        if style_id(name) not in styles and not in_template(name):
             styles[style_id(name)] = _builtin(name, first_page)
     settings = lowering.settings
     if lowering.even_headers:
@@ -149,6 +178,7 @@ def lower(result: ParseResult, base_dir: Path | None = None) -> tuple[ir.Documen
         default_run=compiled.default_run,
         default_paragraph=compiled.default_paragraph,
         section=resolved_section,
+        template=template,
     )
     return document, diagnostics
 

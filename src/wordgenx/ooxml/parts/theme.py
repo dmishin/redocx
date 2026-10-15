@@ -107,3 +107,35 @@ def theme_xml(theme: Theme) -> Element:
         E("a:extraClrSchemeLst"),
         nsmap=nsmap("a"),
     )
+
+
+_A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
+
+
+def theme_from_xml(root: Element) -> Theme:
+    """The colours and fonts of an existing theme part (a template's), for resolving
+    theme colours; unknown or missing entries keep wordgenx's defaults."""
+    default = Theme()
+    colors = dict(default.colors)
+    scheme = root.find(f"{_A}themeElements/{_A}clrScheme")
+    if scheme is not None:
+        for slot in SCHEME_SLOTS:
+            entry = scheme.find(f"{_A}{slot}")
+            if entry is None or not len(entry):
+                continue
+            color = entry[0]
+            value = color.get("lastClr") if color.tag == f"{_A}sysClr" else color.get("val")
+            if value and len(value) == 6:
+                colors[slot] = value.upper()
+    fonts = root.find(f"{_A}themeElements/{_A}fontScheme")
+
+    def typeface(which: str, fallback: str) -> str:
+        latin = fonts.find(f"{_A}{which}/{_A}latin") if fonts is not None else None
+        return (latin.get("typeface") if latin is not None else None) or fallback
+
+    return Theme(
+        name=root.get("name") or default.name,
+        colors=colors,
+        major_font=typeface("majorFont", default.major_font),
+        minor_font=typeface("minorFont", default.minor_font),
+    )

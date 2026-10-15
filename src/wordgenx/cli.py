@@ -36,11 +36,13 @@ def _diagnostics(source: Source) -> list[tuple[Source, Diagnostic]]:
     return list(compile_source(source).diagnostics)
 
 
-def _build(path: str, output: str | None) -> int:
+def _build(path: str, output: str | None, template: str | None) -> int:
     source = _load(path)
     if source is None:
         return 1
-    data, result = build(source)
+    as_template = output is not None and output.lower().endswith(".dotx")
+    template_path = Path(template).resolve() if template else None
+    data, result = build(source, template=template_path, as_template=as_template)
     if result.diagnostics:
         print(result.render_diagnostics(), file=sys.stderr)
     summary = f"{result.error_count} error{'s' * (result.error_count != 1)}, " + (
@@ -112,7 +114,15 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     build_cmd = commands.add_parser("build", help="compile a document to .docx")
     build_cmd.add_argument("file", metavar="FILE")
-    build_cmd.add_argument("-o", "--output", metavar="OUT", help="output file (default: FILE.docx)")
+    build_cmd.add_argument(
+        "-o", "--output", metavar="OUT", help="output file (default: FILE.docx; .dotx: a template)"
+    )
+    build_cmd.add_argument(
+        "-t",
+        "--template",
+        metavar="TEMPLATE",
+        help="a .dotx or .docx to compile into (overrides \\document[template=...])",
+    )
 
     check = commands.add_parser("check", help="report diagnostics without writing output")
     check.add_argument("files", nargs="+", metavar="FILE")
@@ -128,7 +138,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
     if args.command == "build":
-        return _build(args.file, args.output)
+        return _build(args.file, args.output, args.template)
     if args.command == "check":
         return _check(args.files)
     if args.command == "inspect":
