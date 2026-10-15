@@ -1,0 +1,55 @@
+[project]
+name = "wordgenx"
+version = "0.0.1"
+description = "A document markup language that compiles to native, fully formatted Word (.docx) documents."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "wordgenx contributors" }]
+requires-python = ">=3.12"
+dependencies = []
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Office/Business :: Office Suites",
+    "Topic :: Text Processing :: Markup",
+    "Typing :: Typed",
+]
+
+[dependency-groups]
+dev = [
+    "lxml>=5.3",
+    "pyright>=1.1.400",
+    "pytest>=8.3",
+    "python-docx>=1.1",
+    "ruff>=0.12",
+    "types-lxml>=2025.3",
+]
+
+[build-system]
+requires = ["uv_build>=0.13.1,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["docs", "examples"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "SIM", "RUF", "PT", "N"]
+
+[tool.pyright]
+include = ["src", "tests"]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-ra", "--strict-markers"]
+markers = [
+    "validator: needs the .NET OOXML validator (tools/ooxml-validate); skipped when dotnet is unavailable",
+]
