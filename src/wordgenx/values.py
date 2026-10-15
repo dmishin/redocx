@@ -70,7 +70,9 @@ class Length:
 
     @classmethod
     def parse(cls, text: str) -> Length:
-        """Parse a length such as ``12pt``, ``2.5cm`` or ``-0.5in``."""
+        """Parse a length such as ``12pt``, ``2.5cm`` or ``-0.5in``; a bare ``0`` is zero."""
+        if text.strip() in ("0", "0.0"):
+            return cls(0)
         match = _LENGTH_RE.fullmatch(text)
         if match is None:
             raise InvalidValueError(

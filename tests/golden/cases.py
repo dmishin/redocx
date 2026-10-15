@@ -6,9 +6,12 @@ is snapshotted, schema-validated and run through the Open XML SDK validator.
 
 from collections.abc import Callable
 from datetime import UTC, datetime
+from pathlib import Path
 
 from wordgenx import ir
 from wordgenx.props import para_props, run_props
+from wordgenx.stylesheet import compile_stylesheets, parse_stylesheet
+from wordgenx.syntax import Source
 from wordgenx.values import Length, LineSpacing
 
 
@@ -119,8 +122,32 @@ def metadata() -> ir.Document:
     )
 
 
+def stylesheet() -> ir.Document:
+    """examples/styles/house.wgxs: defaults, styles, linked style, heading and list numbering."""
+    path = Path(__file__).resolve().parents[2] / "examples" / "styles" / "house.wgxs"
+    compiled = compile_stylesheets([parse_stylesheet(Source.from_path(path))])
+    assert compiled.ok, compiled.render_diagnostics()
+    body = (
+        ir.paragraph("Introduction", style="Heading 1"),
+        ir.paragraph(
+            "Body text with a ",
+            ir.run("term", style="Term"),
+            " and ",
+            ir.run("strong words", style="Strong"),
+            ".",
+            style="Body Text",
+        ),
+        ir.paragraph("Background", style="Heading 2"),
+        ir.paragraph("A quotation in a linked style.", style="Quote"),
+        ir.paragraph("Design", style="Heading 1"),
+        ir.paragraph("print('hello')", style="Code Block"),
+    )
+    return compiled.apply(ir.Document(body=body, meta=ir.Meta(language="en-GB")))
+
+
 CASES: dict[str, Callable[[], ir.Document]] = {
     "minimal": minimal,
     "styled": styled,
     "metadata": metadata,
+    "stylesheet": stylesheet,
 }

@@ -23,7 +23,9 @@ with no repair prompt, pass both validators, and match their golden snapshots.
   design §3.22). Checked by property-based fuzzing (Hypothesis) and a syntax tour (`examples/syntax-tour.wgx`).
 - [x] CLI `wordgenx check` and `wordgenx parse` (`--tree ast|cst`).
 - Inline sugar, commands, options type-checking, units and colors (lowering AST -> IR).
-- Style sheets: defaults, paragraph and character styles, theme references.
+- [x] Style sheets (`.wgxs` and `\styles{}`): defaults, paragraph, character and linked styles, theme references,
+  modify/replace, multilevel numbering definitions with style-linked levels (`numbering.xml`). Table styles are parsed
+  but deferred to M2.
 - Headings, paragraphs, lists with real multilevel numbering (restart and continue).
 - Single-section page setup, breaks, hyperlinks, inline images, simple tables.
 - `\include`, `\use`, `\let`, `\define` (macros with `#param`), `\settings`.

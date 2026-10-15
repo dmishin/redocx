@@ -444,9 +444,13 @@ class PropertySet(Mapping[str, object]):
         if "first-line-indent" in coerced and "hanging-indent" in coerced:
             raise InvalidValueError("first-line-indent and hanging-indent are mutually exclusive")
         self._target = target
+        self._values = self._ordered(target, coerced)
+
+    @staticmethod
+    def _ordered(target: Target, values: dict[str, object]) -> dict[str, object]:
         # Registry order, so iteration (and anything derived from it) is deterministic.
         order = list(REGISTRY[target])
-        self._values = dict(sorted(coerced.items(), key=lambda item: order.index(item[0])))
+        return dict(sorted(values.items(), key=lambda item: order.index(item[0])))
 
     @property
     def target(self) -> Target:
@@ -474,10 +478,25 @@ class PropertySet(Mapping[str, object]):
         return f"PropertySet({self._target.name}, {items})"
 
     def merged(self, other: PropertySet) -> PropertySet:
-        """A new set with `other`'s values taking precedence."""
+        """A new set with `other`'s values taking precedence.
+
+        Both sets are already validated, so values are not coerced again. A first-line
+        indent in `other` replaces a hanging indent in `self`, and vice versa.
+        """
         if other._target is not self._target:
             raise ValueError("cannot merge property sets of different targets")
-        return PropertySet(self._target, {**self._values, **other._values})
+        values = dict(self._values)
+        for exclusive, rival in (
+            ("first-line-indent", "hanging-indent"),
+            ("hanging-indent", "first-line-indent"),
+        ):
+            if exclusive in other._values:
+                values.pop(rival, None)
+        values.update(other._values)
+        merged = PropertySet.__new__(PropertySet)
+        merged._target = self._target
+        merged._values = self._ordered(self._target, values)
+        return merged
 
     def emit(self, ctx: EmitContext) -> dict[str, Attrs]:
         """Element local name -> merged attributes, for every property in the set."""

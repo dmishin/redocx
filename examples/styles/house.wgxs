@@ -1,0 +1,62 @@
+% ============================================================================
+% A house style sheet (language design §3.5, §3.7).
+% Used by the style-sheet tests and the "stylesheet" golden case.
+% ============================================================================
+
+defaults {
+  font: theme.minor; size: 11pt; lang: en-GB;
+  space-after: 8pt; line-spacing: 1.08;
+}
+
+paragraph Normal { widow-control; }
+
+paragraph "Body Text" : Normal {          % ": Normal" means based on Normal
+  first-line-indent: 0; space-after: 6pt; justify;
+  next: "Body Text";
+}
+
+paragraph "Heading 1" : Normal {
+  font: theme.major; size: 16pt; color: theme.accent1;
+  space-before: 24pt; space-after: 6pt; keep-with-next; keep-lines;
+  outline-level: 1;
+  numbering: Headings level 1;            % link to the multilevel list below
+  next: "Body Text";
+}
+
+paragraph "Heading 2" : "Heading 1" {
+  size: 13pt; space-before: 12pt; outline-level: 2;
+  numbering: Headings level 2;
+}
+
+paragraph "Code Block" : Normal {
+  font: "Consolas"; size: 9.5pt; line-spacing: (12pt, exact);
+  indent: (left=0.5cm); contextual-spacing;
+}
+
+character Term { italic; color: theme.accent2; }
+character Strong { bold; }
+
+linked Quote : Normal {                   % linked paragraph + character style
+  indent: (left=1cm, right=1cm); italic; color: theme.text2;
+}
+
+table "Data Grid" {                       % table styles arrive in M2 (warning)
+  header-row { bold; }
+}
+
+numbering Headings {
+  level 1 { format: decimal; text: "%1"; indent: 0.75cm hanging; }
+  level 2 { format: decimal; text: "%1.%2"; indent: 1cm hanging; }
+}
+
+numbering Legal {
+  level 1 { format: decimal;      text: "%1.";  indent: 0.75cm hanging; legal; }
+  level 2 { format: lower-letter; text: "(%2)"; indent: (left=1.5cm, hanging=0.75cm); }
+  level 3 { format: lower-roman;  text: "(%3)"; indent: (left=2.25cm, hanging=0.75cm); start: 1; }
+}
+
+numbering Checklist {
+  level 1 { bullet: "☐"; font: "Segoe UI Symbol"; suffix: space; }
+}
+
+modify paragraph "Heading 1" { page-break-before: false; }

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from wordgenx.ooxml.schema_order import PPR, RPR, ordered
+from wordgenx.ooxml.schema_order import NUM_PR, PPR, RPR, ordered
 from wordgenx.ooxml.xml import E, Element
 from wordgenx.props import EmitContext, PropertySet, Target
 
@@ -26,11 +26,30 @@ def run_properties(
 
 
 def paragraph_properties(
-    props: PropertySet, ctx: EmitContext, *, style_id: str | None = None
+    props: PropertySet,
+    ctx: EmitContext,
+    *,
+    style_id: str | None = None,
+    numbering: tuple[int, int] | None = None,
 ) -> Element | None:
-    """A w:pPr element, or None when there is nothing to say."""
+    """A w:pPr element, or None when there is nothing to say.
+
+    `numbering` is (numId, 0-based level) for numbered paragraphs and styles.
+    """
     assert props.target is Target.PARAGRAPH
     children = _children(props, ctx)
     if style_id is not None:
         children["pStyle"] = E("w:pStyle", {"w:val": style_id})
+    if numbering is not None:
+        num_id, ilvl = numbering
+        children["numPr"] = E(
+            "w:numPr",
+            *ordered(
+                {
+                    "ilvl": E("w:ilvl", {"w:val": str(ilvl)}),
+                    "numId": E("w:numId", {"w:val": str(num_id)}),
+                },
+                NUM_PR,
+            ),
+        )
     return E("w:pPr", *ordered(children, PPR)) if children else None

@@ -17,6 +17,8 @@ class ArgKind(Enum):
     """Literal text with balanced braces; nothing is an escape."""
     MATH = "math"
     """LaTeX-style math: balanced braces; \\{ and \\} do not count."""
+    STYLESHEET = "stylesheet"
+    """Style-sheet syntax (design §3.5): balanced braces, parsed by wordgenx.stylesheet."""
 
 
 BODY_KINDS: dict[str, ArgKind] = {
@@ -29,6 +31,7 @@ BODY_KINDS: dict[str, ArgKind] = {
     "raw": ArgKind.RAW,
     "m": ArgKind.MATH,
     "math": ArgKind.MATH,
+    "styles": ArgKind.STYLESHEET,
 }
 
 SPECIAL_FORMS = frozenset({"define", "let"})

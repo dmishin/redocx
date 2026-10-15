@@ -36,6 +36,20 @@ SECT_PR: Sequence[str] = (
 ).split()
 """EG_SectPrContents (after the header/footer references, before sectPrChange)."""
 
+LVL: Sequence[str] = (
+    "start numFmt lvlRestart pStyle isLgl suff lvlText lvlPicBulletId legacy lvlJc pPr rPr"
+).split()
+"""CT_Lvl."""
+
+ABSTRACT_NUM: Sequence[str] = "nsid multiLevelType tmpl name styleLink numStyleLink lvl".split()
+"""CT_AbstractNum."""
+
+NUMBERING: Sequence[str] = "numPicBullet abstractNum num numIdMacAtCleanup".split()
+"""CT_Numbering."""
+
+NUM_PR: Sequence[str] = "ilvl numId numberingChange ins".split()
+"""CT_NumPr."""
+
 SETTINGS: Sequence[str] = (
     "writeProtection view zoom removePersonalInformation removeDateAndTime "
     "doNotDisplayPageBoundaries displayBackgroundShape printPostScriptOverText "

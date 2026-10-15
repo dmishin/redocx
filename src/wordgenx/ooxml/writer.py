@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from dataclasses import replace
 from os import PathLike
 
-from wordgenx.ir import Document, StyleKind
+from wordgenx.ir import Document, Numbering, NumberingRef, StyleKind
 from wordgenx.ooxml.constants import CT, RT
 from wordgenx.ooxml.opc import Package
 from wordgenx.ooxml.parts.docprops import app_xml, core_xml
 from wordgenx.ooxml.parts.document import document_xml
 from wordgenx.ooxml.parts.fonts import font_table_xml
+from wordgenx.ooxml.parts.numbering import default_level, numbering_xml
 from wordgenx.ooxml.parts.settings import settings_xml
 from wordgenx.ooxml.parts.styles import StyleError, resolve_styles, styles_xml
 from wordgenx.ooxml.parts.theme import Theme, theme_xml
@@ -26,15 +28,64 @@ def _with_default_fonts(document: Document) -> Document:
     if document.meta.language:
         defaults["lang"] = document.meta.language
     base = PropertySet(Target.RUN, defaults)
-    return Document(
-        body=document.body,
-        meta=document.meta,
-        settings=document.settings,
-        styles=document.styles,
-        default_run=base.merged(document.default_run),
-        default_paragraph=document.default_paragraph,
-        page=document.page,
-    )
+    return replace(document, default_run=base.merged(document.default_run))
+
+
+def _link_numbering(document: Document) -> Document:
+    """Validate numbering references and complete the two-way style <-> level links.
+
+    Word numbers a heading style through both a w:numPr in the style and a w:pStyle
+    in the list level. Declaring either side is enough; this fills in the other.
+    """
+    definitions: dict[str, Numbering] = {}
+    for numbering in document.numbering:
+        if numbering.name in definitions:
+            raise StyleError(f"numbering {numbering.name!r} is defined twice")
+        definitions[numbering.name] = numbering
+    styles = {style_id(s.name): s for s in document.styles}
+
+    for style in styles.values():
+        ref = style.numbering
+        if ref is not None and ref.name not in definitions:
+            raise StyleError(f"style {style.name!r}: numbering {ref.name!r} is not defined")
+
+    # Level -> style links: give the style its w:numPr.
+    for numbering in definitions.values():
+        for level in numbering.levels:
+            if level.style is None:
+                continue
+            sid = style_id(level.style)
+            style = styles.get(sid)
+            if style is None or style.kind is not StyleKind.PARAGRAPH:
+                raise StyleError(
+                    f"numbering {numbering.name!r} level {level.level}: "
+                    f"paragraph style {level.style!r} is not defined"
+                )
+            ref = NumberingRef(numbering.name, level.level)
+            if style.numbering is None:
+                styles[sid] = replace(style, numbering=ref)
+            elif style.numbering != ref:
+                raise StyleError(
+                    f"style {style.name!r} is linked to two list levels: "
+                    f"{style.numbering.name} level {style.numbering.level} and "
+                    f"{numbering.name} level {level.level}"
+                )
+
+    # Style -> level links: give the level its w:pStyle (first style wins).
+    for style in styles.values():
+        ref = style.numbering
+        if ref is None:
+            continue
+        numbering = definitions[ref.name]
+        level = numbering.level(ref.level) or default_level(numbering, ref.level)
+        if level.style is None:
+            level = replace(level, style=style.name)
+            others = tuple(lvl for lvl in numbering.levels if lvl.level != ref.level)
+            levels = tuple(sorted((*others, level), key=lambda lvl: lvl.level))
+            definitions[ref.name] = replace(numbering, levels=levels)
+
+    ordered_styles = tuple(styles[style_id(s.name)] for s in document.styles)
+    return replace(document, styles=ordered_styles, numbering=tuple(definitions.values()))
 
 
 def _check_style_references(document: Document) -> None:
@@ -56,6 +107,7 @@ def _font_names(document: Document, theme: Theme) -> Iterator[str]:
     yield theme.major_font
     yield theme.minor_font
     property_sets = [document.default_run, *(s.run for s in document.styles)]
+    property_sets += [level.run for n in document.numbering for level in n.levels]
     property_sets += [run.props for p in document.body for run in p.content]
     for props in property_sets:
         font = props.get("font")
@@ -66,7 +118,7 @@ def _font_names(document: Document, theme: Theme) -> Iterator[str]:
 def build_package(document: Document, theme: Theme | None = None) -> Package:
     """Build the OPC package for `document` (not yet serialized)."""
     theme = theme or Theme()
-    document = _with_default_fonts(document)
+    document = _link_numbering(_with_default_fonts(document))
     _check_style_references(document)
 
     pkg = Package()
@@ -95,6 +147,13 @@ def build_package(document: Document, theme: Theme | None = None) -> Package:
     main.relate(settings, RT.SETTINGS)
     main.relate(fonts, RT.FONT_TABLE)
     main.relate(theme_part, RT.THEME)
+    if document.numbering:
+        numbering = pkg.add_part(
+            "/word/numbering.xml",
+            CT.WML_NUMBERING,
+            serialize(numbering_xml(document.numbering, theme)),
+        )
+        main.relate(numbering, RT.NUMBERING)
     return pkg
 
 

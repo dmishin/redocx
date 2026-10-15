@@ -7,8 +7,11 @@ import sys
 from collections.abc import Sequence
 
 from wordgenx import __version__
+from wordgenx.stylesheet import compile_stylesheets, parse_stylesheet
+from wordgenx.stylesheet.collect import STYLESHEET_SUFFIX, document_styles
 from wordgenx.syntax import Source, ast, parse
 from wordgenx.syntax.cst import dump as dump_cst
+from wordgenx.syntax.diagnostics import Diagnostic, render
 
 
 def _load(path: str) -> Source | None:
@@ -22,6 +25,15 @@ def _load(path: str) -> Source | None:
         return None
 
 
+def _diagnostics(source: Source) -> list[tuple[Source, Diagnostic]]:
+    """Syntax and style-sheet diagnostics of a document (.wgx) or style sheet (.wgxs)."""
+    if source.name.endswith(STYLESHEET_SUFFIX):
+        return list(compile_stylesheets([parse_stylesheet(source)]).diagnostics)
+    result = parse(source)
+    found = [(source, d) for d in result.diagnostics]
+    return found + list(document_styles(result).diagnostics)
+
+
 def _check(paths: Sequence[str]) -> int:
     errors = warnings = 0
     failed = False
@@ -30,11 +42,11 @@ def _check(paths: Sequence[str]) -> int:
         if source is None:
             failed = True
             continue
-        result = parse(source)
-        if result.diagnostics:
-            print(result.render_diagnostics(), file=sys.stderr)
-        errors += sum(d.is_error for d in result.diagnostics)
-        warnings += sum(not d.is_error for d in result.diagnostics)
+        diagnostics = _diagnostics(source)
+        if diagnostics:
+            print("\n".join(render(d, src) for src, d in diagnostics), file=sys.stderr)
+        errors += sum(d.is_error for _, d in diagnostics)
+        warnings += sum(not d.is_error for _, d in diagnostics)
     summary = f"{errors} error{'s' * (errors != 1)}, {warnings} warning{'s' * (warnings != 1)}"
     print(f"checked {len(paths)} file{'s' * (len(paths) != 1)}: {summary}", file=sys.stderr)
     return 1 if errors or failed else 0

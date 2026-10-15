@@ -45,6 +45,14 @@ class Code(Enum):
     UNCLOSED_GROUP = "WGX0115"
     NESTING_TOO_DEEP = "WGX0116"
 
+    # Style sheets (WGX02xx)
+    STYLESHEET_SYNTAX = "WGX0201"
+    UNKNOWN_PROPERTY = "WGX0202"
+    INVALID_VALUE = "WGX0203"
+    STYLE_DEFINITION = "WGX0204"
+    UNSUPPORTED = "WGX0205"
+    STYLESHEET_NOT_FOUND = "WGX0206"
+
 
 @dataclass(frozen=True)
 class Diagnostic:

@@ -36,6 +36,10 @@ def _children(kind: str, name: str) -> list[str]:
         (schema_order.STYLE, "complexType", "CT_Style"),
         (schema_order.SECT_PR, "group", "EG_SectPrContents"),
         (schema_order.SETTINGS, "complexType", "CT_Settings"),
+        (schema_order.LVL, "complexType", "CT_Lvl"),
+        (schema_order.ABSTRACT_NUM, "complexType", "CT_AbstractNum"),
+        (schema_order.NUMBERING, "complexType", "CT_Numbering"),
+        (schema_order.NUM_PR, "complexType", "CT_NumPr"),
     ],
 )
 def test_order_matches_schema(ours: Sequence[str], kind: str, name: str) -> None:

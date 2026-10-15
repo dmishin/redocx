@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from wordgenx.ir import Document, Style, StyleKind
+from wordgenx.ooxml.parts.numbering import numbering_ids
 from wordgenx.ooxml.parts.properties import paragraph_properties, run_properties
 from wordgenx.ooxml.schema_order import STYLE, ordered
 from wordgenx.ooxml.style_names import UI_PRIORITY, is_builtin, stored_name, style_id
@@ -83,6 +86,14 @@ def resolve_styles(document: Document) -> dict[str, Style]:
                 raise StyleError(f"style {style.name!r}: {kind} style {ref!r} is not defined")
             if target.kind is not style.kind:
                 raise StyleError(f"style {style.name!r}: {kind} style {ref!r} is a different kind")
+        if style.link is not None:
+            linked = styles.get(style_id(style.link))
+            if linked is None:
+                raise StyleError(
+                    f"style {style.name!r}: linked style {style.link!r} is not defined"
+                )
+            if linked.kind is style.kind:
+                raise StyleError(f"style {style.name!r}: a linked style must be of the other kind")
     _check_cycles(styles)
     return styles
 
@@ -99,7 +110,7 @@ def _check_cycles(styles: dict[str, Style]) -> None:
             current = styles[sid].based_on
 
 
-def _style(style: Style, sid: str, ctx: EmitContext) -> Element:
+def _style(style: Style, sid: str, ctx: EmitContext, num_ids: Mapping[str, int]) -> Element:
     name = stored_name(style.name)
     attrs = {"w:type": style.kind.value, "w:styleId": sid}
     if sid == "Normal":
@@ -107,14 +118,18 @@ def _style(style: Style, sid: str, ctx: EmitContext) -> Element:
     if not is_builtin(name):
         attrs["w:customStyle"] = "1"
     priority = style.ui_priority if style.ui_priority is not None else UI_PRIORITY.get(name)
+    numbering = None
+    if style.numbering is not None:
+        numbering = (num_ids[style.numbering.name], style.numbering.level - 1)
 
     children: dict[str, Element | None] = {
         "name": E("w:name", {"w:val": name}),
         "basedOn": E("w:basedOn", {"w:val": style_id(style.based_on)}) if style.based_on else None,
         "next": E("w:next", {"w:val": style_id(style.next)}) if style.next else None,
+        "link": E("w:link", {"w:val": style_id(style.link)}) if style.link else None,
         "uiPriority": E("w:uiPriority", {"w:val": str(priority)}) if priority else None,
         "qFormat": E("w:qFormat") if style.quick_format else None,
-        "pPr": paragraph_properties(style.paragraph, ctx),
+        "pPr": paragraph_properties(style.paragraph, ctx, numbering=numbering),
         "rPr": run_properties(style.run, ctx),
     }
     present = {key: value for key, value in children.items() if value is not None}
@@ -130,12 +145,13 @@ def styles_xml(document: Document, ctx: EmitContext) -> Element:
         E("w:rPrDefault", rpr) if rpr is not None else None,
         E("w:pPrDefault", ppr) if ppr is not None else None,
     )
-    normal = _style(styles.pop("Normal"), "Normal", ctx)
+    ids = numbering_ids(document.numbering)
+    normal = _style(styles.pop("Normal"), "Normal", ctx, ids)
     return E(
         "w:styles",
         doc_defaults,
         normal,
         *_base_styles(),
-        *(_style(style, sid, ctx) for sid, style in styles.items()),
+        *(_style(style, sid, ctx, ids) for sid, style in styles.items()),
         nsmap=nsmap("w"),
     )

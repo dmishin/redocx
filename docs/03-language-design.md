@@ -193,6 +193,38 @@ table "Data Grid" : "Table Grid" {
 The full property vocabulary is in the [feature matrix](05-feature-matrix.md). It is generated from one
 **property registry** in code, which also drives docs, LSP completion and validation.
 
+### Style-sheet details (implemented in M1, `wordgenx.stylesheet`)
+
+Style sheets come from `.wgxs` files loaded with `\use{file.wgxs}`, or from `\styles{…}` bodies in a document. Paths are
+relative to the document. Sheets apply in document order.
+
+- **Rules:** `defaults { … }`, `[modify|replace] paragraph|character|linked|table NAME [: BASE] { … }`, and
+  `numbering NAME { level N { … } … }`. Names are words or `"quoted strings"`.
+- **Declarations:** `key: value;`. A flag `key;` means `key: true`. Bare alignment words (`justify;`, `center;`, …) mean
+  `align: …`. The `;` before a closing `}` may be omitted. Comments use `%`, as in documents.
+- **Property routing:** each key is looked up in the property registry. Run properties go to the style's run formatting,
+  paragraph properties to its paragraph formatting. Character styles accept only run properties.
+- **Style-level keys:** `next`, `numbering: NAME [level N]`, `ui-priority`, `quick-format`.
+- **Composite values:** `indent: (left=…, right=…, first-line=…, hanging=…)`, `indent: 0.75cm hanging` (left and hanging
+  both 0.75cm), `indent: 1cm` (left). `line-spacing: 1.15` is a multiple. `line-spacing: (12pt, exact)` and `(12pt, at-least)`
+  set a fixed height.
+- **Defaults:** a paragraph style without `: BASE` is based on `Normal`. A character style has no base.
+- **Redefinition:** declaring a style twice is an error. `modify` merges into an existing definition (or creates it, e.g.
+  for a built-in style). `replace` starts from scratch.
+- **Linked styles:** `linked Quote { … }` creates the paragraph style `Quote` and the character style `Quote Char`, linked
+  to each other as Word does.
+- **Numbering levels:** `format` (kebab-case Word formats: `decimal`, `lower-letter`, `upper-roman`, `bullet`,
+  `decimal-zero`, …), `text` (`%1.%2`), `bullet: "•"`, `start`, `style`, `legal`, `suffix: tab|space|nothing`,
+  `marker-align`, `restart-after`, `indent`. Any run property (`bold`, `font`, `color`, …) formats the marker.
+  Undefined levels of the nine are filled in, continuing an outline pattern (`%1.%2` → `%1.%2.%3`). Linking a level to a
+  style (`style: "Heading 1"`) and linking a style to a level (`numbering: Headings level 1`) are equivalent. The
+  compiler completes the other side.
+- **Not yet:** table styles (rules are parsed, ignored with warning `WGX0205`; planned for M2). Composite borders and
+  shading. The `ooxml.*` escape hatch. Unlike documents, style sheets are parsed straight to an AST, not a lossless CST.
+  A formatter for `.wgxs` will need one.
+- **Diagnostics:** `WGX02xx`. Unknown properties suggest the nearest name. Unresolved style and numbering references are
+  reported where they occur.
+
 ## 3.6 Paragraph-level formatting
 
 ```wgx

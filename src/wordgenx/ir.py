@@ -1,12 +1,14 @@
 """The document intermediate representation (IR).
 
 A Word-shaped, immutable model of a document. The language frontend (later) and
-the Python API both produce it; the OOXML writer consumes it. M0 covers metadata,
-document settings, styles, a single section and paragraphs of text runs.
+the Python API both produce it; the OOXML writer consumes it. It covers metadata,
+document settings, styles (incl. linked styles), multilevel numbering definitions,
+a single section and paragraphs of text runs.
 """
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -65,12 +67,103 @@ class Style:
     quick_format: bool = True
     """Show in the Styles gallery."""
     ui_priority: int | None = None
+    link: str | None = None
+    """The linked style of the other kind (a paragraph style and its "... Char" style)."""
+    numbering: NumberingRef | None = None
+    """Paragraphs in this style are numbered by this list level (heading numbering)."""
 
     def __post_init__(self) -> None:
         if self.paragraph.target is not Target.PARAGRAPH or self.run.target is not Target.RUN:
             raise ValueError("Style.paragraph / Style.run have the wrong property targets")
-        if self.kind is StyleKind.CHARACTER and self.paragraph:
+        if self.kind is StyleKind.CHARACTER and (self.paragraph or self.numbering):
             raise ValueError(f"character style {self.name!r} cannot have paragraph properties")
+
+
+# --- numbering (lists) -------------------------------------------------------------
+
+NUMBER_FORMATS = frozenset(
+    "decimal upperRoman lowerRoman upperLetter lowerLetter ordinal cardinalText ordinalText "
+    "decimalZero bullet none hex chicago ideographDigital japaneseCounting aiueo iroha "
+    "decimalFullWidth decimalHalfWidth japaneseLegal decimalEnclosedCircle decimalEnclosedFullstop "
+    "decimalEnclosedParen numberInDash russianLower russianUpper hebrew1 hebrew2 arabicAlpha "
+    "arabicAbjad hindiVowels hindiConsonants hindiNumbers thaiLetters thaiNumbers "
+    "chineseCounting koreanCounting vietnameseCounting".split()
+)
+"""ST_NumberFormat values supported (Word's common formats)."""
+
+_LEVEL_PLACEHOLDER = re.compile(r"%(\d)")
+
+
+@dataclass(frozen=True)
+class NumberingLevel:
+    """One level of a multilevel list (w:lvl)."""
+
+    level: int
+    """1-9."""
+    format: str = "decimal"
+    """An ST_NumberFormat value, e.g. ``decimal``, ``lowerLetter``, ``bullet``."""
+    text: str = ""
+    """The marker template: ``%1.%2`` for numbers, the character itself for bullets."""
+    start: int = 1
+    style: str | None = None
+    """Paragraph style linked to this level."""
+    legal: bool = False
+    """Show all levels as decimal numbers (legal numbering, w:isLgl)."""
+    suffix: str = "tab"
+    """What follows the marker: ``tab``, ``space`` or ``nothing``."""
+    restart_after: int | None = None
+    """Restart after this higher level (w:lvlRestart); None restarts after any higher level."""
+    marker_align: str = "left"
+    paragraph: PropertySet = EMPTY_PARAGRAPH
+    """Paragraph properties of numbered paragraphs (mostly indents)."""
+    run: PropertySet = EMPTY_RUN
+    """Formatting of the marker."""
+
+    def __post_init__(self) -> None:
+        if not 1 <= self.level <= 9:
+            raise ValueError(f"list level must be 1-9, got {self.level}")
+        if self.format not in NUMBER_FORMATS:
+            raise ValueError(f"unknown number format {self.format!r}")
+        for placeholder in _LEVEL_PLACEHOLDER.findall(self.text):
+            if not 1 <= int(placeholder) <= self.level:
+                raise ValueError(
+                    f"level {self.level}: %{placeholder} in {self.text!r} refers to a deeper level"
+                )
+        if self.suffix not in ("tab", "space", "nothing"):
+            raise ValueError(f"suffix must be tab, space or nothing, got {self.suffix!r}")
+        if self.marker_align not in ("left", "center", "right"):
+            raise ValueError(
+                f"marker alignment must be left, center or right: {self.marker_align!r}"
+            )
+        if self.restart_after is not None and not 0 <= self.restart_after < self.level:
+            raise ValueError(
+                f"level {self.level}: restart-after must be a higher level (0-{self.level - 1})"
+            )
+        if self.start < 0:
+            raise ValueError(f"start must not be negative, got {self.start}")
+
+
+@dataclass(frozen=True)
+class Numbering:
+    """A named multilevel list definition (w:abstractNum)."""
+
+    name: str
+    levels: tuple[NumberingLevel, ...]
+    """Defined levels; the writer fills the remaining levels of the nine with defaults."""
+
+    def __post_init__(self) -> None:
+        numbers = [lvl.level for lvl in self.levels]
+        if len(numbers) != len(set(numbers)):
+            raise ValueError(f"numbering {self.name!r} defines a level twice")
+
+    def level(self, number: int) -> NumberingLevel | None:
+        return next((lvl for lvl in self.levels if lvl.level == number), None)
+
+
+@dataclass(frozen=True)
+class NumberingRef:
+    name: str
+    level: int = 1
 
 
 @dataclass(frozen=True)
@@ -111,6 +204,7 @@ class Document:
     meta: Meta = field(default_factory=Meta)
     settings: Settings = field(default_factory=Settings)
     styles: tuple[Style, ...] = ()
+    numbering: tuple[Numbering, ...] = ()
     default_run: PropertySet = EMPTY_RUN
     """Document defaults for runs (docDefaults/rPrDefault)."""
     default_paragraph: PropertySet = EMPTY_PARAGRAPH
