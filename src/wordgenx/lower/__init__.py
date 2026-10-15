@@ -9,6 +9,7 @@ from pathlib import Path
 from wordgenx import ir
 from wordgenx.lower.builtins import BUILTIN_STYLES, DEFAULT_NUMBERING
 from wordgenx.lower.lowering import Located, Lowering, StyleUse
+from wordgenx.lower.references import report_to, resolve
 from wordgenx.ooxml.parts.numbering import complete_levels
 from wordgenx.ooxml.style_names import style_id
 from wordgenx.props import PropertySet, Target
@@ -106,12 +107,23 @@ def lower(result: ParseResult, base_dir: Path | None = None) -> tuple[ir.Documen
         elif style.kind is not use.kind:
             error(use, f"`{use.name}` is a {style.kind.value} style, not a {use.kind.value} style")
 
+    # Cross-references, counters and tables of contents, now that styles and numbering are final.
+    resolved_body, toc_styles, needs_update = resolve(
+        resolved_body, styles, numbering, lowering.references, report_to(diagnostics)
+    )
+    for name in sorted(toc_styles):
+        if style_id(name) not in styles:
+            styles[style_id(name)] = _builtin(name, first_page)
+    settings = lowering.settings
+    if lowering.even_headers:
+        settings = replace(settings, even_and_odd_headers=True)
+    if needs_update:
+        settings = replace(settings, update_fields_on_open=True)
+
     document = ir.Document(
         body=tuple(resolved_body),
         meta=lowering.meta,
-        settings=replace(lowering.settings, even_and_odd_headers=True)
-        if lowering.even_headers
-        else lowering.settings,
+        settings=settings,
         styles=tuple(styles.values()),
         numbering=tuple(numbering.values()),
         default_run=compiled.default_run,
@@ -123,11 +135,15 @@ def lower(result: ParseResult, base_dir: Path | None = None) -> tuple[ir.Documen
 
 def _builtin(name: str, page: ir.PageSetup) -> ir.Style:
     """A built-in style; Header and Footer get centre and right tab stops for the page, as
-    Word's own Header and Footer styles have."""
+    Word's own Header and Footer styles have, and TOC entries a dotted right tab stop."""
     style = BUILTIN_STYLES[name]()
+    width = page.text_width
+    tabs: tuple[TabStop, ...] = ()
     if name in ("Header", "Footer"):
-        width = page.text_width
         tabs = (TabStop(Length(width.emu // 2), "center"), TabStop(width, "right"))
+    elif name.startswith("TOC ") or name == "table of figures":
+        tabs = (TabStop(width, "right", "dot"),)  # page numbers at the right margin
+    if tabs:
         tab_props = PropertySet(Target.PARAGRAPH, {"tabs": tabs})
         style = replace(style, paragraph=style.paragraph.merged(tab_props))
     return style

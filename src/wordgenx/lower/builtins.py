@@ -40,6 +40,18 @@ def _heading(level: int) -> Style:
     )
 
 
+def _toc(level: int) -> Style:
+    """Word's TOC n: each level indented 11pt more; the page-number tab stop is added
+    for the page size when the style is used."""
+    return Style(
+        StyleKind.PARAGRAPH,
+        f"TOC {level}",
+        based_on="Normal",
+        next="Normal",
+        paragraph=para_props(space_after="5pt", indent_left=f"{11 * (level - 1)}pt"),
+    )
+
+
 def _character(name: str, **props: object) -> Callable[[], Style]:
     return lambda: Style(StyleKind.CHARACTER, name, run=run_props(**props))
 
@@ -86,6 +98,30 @@ BUILTIN_STYLES: dict[str, Callable[[], Style]] = {
         "Footer",
         based_on="Normal",
         paragraph=para_props(space_after="0pt", line_spacing=1),
+    ),
+    "Caption": lambda: Style(
+        StyleKind.PARAGRAPH,
+        "Caption",
+        based_on="Normal",
+        next="Normal",
+        paragraph=para_props(space_after="10pt", line_spacing=1),
+        run=run_props(italic=True, size="9pt", color="theme.text2"),
+    ),
+    "TOC Heading": lambda: Style(
+        StyleKind.PARAGRAPH,
+        "TOC Heading",
+        based_on="Normal",
+        next="Normal",
+        paragraph=para_props(keep_with_next=True, space_before="12pt", space_after="6pt"),
+        run=run_props(font="theme.major", size="16pt", color="theme.accent1"),
+    ),
+    **{f"TOC {i}": (lambda i=i: _toc(i)) for i in range(1, 10)},
+    "table of figures": lambda: Style(
+        StyleKind.PARAGRAPH,
+        "table of figures",
+        based_on="Normal",
+        next="Normal",
+        paragraph=para_props(space_after="0pt"),
     ),
     "Strong": _character("Strong", bold=True),
     "Emphasis": _character("Emphasis", italic=True),

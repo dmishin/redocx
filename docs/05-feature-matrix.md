@@ -105,16 +105,16 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Feature | Tier | Diff. |
 |---------|------|-------|
 | Hyperlinks (external, internal anchor) | M1 (partly: external done) | ● |
-| Bookmarks | M2 | ● |
-| Cross-references (REF, PAGEREF, with pre-computed cached text) | M2 | ●●● |
-| Captions (SEQ, chapter numbering) | M2 | ●● |
-| TOC (with pre-rendered entries), list of figures/tables | M2 | ●● |
+| Bookmarks | M2 ✓ | ● |
+| Cross-references (REF, PAGEREF, with pre-computed cached text) | M2 ✓ | ●●● |
+| Captions (SEQ ✓; chapter numbering not yet) | M2 | ●● |
+| TOC (with pre-rendered entries), list of figures/tables | M2 ✓ | ●● |
 | Simple fields (PAGE, NUMPAGES, SECTIONPAGES, DATE, TITLE, AUTHOR, STYLEREF…) | M2 ✓ | ● |
 | Arbitrary / nested fields | M2 ✓ | ●● |
 | Footnotes, endnotes (numbering format, restart, position) | M2 | ●● |
 | Index (XE + INDEX) | M3 | ●● |
 | Citations & bibliography (`\cite`, CSL rendering via citeproc) | M3 | ●● |
-| Custom counters (`\seq`, SEQ fields) | M2 | ● |
+| Custom counters (`\seq`, SEQ fields) | M2 ✓ | ● |
 | Native Word citations (sources.xml + CITATION field) | Later | ●●● |
 | Document properties (core, app, custom) + DOCPROPERTY | M2 | ● |
 

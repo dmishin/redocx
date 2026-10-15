@@ -61,6 +61,8 @@ class Code(Enum):
     MACRO = "WGX0305"
     INCLUDE = "WGX0306"
     UNDEFINED_STYLE = "WGX0307"
+    UNDEFINED_LABEL = "WGX0308"
+    DUPLICATE_LABEL = "WGX0309"
 
 
 @dataclass(frozen=True)

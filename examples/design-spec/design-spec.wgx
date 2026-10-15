@@ -3,9 +3,8 @@
 % The spike sample examples/spike/01-design-spec.wgx, ported to language v0.2.
 % Build: wordgenx build examples/design-spec/design-spec.wgx
 %
-% Features that arrive later in M2 (TOC, captions, footnotes, cross-references)
-% are already written here; until then they produce warnings and the document
-% still builds.
+% Features that arrive later in M2 (footnotes) are already written here; until
+% then they produce warnings and the document still builds.
 % ============================================================================
 
 \document[lang=en-GB]
@@ -56,6 +55,10 @@
 
 \toc[levels=1-3, title="Contents"]
 
+\listof[Figure, title="Figures"]
+
+\listof[Table, title="Tables"]
+
 % ---------------------------------------------------------------------------- body
 % A new section: page numbers restart at 1, and the header shows the current chapter.
 \section[page-numbers=(format=decimal, start=1)]
@@ -78,6 +81,9 @@ and will be addressed in a separate specification.
 
 == Definitions
 
+@tbl:terms lists the terms used in this specification.
+
+\caption[id=tbl:terms]{Terms and definitions}
 \table[header-rows=1, widths=(4cm, 1fr)]{
   | Term            | Definition                                                     |
   | Authorisation   | A hold placed on the cardholder's funds.                        |
@@ -87,9 +93,14 @@ and will be addressed in a separate specification.
 
 = Architecture {#sec:arch}
 
-\align[center]{\image[width=15cm, alt={System context: the web shop sends orders to the checkout
-  API, which calls PayFlow through the payment adapter; PayFlow sends webhooks to the webhook
-  receiver.}]{img/context-diagram.png}}
+\figure[id=fig:context, width=15cm]{
+  \image[alt={System context: the web shop sends orders to the checkout API, which calls
+    PayFlow through the payment adapter; PayFlow sends webhooks to the webhook
+    receiver.}]{img/context-diagram.png}
+  \caption{System context}
+}
+
+@fig:context shows how the payment adapter sits between ACME and the gateway.
 
 The checkout service never handles raw card numbers: card data is tokenised in the
 browser by the \gateway SDK, and only tokens reach ACME systems.
@@ -126,9 +137,9 @@ manually by Finance.}
 == Webhooks {#sec:webhooks}
 
 Events are signed with HMAC-SHA256. The receiver verifies the signature before
-parsing the body:
+parsing the body (@lst:verify):
 
-```python
+```python {#lst:verify, caption="Webhook signature verification"}
 def verify(payload: bytes, header: str, secret: bytes) -> bool:
     expected = hmac.new(secret, payload, hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected, header)

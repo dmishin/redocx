@@ -26,6 +26,8 @@ BODY_KINDS: dict[str, ArgKind] = {
     "use": ArgKind.STRING,
     "image": ArgKind.STRING,
     "url": ArgKind.STRING,
+    "ref": ArgKind.STRING,
+    "pageref": ArgKind.STRING,
     "embed-docx": ArgKind.STRING,
     "field": ArgKind.RAW,
     "raw": ArgKind.RAW,

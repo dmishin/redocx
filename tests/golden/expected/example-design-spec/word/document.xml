@@ -53,9 +53,11 @@
           <w:numId w:val="0"/>
         </w:numPr>
       </w:pPr>
+      <w:bookmarkStart w:id="0" w:name="_Toc000000001"/>
       <w:r>
         <w:t>Revision History</w:t>
       </w:r>
+      <w:bookmarkEnd w:id="0"/>
     </w:p>
     <w:tbl>
       <w:tblPr>
@@ -286,6 +288,452 @@
     </w:tbl>
     <w:p>
       <w:pPr>
+        <w:pStyle w:val="TOCHeading"/>
+      </w:pPr>
+      <w:r>
+        <w:t>Contents</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC1"/>
+      </w:pPr>
+      <w:r>
+        <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> TOC \o "1-3" \h \z \u </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:hyperlink w:anchor="_Toc000000001" w:history="1">
+        <w:r>
+          <w:t>Revision History</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000001 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC1"/>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000002" w:history="1">
+        <w:r>
+          <w:t>1</w:t>
+          <w:tab/>
+          <w:t>Introduction</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000002 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC2"/>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000003" w:history="1">
+        <w:r>
+          <w:t>1.1</w:t>
+          <w:tab/>
+          <w:t>Purpose</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000003 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC2"/>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000004" w:history="1">
+        <w:r>
+          <w:t>1.2</w:t>
+          <w:tab/>
+          <w:t>Scope</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000004 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC2"/>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000005" w:history="1">
+        <w:r>
+          <w:t>1.3</w:t>
+          <w:tab/>
+          <w:t>Definitions</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000005 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC1"/>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000006" w:history="1">
+        <w:r>
+          <w:t>2</w:t>
+          <w:tab/>
+          <w:t>Architecture</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000006 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC2"/>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000007" w:history="1">
+        <w:r>
+          <w:t>2.1</w:t>
+          <w:tab/>
+          <w:t>Components</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000007 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC2"/>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000008" w:history="1">
+        <w:r>
+          <w:t>2.2</w:t>
+          <w:tab/>
+          <w:t>Error Handling</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000008 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC1"/>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000009" w:history="1">
+        <w:r>
+          <w:t>3</w:t>
+          <w:tab/>
+          <w:t>Functional Requirements</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000009 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC2"/>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000010" w:history="1">
+        <w:r>
+          <w:t>3.1</w:t>
+          <w:tab/>
+          <w:t>Authorisation</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000010 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC2"/>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000011" w:history="1">
+        <w:r>
+          <w:t>3.2</w:t>
+          <w:tab/>
+          <w:t>Refunds</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000011 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC2"/>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000012" w:history="1">
+        <w:r>
+          <w:t>3.3</w:t>
+          <w:tab/>
+          <w:t>Webhooks</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000012 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC1"/>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000013" w:history="1">
+        <w:r>
+          <w:t>Appendix A: Error Mapping</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000013 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC1"/>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000014" w:history="1">
+        <w:r>
+          <w:t>Approval</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000014 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOCHeading"/>
+      </w:pPr>
+      <w:r>
+        <w:t>Figures</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TableofFigures"/>
+      </w:pPr>
+      <w:r>
+        <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> TOC \h \z \c "Figure" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:hyperlink w:anchor="_Ref_fig_context_f" w:history="1">
+        <w:r>
+          <w:t>Figure 1: System context</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Ref_fig_context_f \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOCHeading"/>
+      </w:pPr>
+      <w:r>
+        <w:t>Tables</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TableofFigures"/>
         <w:sectPr>
           <w:headerReference xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId6" w:type="default"/>
           <w:footerReference xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId7" w:type="default"/>
@@ -297,22 +745,60 @@
           <w:docGrid w:linePitch="360"/>
         </w:sectPr>
       </w:pPr>
+      <w:r>
+        <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> TOC \h \z \c "Table" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:hyperlink w:anchor="_Ref_tbl_terms_f" w:history="1">
+        <w:r>
+          <w:t>Table 1: Terms and definitions</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Ref_tbl_terms_f \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
     </w:p>
     <w:p>
       <w:pPr>
         <w:pStyle w:val="Heading1"/>
       </w:pPr>
+      <w:bookmarkStart w:id="1" w:name="_Toc000000002"/>
+      <w:bookmarkStart w:id="2" w:name="_Ref_sec_intro"/>
       <w:r>
         <w:t>Introduction</w:t>
       </w:r>
+      <w:bookmarkEnd w:id="2"/>
+      <w:bookmarkEnd w:id="1"/>
     </w:p>
     <w:p>
       <w:pPr>
         <w:pStyle w:val="Heading2"/>
       </w:pPr>
+      <w:bookmarkStart w:id="3" w:name="_Toc000000003"/>
       <w:r>
         <w:t>Purpose</w:t>
       </w:r>
+      <w:bookmarkEnd w:id="3"/>
     </w:p>
     <w:p>
       <w:r>
@@ -334,13 +820,51 @@
       <w:pPr>
         <w:pStyle w:val="Heading2"/>
       </w:pPr>
+      <w:bookmarkStart w:id="4" w:name="_Toc000000004"/>
       <w:r>
         <w:t>Scope</w:t>
       </w:r>
+      <w:bookmarkEnd w:id="4"/>
     </w:p>
     <w:p>
       <w:r>
-        <w:t xml:space="preserve">The integration covers card authorisation, capture, refunds (sec:refunds) and asynchronous notifications (sec:webhooks). Recurring billing is </w:t>
+        <w:t>The integration covers card authorisation, capture, refunds (</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_sec_refunds \w \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>3.2</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t>) and asynchronous notifications (</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_sec_webhooks \w \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>3.3</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">). Recurring billing is </w:t>
       </w:r>
       <w:r>
         <w:rPr>
@@ -356,9 +880,69 @@
       <w:pPr>
         <w:pStyle w:val="Heading2"/>
       </w:pPr>
+      <w:bookmarkStart w:id="5" w:name="_Toc000000005"/>
       <w:r>
         <w:t>Definitions</w:t>
       </w:r>
+      <w:bookmarkEnd w:id="5"/>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_tbl_terms \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>Table 1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> lists the terms used in this specification.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Caption"/>
+        <w:keepNext/>
+      </w:pPr>
+      <w:bookmarkStart w:id="6" w:name="_Ref_tbl_terms_f"/>
+      <w:bookmarkStart w:id="7" w:name="_Ref_tbl_terms"/>
+      <w:r>
+        <w:t xml:space="preserve">Table </w:t>
+      </w:r>
+      <w:bookmarkStart w:id="8" w:name="_Ref_tbl_terms_n"/>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> SEQ Table \* ARABIC </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:bookmarkEnd w:id="8"/>
+      <w:bookmarkEnd w:id="7"/>
+      <w:r>
+        <w:t xml:space="preserve">: </w:t>
+      </w:r>
+      <w:bookmarkStart w:id="9" w:name="_Ref_tbl_terms_t"/>
+      <w:r>
+        <w:t>Terms and definitions</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="9"/>
+      <w:bookmarkEnd w:id="6"/>
     </w:p>
     <w:tbl>
       <w:tblPr>
@@ -467,12 +1051,17 @@
       <w:pPr>
         <w:pStyle w:val="Heading1"/>
       </w:pPr>
+      <w:bookmarkStart w:id="10" w:name="_Toc000000006"/>
+      <w:bookmarkStart w:id="11" w:name="_Ref_sec_arch"/>
       <w:r>
         <w:t>Architecture</w:t>
       </w:r>
+      <w:bookmarkEnd w:id="11"/>
+      <w:bookmarkEnd w:id="10"/>
     </w:p>
     <w:p>
       <w:pPr>
+        <w:keepNext/>
         <w:jc w:val="center"/>
       </w:pPr>
       <w:r>
@@ -514,6 +1103,65 @@
       </w:r>
     </w:p>
     <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Caption"/>
+        <w:keepNext w:val="0"/>
+        <w:jc w:val="center"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="12" w:name="_Ref_fig_context_f"/>
+      <w:bookmarkStart w:id="13" w:name="_Ref_fig_context"/>
+      <w:r>
+        <w:t xml:space="preserve">Figure </w:t>
+      </w:r>
+      <w:bookmarkStart w:id="14" w:name="_Ref_fig_context_n"/>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> SEQ Figure \* ARABIC </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:bookmarkEnd w:id="14"/>
+      <w:bookmarkEnd w:id="13"/>
+      <w:r>
+        <w:t xml:space="preserve">: </w:t>
+      </w:r>
+      <w:bookmarkStart w:id="15" w:name="_Ref_fig_context_t"/>
+      <w:r>
+        <w:t>System context</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="15"/>
+      <w:bookmarkEnd w:id="12"/>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_fig_context \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>Figure 1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> shows how the payment adapter sits between ACME and the gateway.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
       <w:r>
         <w:t>The checkout service never handles raw card numbers: card data is tokenised in the browser by the PayFlow SDK, and only tokens reach ACME systems.</w:t>
       </w:r>
@@ -522,9 +1170,11 @@
       <w:pPr>
         <w:pStyle w:val="Heading2"/>
       </w:pPr>
+      <w:bookmarkStart w:id="16" w:name="_Toc000000007"/>
       <w:r>
         <w:t>Components</w:t>
       </w:r>
+      <w:bookmarkEnd w:id="16"/>
     </w:p>
     <w:p>
       <w:pPr>
@@ -584,30 +1234,56 @@
       <w:pPr>
         <w:pStyle w:val="Heading2"/>
       </w:pPr>
+      <w:bookmarkStart w:id="17" w:name="_Toc000000008"/>
       <w:r>
         <w:t>Error Handling</w:t>
       </w:r>
+      <w:bookmarkEnd w:id="17"/>
     </w:p>
     <w:p>
       <w:r>
-        <w:t>Gateway errors are mapped to adapter behaviour in the appendix (app:errors).</w:t>
+        <w:t>Gateway errors are mapped to adapter behaviour in the appendix (</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_app_errors \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>Appendix A: Error Mapping</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t>).</w:t>
       </w:r>
     </w:p>
     <w:p>
       <w:pPr>
         <w:pStyle w:val="Heading1"/>
       </w:pPr>
+      <w:bookmarkStart w:id="18" w:name="_Toc000000009"/>
+      <w:bookmarkStart w:id="19" w:name="_Ref_sec_reqs"/>
       <w:r>
         <w:t>Functional Requirements</w:t>
       </w:r>
+      <w:bookmarkEnd w:id="19"/>
+      <w:bookmarkEnd w:id="18"/>
     </w:p>
     <w:p>
       <w:pPr>
         <w:pStyle w:val="Heading2"/>
       </w:pPr>
+      <w:bookmarkStart w:id="20" w:name="_Toc000000010"/>
       <w:r>
         <w:t>Authorisation</w:t>
       </w:r>
+      <w:bookmarkEnd w:id="20"/>
     </w:p>
     <w:p>
       <w:pPr>
@@ -655,9 +1331,13 @@
       <w:pPr>
         <w:pStyle w:val="Heading2"/>
       </w:pPr>
+      <w:bookmarkStart w:id="21" w:name="_Toc000000011"/>
+      <w:bookmarkStart w:id="22" w:name="_Ref_sec_refunds"/>
       <w:r>
         <w:t>Refunds</w:t>
       </w:r>
+      <w:bookmarkEnd w:id="22"/>
+      <w:bookmarkEnd w:id="21"/>
     </w:p>
     <w:p>
       <w:pPr>
@@ -723,14 +1403,74 @@
       <w:pPr>
         <w:pStyle w:val="Heading2"/>
       </w:pPr>
+      <w:bookmarkStart w:id="23" w:name="_Toc000000012"/>
+      <w:bookmarkStart w:id="24" w:name="_Ref_sec_webhooks"/>
       <w:r>
         <w:t>Webhooks</w:t>
       </w:r>
+      <w:bookmarkEnd w:id="24"/>
+      <w:bookmarkEnd w:id="23"/>
     </w:p>
     <w:p>
       <w:r>
-        <w:t>Events are signed with HMAC-SHA256. The receiver verifies the signature before parsing the body:</w:t>
+        <w:t>Events are signed with HMAC-SHA256. The receiver verifies the signature before parsing the body (</w:t>
       </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_lst_verify \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>Listing 1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t>):</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Caption"/>
+        <w:keepNext/>
+      </w:pPr>
+      <w:bookmarkStart w:id="25" w:name="_Ref_lst_verify_f"/>
+      <w:bookmarkStart w:id="26" w:name="_Ref_lst_verify"/>
+      <w:r>
+        <w:t xml:space="preserve">Listing </w:t>
+      </w:r>
+      <w:bookmarkStart w:id="27" w:name="_Ref_lst_verify_n"/>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> SEQ Listing \* ARABIC </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:bookmarkEnd w:id="27"/>
+      <w:bookmarkEnd w:id="26"/>
+      <w:r>
+        <w:t xml:space="preserve">: </w:t>
+      </w:r>
+      <w:bookmarkStart w:id="28" w:name="_Ref_lst_verify_t"/>
+      <w:r>
+        <w:t>Webhook signature verification</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="28"/>
+      <w:bookmarkEnd w:id="25"/>
     </w:p>
     <w:p>
       <w:pPr>
@@ -837,9 +1577,13 @@
           <w:numId w:val="0"/>
         </w:numPr>
       </w:pPr>
+      <w:bookmarkStart w:id="29" w:name="_Toc000000013"/>
+      <w:bookmarkStart w:id="30" w:name="_Ref_app_errors"/>
       <w:r>
         <w:t>Appendix A: Error Mapping</w:t>
       </w:r>
+      <w:bookmarkEnd w:id="30"/>
+      <w:bookmarkEnd w:id="29"/>
     </w:p>
     <w:tbl>
       <w:tblPr>
@@ -1217,9 +1961,11 @@
           <w:numId w:val="0"/>
         </w:numPr>
       </w:pPr>
+      <w:bookmarkStart w:id="31" w:name="_Toc000000014"/>
       <w:r>
         <w:t>Approval</w:t>
       </w:r>
+      <w:bookmarkEnd w:id="31"/>
     </w:p>
     <w:tbl>
       <w:tblPr>

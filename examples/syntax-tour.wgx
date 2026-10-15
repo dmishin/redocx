@@ -91,7 +91,7 @@ Inline math: \m{e^{i\pi} + 1 = 0}, and a literal \#{ is escaped.
 }
 
 \figure[id=fig:arch, width=12cm, align=center]{
-  \image{img/architecture_v2%20final.png}
+  \image{img/logo.png}
   \caption{Overall architecture}
 }
 

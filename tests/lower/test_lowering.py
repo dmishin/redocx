@@ -95,7 +95,7 @@ def test_links() -> None:
         r'[site](https://x.org) <https://y.org> \link[to="https://z.org"]{*z*} \url{mailto:a@b.c}'
     )
     links = [item for item in paragraphs(doc)[0].content if isinstance(item, ir.Hyperlink)]
-    assert [(link.url, "".join(r.text for r in link.content)) for link in links] == [
+    assert [(link.url, "".join(r.text for r in link.content if isinstance(r, ir.Run))) for link in links] == [
         ("https://x.org", "site"), ("https://y.org", "https://y.org"),
         ("https://z.org", "z"), ("mailto:a@b.c", "a@b.c"),
     ]  # fmt: skip
@@ -292,12 +292,10 @@ def test_suggestions() -> None:
 
 
 def test_planned_features_warn_but_build() -> None:
-    result = diagnostics(
-        r"Text\footnote{note} and @fig:x and \comment[author=A]{kept}" + "\n\n\\toc"
-    )
+    result = diagnostics(r"Text\footnote{note} and \comment[author=A]{kept}" + "\n\n\\index")
     assert result.document is not None
     assert {d.severity for _, d in result.diagnostics} == {Severity.WARNING}
-    assert texts(result.document) == ["Text and fig:x and kept"]
+    assert texts(result.document) == ["Text and kept"]
 
 
 # --- build ------------------------------------------------------------------------------------

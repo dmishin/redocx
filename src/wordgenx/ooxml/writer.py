@@ -188,6 +188,10 @@ def build_package(document: Document, theme: Theme | None = None) -> Package:
     list_ids = {(i.numbering, i.instance): i.num_id for i in instances}
     drawing_ids = itertools.count(1)
     part_counts = {"header": 0, "footer": 0}
+    bookmarks: dict[str, int] = {}
+
+    def bookmark_id(name: str) -> int:
+        return bookmarks.setdefault(name, len(bookmarks))
 
     def context(part: Part) -> BodyContext:
         """Relationships for hyperlinks and images belong to the part that uses them."""
@@ -212,7 +216,13 @@ def build_package(document: Document, theme: Theme | None = None) -> Package:
             return images[digest]
 
         return BodyContext(
-            theme, hyperlink, list_ids, image, lambda: next(drawing_ids), header_footer
+            theme,
+            hyperlink,
+            list_ids,
+            image,
+            lambda: next(drawing_ids),
+            header_footer,
+            bookmark_id,
         )
 
     def header_footer(family: str, blocks: tuple[Block, ...]) -> str:

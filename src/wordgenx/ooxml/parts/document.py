@@ -10,10 +10,13 @@ from wordgenx.ir import (
     PAGE_NUMBER_FORMATS,
     SECTION_STARTS,
     Block,
+    BookmarkEnd,
+    BookmarkStart,
     Break,
     Cell,
     Document,
     Field,
+    FieldBlock,
     Image,
     Inline,
     Paragraph,
@@ -55,6 +58,8 @@ class BodyContext:
     """A new document-wide unique id for wp:docPr."""
     header_footer: Callable[[str, tuple[Block, ...]], str] = lambda family, blocks: ""
     """Writes a header ("header") or footer ("footer") part; returns its relationship id."""
+    bookmark_id: Callable[[str], int] = lambda name: 0
+    """The document-wide w:id of a bookmark name (the same for its start and end)."""
 
 
 # --- runs and inline content --------------------------------------------------------------
@@ -76,8 +81,8 @@ def _run(run: Run, ctx: BodyContext) -> Element:
     return E("w:r", run_properties(run.props, ctx.emit, style_id=style), *_run_content(run.text))
 
 
-def _field(field: Field, ctx: BodyContext) -> list[Element]:
-    """A complex field: begin, instruction (with nested fields), separate, result, end."""
+def _field_runs(field: Field, ctx: BodyContext) -> tuple[list[Element], list[Element]]:
+    """(begin + instruction + separate, end) runs of a complex field."""
     style = style_id(field.style) if field.style else None
 
     def run(*content: Element) -> Element:
@@ -86,17 +91,25 @@ def _field(field: Field, ctx: BodyContext) -> list[Element]:
     begin = {"w:fldCharType": "begin"}
     if field.dirty:
         begin["w:dirty"] = "true"
-    out = [run(E("w:fldChar", begin))]
+    opening = [run(E("w:fldChar", begin))]
     for part in field.instruction:
         if isinstance(part, str):
-            out.append(run(E("w:instrText", {"xml:space": "preserve"}, text=part)))
+            opening.append(run(E("w:instrText", {"xml:space": "preserve"}, text=part)))
         else:
-            out.extend(_field(part, ctx))
-    out.append(run(E("w:fldChar", {"w:fldCharType": "separate"})))
+            opening.extend(_field(part, ctx))
+    opening.append(run(E("w:fldChar", {"w:fldCharType": "separate"})))
+    return opening, [run(E("w:fldChar", {"w:fldCharType": "end"}))]
+
+
+def _field(field: Field, ctx: BodyContext) -> list[Element]:
+    """A complex field: begin, instruction (with nested fields), separate, result, end."""
+    opening, closing = _field_runs(field, ctx)
+    result: list[Element] = []
     if field.result:
-        out.append(run(*_run_content(field.result)))
-    out.append(run(E("w:fldChar", {"w:fldCharType": "end"})))
-    return out
+        style = style_id(field.style) if field.style else None
+        props = run_properties(field.props, ctx.emit, style_id=style)
+        result.append(E("w:r", props, *_run_content(field.result)))
+    return opening + result + closing
 
 
 def _drawing(image: Image, ctx: BodyContext) -> Element:
@@ -144,11 +157,20 @@ def _inline(item: Inline, ctx: BodyContext) -> list[Element]:
         return [_drawing(item, ctx)]
     if isinstance(item, Field):
         return _field(item, ctx)
+    if isinstance(item, BookmarkStart):
+        return [
+            E("w:bookmarkStart", {"w:id": str(ctx.bookmark_id(item.name)), "w:name": item.name})
+        ]
+    if isinstance(item, BookmarkEnd):
+        return [E("w:bookmarkEnd", {"w:id": str(ctx.bookmark_id(item.name))})]
+    target = (
+        {"w:anchor": item.anchor} if item.anchor is not None else {"r:id": ctx.hyperlink(item.url)}
+    )
     return [
         E(
             "w:hyperlink",
-            {"r:id": ctx.hyperlink(item.url), "w:history": "1"},
-            *(_run(run, ctx) for run in item.content),
+            {**target, "w:history": "1"},
+            *(element for part in item.content for element in _inline(part, ctx)),
         )
     ]
 
@@ -196,6 +218,10 @@ def _blocks(blocks: tuple[Block, ...], ctx: BodyContext, *, final: bool = False)
                 elements.append(E("w:p"))
             elements.append(_table(block, ctx))
             last_paragraph = None
+        elif isinstance(block, FieldBlock):
+            paragraphs = _field_block(block, ctx)
+            elements.extend(paragraphs)
+            last_paragraph = paragraphs[-1]
         else:
             last_paragraph = _paragraph(block, ctx)
             elements.append(last_paragraph)
@@ -203,6 +229,19 @@ def _blocks(blocks: tuple[Block, ...], ctx: BodyContext, *, final: bool = False)
     if isinstance(previous, Table) or (not elements and not final):
         elements.append(E("w:p"))
     return elements
+
+
+def _field_block(block: FieldBlock, ctx: BodyContext) -> list[Element]:
+    """Paragraphs of a field whose result spans them: the field opens in the first
+    paragraph and closes in the last."""
+    paragraphs = [_paragraph(p, ctx) for p in block.content or (Paragraph(),)]
+    opening, closing = _field_runs(block.field, ctx)
+    first = paragraphs[0]
+    position = 1 if len(first) and first[0].tag == qn("w:pPr") else 0
+    for offset, run in enumerate(opening):
+        first.insert(position + offset, run)
+    paragraphs[-1].extend(closing)
+    return paragraphs
 
 
 def _attach_section(paragraph: Element, section: Element) -> None:

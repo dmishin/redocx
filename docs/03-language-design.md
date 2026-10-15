@@ -354,9 +354,16 @@ bookmark around the caption, as Word's Insert Cross-reference does.
 ```
 
 - The kind (`Figure`, `Table`, `Equation`, `Listing`, or any custom kind) is given explicitly or inferred from the adjacent
-  table, image, or code block.
+  table, image, or code block. Without a neighbour to go by, the kind is `Figure`.
+- The caption reads "Figure 1: text". It carries four bookmarks, one per reference form: label and number (the main
+  label), number only, text only, and the whole caption. A caption above its table or code keeps with the next paragraph.
+- `\figure` centres its paragraphs (or uses its `align`), gives images without a size its `width`, and keeps the
+  paragraphs together on one page. A labelled `\figure` must contain a `\caption`.
+- A block command on a line of its own ends the paragraph, so `\image{…}` and `\caption{…}` may sit on consecutive
+  lines. A block command in the middle of a line of text is still an error.
 - Chapter-numbered captions ("Figure 3.2") use a document setting:
-  `\settings[captions=(chapter-numbers, chapter-style="Heading 1", separator=".")]`, which emits `STYLEREF` + `SEQ … \s 1`.
+  `\settings[captions=(chapter-numbers, chapter-style="Heading 1", separator=".")]`, which emits `STYLEREF` + `SEQ … \s 1`
+  (not implemented yet).
 - Code blocks and display equations can take `caption="…"` directly.
 
 ## 3.10 Sections and page setup (F-6)
@@ -405,6 +412,15 @@ A claim.\footnote{With a footnote.} Another.\endnote{And an endnote.}
 
 A lint warns when the word before `@label` repeats the label it prints, for example "Table @tbl:x" printing "Table Table 3".
 
+Labels come from headings (`{#sec:x}`), list items (`1. {#it:x} …`), `\p[id=…]`, captions (`\caption[id=…]`,
+`\figure[id=…]`, code blocks `{#lst:x, caption="…"}`) and counters (`\seq[…, id=…]`). Bookmark names are derived from the
+label (`sec:intro` → `_Ref_sec_intro`, at most 40 characters). Cached results are computed the way Word computes them:
+list and heading numbers are simulated from the numbering definitions, SEQ fields are counted in document order.
+A `PAGEREF` cannot be known in advance; it gets "1" and the document asks Word to update fields when it opens.
+
+Not yet: references from headers and footers, `form=relative` in full-context form (it prints the paragraph's own
+number), and the "Table Table 3" lint.
+
 ## 3.12 Fields and generated content
 
 ```wgx
@@ -416,6 +432,11 @@ A lint warns when the word before `@label` repeats the label it prints, for exam
 \field{AUTHOR}                    % any Word field; the body is raw
 \field[result="cached text"]{IF { MERGEFIELD x } = 1 "yes" "no"}
 ```
+
+`\toc` and `\listof` write the `TOC` field with its entries already filled in: one paragraph per heading (styles
+`TOC 1`–`TOC 9`) or caption (`table of figures`), each a link to a hidden `_Toc` bookmark with a `PAGEREF` for the page
+number. Page numbers are left for Word, which updates them when the document opens. `title=` adds a `TOC Heading`
+paragraph, which is not itself listed.
 
 `\field` is the general escape hatch. It takes the raw field instruction and an optional cached result. It emits
 `w:fldChar` begin/separate/end. `{ … }` inside the instruction are nested fields, in Word's display notation.

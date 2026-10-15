@@ -193,10 +193,24 @@ class Break:
 
 @dataclass(frozen=True)
 class Hyperlink:
-    """An external hyperlink around runs."""
+    """A hyperlink around runs: to an external `url`, or to a bookmark (`anchor`)."""
 
     url: str
-    content: tuple[Run, ...]
+    content: tuple[Run | Field, ...]
+    anchor: str | None = None
+    """A bookmark name; when set, `url` is unused (an internal link, e.g. in a TOC)."""
+
+
+@dataclass(frozen=True)
+class BookmarkStart:
+    """Start of a named range (w:bookmarkStart); cross-references point at bookmarks."""
+
+    name: str
+
+
+@dataclass(frozen=True)
+class BookmarkEnd:
+    name: str
 
 
 IMAGE_FORMATS = {"png": "png", "jpeg": "jpeg", "gif": "gif", "bmp": "bmp"}
@@ -247,7 +261,7 @@ class Field:
         )
 
 
-Inline = Run | Break | Hyperlink | Image | Field
+Inline = Run | Break | Hyperlink | Image | Field | BookmarkStart | BookmarkEnd
 
 
 @dataclass(frozen=True)
@@ -282,8 +296,20 @@ class Paragraph:
             if isinstance(item, Run):
                 out.append(item)
             elif isinstance(item, Hyperlink):
-                out.extend(item.content)
+                out.extend(r for r in item.content if isinstance(r, Run))
         return tuple(out)
+
+    def text(self) -> str:
+        """The visible text: runs, and cached field results."""
+        parts: list[str] = []
+        for item in self.content:
+            if isinstance(item, Run):
+                parts.append(item.text)
+            elif isinstance(item, Field):
+                parts.append(item.result)
+            elif isinstance(item, Hyperlink):
+                parts.extend(r.text if isinstance(r, Run) else r.result for r in item.content)
+        return "".join(parts)
 
 
 # --- tables ------------------------------------------------------------------------------
@@ -415,7 +441,19 @@ class SectionBreak:
     section: Section
 
 
-Block = Paragraph | Table | SectionBreak
+@dataclass(frozen=True)
+class FieldBlock:
+    """A field whose result is whole paragraphs, such as a table of contents.
+
+    The field starts in the first paragraph and ends in the last one.
+    """
+
+    field: Field
+    """Instruction and flags; its `result` is unused."""
+    content: tuple[Paragraph, ...]
+
+
+Block = Paragraph | Table | SectionBreak | FieldBlock
 
 
 @dataclass(frozen=True)
@@ -478,6 +516,8 @@ def iter_paragraphs(blocks: tuple[Block, ...]) -> Iterator[Paragraph]:
     for block in blocks:
         if isinstance(block, Paragraph):
             yield block
+        elif isinstance(block, FieldBlock):
+            yield from block.content
         elif isinstance(block, Table):
             for row in block.rows:
                 for cell in row.cells:
@@ -504,6 +544,8 @@ def map_paragraphs(
             out.append(fn(block))
         elif isinstance(block, SectionBreak):
             out.append(SectionBreak(map_section(block.section, fn)))
+        elif isinstance(block, FieldBlock):
+            out.append(replace(block, content=tuple(fn(p) for p in block.content)))
         else:
             rows = tuple(
                 replace(

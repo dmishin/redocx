@@ -225,6 +225,26 @@
       </w:tblBorders>
     </w:tblPr>
   </w:style>
+  <w:style w:styleId="TOCHeading" w:type="paragraph">
+    <w:name w:val="TOC Heading"/>
+    <w:basedOn w:val="Normal"/>
+    <w:next w:val="Normal"/>
+    <w:uiPriority w:val="39"/>
+    <w:qFormat/>
+    <w:pPr>
+      <w:keepNext/>
+      <w:tabs>
+        <w:tab w:leader="dot" w:pos="9354" w:val="right"/>
+      </w:tabs>
+      <w:spacing w:after="120" w:before="240"/>
+    </w:pPr>
+    <w:rPr>
+      <w:rFonts w:asciiTheme="majorHAnsi" w:cstheme="majorBidi" w:eastAsiaTheme="majorEastAsia" w:hAnsiTheme="majorHAnsi"/>
+      <w:color w:themeColor="accent1" w:val="1F6FB2"/>
+      <w:sz w:val="32"/>
+      <w:szCs w:val="32"/>
+    </w:rPr>
+  </w:style>
   <w:style w:styleId="Hyperlink" w:type="character">
     <w:name w:val="Hyperlink"/>
     <w:uiPriority w:val="99"/>
@@ -240,6 +260,22 @@
     <w:qFormat/>
     <w:rPr>
       <w:i/>
+    </w:rPr>
+  </w:style>
+  <w:style w:styleId="Caption" w:type="paragraph">
+    <w:name w:val="caption"/>
+    <w:basedOn w:val="Normal"/>
+    <w:next w:val="Normal"/>
+    <w:uiPriority w:val="35"/>
+    <w:qFormat/>
+    <w:pPr>
+      <w:spacing w:after="200" w:line="240" w:lineRule="auto"/>
+    </w:pPr>
+    <w:rPr>
+      <w:i/>
+      <w:color w:themeColor="text2" w:val="1F2A44"/>
+      <w:sz w:val="18"/>
+      <w:szCs w:val="18"/>
     </w:rPr>
   </w:style>
   <w:style w:styleId="Strong" w:type="character">
@@ -265,6 +301,46 @@
     <w:pPr>
       <w:ind w:left="720"/>
       <w:contextualSpacing/>
+    </w:pPr>
+  </w:style>
+  <w:style w:styleId="TOC1" w:type="paragraph">
+    <w:name w:val="toc 1"/>
+    <w:basedOn w:val="Normal"/>
+    <w:next w:val="Normal"/>
+    <w:uiPriority w:val="39"/>
+    <w:qFormat/>
+    <w:pPr>
+      <w:tabs>
+        <w:tab w:leader="dot" w:pos="9354" w:val="right"/>
+      </w:tabs>
+      <w:spacing w:after="100"/>
+      <w:ind w:left="0"/>
+    </w:pPr>
+  </w:style>
+  <w:style w:styleId="TOC2" w:type="paragraph">
+    <w:name w:val="toc 2"/>
+    <w:basedOn w:val="Normal"/>
+    <w:next w:val="Normal"/>
+    <w:uiPriority w:val="39"/>
+    <w:qFormat/>
+    <w:pPr>
+      <w:tabs>
+        <w:tab w:leader="dot" w:pos="9354" w:val="right"/>
+      </w:tabs>
+      <w:spacing w:after="100"/>
+      <w:ind w:left="220"/>
+    </w:pPr>
+  </w:style>
+  <w:style w:styleId="TableofFigures" w:type="paragraph">
+    <w:name w:val="table of figures"/>
+    <w:basedOn w:val="Normal"/>
+    <w:next w:val="Normal"/>
+    <w:qFormat/>
+    <w:pPr>
+      <w:tabs>
+        <w:tab w:leader="dot" w:pos="9354" w:val="right"/>
+      </w:tabs>
+      <w:spacing w:after="0"/>
     </w:pPr>
   </w:style>
 </w:styles>

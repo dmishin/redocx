@@ -39,6 +39,7 @@ from wordgenx.lower.fields import (
     parse_instruction,
 )
 from wordgenx.lower.macros import Binding, Macro, Substitution, define_macro, let_macro
+from wordgenx.lower.references import REF_FORMS, Label, PendingRef, PendingToc, References
 from wordgenx.lower.typography import smarten
 from wordgenx.ooxml.style_names import style_id
 from wordgenx.props import (
@@ -61,13 +62,14 @@ Located = tuple[Source, Diagnostic]
 
 BLOCK_COMMANDS = frozenset(
     (
-        "p align list include use styles document meta settings section table header footer tabs"
+        "p align list include use styles document meta settings section table header footer tabs "
+        "caption figure toc listof"
     ).split()
 )
 INLINE_COMMANDS = frozenset(
     (
         "b i u s sup sub hl font style lang hidden strong emph code link url br tab image "
-        "pagenum numpages sectionpages field date"
+        "pagenum numpages sectionpages field date ref pageref seq"
     ).split()
 )
 FIELD_COMMANDS = {"pagenum": "PAGE", "numpages": "NUMPAGES", "sectionpages": "SECTIONPAGES"}
@@ -81,15 +83,8 @@ TABLE_PARTS = frozenset({"row", "cell"})
 PLANNED: dict[str, str] = {
     **dict.fromkeys(
         [
-            "figure",
-            "caption",
-            "toc",
-            "listof",
             "footnote",
             "endnote",
-            "ref",
-            "pageref",
-            "seq",
             "raw",
         ],
         "M2",
@@ -113,9 +108,7 @@ PLANNED: dict[str, str] = {
 }
 """Commands of the language that are not implemented yet -> the milestone that adds them."""
 
-PLANNED_BLOCKS = frozenset(
-    "figure caption toc listof watermark bibliography printbibliography index".split()
-)
+PLANNED_BLOCKS = frozenset("watermark bibliography printbibliography index".split())
 CELL_ALIGN = {"top": "top", "center": "center", "middle": "center", "bottom": "bottom"}
 DEFAULT_DPI = 96
 TRANSPARENT = frozenset({"comment", "ins", "control"})
@@ -151,9 +144,10 @@ class Piece:
     format: Format
     kind: str = "text"
     """text (smart punctuation, whitespace collapse) | code (verbatim) | tab | line | page
-    | column | image."""
+    | column | image | field | mark (a bookmark start or end)."""
     image: ir.Image | None = None
     field: ir.Field | None = None
+    mark: ir.BookmarkStart | ir.BookmarkEnd | None = None
 
 
 @dataclass
@@ -201,6 +195,24 @@ class ListContext:
 
 
 @dataclass
+class FigureContext:
+    label: str | None
+    label_span: Span
+    width: Length | None
+    captioned: bool = False
+
+
+SEQ_FORMATS = {
+    "decimal": "ARABIC",
+    "lower-letter": "alphabetic",
+    "upper-letter": "ALPHABETIC",
+    "lower-roman": "roman",
+    "upper-roman": "ROMAN",
+}
+SEQ_NAME_RE = re.compile(r"[A-Za-z][A-Za-z0-9_]*")
+
+
+@dataclass
 class StyleUse:
     name: str
     kind: ir.StyleKind
@@ -237,6 +249,12 @@ class Lowering:
     _macro_depth: int = 0
     _include_stack: list[Path] = field(default_factory=lambda: [])
     _std_loaded: set[str] = field(default_factory=lambda: set[str]())
+    references: References = field(default_factory=References)
+    _figure: FigureContext | None = None
+    _previous: ir.Block | None = None
+    """The block lowered just before the current one (captions look at it)."""
+    _next: ast.Inline | ast.Block | None = None
+    """The block (or block command) after the current one."""
 
     # --- reporting ----------------------------------------------------------------------
 
@@ -286,7 +304,10 @@ class Lowering:
         self, blocks: Iterable[ast.Block], lists: ListContext | None = None
     ) -> list[ir.Block]:
         out: list[ir.Block] = []
-        for block in blocks:
+        items = list(blocks)
+        for i, block in enumerate(items):
+            self._previous = out[-1] if out else None
+            self._next = items[i + 1] if i + 1 < len(items) else None
             out.extend(self.block(block, lists))
         return out
 
@@ -316,19 +337,33 @@ class Lowering:
         name = f"Heading {heading.level}"
         self.use_style(name, ir.StyleKind.PARAGRAPH, heading.span)
         content = self.assemble(self.inlines(heading.content, Format()))
+        if heading.label is not None:
+            label = self.register_label(heading.label.name, heading.label.span, "heading")
+            content = _marked(label.bookmark, content)
         return ir.Paragraph(content, name, unnumbered=not heading.numbered)
 
     def code_block(self, block: ast.CodeBlock) -> list[ir.Block]:
-        if block.options is not None:
-            for option in block.options.items:
-                if option.key == "caption":
-                    self.warn(
-                        Code.NOT_SUPPORTED_YET,
-                        "code captions are not supported yet",
-                        option.span,
-                        help="planned for milestone M2",
-                    )
-        return [self.code_paragraph(line) for line in block.code.split("\n")]
+        """A fenced code block; ```` ```python {#lst:x, caption="..."} ```` adds a Listing
+        caption above it."""
+        out: list[ir.Block] = []
+        caption: str | None = None
+        label: tuple[str, Span] | None = None
+        command = ast.Command("code block", None, None, span=block.span)
+        for option in block.options.items if block.options else ():
+            if option.key == "caption":
+                caption = self.text_value(option.value, command, "caption")
+            elif option.key == "id":
+                text = self.text_value(option.value, command, "id")
+                if text:
+                    label = (text, option.value.span)
+        if label is not None and caption is None:
+            caption = ""
+        if caption is not None:
+            text = self.assemble([Piece(caption, Format())])
+            name, span = label if label is not None else (None, block.span)
+            out.append(self.make_caption("Listing", name, span, text, keep_with_next=True))
+        out += [self.code_paragraph(line) for line in block.code.split("\n")]
+        return out
 
     def code_paragraph(self, line: str) -> ir.Paragraph:
         self.use_style("Code Block", ir.StyleKind.PARAGRAPH, Span(0, 0))
@@ -338,27 +373,46 @@ class Lowering:
 
     def paragraph(self, paragraph: ast.Paragraph) -> list[ir.Block]:
         items = self.expand(paragraph.content)
-        blocks = [item for item in items if self.is_block_item(item)]
-        content = [item for item in items if not self.is_block_item(item)]
-        has_text = any(not _is_blank(item) for item in content)
-        if blocks and has_text:
-            for item in blocks:
+        blocks = [i for i, item in enumerate(items) if self.is_block_item(item)]
+        has_text = any(not _is_blank(item) and not self.is_block_item(item) for item in items)
+        inside = [i for i in blocks if not _on_own_line(items, i)]
+        if inside and has_text:
+            for i in inside:
                 self.report(
                     Code.MISPLACED,
                     "a block cannot appear inside a paragraph",
-                    item.span,
-                    help="put it on its own line, separated from the text by a blank line",
+                    items[i].span,  # type: ignore[union-attr]
+                    help="put it on its own line",
                 )
+            items = [item for item in items if not self.is_block_item(item)]
             blocks = []
-        if blocks:
-            out: list[ir.Block] = []
-            for item in items:
-                if isinstance(item, ast.Command):
-                    out.extend(self.block_command(item))
-                elif not isinstance(item, ast.Text | ast.SoftBreak):
-                    out.extend(self.block(item))  # type: ignore[arg-type]
-            return out
-        if not has_text:
+        if not blocks:
+            return self.text_paragraph(items) if has_text else []
+        # Block commands on lines of their own split the paragraph: text, block, text, ...
+        segments: list[ast.Inline | ast.Block | list[ast.Inline | ast.Block]] = []
+        for item in items:
+            if self.is_block_item(item):
+                segments.append(item)
+            elif not _is_blank(item) or (segments and isinstance(segments[-1], list)):
+                if not segments or not isinstance(segments[-1], list):
+                    segments.append([])
+                segments[-1].append(item)  # type: ignore[union-attr]
+        out: list[ir.Block] = []
+        previous, following = self._previous, self._next
+        for i, segment in enumerate(segments):
+            self._previous = out[-1] if out else previous
+            after = segments[i + 1] if i + 1 < len(segments) else following
+            self._next = after[0] if isinstance(after, list) else after
+            if isinstance(segment, list):
+                out.extend(self.text_paragraph(segment))
+            elif isinstance(segment, ast.Command):
+                out.extend(self.block_command(segment))
+            else:
+                out.extend(self.block(segment))  # type: ignore[arg-type]
+        return out
+
+    def text_paragraph(self, content: list[ast.Inline | ast.Block]) -> list[ir.Block]:
+        if all(_is_blank(item) for item in content):
             return []
         self.has_content = True
         pieces = self.inlines(content, Format())  # type: ignore[arg-type]
@@ -481,6 +535,10 @@ class Lowering:
             "header": self.cmd_header,
             "footer": self.cmd_header,
             "tabs": self.cmd_tabs,
+            "caption": self.cmd_caption,
+            "figure": self.cmd_figure,
+            "toc": self.cmd_toc,
+            "listof": self.cmd_toc,
         }.get(name)
         if handler is not None:
             return handler(command)
@@ -522,7 +580,7 @@ class Lowering:
 
     def cmd_p(self, command: ast.Command) -> list[ir.Block]:
         self.has_content = True
-        extra, props = self.option_props(command, Target.PARAGRAPH, extra=("style",))
+        extra, props = self.option_props(command, Target.PARAGRAPH, extra=("style", "id"))
         style = None
         if (value := extra.get("style")) is not None:
             style = self.text_value(value, command, "style")
@@ -530,7 +588,12 @@ class Lowering:
                 self.use_style(style, ir.StyleKind.PARAGRAPH, value.span)
         content = self.expand(self.single_paragraph(command))
         pieces = self.inlines([c for c in content if not isinstance(c, BLOCK_TYPES)], Format())  # type: ignore[misc]
-        return [ir.Paragraph(self.assemble(pieces), style, props)]
+        inlines = self.assemble(pieces)
+        if (value := extra.get("id")) is not None and (
+            name := self.text_value(value, command, "id")
+        ):
+            inlines = _marked(self.register_label(name, value.span, "paragraph").bookmark, inlines)
+        return [ir.Paragraph(inlines, style, props)]
 
     def cmd_align(self, command: ast.Command) -> list[ir.Block]:
         positional = self.positional(command, 1)
@@ -1520,6 +1583,16 @@ class Lowering:
 
     # --- images --------------------------------------------------------------------------------
 
+    def image_width(self, text: str, span: Span) -> Length | None:
+        """A length, or a percentage of the text width."""
+        if text.endswith("%"):
+            try:
+                return Length(int(self.text_width().emu * Decimal(text[:-1]) / 100))
+            except ArithmeticError:
+                self.report(Code.INVALID_ARGUMENT, f"invalid width `{text}`", span)
+                return None
+        return self.length(text, span)
+
     def inline_image(self, command: ast.Command, fmt: Format) -> list[Piece]:
         path = self.path_value(command)
         if path is None:
@@ -1529,17 +1602,10 @@ class Lowering:
         description = name = ""
         for option in command.options.items if command.options else ():
             text = self.text_value(option.value, command, option.key or "option") or ""
-            if option.key == "width" and text.endswith("%"):
-                try:
-                    width = Length(int(self.text_width().emu * Decimal(text[:-1]) / 100))
-                except ArithmeticError:
-                    self.report(Code.INVALID_ARGUMENT, f"invalid width `{text}`", option.value.span)
-            elif option.key in ("width", "height"):
-                length = self.length(text, option.value.span)
-                if option.key == "width":
-                    width = length
-                else:
-                    height = length
+            if option.key == "width":
+                width = self.image_width(text, option.value.span)
+            elif option.key == "height":
+                height = self.length(text, option.value.span)
             elif option.key == "alt":
                 description = text
             elif option.key == "name":
@@ -1579,6 +1645,8 @@ class Lowering:
                 help="use PNG, JPEG, GIF or BMP",
             )
             return []
+        if width is None and height is None and self._figure is not None:
+            width = self._figure.width
         dpi_x, dpi_y = _dpi(dpi)
         natural = (Length.inch(Decimal(pixels[0]) / dpi_x), Length.inch(Decimal(pixels[1]) / dpi_y))
         if width is None and height is None and natural[0].emu > self.text_width().emu:
@@ -1594,6 +1662,301 @@ class Lowering:
             self.report(Code.INVALID_ARGUMENT, str(e), command.span)
             return []
         return [Piece("", fmt, "image", image)]
+
+    # --- labels, references, captions, counters, tables of contents ---------------------------
+
+    def register_label(self, name: str, span: Span, kind: str) -> Label:
+        """A new label and its bookmark; a duplicate is reported (and gets a bookmark of its own,
+        which nothing refers to)."""
+        refs = self.references
+        label = Label(name, refs.bookmark(name), kind, span, self.source)
+        existing = refs.labels.get(name)
+        if existing is None:
+            refs.labels[name] = label
+        else:
+            line = existing.source.position(existing.span.start).line
+            self.report(
+                Code.DUPLICATE_LABEL,
+                f"label `{name}` is defined twice",
+                span,
+                help=f"first defined at {existing.source.name}:{line}",
+            )
+        return label
+
+    def make_ref(self, label: str, form: str, span: Span, fmt: Format) -> list[Piece]:
+        """A placeholder REF field, resolved once every label is known."""
+        ref_id = len(self.references.refs) + 1
+        self.references.refs[ref_id] = (span, self.source)
+        ref = PendingRef(
+            (f" REF {label} ",), "", fmt.props, fmt.style, label=label, form=form, ref_id=ref_id
+        )
+        return [Piece("", fmt, "field", field=ref)]
+
+    def inline_ref(self, command: ast.Command, fmt: Format) -> list[Piece]:
+        r"""\ref[form=number]{label} and \pageref{label}."""
+        label = command.body.text.strip() if isinstance(command.body, ast.VerbatimBody) else ""
+        if not label:
+            self.report(
+                Code.INVALID_ARGUMENT,
+                f"`\\{command.name}` needs a label: \\{command.name}{{fig:arch}}",
+                command.span,
+            )
+            return []
+        form = "page"
+        if command.name == "pageref":
+            self.no_options(command)
+        else:
+            form = "default"
+            for option in command.options.items if command.options else ():
+                text = self.text_value(option.value, command, option.key or "form")
+                if option.key in (None, "form") and text in REF_FORMS:
+                    form = text
+                else:
+                    self.report(
+                        Code.INVALID_ARGUMENT,
+                        "invalid \\ref option",
+                        option.span,
+                        help=f"form={'|'.join(REF_FORMS)}",
+                    )
+        return self.make_ref(label, form, command.span, fmt)
+
+    def inline_seq(self, command: ast.Command, fmt: Format) -> list[Piece]:
+        r"""\seq[Req, id=req:x, restart=heading-1 | 1, format=decimal]: a SEQ counter."""
+        self.no_body(command)
+        name = label = restart = None
+        label_span = command.span
+        number_format = "ARABIC"
+        for option in command.options.items if command.options else ():
+            text = self.text_value(option.value, command, option.key or "counter")
+            if text is None:
+                continue
+            if option.key is None and name is None:
+                name = text
+            elif option.key == "id":
+                label, label_span = text, option.value.span
+            elif option.key == "restart" and (match := re.fullmatch(r"heading-([1-9])", text)):
+                restart = f"\\s {match.group(1)}"
+            elif option.key == "restart" and text.isdigit():
+                restart = f"\\r {text}"
+            elif option.key == "format" and text in SEQ_FORMATS:
+                number_format = SEQ_FORMATS[text]
+            else:
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    "invalid \\seq option",
+                    option.span,
+                    help="\\seq[Name, id=label, restart=heading-N|N, "
+                    f"format={'|'.join(SEQ_FORMATS)}]",
+                )
+        if name is None or not SEQ_NAME_RE.fullmatch(name):
+            self.report(
+                Code.INVALID_ARGUMENT,
+                "\\seq needs a counter name (letters, digits, _): \\seq[Req]",
+                command.span,
+            )
+            return []
+        code = f" SEQ {name} \\* {number_format} " + (f"{restart} " if restart else "")
+        pieces = [Piece("", fmt, "field", field=ir.Field((code,), "1", fmt.props, fmt.style))]
+        if label is not None:
+            bookmark = self.register_label(label, label_span, "seq").bookmark
+            pieces = [
+                Piece("", fmt, "mark", mark=ir.BookmarkStart(bookmark)),
+                *pieces,
+                Piece("", fmt, "mark", mark=ir.BookmarkEnd(bookmark)),
+            ]
+        return pieces
+
+    def make_caption(
+        self,
+        kind: str,
+        label: str | None,
+        span: Span,
+        text: tuple[ir.Inline, ...],
+        keep_with_next: bool,
+    ) -> ir.Paragraph:
+        """A Caption paragraph, "Figure {SEQ Figure} : text", with the bookmarks Word's
+        Insert Cross-reference would use: label and number, number only, text only, whole."""
+        self.use_style("Caption", ir.StyleKind.PARAGRAPH, span)
+        number: tuple[ir.Inline, ...] = (
+            ir.Field((f" SEQ {kind.replace(' ', '_')} \\* ARABIC ",), "1"),
+        )
+        body = text
+        separator = (ir.Run(": "),) if text else ()
+        if label is not None:
+            entry = self.register_label(label, span, "caption")
+            refs = self.references
+            entry.parts.update(
+                number=refs.bookmark(label, "_n"),
+                text=refs.bookmark(label, "_t"),
+                full=refs.bookmark(label, "_f"),
+            )
+            number = _marked(entry.parts["number"], number)
+            head = _marked(entry.bookmark, (ir.Run(f"{kind} "), *number))
+            if text:
+                body = _marked(entry.parts["text"], text)
+            content = _marked(entry.parts["full"], (*head, *separator, *body))
+        else:
+            content = _marked(
+                self.references.hidden_bookmark(), (ir.Run(f"{kind} "), *number, *separator, *body)
+            )
+        props = (
+            PropertySet(Target.PARAGRAPH, {"keep-with-next": True})
+            if keep_with_next
+            else EMPTY_PARAGRAPH
+        )
+        return ir.Paragraph(content, "Caption", props)
+
+    def caption_neighbours(self) -> tuple[str, bool]:
+        """(kind, caption is above its subject) inferred from the blocks around a caption."""
+        previous, following = self._previous, self._next
+        if isinstance(previous, ir.Table):
+            return "Table", False
+        if isinstance(previous, ir.Paragraph) and previous.style == "Code Block":
+            return "Listing", False
+        if _has_image(previous):
+            return "Figure", False
+        if isinstance(following, ast.PipeTable) or _starts_with(following, "table"):
+            return "Table", True
+        if isinstance(following, ast.CodeBlock):
+            return "Listing", True
+        return "Figure", True
+
+    def cmd_caption(self, command: ast.Command) -> list[ir.Block]:
+        r"""\caption[Table, id=tbl:x]{text}; the kind defaults from the neighbouring block."""
+        self.has_content = True
+        kind = label = None
+        label_span = command.span
+        for option in command.options.items if command.options else ():
+            text = self.text_value(option.value, command, option.key or "kind")
+            if text is None:
+                continue
+            if option.key is None and kind is None and text.strip():
+                kind = text.strip()
+            elif option.key == "id" and text:
+                label, label_span = text, option.value.span
+            else:
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    "invalid \\caption option",
+                    option.span,
+                    help="\\caption[Figure|Table|Listing|..., id=label]{text}",
+                )
+        content = self.expand(self.single_paragraph(command))
+        pieces = self.inlines([c for c in content if not isinstance(c, BLOCK_TYPES)], Format())  # type: ignore[misc]
+        text = self.assemble(pieces)
+        inferred, above = self.caption_neighbours()
+        figure = self._figure
+        if figure is not None:
+            inferred = "Figure"
+            if figure.label is not None:
+                if label is not None:
+                    self.report(
+                        Code.INVALID_ARGUMENT,
+                        "both the \\figure and its \\caption have an id",
+                        label_span,
+                        help="keep one of them",
+                    )
+                else:
+                    label, label_span = figure.label, figure.label_span
+            figure.captioned = True
+        return [self.make_caption(kind or inferred, label, label_span, text, above)]
+
+    def cmd_figure(self, command: ast.Command) -> list[ir.Block]:
+        r"""\figure[id=fig:x, width=12cm, align=center]{\image{...} \caption{...}}: the
+        image and caption paragraphs, kept together on one page."""
+        self.has_content = True
+        if self._figure is not None:
+            self.report(Code.MISPLACED, "a \\figure cannot contain another \\figure", command.span)
+            return []
+        extra, props = self.option_props(command, Target.PARAGRAPH, extra=("id", "width"))
+        label: str | None = None
+        label_span = command.span
+        if (value := extra.get("id")) is not None:
+            label, label_span = self.text_value(value, command, "id") or None, value.span
+        width: Length | None = None
+        if (value := extra.get("width")) is not None and (
+            text := self.text_value(value, command, "width")
+        ):
+            width = self.image_width(text, value.span)
+        context = FigureContext(label, label_span, width)
+        self._figure = context
+        try:
+            blocks = self.blocks(self.markup_blocks(command))
+        finally:
+            self._figure = None
+        if label is not None and not context.captioned:
+            self.report(
+                Code.INVALID_ARGUMENT,
+                "a labelled \\figure needs a \\caption: references point at the caption",
+                label_span,
+            )
+        base = PropertySet(Target.PARAGRAPH, {"align": "center"}).merged(props)
+        keep = base.merged(PropertySet(Target.PARAGRAPH, {"keep-with-next": True}))
+        last = max((i for i, b in enumerate(blocks) if isinstance(b, ir.Paragraph)), default=-1)
+        out: list[ir.Block] = []
+        for i, block in enumerate(blocks):
+            if isinstance(block, ir.Paragraph):
+                own = block.props
+                if i == last:  # the last paragraph does not keep with what follows the figure
+                    own = own.merged(PropertySet(Target.PARAGRAPH, {"keep-with-next": False}))
+                block = replace(block, props=(keep if i < last else base).merged(own))
+            out.append(block)
+        return out
+
+    def cmd_toc(self, command: ast.Command) -> list[ir.Block]:
+        r"""\toc[levels=1-3, title="Contents"] and \listof[Figure, title=...]."""
+        self.has_content = True
+        self.no_body(command)
+        if self._container_depth or self._figure is not None:
+            self.report(
+                Code.MISPLACED,
+                f"`\\{command.name}` must be in the document body",
+                command.span,
+            )
+            return []
+        levels = (1, 3)
+        title: str | None = None
+        kind: str | None = None
+        for option in command.options.items if command.options else ():
+            text = self.text_value(option.value, command, option.key or "option")
+            if text is None:
+                continue
+            if option.key == "title":
+                title = text
+            elif (
+                command.name == "toc"
+                and option.key == "levels"
+                and (match := re.fullmatch(r"([1-9])(?:\s*-\s*([1-9]))?", text))
+            ):
+                first = int(match.group(1))
+                levels = (first, int(match.group(2) or first))
+            elif command.name == "toc" and option.key is None and text == "hyperlinks":
+                pass  # entries are always links
+            elif command.name == "listof" and option.key is None and kind is None and text:
+                kind = text
+            else:
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    f"invalid \\{command.name} option",
+                    option.span,
+                    help='\\toc[levels=1-3, title="Contents"]'
+                    if command.name == "toc"
+                    else '\\listof[Figure, title="List of Figures"]',
+                )
+        out: list[ir.Block] = []
+        if title:
+            self.use_style("TOC Heading", ir.StyleKind.PARAGRAPH, command.span)
+            out.append(ir.Paragraph(self.assemble([Piece(title, Format())]), "TOC Heading"))
+        if command.name == "toc":
+            if levels[0] > levels[1]:
+                levels = (levels[1], levels[0])
+            field = ir.Field((f' TOC \\o "{levels[0]}-{levels[1]}" \\h \\z \\u ',), dirty=True)
+            out.append(PendingToc(field, (), levels=levels))
+        else:
+            kind = kind or "Figure"
+            field = ir.Field((f' TOC \\h \\z \\c "{kind.replace(" ", "_")}" ',), dirty=True)
+            out.append(PendingToc(field, (), caption_kind=kind))
+        return out
 
     # --- lists ---------------------------------------------------------------------------------
 
@@ -1646,6 +2009,12 @@ class Lowering:
                     out.append(lowered)
         if not numbered:
             out.append(ir.Paragraph(list_item=ref))
+        if item.label is not None:
+            label = self.register_label(item.label.name, item.label.span, "item")
+            for i, lowered in enumerate(out):
+                if isinstance(lowered, ir.Paragraph) and lowered.list_item == ref:
+                    out[i] = replace(lowered, content=_marked(label.bookmark, lowered.content))
+                    break
         return out
 
     # --- inline content ---------------------------------------------------------------------------
@@ -1676,13 +2045,7 @@ class Lowering:
             case ast.Link():
                 return self.inlines(node.content, self.with_link(fmt, node.target, node.span))
             case ast.Ref():
-                self.warn(
-                    Code.NOT_SUPPORTED_YET,
-                    "cross-references are not supported yet; the label is shown",
-                    node.span,
-                    help="planned for milestone M2",
-                )
-                return [Piece(node.label, fmt, "code")]
+                return self.make_ref(node.label, "default", node.span, fmt)
             case ast.Param():
                 self.report(Code.MACRO, f"`#{node.name}` is only valid inside \\define", node.span)
                 return []
@@ -1756,6 +2119,10 @@ class Lowering:
             return self.inline_field(command, fmt)
         if name == "date":
             return self.inline_date(command, fmt)
+        if name in ("ref", "pageref"):
+            return self.inline_ref(command, fmt)
+        if name == "seq":
+            return self.inline_seq(command, fmt)
         if name == "url":
             url = command.body.text.strip() if isinstance(command.body, ast.VerbatimBody) else ""
             self.no_options(command)
@@ -1913,6 +2280,8 @@ class Lowering:
             elif piece.kind in ("tab", "line", "page", "column"):
                 _trim_trailing(collapsed)
                 after_space = True
+            elif piece.kind == "mark":
+                pass  # a bookmark takes no room
             else:
                 after_space = False
             collapsed.append(piece)
@@ -1933,9 +2302,10 @@ class Lowering:
                 flush_link()
                 inlines.append(ir.Break(piece.kind))
                 continue
-            if piece.image is not None or piece.field is not None:  # not inside hyperlinks (yet)
+            special = piece.image or piece.field or piece.mark
+            if special is not None:  # not inside hyperlinks (yet)
                 flush_link()
-                inlines.append(piece.image or piece.field)  # type: ignore[arg-type]
+                inlines.append(special)
                 continue
             if not piece.text:
                 continue
@@ -2145,9 +2515,50 @@ def _is_blank(item: ast.Inline | ast.Block) -> bool:
 
 
 def _trim_trailing(pieces: list[Piece]) -> None:
-    while pieces and pieces[-1].kind == "text":
-        text = pieces[-1].text.rstrip(" ")
+    """Drop trailing spaces (looking through bookmarks, which take no room)."""
+    i = len(pieces) - 1
+    while i >= 0 and pieces[i].kind in ("text", "mark"):
+        if pieces[i].kind == "mark":
+            i -= 1
+            continue
+        text = pieces[i].text.rstrip(" ")
         if text:
-            pieces[-1] = replace(pieces[-1], text=text)
+            pieces[i] = replace(pieces[i], text=text)
             return
-        pieces.pop()
+        del pieces[i]
+        i -= 1
+
+
+def _on_own_line(items: Sequence[ast.Inline | ast.Block], index: int) -> bool:
+    """Whether only line breaks (or spaces) separate items[index] from its neighbours."""
+
+    def boundary(step: int) -> bool:
+        i = index + step
+        while 0 <= i < len(items):
+            item = items[i]
+            if not isinstance(item, ast.Text):
+                return isinstance(item, (ast.SoftBreak, *BLOCK_TYPES)) or (
+                    isinstance(item, ast.Command) and item.name in BLOCK_COMMANDS | PLANNED_BLOCKS
+                )
+            if item.text.strip():
+                return False
+            i += step
+        return True
+
+    return boundary(-1) and boundary(1)
+
+
+def _marked(name: str, content: Iterable[ir.Inline]) -> tuple[ir.Inline, ...]:
+    """`content` inside the bookmark `name`."""
+    return (ir.BookmarkStart(name), *content, ir.BookmarkEnd(name))
+
+
+def _has_image(block: ir.Block | None) -> bool:
+    return isinstance(block, ir.Paragraph) and any(isinstance(i, ir.Image) for i in block.content)
+
+
+def _starts_with(item: ast.Inline | ast.Block | None, command: str) -> bool:
+    """Whether `item` is (or is a paragraph starting with) the block command `command`."""
+    if isinstance(item, ast.Paragraph):
+        item = next((c for c in item.content if not _is_blank(c)), None)
+    return isinstance(item, ast.Command) and item.name == command

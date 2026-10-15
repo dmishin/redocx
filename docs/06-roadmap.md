@@ -47,7 +47,9 @@ with no repair prompt, pass both validators, and match their golden snapshots.
 
 - [x] Multiple sections (orientation, size, margins, columns, break types); headers and footers (first, even, linked
   or not); page-number formats and restarts; fields (`\pagenum`, `\numpages`, `\field`, `\date`); tab stops.
-- Footnotes and endnotes; bookmarks; cross-references with pre-computed text; captions; TOC; list of figures and tables.
+- [x] Bookmarks; cross-references with pre-computed text (`@label`, `\ref`, `\pageref`); captions (`\caption`,
+  `\figure`, code-block captions); `\seq` counters; TOC and lists of figures/tables with pre-rendered entries.
+- Footnotes and endnotes.
 - Full tables: merges, borders, shading, repeat headers, table styles with conditional formatting.
 - Templates: compile into `.dotx` or `.docx`, merge styles and numbering.
 - Heading numbering, legal numbering, tab stops, paragraph borders.
