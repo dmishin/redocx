@@ -9,6 +9,7 @@ from pathlib import Path
 
 from wordgenx import __version__
 from wordgenx.compiler import build, compile_source
+from wordgenx.ooxml.reader import NotADocxError, read_docx
 from wordgenx.stylesheet import compile_stylesheets, parse_stylesheet
 from wordgenx.stylesheet.collect import STYLESHEET_SUFFIX
 from wordgenx.syntax import Source, ast, parse
@@ -90,6 +91,19 @@ def _parse(path: str, tree: str) -> int:
     return 0 if result.ok else 1
 
 
+def _inspect(path: str) -> int:
+    try:
+        result = read_docx(path)
+    except OSError as e:
+        print(f"error: cannot read {path}: {e.strerror}", file=sys.stderr)
+        return 1
+    except NotADocxError as e:
+        print(f"error: {path}: {e}", file=sys.stderr)
+        return 1
+    print(f"{path}\n{result.report.render()}")
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="wordgenx", description=__doc__)
     parser.add_argument("--version", action="version", version=f"wordgenx {__version__}")
@@ -106,11 +120,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     dump.add_argument("file", metavar="FILE")
     dump.add_argument("--tree", choices=("ast", "cst"), default="ast")
 
+    inspect = commands.add_parser(
+        "inspect", help="read a .docx and report its structure and coverage"
+    )
+    inspect.add_argument("file", metavar="FILE.docx")
+
     args = parser.parse_args(argv)
     if args.command == "build":
         return _build(args.file, args.output)
     if args.command == "check":
         return _check(args.files)
+    if args.command == "inspect":
+        return _inspect(args.file)
     return _parse(args.file, args.tree)
 
 

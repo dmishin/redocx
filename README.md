@@ -39,6 +39,7 @@ uv run pyright             # strict type check
 uv run wordgenx build examples/hello.wgx             # compile to examples/hello.docx
 uv run wordgenx check examples/syntax-tour.wgx       # compile and report diagnostics, write nothing
 uv run wordgenx parse examples/syntax-tour.wgx       # print the AST (--tree cst for the CST)
+uv run wordgenx inspect examples/hello.docx          # read a .docx back, report structure and coverage
 ```
 
 Golden snapshots (`tests/golden/expected/`) record the exact XML of each test document. After an intended output
