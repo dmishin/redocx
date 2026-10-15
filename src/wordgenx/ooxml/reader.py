@@ -38,7 +38,7 @@ _PIC = "http://schemas.openxmlformats.org/drawingml/2006/picture"
 
 _PREFIX_BY_URI = {NS.W: "w", NS.R: "r", _A: "a", _WP: "wp", _PIC: "pic"}
 
-_RUN_IMAGE_FORMATS = {"png": "png", "jpeg": "jpg", "jpg": "jpeg", "gif": "gif", "bmp": "bmp"}
+_RUN_IMAGE_FORMATS = {"png": "png", "jpeg": "jpeg", "jpg": "jpeg", "gif": "gif", "bmp": "bmp"}
 
 _BUILTIN_TABLE_STYLES = {"normal table", "table grid"}
 _LEADER_NAMES = {value: key for key, value in TAB_LEADERS.items()}
@@ -450,6 +450,19 @@ def _decode_numbering(numpr: Element) -> tuple[int, int] | None:
 def _property_set(target: Target, values: dict[str, object], ctx: _Ctx, where: str) -> PropertySet:
     try:
         return PropertySet(target, values)
+    except ValueError:
+        pass
+    # Keep every value that is valid on its own; report the rest.
+    valid: dict[str, object] = {}
+    for key, value in values.items():
+        try:
+            PropertySet(target, {key: value})
+        except ValueError as e:
+            ctx.stats.note(f"{where} property {e}")
+        else:
+            valid[key] = value
+    try:
+        return PropertySet(target, valid)
     except ValueError as e:
         ctx.stats.note(f"{where} property {e}")
         return PropertySet(target)
@@ -534,8 +547,10 @@ def _read_run(run: Element, ctx: _Ctx) -> list[ir.Inline]:
             buffer += "\u00ad"
         elif tag == _w("sym"):
             char = child.get(_w("char"))
-            if char:
-                buffer += chr(_int(char, 0xF000))
+            try:
+                buffer += chr(int(char or "", 16))
+            except ValueError:
+                ctx.stats.note("w:sym without a hex w:char")
         elif tag == _w("drawing"):
             flush()
             if (image := _read_drawing(child, ctx)) is not None:
@@ -559,10 +574,11 @@ def _read_hyperlink(link: Element, ctx: _Ctx) -> ir.Hyperlink:
         if target is not None and external:
             url = target
     content: list[ir.Run | ir.Field] = []
-    for run in link.findall(_w("r")):
-        for item in _read_run(run, ctx):
-            if isinstance(item, ir.Run | ir.Field):
-                content.append(item)
+    for item in _read_inline(link, ctx):
+        if isinstance(item, ir.Run | ir.Field):
+            content.append(item)
+        else:
+            ctx.stats.note(f"{type(item).__name__} inside w:hyperlink")
     ctx.stats.count("hyperlink")
     return ir.Hyperlink(url, tuple(content), anchor)
 
@@ -642,7 +658,10 @@ def _read_inline(container: Element, ctx: _Ctx) -> tuple[ir.Inline, ...]:
     index = 0
     while index < len(children):
         element = children[index]
-        if element.tag == _w("r") and element.find(_w("fldChar")) is not None:
+        # A field that began in an earlier paragraph leaves a stray separate/end
+        # here; its runs are read as plain text.
+        begin = element.find(_w("fldChar")) if element.tag == _w("r") else None
+        if begin is not None and begin.get(_w("fldCharType")) == "begin":
             field, index = _read_field(children, index, ctx)
             items.append(field)
             continue
@@ -759,9 +778,11 @@ def _read_table(element: Element, ctx: _Ctx) -> ir.Table | None:
             colspan = _cell_colspan(tc_pr)
             vmerge = tc_pr.find(_w("vMerge")) if tc_pr is not None else None
             if vmerge is not None and vmerge.get(_w("val")) != "restart":
-                origin = occupancy.get((r, column))
+                origin = occupancy.get((r - 1, column))
                 if origin is not None:
                     origin.rowspan = max(origin.rowspan, r - origin.row + 1)
+                    for c in range(column, column + colspan):
+                        occupancy[(r, c)] = origin
                     column += colspan
                     continue
             builder = _CellBuilder(

@@ -1,15 +1,16 @@
-"""Command-line interface: ``wordgenx build``, ``wordgenx check`` and ``wordgenx parse``."""
+"""Command-line interface: ``wordgenx build``, ``check``, ``parse`` and ``inspect``."""
 
 from __future__ import annotations
 
 import argparse
 import sys
+import zipfile
 from collections.abc import Sequence
 from pathlib import Path
 
 from wordgenx import __version__
 from wordgenx.compiler import build, compile_source
-from wordgenx.ooxml.reader import NotADocxError, read_docx
+from wordgenx.ooxml.reader import read_docx
 from wordgenx.stylesheet import compile_stylesheets, parse_stylesheet
 from wordgenx.stylesheet.collect import STYLESHEET_SUFFIX
 from wordgenx.syntax import Source, ast, parse
@@ -97,7 +98,7 @@ def _inspect(path: str) -> int:
     except OSError as e:
         print(f"error: cannot read {path}: {e.strerror}", file=sys.stderr)
         return 1
-    except NotADocxError as e:
+    except (ValueError, zipfile.BadZipFile) as e:  # NotADocxError, or content the IR rejects
         print(f"error: {path}: {e}", file=sys.stderr)
         return 1
     print(f"{path}\n{result.report.render()}")
