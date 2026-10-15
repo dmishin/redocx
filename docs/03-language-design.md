@@ -86,7 +86,7 @@ and `w:themeShade`, so they follow theme changes in Word.
   author   = "Jane Doe",
   subject  = "Compiler design",
   keywords = (docx, compiler),
-  custom.project-code = "WX-001",   % custom document property
+  custom.project-code = "WX-001",   % custom document property (text; bare 3, 0.5, true: number, yes/no)
 ]
 
 \settings[even-odd-headers, update-fields-on-open=on]
@@ -240,7 +240,11 @@ relative to the document. Sheets apply in document order.
   Shading takes RGB or theme colours (`theme.accent1.lighter(80%)`).
 - **Built-ins:** referring to a Word built-in style (`: "Table Grid"`, `style: "Heading 1"`) is valid without
   defining it, and the compiler adds it. `modify` of an undefined built-in starts from the built-in definition.
-- **Not yet:** paragraph borders and shading. The `ooxml.*` escape hatch. Unlike documents, style sheets are parsed straight to an AST, not a lossless CST.
+- **Paragraph borders and shading:** `border-top`, `border-left`, `border-bottom`, `border-right`, `border-between`
+  (between paragraphs that share the same borders) and `border-bar` take a border. `borders: (all=…, between=…)` sets
+  them together; for paragraphs, `all` is the four sides of a box. `shading` is the background. The same keys work as
+  `\p[…]` options. In table styles, `borders` and `shading` mean the table's and the cells'.
+- **Not yet:** the `ooxml.*` escape hatch. Unlike documents, style sheets are parsed straight to an AST, not a lossless CST.
   A formatter for `.wgxs` will need one.
 - **Diagnostics:** `WGX02xx`. Unknown properties suggest the nearest name. Unresolved style and numbering references are
   reported where they occur.
@@ -460,6 +464,7 @@ number), and the "Table Table 3" lint.
 \pagenum   \numpages   \sectionpages
 \date[kind=fixed, format="d MMMM yyyy"]   % kind: fixed (default, text at build time) | today (DATE) | saved (SAVEDATE) | created (CREATEDATE)
 \field{AUTHOR}                    % any Word field; the body is raw
+\field{DOCPROPERTY "project-code"} % a custom property; its value is the cached result
 \field[result="cached text"]{IF { MERGEFIELD x } = 1 "yes" "no"}
 ```
 

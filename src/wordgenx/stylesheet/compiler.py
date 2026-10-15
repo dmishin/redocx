@@ -76,7 +76,8 @@ BANDS: dict[str, tuple[str, str]] = {
     "banded-columns": ("band1Vert", "band2Vert"),
 }
 """Banding blocks -> (odd, even) w:tblStylePr types."""
-CONDITION_TARGETS = (Target.RUN, Target.PARAGRAPH, Target.CELL)
+CONDITION_TARGETS = (Target.RUN, Target.CELL, Target.PARAGRAPH)
+"""In table styles, borders and shading are the table's and the cells', not paragraphs'."""
 NUMBERING_REF_RE = re.compile(r'\s*(?:"([^"]*)"|(\S+))(?:\s+level\s+(\d))?\s*')
 
 
@@ -244,11 +245,13 @@ class StyleSheetCompiler:
             if item.key in meta:
                 meta_found[item.key] = item
                 continue
-            for key, value, span in self._expand(item):
+            for key, value, span in self._expand(item, targets):
                 self._assign(key, value, span, item, targets, meta, values)
         return values, meta_found
 
-    def _expand(self, decl: Declaration) -> list[tuple[str, object, Span]]:
+    def _expand(
+        self, decl: Declaration, targets: Sequence[Target] = ()
+    ) -> list[tuple[str, object, Span]]:
         """Composite and shorthand declarations -> (registry key, value, span) triples."""
         value_span = decl.value_span or decl.key_span
         if decl.value is None:
@@ -261,7 +264,9 @@ class StyleSheetCompiler:
             return self._indent(raw, value_span)
         if decl.key in SHORTHANDS:
             try:
-                expanded = expand_shorthand(decl.key, _unquote(raw)) or {}
+                boxed = (Target.PARAGRAPH, Target.TABLE, Target.CELL)
+                target = next((t for t in targets if t in boxed), Target.TABLE)
+                expanded = expand_shorthand(decl.key, _unquote(raw), target) or {}
             except InvalidValueError as e:
                 self._report(Code.INVALID_VALUE, f"{decl.key}: {e}", value_span, "invalid value")
                 return []
@@ -458,7 +463,7 @@ class StyleSheetCompiler:
         blocks = [item for item in rule.items if isinstance(item, Block)]
         values, meta = self._properties(
             declarations,
-            (Target.RUN, Target.PARAGRAPH, Target.TABLE, Target.CELL),
+            (Target.RUN, Target.TABLE, Target.CELL, Target.PARAGRAPH),
             TABLE_META,
             "a table style",
         )

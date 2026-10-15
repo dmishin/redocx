@@ -39,6 +39,10 @@ _NO_GUTTER = Length(0)
 _DEFAULT_TAB_STOP = Length.cm("1.27")
 
 
+CustomValue = str | int | float | bool
+"""A custom document property: text, number or yes/no."""
+
+
 @dataclass(frozen=True)
 class Meta:
     """Core document properties (File > Info in Word)."""
@@ -53,6 +57,11 @@ class Meta:
     """Written only when given, so builds stay reproducible."""
     modified: datetime | None = None
     language: str | None = None
+    custom: tuple[tuple[str, CustomValue], ...] = ()
+    """Custom document properties (File > Info > Properties > Custom), in order."""
+
+    def custom_value(self, name: str) -> CustomValue | None:
+        return next((value for key, value in self.custom if key == name), None)
 
 
 NOTE_NUMBER_FORMATS = (

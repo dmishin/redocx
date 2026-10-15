@@ -79,6 +79,7 @@ INLINE_COMMANDS = frozenset(
 FIELD_COMMANDS = {"pagenum": "PAGE", "numpages": "NUMPAGES", "sectionpages": "SECTIONPAGES"}
 DATE_FIELDS = {"today": "DATE", "saved": "SAVEDATE", "created": "CREATEDATE"}
 META_FIELDS = {"TITLE": "title", "SUBJECT": "subject", "AUTHOR": "author", "KEYWORDS": "keywords"}
+DOCPROPERTY_RE = re.compile(r'\s*DOCPROPERTY\s+(?:"([^"]+)"|(\S+))', re.IGNORECASE)
 BREAK_COMMANDS = frozenset({"pagebreak", "columnbreak"})
 """Allowed both inline and as a block of their own."""
 TABLE_PARTS = frozenset({"row", "cell"})
@@ -857,21 +858,37 @@ class Lowering:
                     self.meta = replace(
                         self.meta, keywords=tuple(w.strip() for w in text.split(","))
                     )
-            elif key.startswith("custom."):
-                self.warn(
-                    Code.NOT_SUPPORTED_YET,
-                    "custom document properties are not supported yet",
-                    option.span,
-                    help="planned for milestone M2",
-                )
+            elif key.startswith("custom.") and len(key) > len("custom."):
+                value = self.custom_value(option.value, command, key)
+                if value is not None:
+                    name = key.removeprefix("custom.")
+                    custom = tuple((k, v) for k, v in self.meta.custom if k != name)
+                    self.meta = replace(self.meta, custom=(*custom, (name, value)))
             else:
                 self.report(
                     Code.INVALID_ARGUMENT,
                     f"unknown \\meta field `{key}`",
                     option.span,
-                    help="title, subject, author, keywords, description, last-modified-by",
+                    help="title, subject, author, keywords, description, last-modified-by, "
+                    "custom.NAME",
                 )
         return []
+
+    def custom_value(
+        self, value: ast.Value, command: ast.Command, key: str
+    ) -> ir.CustomValue | None:
+        """A custom property: "text" is text; a bare true/false, whole or decimal number is
+        a yes/no or number property."""
+        text = self.text_value(value, command, key)
+        if text is None or not isinstance(value, ast.BareValue):
+            return text
+        if text in ("true", "false"):
+            return text == "true"
+        if re.fullmatch(r"-?\d+", text) and -(2**31) <= int(text) < 2**31:
+            return int(text)
+        if re.fullmatch(r"-?\d+\.\d+", text):
+            return float(text)
+        return text
 
     def cmd_settings(self, command: ast.Command) -> list[ir.Block]:
         self.no_body(command)
@@ -1640,15 +1657,20 @@ class Lowering:
         name = field_name(code)
         dirty = False
         if result is None:
-            known = self.known_field_result(name)
+            known = self.known_field_result(name, code)
             dirty = known is None  # Word computes it when the document opens
             result = known or ""
         field = ir.Field(merge_text((" ", *instruction, " ")), result, fmt.props, fmt.style, dirty)
         return [Piece("", fmt, "field", field=field)]
 
-    def known_field_result(self, name: str) -> str | None:
+    def known_field_result(self, name: str, code: str = "") -> str | None:
         if name in ("PAGE", "SECTIONPAGES", "NUMPAGES"):
             return "1"
+        if name == "DOCPROPERTY" and (match := DOCPROPERTY_RE.match(code)):
+            value = self.meta.custom_value(match.group(1) or match.group(2))
+            if isinstance(value, bool):
+                return "Y" if value else "N"
+            return None if value is None else str(value)
         if name in META_FIELDS:
             value: object = getattr(self.meta, META_FIELDS[name])
             if isinstance(value, tuple):
@@ -2550,12 +2572,15 @@ class Lowering:
             elif key in extra:
                 found[key] = option.value
                 continue
+            elif isinstance(option.value, ast.TupleValue):  # borders=(...), border-top=(...)
+                value = _value_text(option.value)
             else:
                 text = self.text_value(option.value, command, key)
                 if text is None:
                     continue
                 value = text
-            if target is None or key not in REGISTRY[target]:
+            known = target is not None and (key in REGISTRY[target] or key in SHORTHANDS)
+            if target is None or not known:
                 options = [*extra, *(REGISTRY[target] if target else ())]
                 close = difflib.get_close_matches(key, options, n=1)
                 self.report(

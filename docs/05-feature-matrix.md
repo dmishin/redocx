@@ -36,7 +36,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Keep with next, keep lines, page break before, widow control | M1 | ● |
 | Outline level | M1 | ● |
 | Tab stops (alignment, leaders, clear) | M2 ✓ | ● |
-| Paragraph borders (incl. between, bar), shading | M2 | ● |
+| Paragraph borders (incl. between, bar), shading | M2 ✓ | ● |
 | Suppress line numbers, suppress auto-hyphens | M2 | ● |
 | Drop caps, text frames | M4 | ●● |
 | Bidi paragraph, text direction | M4 | ●● |
@@ -116,7 +116,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Citations & bibliography (`\cite`, CSL rendering via citeproc) | M3 | ●● |
 | Custom counters (`\seq`, SEQ fields) | M2 ✓ | ● |
 | Native Word citations (sources.xml + CITATION field) | Later | ●●● |
-| Document properties (core, app, custom) + DOCPROPERTY | M2 | ● |
+| Document properties (core, app, custom) + DOCPROPERTY | M2 ✓ | ● |
 
 ## 5.8 Media, drawing, math, code
 

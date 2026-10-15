@@ -36,7 +36,7 @@ from wordgenx.ooxml.merge import (
     without_note_separators,
 )
 from wordgenx.ooxml.opc import Package, Part
-from wordgenx.ooxml.parts.docprops import app_xml, core_xml
+from wordgenx.ooxml.parts.docprops import app_xml, core_xml, custom_xml
 from wordgenx.ooxml.parts.document import (
     BodyContext,
     document_xml,
@@ -276,6 +276,14 @@ def build_package(
     pkg.relate(main, RT.OFFICE_DOCUMENT)
     pkg.relate(core, RT.CORE_PROPERTIES)
     pkg.relate(app, RT.EXTENDED_PROPERTIES)
+    if document.meta.custom:
+        base = _template_custom_properties(template)
+        custom = pkg.add_part(
+            "/docProps/custom.xml",
+            CT.CUSTOM_PROPERTIES,
+            serialize(custom_xml(document.meta.custom, base)),
+        )
+        pkg.relate(custom, RT.CUSTOM_PROPERTIES)
     main.relate(styles, RT.STYLES)
     main.relate(settings, RT.SETTINGS)
     main.relate(fonts, RT.FONT_TABLE)
@@ -411,13 +419,24 @@ def build_package(
     for kind, (part, _, written) in notes.items():
         part.data = finish(notes_xml(kind, written))
     if template is not None and copier is not None:
-        _copy_unmanaged(template, copier, pkg, main)
+        _copy_unmanaged(template, copier, pkg, main, custom=not document.meta.custom)
     return pkg
 
 
-def _copy_unmanaged(template: Template, copier: PartCopier, pkg: Package, main: Part) -> None:
+def _template_custom_properties(template: Template | None) -> Element | None:
+    if template is None:
+        return None
+    for _rel_id, (reltype, target, external) in template.relationships(None).items():
+        if reltype == RT.CUSTOM_PROPERTIES and not external:
+            return template.reader.parse(target.lstrip("/"))
+    return None
+
+
+def _copy_unmanaged(
+    template: Template, copier: PartCopier, pkg: Package, main: Part, *, custom: bool
+) -> None:
     """Template parts wordgenx does not write: glossary (building blocks), customXml, web
-    settings, custom document properties, ..."""
+    settings, and (with `custom`, when the document sets none) custom document properties."""
     referenced = {
         value
         for element in template.body
@@ -434,7 +453,7 @@ def _copy_unmanaged(template: Template, copier: PartCopier, pkg: Package, main: 
         if source is not None and template.reader.read(source) is not None:
             main.relate(copier.copy(source), reltype)
     for _rel_id, (reltype, target, external) in template.relationships(None).items():
-        if reltype == RT.CUSTOM_PROPERTIES and not external:
+        if reltype == RT.CUSTOM_PROPERTIES and not external and custom:
             pkg.relate(copier.copy(target.lstrip("/")), reltype)
 
 

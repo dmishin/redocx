@@ -55,8 +55,14 @@ def test_registry_elements_are_known() -> None:
     from wordgenx.ooxml.parts.theme import Theme
     from wordgenx.values import Color
 
-    samples: dict[str, object] = {"color": Color(rgb="000000")}
-    for target, order in ((Target.RUN, schema_order.RPR), (Target.PARAGRAPH, schema_order.PPR)):
+    samples: dict[str, object] = {"color": Color(rgb="000000"), "shading": Color(rgb="F2F2F2")}
+    containers = (
+        (Target.RUN, schema_order.RPR),
+        (Target.PARAGRAPH, schema_order.PPR),
+        (Target.TABLE, schema_order.TBL_PR),
+        (Target.CELL, schema_order.TC_PR),
+    )
+    for target, order in containers:
         for spec in REGISTRY[target].values():
             value = samples.get(spec.name)
             if value is None:
@@ -79,8 +85,12 @@ def _sample(name: str, target: Target) -> object:
         "outline-level": 1,
         "line-spacing": LineSpacing.lines(1),
         "tabs": "8cm center",
+        "table-align": "center",
+        "valign": "center",
     }
     if name in special:
         return special[name]
     spec = REGISTRY[target][name]
+    if name.startswith("border-"):
+        return "(single, 0.5pt)"
     return "1pt" if "length" in spec.values else True

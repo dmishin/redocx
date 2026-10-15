@@ -536,13 +536,25 @@ BORDER_SIDES = {
     "inside-h": "insideH",
     "inside-v": "insideV",
 }
-"""wordgenx side -> OOXML element, in schema order."""
+"""wordgenx side -> OOXML element, in schema order (tables and cells)."""
+PARAGRAPH_BORDER_SIDES = {
+    "top": "top",
+    "left": "left",
+    "bottom": "bottom",
+    "right": "right",
+    "between": "between",
+    "bar": "bar",
+}
+"""Paragraph border sides (w:pBdr): `between` separates paragraphs that share the same
+borders; `bar` is a vertical line beside the text."""
 MARGIN_SIDES = ("top", "left", "bottom", "right")
 
 
-def _border_specs(target: Target, container: str, what: str) -> tuple[PropSpec, ...]:
+def _border_specs(
+    target: Target, container: str, what: str, sides: Mapping[str, str] = BORDER_SIDES
+) -> tuple[PropSpec, ...]:
     specs: list[PropSpec] = []
-    for side, element in BORDER_SIDES.items():
+    for side, element in sides.items():
         emit, children = _border_side(container, element)
         specs.append(
             PropSpec(
@@ -610,7 +622,19 @@ _CELL_SPECS: tuple[PropSpec, ...] = (
     ),
 )
 
-_ALL_SPECS = (*_SPECS, *_TABLE_SPECS, *_CELL_SPECS)
+_PARAGRAPH_SPECS: tuple[PropSpec, ...] = (
+    *_border_specs(P, "pBdr", "Paragraph", PARAGRAPH_BORDER_SIDES),
+    PropSpec(
+        "shading",
+        P,
+        _color,
+        _emit_shading,
+        "Background colour of the paragraph.",
+        "#RRGGBB | theme.<name>",
+    ),
+)
+
+_ALL_SPECS = (*_SPECS, *_PARAGRAPH_SPECS, *_TABLE_SPECS, *_CELL_SPECS)
 
 REGISTRY: dict[Target, dict[str, PropSpec]] = {
     target: {spec.name: spec for spec in _ALL_SPECS if spec.target is target} for target in Target
@@ -748,6 +772,12 @@ _BORDER_GROUPS: dict[str, tuple[str, ...]] = {
     "inner": ("inside-h", "inside-v"),
     "all": tuple(BORDER_SIDES),
 }
+_PARAGRAPH_BORDER_GROUPS: dict[str, tuple[str, ...]] = {
+    **{side: (side,) for side in PARAGRAPH_BORDER_SIDES},
+    "outer": ("top", "left", "bottom", "right"),
+    "all": ("top", "left", "bottom", "right"),
+}
+"""For paragraphs, `all` is a box: the four sides (between and bar are set by name)."""
 _MARGIN_GROUPS: dict[str, tuple[str, ...]] = {
     **{side: (side,) for side in MARGIN_SIDES},
     "horizontal": ("left", "right"),
@@ -764,7 +794,7 @@ def _expand_shorthands(target: Target, values: Mapping[str, object]) -> dict[str
     for name, value in values.items():
         if name in SHORTHANDS and name not in REGISTRY[target] and isinstance(value, str):
             try:
-                expanded = expand_shorthand(name, value) or {}
+                expanded = expand_shorthand(name, value, target) or {}
             except InvalidValueError as e:
                 raise InvalidValueError(f"{name}: {e}") from None
             if any(key not in REGISTRY[target] for key in expanded):
@@ -798,25 +828,28 @@ def split_parts(text: str) -> list[tuple[str | None, str]]:
     return out
 
 
-def expand_shorthand(key: str, raw: str) -> dict[str, object] | None:
+def expand_shorthand(key: str, raw: str, target: Target = Target.TABLE) -> dict[str, object] | None:
     """`borders` and `cell-margins` -> the per-side properties they stand for (None when
     `key` is not a shorthand). Raises InvalidValueError for a bad value.
 
     ``borders: (single, 0.5pt, #BFBFBF)`` sets all six sides; ``borders: none`` clears them;
     ``borders: (all=(single, 0.5pt), inside-v=none)`` sets groups (all, outer, inner) and
-    sides (top, left, bottom, right, inside-h, inside-v) in order.
+    sides (top, left, bottom, right, inside-h, inside-v) in order. For paragraphs
+    (`target` PARAGRAPH) the sides are top, left, bottom, right, between and bar, and `all`
+    is the four sides of a box.
     """
     if key == "borders":
+        groups = _PARAGRAPH_BORDER_GROUPS if target is Target.PARAGRAPH else _BORDER_GROUPS
         parts = split_parts(raw)
         keys = [k for k, _ in parts if k]
-        if not keys or not all(k in _BORDER_GROUPS for k in keys):  # one border for all sides
+        if not keys or not all(k in groups for k in keys):  # one border for all sides
             parts = [("all", raw)]
         elif any(k is None for k, _ in parts):
             raise InvalidValueError("write borders as one border or as side=border pairs, not both")
         out: dict[str, object] = {}
         for group, value in parts:
             border = Border.parse(value)
-            for side in _BORDER_GROUPS[group or "all"]:
+            for side in groups[group or "all"]:
                 out[f"border-{side}"] = border
         return out
     if key == "cell-margins":
