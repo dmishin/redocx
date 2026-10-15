@@ -113,7 +113,8 @@ Difficulty: ● low · ●● medium · ●●● high.
 | Arbitrary / nested fields | M2 | ●● |
 | Footnotes, endnotes (numbering format, restart, position) | M2 | ●● |
 | Index (XE + INDEX) | M3 | ●● |
-| Citations & bibliography (CSL rendering via citeproc) | M3 | ●● |
+| Citations & bibliography (`\cite`, CSL rendering via citeproc) | M3 | ●● |
+| Custom counters (`\seq`, SEQ fields) | M2 | ● |
 | Native Word citations (sources.xml + CITATION field) | Later | ●●● |
 | Document properties (core, app, custom) + DOCPROPERTY | M2 | ● |
 
@@ -141,7 +142,8 @@ Difficulty: ● low · ●● medium · ●●● high.
 | Tracked formatting changes | Later | ●●● |
 | `wordgenx diff` → redline docx | M5 | ●●● |
 | Content controls (text, rich text, dropdown, combo, date, checkbox, picture) | M5 | ●● |
-| Repeating sections, data binding to custom XML | Later | ●●● |
+| Repeating-section content controls | M5 | ●● |
+| Content-control data binding to custom XML | Later | ●●● |
 | Legacy form fields | Later | ●● |
 | Document protection (read-only, forms, comments) | M5 | ● |
 

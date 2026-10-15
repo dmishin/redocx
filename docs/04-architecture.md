@@ -40,7 +40,8 @@ Each can be tested on its own and is accessible from the Python API.
 src/wordgenx/
   syntax/        lexer, parser, CST, AST, source map, pretty-printer (formatter)
   expand/        includes, macros, desugaring
-  commands/      command registry; one module per family (text, para, table, section, refs, math, …)
+  commands/      command registry (option schema + argument kinds); one module per family (text, para, table, section, refs, math, …)
+  std/           standard macro library (.wgx files: theorem, callout, subfigure, signature)
   props/         PROPERTY REGISTRY: name, type, units, OOXML target, docs — single source of truth
   ir/            IR node dataclasses, JSON (de)serialization
   resolve/       styles, numbering, references, fields, sections, ids

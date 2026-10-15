@@ -22,7 +22,9 @@ with no repair prompt, pass both validators, and match their golden snapshots.
 - Style sheets: defaults, paragraph and character styles, theme references.
 - Headings, paragraphs, lists with real multilevel numbering (restart and continue).
 - Single-section page setup, breaks, hyperlinks, inline images, simple tables.
-- `\include`, `\let`, `\define` (macros).
+- `\include`, `\use`, `\let`, `\define` (macros with `#param`), `\settings`.
+- Command registry with argument kinds (markup, string, raw, math); the comment, whitespace and flanking rules from the spike.
+- Standard macro library skeleton (`std:callout`, `std:signature`).
 - CLI: `wordgenx build`, `wordgenx check`.
 - **Exit:** a real 20-page document can be authored entirely in wordgenx. Language grammar v0.1 is frozen.
 
@@ -73,6 +75,6 @@ building blocks, tracked formatting changes.
 ## Suggested immediate next steps
 
 1. ~~Confirm the open questions.~~ Done: see the [decision log](08-open-questions.md).
-2. Write the 5 sample documents (M0 spike) and review them together. This is the cheapest way to find language design mistakes.
+2. ~~Write the 5 sample documents (M0 spike) and review them together.~~ Done: see the [findings](../examples/spike/FINDINGS.md), all accepted.
 3. Collect reference XML: build each M1–M2 feature in Word, save, and archive the unzipped XML under `tests/reference/` with notes.
 4. Start M0.

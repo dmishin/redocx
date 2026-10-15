@@ -1,0 +1,149 @@
+% ============================================================================
+% Spike sample 3: Contract (Master Services Agreement)
+% Exercises: legal multilevel numbering, numbered clauses with labels and
+% clause cross-references, defined terms, schedules with their own numbering,
+% tracked changes, comments, watermark, signature block, line numbering.
+% ============================================================================
+
+\document[lang=en-GB, smart-quotes=on]
+
+\meta[title = "Master Services Agreement", author = "Legal"]
+
+\styles{
+  defaults { font: "Times New Roman"; size: 11pt; space-after: 6pt; justify; }
+
+  paragraph "Clause 1" : Normal { bold; caps; keep-with-next; space-before: 12pt;
+                                  numbering: MSA level 1; outline-level: 1; }
+  paragraph "Clause 2" : Normal { numbering: MSA level 2; }
+  paragraph "Clause 3" : Normal { numbering: MSA level 3; }
+  paragraph "Schedule Title" : Normal { bold; caps; align: center; page-break-before;
+                                        numbering: Schedules level 1; outline-level: 1; }
+
+  character "Defined Term" { bold; }
+
+  numbering MSA {
+    level 1 { format: decimal;      text: "%1.";       indent: 1.25cm hanging; style: "Clause 1"; }
+    level 2 { format: decimal;      text: "%1.%2";     indent: 1.25cm hanging; style: "Clause 2"; legal; }
+    level 3 { format: lower-letter; text: "(%3)";      indent: (left=2.5cm, hanging=1.25cm); style: "Clause 3"; }
+    level 4 { format: lower-roman;  text: "(%4)";      indent: (left=3.75cm, hanging=1.25cm); }
+  }
+
+  numbering Schedules {
+    level 1 { format: decimal; text: "Schedule %1"; suffix: newline; style: "Schedule Title"; }
+  }
+}
+
+% A defined term: styled on definition, bookmarked so later uses can link back.
+\define{defn}[id]{term}{“\style{Defined Term}{\term}”}
+
+\page[size=A4, margins=(all=2.54cm), line-numbers=(restart=each-page, distance=0.5cm)]
+\watermark[text="DRAFT", color=#E0E0E0, rotation=-45]
+\footer{\align[center]{\pagenum}}
+
+\p[style="Title", align=center]{MASTER SERVICES AGREEMENT}
+
+\p[align=center]{
+  This Agreement is dated \control[type=date, format="d MMMM yyyy", tag=effective-date]{[date]}
+}
+
+*PARTIES*
+
+\list[Parties]{
+  1. NORTHWIND LOGISTICS LIMITED, incorporated in England and Wales with company
+     number 01234567 (the \defn[id=d:customer]{Customer}); and
+  2. CONTOSO SYSTEMS B.V., a company registered in the Netherlands (the
+     \defn[id=d:supplier]{Supplier}),
+}
+
+each a \defn{Party} and together the \defn{Parties}.
+
+% Clause sugar: the heading levels of the contract are the MSA numbering.
+% Option A (shown here): explicit paragraph styles.
+% Option B (see findings F-9): a \clause command with nesting.
+
+\p[style="Clause 1", id=cl:defs]{Definitions and Interpretation}
+
+\p[style="Clause 2"]{In this Agreement the following definitions apply:}
+
+\p[style="Clause 3"]{\defn{Business Day} means a day other than a Saturday, Sunday
+or public holiday in England;}
+
+\p[style="Clause 3"]{\defn{Charges} means the charges set out in Schedule
+\ref[form=number]{sch:charges};}
+
+\p[style="Clause 3"]{\defn{Services} means the services described in
+Schedule \ref[form=number]{sch:services}, as varied under clause
+\ref[form=number]{cl:change}.}
+
+\p[style="Clause 1", id=cl:term]{Term}
+
+\p[style="Clause 2"]{This Agreement commences on the Effective Date and continues
+for an initial term of \del[author="A. Brandt", date=2026-10-12]{twelve (12)}\ins[author="A. Brandt",
+date=2026-10-12]{twenty-four (24)} months, unless terminated earlier under clause
+\ref[form=number]{cl:termination}.}
+
+\p[style="Clause 1", id=cl:charges]{Charges and Payment}
+
+\p[style="Clause 2", id=cl:invoice]{The Supplier shall invoice the Customer monthly
+in arrears. The Customer shall pay each undisputed invoice within
+\comment[author="R. Patel", date=2026-10-13]{thirty (30) days}{Customer’s standard
+terms are 45 days. Please confirm commercial position.} of receipt.}
+
+\p[style="Clause 2"]{If any sum is not paid when due, the Supplier may:}
+
+\p[style="Clause 3"]{charge interest at 4\% per annum above the Bank of England base
+rate; and}
+
+\p[style="Clause 3"]{suspend the Services on not less than ten (10) Business Days’
+written notice, provided that clause \ref[form=number]{cl:invoice} has been
+complied with.}
+
+\p[style="Clause 1", id=cl:change]{Change Control}
+
+\p[style="Clause 2"]{Either Party may request a change to the Services. No change
+shall be effective unless agreed in writing by both Parties.}
+
+\p[style="Clause 1", id=cl:termination]{Termination}
+
+\p[style="Clause 2"]{Either Party may terminate this Agreement by written notice
+if the other Party commits a material breach which is not remedied within
+thirty (30) days of notice.}
+
+% ---------------------------------------------------------------- signatures
+\p[keep-with-next, space-before=24pt]{*Signed* for and on behalf of the Customer:}
+
+\tabs[(8cm, left, leader=underscore)]{
+  Signature:\tab \br
+  Name:\tab \br
+  Date:\tab
+}
+
+\p[keep-with-next, space-before=24pt]{*Signed* for and on behalf of the Supplier:}
+
+\tabs[(8cm, left, leader=underscore)]{
+  Signature:\tab \br
+  Name:\tab \br
+  Date:\tab
+}
+
+% ---------------------------------------------------------------- schedules
+\page[break=next-page, line-numbers=off]
+
+\p[style="Schedule Title", id=sch:services]{Services}
+
+The Supplier shall provide the following:
+
+\list[MSA, restart]{
+  1. Hosting of the Northwind transport management system;
+  2. Second-line support during Business Hours; and
+  3. Quarterly disaster-recovery testing.
+}
+
+\p[style="Schedule Title", id=sch:charges]{Charges}
+
+\table[style="Table Grid", header-rows=1, widths=(1fr, 4cm)]{
+  | Service                  | Monthly charge (EUR) |
+  | Hosting                  | 12,500               |
+  | Support                  | 4,200                |
+  | DR testing (per test)    | 3,000                |
+}

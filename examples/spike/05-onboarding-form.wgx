@@ -1,0 +1,118 @@
+% ============================================================================
+% Spike sample 5: Fillable form
+% Exercises: content controls (text, date, dropdown, checkbox, rich text),
+% layout tables with partial borders, shading, protection, document-level
+% settings, repeating rows, tagged fields for data extraction.
+% ============================================================================
+
+\document[lang=en-US]
+
+\meta[title = "New Employee Onboarding Form", author = "People Operations",
+      custom.form-version = "2026.2"]
+
+% Document-level settings (see findings F-14: no command for this existed yet)
+\settings[protection=(mode=forms, enforce), update-fields-on-open=off]
+
+\styles{
+  defaults { font: "Segoe UI"; size: 10pt; space-after: 0; }
+
+  paragraph "Form Section" : Normal { bold; size: 11pt; color: white;
+                                      shading: theme.accent1; space-before: 12pt;
+                                      space-after: 4pt; indent: (left=0.1cm); keep-with-next; }
+  paragraph "Field Label" : Normal { size: 8pt; color: theme.text1.lighter(40%); space-before: 3pt; }
+  paragraph "Fine Print"  : Normal { size: 7.5pt; italic; color: theme.text1.lighter(25%); }
+
+  table "Form Grid" {
+    borders: (bottom = single 0.5pt #A6A6A6, inside-h = single 0.5pt #A6A6A6);
+    cell-margins: (left=0.1cm, right=0.1cm, top=0.05cm, bottom=0.1cm);
+  }
+}
+
+% A labelled field: small grey label above an input control.
+\define{field}[label, tag, type=text, placeholder="Click to enter"]{}{
+  \p[style="Field Label"]{\label}
+  \p{\control[type=\type, tag=\tag, placeholder=\placeholder]}
+}
+
+\page[size=Letter, margins=(top=0.6in, bottom=0.6in, left=0.75in, right=0.75in)]
+\header{\image[height=1.2cm, alt="Contoso logo"]{img/logo.png} \tab \tab
+        \style{Field Label}{Form HR-01 · v\field{DOCPROPERTY form-version}}}
+
+\p[style="Title"]{New Employee Onboarding}
+\p[style="Fine Print"]{Complete all fields and return to People Operations within five
+working days of your start date. Fields marked * are mandatory.}
+
+\p[style="Form Section"]{1. Personal Details}
+
+\table[style="Form Grid", widths=(1fr, 1fr, 1fr)]{
+  \row{
+    \cell{\field[label="Legal first name *", tag=first-name]}
+    \cell{\field[label="Legal last name *",  tag=last-name]}
+    \cell{\field[label="Preferred name",     tag=preferred-name]}
+  }
+  \row{
+    \cell{\field[label="Date of birth *", tag=dob, type=date]}
+    \cell[colspan=2]{\field[label="Personal email *", tag=email]}
+  }
+  \row{
+    \cell[colspan=3]{
+      \p[style="Field Label"]{Home address *}
+      \control[type=rich-text, tag=address, placeholder="Street, city, postcode"]
+    }
+  }
+}
+
+\p[style="Form Section"]{2. Employment}
+
+\table[style="Form Grid", widths=(1fr, 1fr)]{
+  \row{
+    \cell{
+      \p[style="Field Label"]{Department *}
+      \p{\control[type=dropdown, tag=department,
+                  items=("Engineering", "Finance", "Operations", "Sales", "People"),
+                  placeholder="Choose a department"]}
+    }
+    \cell{\field[label="Start date *", tag=start-date, type=date]}
+  }
+  \row{
+    \cell[colspan=2]{
+      \p[style="Field Label"]{Employment type *}
+      \p{
+        \control[type=checkbox, tag=type-full-time] Full-time\quad
+        \control[type=checkbox, tag=type-part-time] Part-time\quad
+        \control[type=checkbox, tag=type-contract]  Contractor
+      }
+    }
+  }
+}
+
+\p[style="Form Section"]{3. Emergency Contacts}
+
+\control[type=repeating, tag=contacts, min=1, max=3]{
+  \table[style="Form Grid", widths=(2fr, 1fr, 1.5fr)]{
+    \row{
+      \cell{\field[label="Name *", tag=contact-name]}
+      \cell{\field[label="Relationship", tag=contact-rel]}
+      \cell{\field[label="Phone *", tag=contact-phone]}
+    }
+  }
+}
+
+\p[style="Form Section"]{4. Declaration}
+
+\p[space-before=6pt]{
+  \control[type=checkbox, tag=declaration] I confirm that the information provided
+  is accurate and complete.
+}
+
+\table[style="Form Grid", widths=(2fr, 1fr)]{
+  \row[height=1.5cm at-least]{
+    \cell{\field[label="Signature", tag=signature, type=picture]}
+    \cell[valign=bottom]{\field[label="Date", tag=signed-date, type=date]}
+  }
+}
+
+\p[style="Fine Print", space-before=12pt]{
+  Contoso processes this information under its Employee Privacy Notice. Data is
+  retained for the duration of employment plus six years.
+}

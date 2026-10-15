@@ -1,41 +1,74 @@
 # 3. Language Design
 
-> This is a **draft** for discussion. The examples show intent. The exact grammar is fixed in M1.
-> File extension: `.wgx`. Encoding: UTF-8.
+> **Status:** draft v0.2. It includes the decisions from the M0 syntax spike
+> ([findings](../examples/spike/FINDINGS.md), referenced below as F-n). The exact grammar is fixed in M1.
+> File extensions: `.wgx` (documents and macro files), `.wgxs` (style sheets). Encoding: UTF-8.
 
 ## 3.1 Design goals for the syntax
 
 0. **DOCX is the only target.** wordgenx is not a universal, output-neutral markup language. Every construct exists
    because Word has a matching concept, and it is named and shaped after that concept. We do not add abstractions to
    make documents portable to HTML or PDF. When "the obvious markup design" and "how Word models it" disagree, Word wins.
-1. **Prose reads like prose.** A paragraph of plain text needs no markup.
+   Conveniences without a Word counterpart (theorems, callouts, subfigures) live in the standard macro library (§3.18),
+   not in the core.
+1. **Prose reads like prose.** A paragraph of plain text needs no markup. Currency (`$48.2M`) and percentages (`12%`)
+   need no escaping.
 2. **One uniform command form** covers everything that isn't common enough for sugar.
-3. **Common things are short:** headings, emphasis, lists, simple tables, links, math.
+3. **Common things are short:** headings, emphasis, lists, simple tables, links, references.
 4. **Options are named, typed and validated.** No positional magic. Unknown options are errors.
-5. **Predictable parsing.** There is no expansion-order cleverness as in TeX. The grammar is context-sensitive only in
-   well-defined *modes* (markup, code, math, raw, style sheet).
-6. **Every sugar has a command equivalent**, so tools such as formatters, the importer and the LSP can always print the canonical form.
+5. **Predictable parsing.** There is no expansion-order cleverness as in TeX and no heuristics. The grammar is
+   context-sensitive only in well-defined *modes* (markup, string, raw, math, code, style sheet).
+6. **Every sugar has a command equivalent**, so tools such as formatters, the importer and the LSP can always print the
+   canonical form.
+7. **One body per command.** Extra content goes in named options (F-10).
 
 ## 3.2 Lexical basics
 
 | Construct | Syntax | Notes |
 |-----------|--------|-------|
-| Command | `\name[options]{body}{body2}…` | `[options]` and bodies are optional, as each command defines |
-| Options | `key=value, key2=value2, flag` | Values: number+unit, string, identifier, color, list `(a, b)`, nested `{…}` |
+| Command | `\name[options]{body}` | `[options]` and `{body}` are optional, as each command defines. At most one body. |
+| Options | `key=value, key2=value2, flag` | Values: number+unit, string `"…"`, identifier, color, tuple `(a, b)` or `(k=v, …)`, markup `{…}` |
 | Paragraph break | blank line | As in TeX and Markdown |
 | Line break | `\br` | `w:br` |
+| Tab | `\tab` | `w:tab` |
 | Page / column break | `\pagebreak`, `\columnbreak` | |
-| Comment | `% …` to end of line | As in TeX. A literal percent sign is `\%`. There are no block comments. Because `50% of` is common in business text, the compiler warns when `%` directly follows a digit (likely a forgotten `\%`). |
-| Escape | `\\ \% \{ \} \[ \] \* \_ \` \$ \# \= \|` | Escapes the next character |
-| Non-breaking space | `~` | As in TeX. Literal tilde is `\~`. |
+| Comment | `%` to end of line, **only at the start of a line or after whitespace** | TeX-style (F-2). `12%` and `a%20b` are literal text. `\%` is always a literal percent sign. There are no block comments. |
+| Escape | `\\ \% \{ \} \[ \] \* \_ \` \$ \# \= \| \@ \~` | Escapes the next character |
+| Non-breaking space | `~` | As in TeX |
 | Typographic | `--` en dash, `---` em dash, smart quotes | Smart punctuation can be turned off per document |
-| Identifier/label | `{#label}` after a block, or `id=label` option | Creates a bookmark |
+| Label | `{#label}` after a heading, list-item marker or display block; or the `id=label` option | Creates a bookmark (§3.11) |
+| Dollar sign | `$` | **Literal text** (F-3). Inline math is `\m{…}`. Only `$$` (display math) is special. |
+| Reserved | `#{` | Reserved for possible future use. Use `\#` for a literal `#` before `{`. |
+
+### Whitespace after commands (F-1)
+
+Unlike TeX, **whitespace after a command is kept**. `The \product is great` prints a space between the two words.
+`\name{}` is still allowed as an explicit terminator (`\product{}s`).
+
+The one exception: **break-like commands** (`\br`, `\tab`, `\pagebreak`, `\columnbreak`) trim horizontal whitespace on both
+sides, so `Name:\tab \br` and `\tab Page \pagenum` produce no stray spaces.
+
+### Argument kinds (F-4)
+
+Each command declares, in the command registry, how its body and each option value are read:
+
+| Kind | Interpreted | Used by |
+|------|-------------|---------|
+| `markup` (default) | All inline markup and commands | `\p`, `\cell`, `\footnote`, … |
+| `string` | Nothing except `\}` and `\\`; `_ ~ % * $` are literal | Paths, URLs, style names: `\image`, `\include`, `\link` target |
+| `raw` | Nothing; braces must balance | `\field` instructions, `\raw[ooxml]` |
+| `math` | LaTeX-math subset | `\m`, `$$…$$` |
+
+For example, `\field{STYLEREF "Heading 1" \n}` works because the body is raw: `\n` is a field switch, not a command.
+Nested fields inside a raw field body use Word's own display notation with field braces, `{ MERGEFIELD x }`, as in §3.12.
 
 ### Units
 
 `pt`, `cm`, `mm`, `in`, `pc`, `em` (relative to current font size), `%` (where meaningful), `fr` (table column fractions),
 `lines` (line-spacing multiples), plus the raw units `twip` and `emu` for exactness. The compiler converts to the OOXML
 unit each property needs (twips, half-points, eighths of a point, EMUs, fiftieths of a percent).
+
+Length-plus-rule values use tuples: `height=(1.5cm, at-least)`, `line-spacing=(12pt, exact)`.
 
 ### Colors
 
@@ -56,39 +89,51 @@ and `w:themeShade`, so they follow theme changes in Word.
   custom.project-code = "WX-001",   % custom document property
 ]
 
-\use{styles/house.wgxs}             % style sheet (see §3.5)
+\settings[even-odd-headers, update-fields-on-open=on]
 
-\page[size=A4, margins=(top=2.5cm, bottom=2.5cm, inside=3cm, outside=2cm), mirror]
+\use{styles/house.wgxs}             % style sheet (§3.5)
+\use{macros/house.wgx}              % macro library (§3.17)
+
+\section[size=A4, margins=(top=2.5cm, bottom=2.5cm, inside=3cm, outside=2cm), mirror, title-page]
 \header[first]{}                    % empty first-page header
-\header{ \field{STYLEREF "Heading 1"} \tab \field{TITLE} }
-\footer{ \align[center]{Page \pagenum of \numpages} }
+\header{\field{STYLEREF "Heading 1"} \tab \field{TITLE}}
+\footer{\align[center]{Page \pagenum of \numpages}}
 
-\titlepage{ … }
+\p[style="Title"]{wordgenx Architecture Specification}
+\pagebreak
 
 \toc[levels=1-3, title="Contents"]
 
-= Introduction {#intro}
+= Introduction {#sec:intro}
 …
 ```
 
-Everything before the first content is *preamble*. Settings commands can also appear later. For example, `\page` after
-content starts a new section (§3.9).
+Everything before the first content is the *preamble*. `\document`, `\meta`, `\settings`, `\use` and `\styles` are
+preamble-only. In the preamble, `\section` configures the first section. After content, it starts a new one (§3.10).
+
+### Document settings (F-14)
+
+`\settings[…]` maps to `settings.xml`. Examples: `protection=(mode=forms|read-only|comments|tracked-changes, enforce)`,
+`update-fields-on-open=on|off`, `even-odd-headers`, `track-changes`, `default-tab-stop=1.27cm`,
+`footnotes=(format=lower-roman, restart=each-section, position=page-bottom)`, `hyphenation=auto`.
 
 ## 3.4 Inline markup
 
 | Sugar | Meaning | Command form |
 |-------|---------|--------------|
-| `*text*` | strong (style `Strong` or bold) | `\strong{text}` |
-| `_text_` | emphasis | `\emph{text}` |
+| `*text*` | strong (character style `Strong`) | `\strong{text}` |
+| `_text_` | emphasis (character style `Emphasis`) | `\emph{text}` |
 | `` `code` `` | inline code (character style `Code`) | `\code{code}` |
-| `$x^2$` | inline math | `\math{x^2}` |
+| `\m{x^2}` | inline math (there is no sugar; `$` is literal) | `\m{x^2}` |
 | `<https://…>` | autolink | `\link{https://…}` |
-| `[text](url)` | hyperlink | `\link[url]{text}` |
-| `@label` | cross-reference | `\ref{label}` |
+| `[text](url)` | hyperlink | `\link[to="url"]{text}` |
+| `@label` | cross-reference (§3.11) | `\ref{label}` |
 
-Sugar maps to **semantic character styles** (`Strong`, `Emphasis`, `Code`), which are created if the template lacks them.
-A setting can map them to direct bold or italic instead.
+**Flanking rules.** `*` and `_` open emphasis only at a word start and close only at a word end, so `5 * 3`,
+`snake_case_name` and `file_name.txt` need no escapes. `@` starts a reference only after whitespace or opening
+punctuation and only when followed by a label character, so `jane@example.com` is literal.
 
+Sugar maps to **semantic character styles**, which are created if the template lacks them, giving idiomatic Word output.
 Direct formatting is always available:
 
 ```wgx
@@ -110,7 +155,7 @@ defaults {
   space-after: 8pt; line-spacing: 1.08;
 }
 
-paragraph "Body Text" : Normal {          % : basedOn
+paragraph "Body Text" : Normal {          % ": Normal" means basedOn Normal
   first-line-indent: 0; space-after: 6pt; justify;
   widow-control;
   next: "Body Text";
@@ -120,19 +165,18 @@ paragraph "Heading 1" : Normal {
   font: theme.major; size: 16pt; color: theme.accent1.darker(25%);
   space-before: 24pt; space-after: 6pt; keep-with-next; keep-lines;
   outline-level: 1;
-  numbering: Headings level 1;            % link to multilevel list (§3.7)
-  page-break-before: false;
+  numbering: Headings level 1;            % link to a multilevel list (§3.7)
 }
 
 character Term { italic; color: theme.accent2; }
 
 linked "Quote" : Normal {                 % linked paragraph+character style
   indent: (left=1cm, right=1cm); italic;
-  border-left: single 3pt theme.accent1 space=6pt;
+  border-left: (single, 3pt, theme.accent1, space=6pt);
 }
 
 table "Data Grid" : "Table Grid" {
-  borders: (all = single 0.5pt #BFBFBF);
+  borders: (all = (single, 0.5pt, #BFBFBF));
   cell-margins: (left=0.1cm, right=0.1cm);
   header-row { bold; shading: theme.accent1; color: white; repeat; }
   banded-rows { odd { shading: #F2F2F2; } }
@@ -152,7 +196,7 @@ The full property vocabulary is in the [feature matrix](05-feature-matrix.md). I
 ## 3.6 Paragraph-level formatting
 
 ```wgx
-\p[style="Body Text", align=center, space-before=12pt, keep-with-next]{A paragraph with options.}
+\p[style="Body Text", align=center, space-before=12pt, keep-with-next, id=par:key]{A paragraph with options.}
 
 \align[right]{Short form for alignment.}
 
@@ -161,72 +205,90 @@ The full property vocabulary is in the [feature matrix](05-feature-matrix.md). I
 
 Paragraph options and style-sheet properties use the **same vocabulary**.
 
-## 3.7 Headings and lists
+## 3.7 Headings, lists and numbered paragraphs
 
 ```wgx
-= Heading 1            % maps to style "Heading 1"
+= Heading 1 {#sec:intro}   % maps to style "Heading 1"
 == Heading 2
-=== Heading 3 {#sec:details}
-=* Unnumbered heading  % suppress numbering, keep outline level
+=== Heading 3
+=* Unnumbered heading      % suppress numbering, keep outline level
 
 - bullet
 - bullet
   - nested bullet
 1. numbered
 2. numbered
-   a. nested, lettered     % format comes from the list definition, not the marker
+   a. nested               % the marker only signals "numbered"; the format comes from the definition
 ```
 
-Lists use **Word multilevel numbering definitions** (`abstractNum` / `num`) declared in style sheets:
+`=` is heading sugar only at the start of a line and followed by a space.
+
+Lists use **Word multilevel numbering definitions** (`abstractNum` / `num`) declared in style sheets. A level can be
+**linked to a paragraph style**, as in Word:
 
 ```wgxs
 numbering Headings {
-  level 1 { format: decimal;     text: "%1";       style: "Heading 1"; }
-  level 2 { format: decimal;     text: "%1.%2";    style: "Heading 2"; }
-  level 3 { format: decimal;     text: "%1.%2.%3"; style: "Heading 3"; }
+  level 1 { format: decimal; text: "%1";       style: "Heading 1"; }
+  level 2 { format: decimal; text: "%1.%2";    style: "Heading 2"; }
+  level 3 { format: decimal; text: "%1.%2.%3"; style: "Heading 3"; }
 }
 
-numbering Legal {
-  level 1 { format: decimal; text: "%1.";   indent: 0.75cm hanging; legal; }
-  level 2 { format: lower-letter; text: "(%2)"; indent: 1.5cm hanging; }
-  level 3 { format: lower-roman;  text: "(%3)"; indent: 2.25cm hanging; }
+numbering MSA {
+  level 1 { format: decimal;      text: "%1.";   indent: (left=1.25cm, hanging=1.25cm); style: "Clause 1"; }
+  level 2 { format: decimal;      text: "%1.%2"; indent: (left=1.25cm, hanging=1.25cm); style: "Clause 2"; legal; }
+  level 3 { format: lower-letter; text: "(%3)";  indent: (left=2.5cm,  hanging=1.25cm); style: "Clause 3"; }
 }
 
-numbering Checklist { level 1 { bullet: "☐" font: "Segoe UI Symbol"; } }
+numbering Checklist { level 1 { bullet: "☐"; font: "Segoe UI Symbol"; } }
 ```
+
+**Clause-numbered documents (F-9).** `\list[Name]{…}` uses list sugar for any numbering. When the levels are style-linked, each item
+gets that level's paragraph style automatically. A whole contract is one list, and **items can carry labels**:
 
 ```wgx
-\list[Legal]{
-  - First clause
-    - sub-clause
-  - Second clause
+\list[MSA]{
+1. {#cl:term} Term
+   1. This Agreement commences on the Effective Date …
+2. {#cl:charges} Charges and Payment
+   1. {#cl:invoice} The Supplier shall invoice the Customer monthly …
+   2. If any sum is not paid when due, the Supplier may:
+      a. charge interest …; and
+      b. suspend the Services, provided that clause @cl:invoice has been complied with.
 }
-\list[Legal, continue]{ - Continues numbering from the previous Legal list }
-\list[Legal, restart=5]{ - Starts at 5 }
+\list[MSA, continue]{ … }        % continue numbering after intervening content
+\list[MSA, restart=5]{ … }       % start at 5
 ```
 
-The compiler manages `num` instances and `lvlOverride/startOverride`, so "restart" and "continue" behave as Word users
-expect.
+- An item continues across lines indented to its text column. A blank line followed by indented text adds another paragraph
+  to the same item (unnumbered continuation, as Word's Shift+Enter or "continue list" would).
+- The compiler manages `num` instances and `lvlOverride/startOverride`, so "restart" and "continue" behave as Word users
+  expect.
 
 ## 3.8 Tables
 
 Pipe tables cover simple cases. The full command covers everything else.
 
 ```wgx
-\table[style="Data Grid", header-rows=1, widths=(4cm, 1fr, 1fr), align=center, id=tbl:rev]{
-  | Item     | Q1  | Q2  |
-  | Revenue  | 10  | 12  |
+\caption[Table, id=tbl:rev]{Quarterly revenue}
+\table[style="Data Grid", header-rows=1, widths=(4cm, 1fr, 1fr), columns=(left, decimal, decimal), align=center]{
+  | Item     | Q1    | Q2    |
+  | Revenue  | 10.5  | 12.25 |
   | Cost     | \cell[shade=#FFF2CC]{7} | 8 |
   | \cell[colspan=3, align=center]{*Total: 7*} |||
 }
-\caption[@tbl:rev]{Quarterly revenue}
 ```
+
+Pipe-table rules (F-15): cells are split on `|` **except** inside `` `code` ``, `\m{…}` or any command body. `\|` is a literal
+pipe. A cell made only of `\cell[…]{…}` takes the options of that command.
+
+**Column options:** `columns=(…)` gives per-column defaults: alignment (`left`, `center`, `right`, `decimal`) and
+optionally `(decimal, tab=1.8cm)`. Decimal alignment emits a decimal tab stop in each cell paragraph, as Word does.
 
 Cells can hold any block content (paragraphs, lists, nested tables) using the block form:
 
 ```wgx
 \table[widths=(1fr, 2fr)]{
-  \row[header, height=1cm exact]{ \cell{Name} \cell{Description} }
+  \row[header, height=(1cm, exact)]{ \cell{Name} \cell{Description} }
   \row{
     \cell[rowspan=2, valign=center]{Merged}
     \cell{
@@ -240,84 +302,122 @@ Cells can hold any block content (paragraphs, lists, nested tables) using the bl
 ```
 
 Supported: column widths (absolute, %, fr, auto), horizontal and vertical merge, per-cell borders and shading, cell margins,
-vertical alignment, text direction, row height (at-least or exact), repeat header rows, "can't split row", table alignment
-and indent, floating tables, nested tables, and table-style conditional formatting flags (`look=(first-row, banded-rows)`).
+vertical alignment, text direction, row height, repeat header rows, "can't split row", table alignment
+and indent, floating tables, nested tables, and table-style conditional formatting flags (`look=(first-row, last-row, banded-rows)`).
 
-## 3.9 Sections and page setup
+## 3.9 Captions (F-5)
 
-`\page[…]` opens a **new section** (except in the preamble, where it configures the first section).
+As in Word, **a caption is a paragraph**: style `Caption`, containing a label and a `SEQ` field
+(`Figure {SEQ Figure \* ARABIC}`). **The caption owns the label.** A cross-reference to a figure or table points at a
+bookmark around the caption, as Word's Insert Cross-reference does.
 
 ```wgx
-\page[orientation=landscape, break=next-page]
+\caption[Table, id=tbl:income]{Condensed income statement}   % above the table
+\include{generated/q3-income-statement.wgx}
+
+\figure[id=fig:arch, width=12cm, align=center]{               % sugar: image paragraph + caption, kept together
+  \image{img/architecture.png}
+  \caption{Overall architecture}                              % kind Figure inferred; \figure's id moves to the caption
+}
+```
+
+- The kind (`Figure`, `Table`, `Equation`, `Listing`, or any custom kind) is given explicitly or inferred from the adjacent
+  table, image, or code block.
+- Chapter-numbered captions ("Figure 3.2") use a document setting:
+  `\settings[captions=(chapter-numbers, chapter-style="Heading 1", separator=".")]`, which emits `STYLEREF` + `SEQ … \s 1`.
+- Code blocks and display equations can take `caption="…"` directly.
+
+## 3.10 Sections and page setup (F-6)
+
+`\section[…]` is **Word's section**. It sets the page layout and, after content, inserts a section break. It is not a heading.
+
+```wgx
+\section[orientation=landscape, break=next-page]
 \header{Landscape appendix header}        % headers belong to the current section
 …wide table…
-\page[orientation=portrait, columns=(count=2, gap=1cm, separator), break=continuous]
+\section[orientation=portrait, columns=(count=2, gap=1cm, separator), break=continuous]
 ```
 
 Options: size (`A4`, `Letter`, or `(w, h)`), orientation, margins (including gutter and mirror), columns (equal or
-custom widths), break type (next-page, continuous, even, odd), vertical alignment, page-number format
-(`decimal`, `lower-roman`, …) and restart, line numbering, page borders, text direction, title page (different
+custom widths), break type (next-page, continuous, even, odd), vertical alignment, page numbers
+(`page-numbers=(format=lower-roman, start=1)`), line numbering, page borders, text direction, title page (different
 first page), and whether headers and footers link to the previous section (`link-headers=false`).
 
-## 3.10 References: bookmarks, cross-references, captions, notes
+## 3.11 References, labels, notes
+
+Labels become **bookmarks**. References become `REF` / `PAGEREF` / `NOTEREF` fields with the `\h` hyperlink switch. The compiler
+**pre-computes cached results**, so the document reads correctly before Word updates fields. Unresolved references are compile
+errors. References resolve across `\include`d files.
+
+**What `@label` prints depends on what it points to** (F-7), matching Word's Insert Cross-reference defaults:
+
+| Target | `@label` prints | Field |
+|--------|-----------------|-------|
+| Caption (figure, table, listing, custom kind) | "Figure 3.1" (label and number) | `REF` on the label-and-number part of the caption |
+| Display equation | "(3.2)" | `REF` |
+| Numbered heading, clause or list item | "4.2" (full-context paragraph number) | `REF \w` |
+| Unnumbered heading or labelled paragraph | the text | `REF` |
+| `\seq` counter (§3.13) | its number | `REF` |
+| Footnote / endnote | the note number | `NOTEREF` |
 
 ```wgx
-= Results {#sec:results}
-
-\figure[id=fig:arch, width=12cm, align=center]{
-  \image{img/architecture.png}
-  \caption{Overall architecture}        % caption label "Figure" + SEQ field
-}
-
-As shown in @fig:arch (page \pageref{fig:arch}), see also \ref[form=number]{sec:results}.
-\ref[form=full]{fig:arch}      % "Figure 3: Overall architecture"
-\ref[form=label-number]{…}     % "Figure 3"  (default for figures)
-\ref[form=text]{…}             % heading or caption text
-\ref[form=above-below]{…}      % "above" / "below"
+As shown in @fig:arch (page \pageref{fig:arch}), see clause @cl:invoice.
+\ref[form=full]{fig:arch}         % "Figure 3: Overall architecture"
+\ref[form=number]{fig:arch}       % "3"
+\ref[form=text]{sec:results}      % heading or caption text
+\ref[form=above-below]{fig:arch}  % "above" / "below"
+\ref[form=relative]{cl:invoice}   % "(a)" (relative paragraph number, REF \r)
 
 A claim.\footnote{With a footnote.} Another.\endnote{And an endnote.}
 ```
 
-- Labels become **bookmarks**. References become `REF` / `PAGEREF` fields with the `\h` hyperlink switch. The compiler
-  **pre-computes cached results**, such as "Figure 3", so the document looks right even before Word updates fields.
-- Captions use `SEQ Figure` / `SEQ Table` / `SEQ Equation` fields, optionally with chapter numbers (`STYLEREF`), as
-  Word's Insert Caption does.
-- Unresolved references are compile errors.
+A lint warns when the word before `@label` repeats the label it prints, for example "Table @tbl:x" printing "Table Table 3".
 
-## 3.11 Fields and generated content
+## 3.12 Fields and generated content
 
 ```wgx
 \toc[levels=1-3, hyperlinks, title="Contents"]
-\listof[figures]   \listof[tables]
-\index                         % from \ix{term} / \ix{term!subterm} entries (XE fields)
+\listof[Figure]   \listof[Table]
+\index[columns=2]                 % from \ix{term} / \ix{term!subterm} entries (XE fields)
 \pagenum   \numpages   \sectionpages
-\date[format="d MMMM yyyy"]    % DATE field;  \date[fixed] for literal text
-\field{AUTHOR}                 % any Word field, raw instruction
+\date[kind=fixed, format="d MMMM yyyy"]   % kind: fixed (default, text at build time) | today (DATE) | saved (SAVEDATE) | created (CREATEDATE)
+\field{AUTHOR}                    % any Word field; the body is raw
 \field[result="cached text"]{IF { MERGEFIELD x } = 1 "yes" "no"}
 ```
 
-`\field` is the general escape hatch. It takes the field instruction and an optional cached result. It emits
-`w:fldChar` begin/separate/end, with nested fields supported.
+`\field` is the general escape hatch. It takes the raw field instruction and an optional cached result. It emits
+`w:fldChar` begin/separate/end. `{ … }` inside the instruction are nested fields, in Word's display notation.
 
-## 3.12 Math
-
-LaTeX-style math, compiled **directly to OMML** (Office Math). It is native and editable in Word's equation editor.
+## 3.13 Custom counters (F-12)
 
 ```wgx
-Inline $e^{i\pi} + 1 = 0$ and display:
+\seq[Req]                                    % SEQ Req, cached result computed by the compiler
+\seq[Req, format=decimal, restart=heading-1] % restart at each Heading 1 (SEQ \s 1)
+\seq[Req, id=req:auth]                       % labelled: @req:auth prints its number
+```
+
+## 3.14 Math
+
+LaTeX-style math, compiled **directly to OMML** (Office Math). It is native and editable in Word's equation editor.
+`$` is **not** a math delimiter (F-3).
+
+```wgx
+Inline \m{e^{i\pi} + 1 = 0} and display:
 
 $$ \int_0^\infty e^{-x^2}\,dx = \frac{\sqrt{\pi}}{2} $$ {#eq:gauss}
 
 $$\begin{aligned}
   a &= b + c \\
     &= d
-\end{aligned}$$
+\end{aligned}$$ {#eq:chain}
 ```
 
-Display equations with a label are numbered: an equation table or OMML `m:eqArr` with a `SEQ Equation` field, depending
-on a setting. The supported LaTeX subset is documented. Unsupported macros are errors with a location.
+- Display math may also be written `\math[id=eq:gauss]{…}`.
+- Labelled display equations are numbered with `SEQ Equation`. The layout (Q9) is decided after the reference-XML survey.
+- Custom operators: `\mathop{argmin}` in the math body, or declared once with `\settings[math-operators=(argmin, argmax)]`.
+- The supported LaTeX subset is documented. Unsupported macros are errors with a location.
 
-## 3.13 Code blocks
+## 3.15 Code blocks
 
 ````wgx
 ```python {#lst:hello, caption="Hello world", line-numbers}
@@ -327,62 +427,111 @@ def hello():
 ````
 
 Highlighted with Pygments into runs with character styles (`Code Keyword`, `Code String`, …) that are generated in the
-style sheet and themeable, or into direct colors. The block uses a `Code Block` paragraph style.
+style sheet and themeable. The block uses a `Code Block` paragraph style. A `caption` creates a `Listing` caption that owns
+the label.
 
-## 3.14 Images, drawings, boxes
+## 3.16 Images, drawings, boxes
 
 ```wgx
-\image[width=8cm, alt="Logo"]{img/logo.png}                     % inline
+\image[width=8cm, alt="Logo"]{img/logo.png}                     % inline; the body is a string (path)
 \image[float, wrap=square, side=right, x=(0cm, from=margin), y=(0cm, from=paragraph), width=5cm]{img/photo.jpg}
-\textbox[width=6cm, border=single 1pt theme.accent1, float, wrap=tight]{ Callout content… }
+\textbox[width=6cm, border=(single, 1pt, theme.accent1), float, wrap=tight]{Callout content…}
 \watermark[text="DRAFT", color=#D9D9D9, rotation=-45]
 ```
 
-## 3.15 Collaboration features
+## 3.17 Collaboration and forms
 
 ```wgx
-\comment[author="J. Doe", date=2026-10-15]{reviewed text}{Is this number right?}
-\ins[author="J. Doe"]{inserted text}   \del[author="J. Doe"]{deleted text}   % tracked revisions
-\control[type=dropdown, items=("Draft","Final"), tag=status]{Draft}            % content control
-\control[type=checkbox, checked]
-\control[type=text, placeholder="Enter name", lock=content]
+\comment[author="R. Patel", date=2026-10-13, text="Please confirm the commercial position."]{thirty (30) days}
+\comment[author="R. Patel", text={Rich comment with *markup*.}]{commented range}
+\ins[author="J. Doe"]{inserted text}   \del[author="J. Doe"]{deleted text}          % tracked revisions
+
+\control[type=text, tag=name, placeholder="Enter name", lock=content]
+\control[type=dropdown, tag=status, items=("Draft", "Final")]{Draft}
+\control[type=date, tag=start, format="d MMM yyyy"]
+\control[type=checkbox, tag=agree, checked]
+\control[type=rich-text, tag=address]
+\control[type=picture, tag=signature]
+\control[type=repeating, tag=contacts, min=1, max=3]{ …block content repeated per entry… }
 ```
+
+Form protection is set with `\settings[protection=(mode=forms, enforce)]`.
 
 A later CLI feature, `wordgenx diff old.wgx new.wgx -o redline.docx`, produces a **tracked-changes redline** between two
-versions of a source. This would be very useful for legal and specification work.
+versions of a source.
 
-## 3.16 Macros, includes, variables
+## 3.18 Macros, includes, constants (F-8)
 
 ```wgx
-\include{chapters/02-design.wgx}
+\include{chapters/02-design.wgx}          % splice another source file here
+\use{macros/house.wgx}                    % load macro definitions only (no content)
 
-\let{product}{wordgenx Compiler}
+\let{product}{wordgenx Compiler}          % zero-parameter constant
 The \product is great.
 
-\define{note}[kind=info]{body}{
-  \table[style="Callout \kind", widths=(1fr)]{ \row{ \cell{\body} } }
+\define{field}[label, tag, type=text, placeholder="Click to enter"]{
+  \p[style="Field Label"]{#label}
+  \p{\control[type=#type, tag=#tag, placeholder=#placeholder]}
 }
-\note[kind=warning]{Mind the gap.}
+
+\define{callout}[title="Key takeaway", id]{
+  \table[style="Callout", widths=(1fr), id=#id]{\row{\cell{
+    \p[style="Callout Title"]{#title}
+    #body
+  }}}
+}
+
+\callout[title="Mind the gap"]{Volume growth is outpacing hub capacity.}
 ```
 
-- Macros are **hygienic and declarative**. They use named parameters with defaults and substitute at the AST level, not
-  through token-level expansion as in TeX.
-- **There is no scripting in the language** (decided; see [decisions](08-open-questions.md)). There are no conditionals,
-  loops or expressions. Programmability comes from the **Python API**: build the IR directly, or render `.wgx` from Jinja.
-  Untrusted sources can then be compiled safely. If scripting is reconsidered later, the syntax `#{ … }` is kept
-  reserved so it can be added without breaking documents.
+- A macro has named parameters (no default means required) and **at most one body**, available as `#body`.
+- `#name` is valid **only inside a `\define` body**. It works in text and in option values. It never collides with command
+  names.
+- An `id` option can be forwarded with `id=#id`. An empty optional `id` is dropped.
+- Macros are **hygienic and declarative**. They substitute at the AST level, not through token-level expansion as in TeX.
+- **There is no scripting in the language.** There are no conditionals, loops or expressions. Programmability comes from the
+  **Python API**: build the IR directly, or render `.wgx` from Jinja. Untrusted sources can then be compiled safely.
 
-## 3.17 Escape hatches (in order of preference)
+### Standard macro library (prelude) (F-13)
+
+Conveniences that Word has no native concept for ship as a readable `.wgx` library, loaded with `\use{std:…}`, built only
+from Word primitives:
+
+| Module | Provides | Built from |
+|--------|----------|------------|
+| `std:theorem` | `\theorem`, `\lemma`, `\definition`, `\proof` | Styled paragraphs + `SEQ Theorem` |
+| `std:callout` | `\callout[kind=info\|warning\|…]` | One-cell table with a table style |
+| `std:subfigure` | `\subfigures{…}` | Borderless layout table with images and letter-format `SEQ` captions |
+| `std:signature` | `\signature-block[…]` | Tab stops with underscore leaders |
+
+Users can copy and override any of these. The prelude also checks that the macro system is expressive enough.
+
+## 3.19 Citations and bibliography (F-11)
+
+```wgx
+\bibliography[file="refs.bib", style="apa"]       % preamble: data (BibTeX/CSL-JSON) and CSL style
+… as shown by \cite{daganzo2005} …                % (Daganzo, 2005)
+\cite[page=214]{daganzo2005}                      % (Daganzo, 2005, p. 214)
+\cite[prefix="see", suffix="Lemma 2"]{tib2013}    % (see Tibshirani, 2013, Lemma 2)
+\cite{ortuzar2011, daganzo2005}                   % multiple keys
+\textcite{tibshirani1996}                         % Tibshirani (1996)
+\printbibliography[title="References"]
+```
+
+Citations are rendered with CSL (citeproc-py) as text with hyperlinks to bookmarks in the bibliography. The bibliography
+uses a `Bibliography` paragraph style. Native Word citations (`CITATION` fields, `sources.xml`) are a later option.
+
+## 3.20 Escape hatches (in order of preference)
 
 1. `\style{Name}{…}`: use any style that exists in the template.
 2. Option `ooxml.rPr` / `ooxml.pPr` / `ooxml.tblPr`: inject raw property XML into the generated element.
-3. `\raw[ooxml]{<w:r>…</w:r>}`: raw run- or block-level WordprocessingML. It is checked for well-formedness, and namespaces
-   are declared automatically.
+3. `\raw[ooxml]{<w:r>…</w:r>}`: raw run- or block-level WordprocessingML. The body is raw. It is checked for well-formedness,
+   and namespaces are declared automatically.
 4. `\embed-docx{part.docx}`: insert another document as `altChunk`. Word merges it on open.
 
 Raw content is validated with the rest of the output. A bad escape hatch fails the build. It does not produce a corrupt file.
 
-## 3.18 Diagnostics
+## 3.21 Diagnostics and lints
 
 Every error has a code (`WGX1203`), a span, a message and, where possible, a suggestion:
 
@@ -393,3 +542,6 @@ error[WGX1203]: unknown paragraph property `space-befor`
 14 | \p[style=Body, space-befor=12pt]{…}
    |                ^^^^^^^^^^^ did you mean `space-before`?
 ```
+
+Planned lints: a repeated label word before `@label` (§3.11); an unused label; for contracts, a defined term that is
+never used, or a capitalised term used but never defined.
