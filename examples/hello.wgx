@@ -1,0 +1,46 @@
+% A first wordgenx document: wordgenx build examples/hello.wgx
+\document[lang=en-GB]
+\meta[title="Hello, wordgenx", author="wordgenx contributors", keywords=(docx, markup)]
+\section[size=A4, margins=2.5cm]
+\use{styles/house.wgxs}
+
+\let{product}{wordgenx}
+\define{note}[title="Note"]{\b{#title:} #body}
+
+\p[style=Title]{Hello, \product}
+
+= Introduction
+
+\product compiles plain text to "idiomatic" Word documents --- with real
+styles, real list numbering, and *strong*, _emphasised_ or `code` text.
+See [the project page](https://example.com/wordgenx) or <https://example.org>.
+
+\note[title="Tip"]{Macros expand to ordinary markup.}
+
+== Lists
+
+- Bullets use Word's own list numbering
+- Nested items work too
+  - like this one
+1. Numbered lists restart
+2. for every new list
+   a. with lettered sub-items
+
+\list[Legal]{
+1. Clauses use the _Legal_ numbering from the style sheet.
+   1. Sub-clauses are lettered.
+2. Second clause.
+
+   A second paragraph in the same clause.
+}
+
+=* Unnumbered heading
+
+\align[center]{Centred text with \font[color=theme.accent2, size=14pt]{direct formatting},
+\u[double]{underlines}, H\sub{2}O and E = mc\sup{2}.}
+
+\pagebreak
+
+```python
+print("code blocks keep    their spacing")
+```

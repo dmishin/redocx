@@ -22,16 +22,20 @@ with no repair prompt, pass both validators, and match their golden snapshots.
 - [x] Parser for all modes, lossless CST, typed AST, source spans, diagnostics renderer (`wordgenx.syntax`; rules in
   design §3.22). Checked by property-based fuzzing (Hypothesis) and a syntax tour (`examples/syntax-tour.wgx`).
 - [x] CLI `wordgenx check` and `wordgenx parse` (`--tree ast|cst`).
-- Inline sugar, commands, options type-checking, units and colors (lowering AST -> IR).
+- [x] Lowering AST -> IR (`wordgenx.lower`, design §3.23): inline sugar, formatting commands, `\p`, `\align`, option
+  type-checking, units and colours (incl. theme `lighter`/`darker`), smart punctuation.
 - [x] Style sheets (`.wgxs` and `\styles{}`): defaults, paragraph, character and linked styles, theme references,
   modify/replace, multilevel numbering definitions with style-linked levels (`numbering.xml`). Table styles are parsed
   but deferred to M2.
-- Headings, paragraphs, lists with real multilevel numbering (restart and continue).
-- Single-section page setup, breaks, hyperlinks, inline images, simple tables.
-- `\include`, `\use`, `\let`, `\define` (macros with `#param`), `\settings`.
-- Command registry with argument kinds (markup, string, raw, math); the comment, whitespace and flanking rules from the spike.
+- [x] Headings, paragraphs, lists with real multilevel numbering (separate lists restart; `\list[Name, continue]`,
+  `restart=N`).
+- [x] Single-section page setup, page and column breaks, hyperlinks.
+- Inline images, simple tables.
+- [x] `\include`, `\use` (style sheets and macro files), `\let`, `\define` (macros with `#param`), `\settings`,
+  `\document`, `\meta`.
+- [x] Command registry with argument kinds (markup, string, raw, math); the comment, whitespace and flanking rules from the spike.
 - Standard macro library skeleton (`std:callout`, `std:signature`).
-- CLI: `wordgenx build`.
+- [x] CLI: `wordgenx build` (and `check` runs the full compile).
 - **Exit:** a real 20-page document can be authored entirely in wordgenx. Language grammar v0.1 is frozen.
 
 ## M2: Word structure (where wordgenx goes beyond Pandoc)

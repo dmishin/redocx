@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator, Mapping
+from dataclasses import dataclass
 
-from wordgenx.ir import Document, PageSetup, Paragraph, Run
+from wordgenx.ir import Break, Document, Hyperlink, Inline, PageSetup, Paragraph, Run
 from wordgenx.ooxml.parts.properties import paragraph_properties, run_properties
 from wordgenx.ooxml.schema_order import SECT_PR, ordered
 from wordgenx.ooxml.style_names import style_id
@@ -13,6 +14,15 @@ from wordgenx.ooxml.xml import E, Element, nsmap
 from wordgenx.props import EmitContext
 
 _SPLIT_RE = re.compile(r"(\t|\n)")
+
+
+@dataclass(frozen=True)
+class BodyContext:
+    emit: EmitContext
+    hyperlink: Callable[[str], str]
+    """Returns the relationship id for an external hyperlink target."""
+    list_num_ids: Mapping[tuple[str, int], int]
+    """(numbering name, list instance) -> w:numId."""
 
 
 def _run_content(text: str) -> Iterator[Element]:
@@ -26,17 +36,36 @@ def _run_content(text: str) -> Iterator[Element]:
             yield E("w:t", {"xml:space": "preserve"} if preserve else None, text=piece)
 
 
-def _run(run: Run, ctx: EmitContext) -> Element:
+def _run(run: Run, ctx: BodyContext) -> Element:
     style = style_id(run.style) if run.style else None
-    return E("w:r", run_properties(run.props, ctx, style_id=style), *_run_content(run.text))
+    return E("w:r", run_properties(run.props, ctx.emit, style_id=style), *_run_content(run.text))
 
 
-def _paragraph(paragraph: Paragraph, ctx: EmitContext) -> Element:
+def _inline(item: Inline, ctx: BodyContext) -> Element:
+    if isinstance(item, Run):
+        return _run(item, ctx)
+    if isinstance(item, Break):
+        return E("w:r", E("w:br", {"w:type": item.kind}))
+    assert isinstance(item, Hyperlink)
+    return E(
+        "w:hyperlink",
+        {"r:id": ctx.hyperlink(item.url), "w:history": "1"},
+        *(_run(run, ctx) for run in item.content),
+    )
+
+
+def _paragraph(paragraph: Paragraph, ctx: BodyContext) -> Element:
     style = style_id(paragraph.style) if paragraph.style else None
+    numbering: tuple[int, int] | None = None
+    if paragraph.list_item is not None:
+        ref = paragraph.list_item
+        numbering = (ctx.list_num_ids[(ref.numbering, ref.instance)], ref.level - 1)
+    elif paragraph.unnumbered:
+        numbering = (0, 0)  # numId 0 removes numbering inherited from the style
     return E(
         "w:p",
-        paragraph_properties(paragraph.props, ctx, style_id=style),
-        *(_run(run, ctx) for run in paragraph.content),
+        paragraph_properties(paragraph.props, ctx.emit, style_id=style, numbering=numbering),
+        *(_inline(item, ctx) for item in paragraph.content),
     )
 
 
@@ -64,7 +93,7 @@ def _section_properties(page: PageSetup) -> Element:
     return E("w:sectPr", *ordered(children, SECT_PR))
 
 
-def document_xml(document: Document, ctx: EmitContext) -> Element:
+def document_xml(document: Document, ctx: BodyContext) -> Element:
     return E(
         "w:document",
         E(

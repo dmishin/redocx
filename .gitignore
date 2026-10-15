@@ -21,3 +21,4 @@ Thumbs.db
 # Build outputs of examples and ad-hoc runs
 /out/
 ~$*.docx
+examples/**/*.docx

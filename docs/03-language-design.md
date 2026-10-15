@@ -139,7 +139,7 @@ Direct formatting is always available:
 ```wgx
 \font[family="Consolas", size=10pt, color=theme.accent1, caps, spacing=0.5pt]{text}
 \b{bold} \i{italic} \u[double]{underlined} \s{struck} \sup{2} \sub{i} \hl[yellow]{highlight}
-\style{Term}{defined term}        % apply a named character style
+\style[Term]{defined term}        % apply a named character style
 \lang[de-DE]{Fahrvergnügen}       % language, for spell-check and hyphenation
 \hidden{text}                     % hidden text
 ```
@@ -516,7 +516,8 @@ The \product is great.
 \callout[title="Mind the gap"]{Volume growth is outpacing hub capacity.}
 ```
 
-- A macro has named parameters (no default means required) and **at most one body**, available as `#body`.
+- A macro has named parameters and **at most one body**, available as `#body`. A parameter without a default is
+  optional: when not given it expands to nothing, and an option whose value is that parameter is dropped.
 - `#name` is valid **only inside a `\define` body**. It works in text and in option values. It never collides with command
   names.
 - An `id` option can be forwarded with `id=#id`. An empty optional `id` is dropped.
@@ -609,3 +610,38 @@ The parser (`wordgenx.syntax`) fixes these details that the sections above leave
 - **Limits:** nesting deeper than 64 levels is an error (`WGX0116`). To avoid exponential backtracking, the parser bounds
   the work it spends on unclosed `*`, `_` and `[` openers. Ordinary documents never reach the bound; adversarial input
   degrades to literal text.
+
+## 3.23 Lowering rules (settled in M1)
+
+Lowering (`wordgenx.lower`) turns the AST into the document IR. It fixes these behaviours:
+
+- **Block vs inline commands.** Block commands (`\p`, `\align`, `\list`, `\include`, `\section`, the preamble commands,
+  and later `\table`, `\figure`, …) must stand alone. A paragraph made only of block commands (and blank lines or
+  comments between them) is a sequence of blocks. Mixing a block command with text in one paragraph is an error
+  (`WGX0303`); separate them with a blank line. `\pagebreak` and `\columnbreak` work inline, and alone they form their
+  own paragraph.
+- **Text.** Runs of spaces and line breaks collapse to one space. Spaces at paragraph edges and around `\tab` / `\br` /
+  breaks are dropped. Smart punctuation (`--` → –, `---` → —, curly quotes) applies to text, not to code or URLs, and
+  `\document[smart-quotes=off]` turns it off.
+- **Character styles.** `*…*` → `Strong`, `_…_` → `Emphasis`, `` `…` `` → `Code`, links → `Hyperlink`. A Word run has one
+  character style, so for nested styles the innermost wins and the outer style's formatting is added as direct
+  formatting.
+- **Built-in styles on demand.** Styles the markup relies on (`Heading 1`–`9`, `Title`, `Subtitle`, `List Paragraph`,
+  `Strong`, `Emphasis`, `Hyperlink`, `Code`, `Code Block`) are created with neutral formatting only when used and not
+  defined by a style sheet. Any other undefined style is an error with a suggestion (`WGX0307`).
+- **Style sheets apply document-wide.** `\styles` and `\use{*.wgxs}` may appear anywhere, including in included files.
+  Style references are checked after the whole document is read.
+- **Lists.** `-` lists use the `Bullets` numbering and `1.` lists use `Numbers`. Both are created unless a style sheet
+  defines them. Each separate list counts from its start (a new Word list instance). A nested list of the same kind is
+  the next level of the same list. A nested list of the other kind starts a new list one level deeper. Further paragraphs
+  of an item are unnumbered and indented to the item's text. List paragraphs get the level's linked style, or
+  `List Paragraph`. `\list[Name]{…}` uses a named numbering for everything inside, `\list[Name, continue]{…}` continues
+  the previous list of that numbering, and `\list[Name, restart=5]{…}` starts at 5.
+- **Headings.** `=`…`=========` use `Heading 1`–`9`. `=*` adds an explicit "no numbering" so a style-numbered heading
+  stays unnumbered.
+- **Macros** expand at the AST level when called. A body that is a single paragraph splices into the surrounding text.
+  Anything else must stand alone as blocks. Built-in command names cannot be redefined, and expansion deeper than 32
+  levels is an error.
+- **Commands not implemented yet** (tables, images, fields, notes, references, math, …) produce a warning
+  (`WGX0304`) naming the milestone, and the document still builds. For `\comment`, `\ins` and `\control` the body text is
+  kept; for the others the command is dropped.

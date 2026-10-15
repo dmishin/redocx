@@ -49,6 +49,7 @@ ignore = ["SIM905"]  # word lists written as "a b c".split() read better
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["E501"]  # test data tables read better unwrapped
+"src/wordgenx/lower/typography.py" = ["RUF001"]  # typographic characters are the point
 
 [tool.pyright]
 include = ["src", "tests"]

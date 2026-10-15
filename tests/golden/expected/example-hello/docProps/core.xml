@@ -1,0 +1,6 @@
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties">
+  <dc:title xmlns:dc="http://purl.org/dc/elements/1.1/">Hello, wordgenx</dc:title>
+  <dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">wordgenx contributors</dc:creator>
+  <cp:keywords>docx, markup</cp:keywords>
+  <dc:language xmlns:dc="http://purl.org/dc/elements/1.1/">en-GB</dc:language>
+</cp:coreProperties>

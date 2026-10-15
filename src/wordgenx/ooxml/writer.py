@@ -10,9 +10,9 @@ from wordgenx.ir import Document, Numbering, NumberingRef, StyleKind
 from wordgenx.ooxml.constants import CT, RT
 from wordgenx.ooxml.opc import Package
 from wordgenx.ooxml.parts.docprops import app_xml, core_xml
-from wordgenx.ooxml.parts.document import document_xml
+from wordgenx.ooxml.parts.document import BodyContext, document_xml
 from wordgenx.ooxml.parts.fonts import font_table_xml
-from wordgenx.ooxml.parts.numbering import default_level, numbering_xml
+from wordgenx.ooxml.parts.numbering import default_level, list_num_ids, numbering_xml
 from wordgenx.ooxml.parts.settings import settings_xml
 from wordgenx.ooxml.parts.styles import StyleError, resolve_styles, styles_xml
 from wordgenx.ooxml.parts.theme import Theme, theme_xml
@@ -48,6 +48,10 @@ def _link_numbering(document: Document) -> Document:
         ref = style.numbering
         if ref is not None and ref.name not in definitions:
             raise StyleError(f"style {style.name!r}: numbering {ref.name!r} is not defined")
+    for paragraph in document.body:
+        item = paragraph.list_item
+        if item is not None and item.numbering not in definitions:
+            raise StyleError(f"list numbering {item.numbering!r} is not defined")
 
     # Level -> style links: give the style its w:numPr.
     for numbering in definitions.values():
@@ -92,7 +96,7 @@ def _check_style_references(document: Document) -> None:
     styles = resolve_styles(document)
     for paragraph in document.body:
         refs = [(paragraph.style, StyleKind.PARAGRAPH)]
-        refs += [(run.style, StyleKind.CHARACTER) for run in paragraph.content]
+        refs += [(run.style, StyleKind.CHARACTER) for run in paragraph.runs()]
         for name, kind in refs:
             if name is None:
                 continue
@@ -108,7 +112,7 @@ def _font_names(document: Document, theme: Theme) -> Iterator[str]:
     yield theme.minor_font
     property_sets = [document.default_run, *(s.run for s in document.styles)]
     property_sets += [level.run for n in document.numbering for level in n.levels]
-    property_sets += [run.props for p in document.body for run in p.content]
+    property_sets += [run.props for p in document.body for run in p.runs()]
     for props in property_sets:
         font = props.get("font")
         if isinstance(font, str) and not font.startswith("theme."):
@@ -122,9 +126,9 @@ def build_package(document: Document, theme: Theme | None = None) -> Package:
     _check_style_references(document)
 
     pkg = Package()
-    main = pkg.add_part(
-        "/word/document.xml", CT.WML_DOCUMENT_MAIN, serialize(document_xml(document, theme))
-    )
+    # Parts first, so the fixed relationships get stable ids (rId1 = styles, ...) and
+    # hyperlinks found while writing the body come after them.
+    main = pkg.add_part("/word/document.xml", CT.WML_DOCUMENT_MAIN)
     styles = pkg.add_part("/word/styles.xml", CT.WML_STYLES, serialize(styles_xml(document, theme)))
     settings = pkg.add_part(
         "/word/settings.xml", CT.WML_SETTINGS, serialize(settings_xml(document))
@@ -147,13 +151,30 @@ def build_package(document: Document, theme: Theme | None = None) -> Package:
     main.relate(settings, RT.SETTINGS)
     main.relate(fonts, RT.FONT_TABLE)
     main.relate(theme_part, RT.THEME)
+
+    used_lists = [
+        (p.list_item.numbering, p.list_item.instance, p.list_item.start)
+        for p in document.body
+        if p.list_item is not None
+    ]
+    instances = list_num_ids(document.numbering, used_lists)
     if document.numbering:
         numbering = pkg.add_part(
             "/word/numbering.xml",
             CT.WML_NUMBERING,
-            serialize(numbering_xml(document.numbering, theme)),
+            serialize(numbering_xml(document.numbering, theme, instances)),
         )
         main.relate(numbering, RT.NUMBERING)
+
+    links: dict[str, str] = {}
+
+    def hyperlink(url: str) -> str:
+        if url not in links:
+            links[url] = main.relate_external(url, RT.HYPERLINK)
+        return links[url]
+
+    body = BodyContext(theme, hyperlink, {(i.numbering, i.instance): i.num_id for i in instances})
+    main.data = serialize(document_xml(document, body))
     return pkg
 
 

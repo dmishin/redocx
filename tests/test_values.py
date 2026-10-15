@@ -2,7 +2,7 @@ from decimal import Decimal
 
 import pytest
 
-from wordgenx.values import Color, InvalidValueError, Length, LineSpacing
+from wordgenx.values import Color, InvalidValueError, Length, LineSpacing, apply_tint_shade
 
 
 @pytest.mark.parametrize(
@@ -46,6 +46,18 @@ def test_color_parse() -> None:
         Color.parse("theme.accent9")
     with pytest.raises(InvalidValueError):
         Color.parse("#12345")
+
+
+def test_theme_tint_and_shade() -> None:
+    darker = Color.parse("theme.accent1.darker(25%)")
+    lighter = Color.parse("theme.text1.lighter(40%)")
+    assert (darker.theme, darker.shade, darker.tint) == ("accent1", 0xBF, None)
+    assert (lighter.theme, lighter.tint, lighter.shade) == ("text1", 0x99, None)
+    assert str(darker) == "theme.accent1.darker(25%)"
+    assert apply_tint_shade("000000", 0x99, None) == "666666"
+    assert apply_tint_shade("FFFFFF", None, 0xBF) == "BFBFBF"
+    with pytest.raises(InvalidValueError):
+        Color.parse("theme.accent1.darker(150%)")
 
 
 def test_line_spacing() -> None:

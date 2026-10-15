@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from bisect import bisect_right
 from dataclasses import dataclass, field
+from os import PathLike
 from pathlib import Path
 
 
@@ -47,7 +48,7 @@ class Source:
         object.__setattr__(self, "_line_starts", tuple(starts))
 
     @classmethod
-    def from_path(cls, path: str | Path) -> Source:
+    def from_path(cls, path: str | PathLike[str]) -> Source:
         path = Path(path)
         # newline="" keeps "\r\n" so offsets match the file; the parser treats "\r" as whitespace.
         with path.open(encoding="utf-8-sig", newline="") as f:

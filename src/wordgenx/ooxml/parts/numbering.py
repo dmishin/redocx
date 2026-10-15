@@ -7,8 +7,8 @@ instance that paragraphs and styles refer to.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from dataclasses import replace
+from collections.abc import Iterable, Sequence
+from dataclasses import dataclass, replace
 
 from wordgenx.ir import Numbering, NumberingLevel
 from wordgenx.ooxml.parts.properties import paragraph_properties, run_properties
@@ -80,9 +80,39 @@ def _level(level: NumberingLevel, ctx: EmitContext) -> Element:
     return E("w:lvl", {"w:ilvl": str(level.level - 1)}, *ordered(present, LVL))
 
 
-def numbering_xml(definitions: Sequence[Numbering], ctx: EmitContext) -> Element:
+@dataclass(frozen=True)
+class ListInstance:
+    """A separately counted list: its own w:num restarting the definition's numbering."""
+
+    num_id: int
+    numbering: str
+    instance: int
+    start: int | None
+
+
+def list_num_ids(
+    definitions: Sequence[Numbering], used: Iterable[tuple[str, int, int | None]]
+) -> list[ListInstance]:
+    """Allocate w:numIds for list instances (numbering, instance, start) in first-use order.
+
+    Ids 1..len(definitions) belong to the definitions themselves (used by styles).
+    """
+    instances: dict[tuple[str, int], ListInstance] = {}
+    next_id = len(definitions) + 1
+    for name, instance, start in used:
+        if (name, instance) not in instances:
+            instances[(name, instance)] = ListInstance(next_id, name, instance, start)
+            next_id += 1
+    return list(instances.values())
+
+
+def numbering_xml(
+    definitions: Sequence[Numbering],
+    ctx: EmitContext,
+    instances: Sequence[ListInstance] = (),
+) -> Element:
     abstract: list[Element] = []
-    instances: list[Element] = []
+    nums: list[Element] = []
     for num_id, numbering in enumerate(definitions, start=1):
         abstract_children = {
             "multiLevelType": E("w:multiLevelType", {"w:val": "multilevel"}),
@@ -96,14 +126,31 @@ def numbering_xml(definitions: Sequence[Numbering], ctx: EmitContext) -> Element
                 *(_level(level, ctx) for level in complete_levels(numbering)),
             )
         )
-        instances.append(
+        nums.append(
             E(
                 "w:num",
                 {"w:numId": str(num_id)},
                 E("w:abstractNumId", {"w:val": str(num_id - 1)}),
             )
         )
-    groups = {"abstractNum": abstract, "num": instances}
+    abstract_ids = {numbering.name: i for i, numbering in enumerate(definitions)}
+    for instance in instances:
+        definition = definitions[abstract_ids[instance.numbering]]
+        first = definition.level(1)
+        start = instance.start if instance.start is not None else (first.start if first else 1)
+        nums.append(
+            E(
+                "w:num",
+                {"w:numId": str(instance.num_id)},
+                E("w:abstractNumId", {"w:val": str(abstract_ids[instance.numbering])}),
+                E(
+                    "w:lvlOverride",
+                    {"w:ilvl": "0"},
+                    E("w:startOverride", {"w:val": str(start)}),
+                ),
+            )
+        )
+    groups = {"abstractNum": abstract, "num": nums}
     return E(
         "w:numbering",
         *(child for name in NUMBERING if name in groups for child in groups[name]),

@@ -109,9 +109,11 @@ def hello():
 
 \comment[author="R. Patel", text={Rich comment with *markup*.}]{thirty (30) days}
 \control[type=dropdown, tag=status, items=("Draft", "Final")]{Draft}
-\p[style="Body Text", align=center, space-before=12pt, keep-with-next]{A paragraph with options.}
 \tabs[(8cm, center), (16cm, right, leader=dot)]{Left\tab Centered\tab Right}
 \font[color=theme.accent1.darker(25%), size=10pt]{Theme colours}
 
+\p[style="Body Text", align=center, space-before=12pt, keep-with-next]{A paragraph with options.}
+
 \section[orientation=landscape, break=next-page]
+
 \date[kind=fixed, format="d MMMM yyyy"]

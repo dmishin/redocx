@@ -55,6 +55,12 @@ numbering Legal {
   level 3 { format: lower-roman;  text: "(%3)"; indent: (left=2.25cm, hanging=0.75cm); start: 1; }
 }
 
+numbering MSA {                           % contract clauses: 1. / 1.1 / (a)
+  level 1 { format: decimal;      text: "%1.";   indent: 1.25cm hanging; bold; }
+  level 2 { format: decimal;      text: "%1.%2"; indent: 1.25cm hanging; legal; }
+  level 3 { format: lower-letter; text: "(%3)";  indent: (left=2.5cm, hanging=1.25cm); }
+}
+
 numbering Checklist {
   level 1 { bullet: "☐"; font: "Segoe UI Symbol"; suffix: space; }
 }

@@ -53,6 +53,15 @@ class Code(Enum):
     UNSUPPORTED = "WGX0205"
     STYLESHEET_NOT_FOUND = "WGX0206"
 
+    # Lowering: documents to the IR (WGX03xx)
+    UNKNOWN_COMMAND = "WGX0301"
+    INVALID_ARGUMENT = "WGX0302"
+    MISPLACED = "WGX0303"
+    NOT_SUPPORTED_YET = "WGX0304"
+    MACRO = "WGX0305"
+    INCLUDE = "WGX0306"
+    UNDEFINED_STYLE = "WGX0307"
+
 
 @dataclass(frozen=True)
 class Diagnostic:

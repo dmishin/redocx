@@ -1,14 +1,16 @@
-"""Command-line interface: ``wordgenx check`` and ``wordgenx parse``."""
+"""Command-line interface: ``wordgenx build``, ``wordgenx check`` and ``wordgenx parse``."""
 
 from __future__ import annotations
 
 import argparse
 import sys
 from collections.abc import Sequence
+from pathlib import Path
 
 from wordgenx import __version__
+from wordgenx.compiler import build, compile_source
 from wordgenx.stylesheet import compile_stylesheets, parse_stylesheet
-from wordgenx.stylesheet.collect import STYLESHEET_SUFFIX, document_styles
+from wordgenx.stylesheet.collect import STYLESHEET_SUFFIX
 from wordgenx.syntax import Source, ast, parse
 from wordgenx.syntax.cst import dump as dump_cst
 from wordgenx.syntax.diagnostics import Diagnostic, render
@@ -29,9 +31,30 @@ def _diagnostics(source: Source) -> list[tuple[Source, Diagnostic]]:
     """Syntax and style-sheet diagnostics of a document (.wgx) or style sheet (.wgxs)."""
     if source.name.endswith(STYLESHEET_SUFFIX):
         return list(compile_stylesheets([parse_stylesheet(source)]).diagnostics)
-    result = parse(source)
-    found = [(source, d) for d in result.diagnostics]
-    return found + list(document_styles(result).diagnostics)
+    return list(compile_source(source).diagnostics)
+
+
+def _build(path: str, output: str | None) -> int:
+    source = _load(path)
+    if source is None:
+        return 1
+    data, result = build(source)
+    if result.diagnostics:
+        print(result.render_diagnostics(), file=sys.stderr)
+    summary = f"{result.error_count} error{'s' * (result.error_count != 1)}, " + (
+        f"{result.warning_count} warning{'s' * (result.warning_count != 1)}"
+    )
+    if data is None:
+        print(f"build failed: {summary}", file=sys.stderr)
+        return 1
+    target = Path(output) if output else Path(path).with_suffix(".docx")
+    try:
+        target.write_bytes(data)
+    except OSError as e:
+        print(f"error: cannot write {target}: {e.strerror}", file=sys.stderr)
+        return 1
+    print(f"wrote {target} ({summary})", file=sys.stderr)
+    return 0
 
 
 def _check(paths: Sequence[str]) -> int:
@@ -72,7 +95,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--version", action="version", version=f"wordgenx {__version__}")
     commands = parser.add_subparsers(dest="command", required=True)
 
-    check = commands.add_parser("check", help="parse files and report diagnostics")
+    build_cmd = commands.add_parser("build", help="compile a document to .docx")
+    build_cmd.add_argument("file", metavar="FILE")
+    build_cmd.add_argument("-o", "--output", metavar="OUT", help="output file (default: FILE.docx)")
+
+    check = commands.add_parser("check", help="report diagnostics without writing output")
     check.add_argument("files", nargs="+", metavar="FILE")
 
     dump = commands.add_parser("parse", help="print the syntax tree of a file")
@@ -80,6 +107,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     dump.add_argument("--tree", choices=("ast", "cst"), default="ast")
 
     args = parser.parse_args(argv)
+    if args.command == "build":
+        return _build(args.file, args.output)
     if args.command == "check":
         return _check(args.files)
     return _parse(args.file, args.tree)

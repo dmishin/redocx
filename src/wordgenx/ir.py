@@ -175,10 +175,62 @@ class Run:
 
 
 @dataclass(frozen=True)
+class Break:
+    """A page or column break inside a paragraph (line breaks are ``\\n`` in run text)."""
+
+    kind: str
+    """``page`` or ``column``."""
+
+    def __post_init__(self) -> None:
+        if self.kind not in ("page", "column"):
+            raise ValueError(f"break kind must be page or column, got {self.kind!r}")
+
+
+@dataclass(frozen=True)
+class Hyperlink:
+    """An external hyperlink around runs."""
+
+    url: str
+    content: tuple[Run, ...]
+
+
+Inline = Run | Break | Hyperlink
+
+
+@dataclass(frozen=True)
+class ListItemRef:
+    """A paragraph's place in a list: which list (instance) and which level."""
+
+    numbering: str
+    """The numbering definition's name."""
+    instance: int
+    """Separate lists of one definition count separately; equal instances continue."""
+    level: int = 1
+    start: int | None = None
+    """Where the instance starts counting (its first level); None uses the definition."""
+    continuation: bool = False
+    """A further paragraph of the item: indented like the item's text, not numbered.
+    Resolved to plain indentation before writing."""
+
+
+@dataclass(frozen=True)
 class Paragraph:
-    content: tuple[Run, ...] = ()
+    content: tuple[Inline, ...] = ()
     style: str | None = None
     props: PropertySet = EMPTY_PARAGRAPH
+    list_item: ListItemRef | None = None
+    unnumbered: bool = False
+    """Suppress numbering that the paragraph style would apply (``=*`` headings)."""
+
+    def runs(self) -> tuple[Run, ...]:
+        """All runs, including those inside hyperlinks."""
+        out: list[Run] = []
+        for item in self.content:
+            if isinstance(item, Run):
+                out.append(item)
+            elif isinstance(item, Hyperlink):
+                out.extend(item.content)
+        return tuple(out)
 
 
 @dataclass(frozen=True)

@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Protocol
 
-from wordgenx.values import Color, InvalidValueError, Length, LineSpacing
+from wordgenx.values import Color, InvalidValueError, Length, LineSpacing, apply_tint_shade
 
 
 class Target(Enum):
@@ -226,7 +226,13 @@ def _emit_size(value: object, ctx: EmitContext) -> Emitted:
 def _emit_color(value: object, ctx: EmitContext) -> Emitted:
     assert isinstance(value, Color)
     if value.theme is not None:
-        return [("color", {"val": ctx.theme_color_rgb(value.theme), "themeColor": value.theme})]
+        rgb = apply_tint_shade(ctx.theme_color_rgb(value.theme), value.tint, value.shade)
+        attrs = {"val": rgb, "themeColor": value.theme}
+        if value.tint is not None:
+            attrs["themeTint"] = f"{value.tint:02X}"
+        if value.shade is not None:
+            attrs["themeShade"] = f"{value.shade:02X}"
+        return [("color", attrs)]
     return [("color", {"val": value.rgb or "auto"})]
 
 

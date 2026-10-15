@@ -9,6 +9,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from wordgenx import ir
+from wordgenx.compiler import compile_file
 from wordgenx.props import para_props, run_props
 from wordgenx.stylesheet import compile_stylesheets, parse_stylesheet
 from wordgenx.syntax import Source
@@ -145,7 +146,15 @@ def stylesheet() -> ir.Document:
     return compiled.apply(ir.Document(body=body, meta=ir.Meta(language="en-GB")))
 
 
+def example_hello() -> ir.Document:
+    """examples/hello.wgx through the full pipeline: parse, style sheets, macros, lowering."""
+    result = compile_file(Path(__file__).resolve().parents[2] / "examples" / "hello.wgx")
+    assert result.document is not None, result.render_diagnostics()
+    return result.document
+
+
 CASES: dict[str, Callable[[], ir.Document]] = {
+    "example-hello": example_hello,
     "minimal": minimal,
     "styled": styled,
     "metadata": metadata,

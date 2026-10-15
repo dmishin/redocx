@@ -8,7 +8,9 @@ converters, wordgenx aims to expose *Word's own document model*: styles, multile
 fields, cross-references, footnotes, content controls, tracked changes, and the rest. The output should be a
 document a Word user can keep editing as if a careful human had built it.
 
-**Status:** design stage. No code yet.
+**Status:** early development (milestone M1). `wordgenx build` compiles documents with paragraphs, headings, inline
+formatting, hyperlinks, lists with real Word numbering, style sheets, macros and includes. Tables, images, fields,
+notes and cross-references are next (see the [roadmap](docs/06-roadmap.md)).
 
 ## Design documents
 
@@ -34,7 +36,8 @@ uv run pytest              # tests (validator tests are skipped without the .NET
 uv run ruff check          # lint
 uv run ruff format         # format
 uv run pyright             # strict type check
-uv run wordgenx check examples/syntax-tour.wgx       # parse and report diagnostics
+uv run wordgenx build examples/hello.wgx             # compile to examples/hello.docx
+uv run wordgenx check examples/syntax-tour.wgx       # compile and report diagnostics, write nothing
 uv run wordgenx parse examples/syntax-tour.wgx       # print the AST (--tree cst for the CST)
 ```
 

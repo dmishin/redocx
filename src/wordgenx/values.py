@@ -113,6 +113,17 @@ THEME_COLOR_NAMES: tuple[str, ...] = (
 )
 
 _HEX_RE = re.compile(r"#?([0-9A-Fa-f]{6})")
+_MODIFIER_RE = re.compile(r"([A-Za-z0-9]+)\.(lighter|darker)\((\d+)%\)")
+
+
+def apply_tint_shade(rgb: str, tint: int | None, shade: int | None) -> str:
+    """The RGB Word shows for a theme color with a tint (towards white) or shade (towards black)."""
+    channels = [int(rgb[i : i + 2], 16) for i in (0, 2, 4)]
+    if tint is not None:
+        channels = [round(c * tint / 255 + 255 * (1 - tint / 255)) for c in channels]
+    if shade is not None:
+        channels = [round(c * shade / 255) for c in channels]
+    return "".join(f"{c:02X}" for c in channels)
 
 
 @dataclass(frozen=True)
@@ -123,20 +134,30 @@ class Color:
     """Upper-case hex without '#', e.g. ``1F3864``."""
     theme: str | None = None
     """An ST_ThemeColor name such as ``accent1`` or ``text1``."""
+    tint: int | None = None
+    """Theme colors only: ``lighter(p%)`` keeps (100-p)% of the color (w:themeTint, 0-255)."""
+    shade: int | None = None
+    """Theme colors only: ``darker(p%)`` keeps (100-p)% of the color (w:themeShade, 0-255)."""
 
     @classmethod
     def parse(cls, text: str) -> Color:
-        """Parse ``#RRGGBB``, ``auto`` or ``theme.<name>``."""
+        """Parse ``#RRGGBB``, ``auto``, ``theme.<name>`` or ``theme.<name>.lighter|darker(N%)``."""
         text = text.strip()
         if text == "auto":
             return cls()
         if text.startswith("theme."):
-            name = text.removeprefix("theme.")
+            name, tint, shade = text.removeprefix("theme."), None, None
+            if match := _MODIFIER_RE.fullmatch(name):
+                name, direction, percent = match.group(1), match.group(2), int(match.group(3))
+                if not 0 <= percent <= 100:
+                    raise InvalidValueError(f"{direction} takes 0-100%, got {percent}%")
+                kept = round(255 * (100 - percent) / 100)
+                tint, shade = (kept, None) if direction == "lighter" else (None, kept)
             if name not in THEME_COLOR_NAMES:
                 raise InvalidValueError(
                     f"unknown theme color {name!r}; expected one of {', '.join(THEME_COLOR_NAMES)}"
                 )
-            return cls(theme=name)
+            return cls(theme=name, tint=tint, shade=shade)
         match = _HEX_RE.fullmatch(text)
         if match is None:
             raise InvalidValueError(
@@ -146,6 +167,10 @@ class Color:
 
     def __str__(self) -> str:
         if self.theme is not None:
+            if self.tint is not None:
+                return f"theme.{self.theme}.lighter({100 - round(self.tint * 100 / 255)}%)"
+            if self.shade is not None:
+                return f"theme.{self.theme}.darker({100 - round(self.shade * 100 / 255)}%)"
             return f"theme.{self.theme}"
         return "auto" if self.rgb is None else f"#{self.rgb}"
 
