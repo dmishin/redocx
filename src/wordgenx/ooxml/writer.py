@@ -85,9 +85,14 @@ def _link_numbering(document: Document) -> Document:
         ref = style.numbering
         if ref is not None and ref.name not in definitions:
             raise StyleError(f"style {style.name!r}: numbering {ref.name!r} is not defined")
+    template_lists = document.template.lists if document.template is not None else {}
     for paragraph in document.all_paragraphs():
         item = paragraph.list_item
-        if item is not None and item.numbering not in definitions:
+        if (
+            item is not None
+            and item.numbering not in definitions
+            and item.numbering not in template_lists
+        ):
             raise StyleError(f"list numbering {item.numbering!r} is not defined")
 
     # Level -> style links: give the style its w:numPr.
@@ -284,7 +289,13 @@ def build_package(
     instances = list_num_ids(document.numbering, used_lists, offsets[0])
     template_numbering = template.numbering if template is not None else None
     if document.numbering or template_numbering is not None:
-        numbering_root = numbering_xml(document.numbering, theme, instances, offsets)
+        numbering_root = numbering_xml(
+            document.numbering,
+            theme,
+            instances,
+            offsets,
+            template.lists if template is not None else {},
+        )
         if template_numbering is not None:
             numbering_root = merge_numbering(template_numbering, numbering_root)
         numbering = pkg.add_part("/word/numbering.xml", CT.WML_NUMBERING, finish(numbering_root))

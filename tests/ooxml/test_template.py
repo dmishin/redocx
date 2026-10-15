@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import subprocess
 import zipfile
 from pathlib import Path
 
@@ -20,6 +21,10 @@ from wordgenx.values import Length
 
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 R = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}"
+VALIDATOR = (
+    Path(__file__).resolve().parents[2]
+    / "tools/ooxml-validate/bin/Release/net10.0/ooxml-validate.exe"
+)
 
 TEMPLATE_SOURCE = r"""\styles{
   paragraph "Heading 1" : Normal { color: #C00000; size: 18pt; outline-level: 1; }
@@ -153,6 +158,59 @@ def test_numbering_ids_follow_the_templates(tmp_path: Path) -> None:
     assert step is not None
     assert used | {step.get(f"{W}val")} <= set(num_ids)
     assert step.get(f"{W}val") not in used  # the template's list and ours are distinct
+
+
+def test_lists_can_use_template_list_definitions(tmp_path: Path) -> None:
+    template = make_template(tmp_path)
+    template_numbering = xml(zipfile.ZipFile(template), "word/numbering.xml")
+    (steps_abstract,) = [
+        a.get(f"{W}abstractNumId")
+        for a in template_numbering.findall(f"{W}abstractNum")
+        if a.find(f"{W}name").get(f"{W}val") == "Steps"  # pyright: ignore[reportOptionalMemberAccess]
+    ]
+    template_nums = {n.get(f"{W}numId") for n in template_numbering.findall(f"{W}num")}
+
+    data, result = build(
+        "\\list[Steps]{\n1. a\n2. b\n}\n\n\\list[Steps, restart=5]{\n1. c\n}", tmp_path, template
+    )
+    assert data is not None, result.render_diagnostics()
+    assert validate_package(data) == {}
+    package = zipfile.ZipFile(io.BytesIO(data))
+    numbering = xml(package, "word/numbering.xml")
+    names = [
+        a.find(f"{W}name").get(f"{W}val")  # pyright: ignore[reportOptionalMemberAccess]
+        for a in numbering.findall(f"{W}abstractNum")
+        if a.find(f"{W}name") is not None
+    ]
+    assert names.count("Steps") == 1  # the template's, not copied
+    nums = {n.get(f"{W}numId"): n for n in numbering.findall(f"{W}num")}
+    assert template_nums <= set(nums)
+
+    used = [n.get(f"{W}val") for n in xml(package, "word/document.xml").iter(f"{W}numId")]
+    assert len(used) == 3
+    assert used[0] == used[1] != used[2]  # one list, then a separately counted one
+    starts: list[str | None] = []
+    for num_id in (used[0], used[2]):
+        assert num_id not in template_nums
+        assert int(num_id) > max(int(n) for n in template_nums)  # pyright: ignore[reportArgumentType]
+        num = nums[num_id]
+        assert num.find(f"{W}abstractNumId").get(f"{W}val") == steps_abstract  # pyright: ignore[reportOptionalMemberAccess]
+        starts.append(num.find(f"{W}lvlOverride/{W}startOverride").get(f"{W}val"))  # pyright: ignore[reportOptionalMemberAccess]
+    assert starts == ["1", "5"]
+    styles = [s.get(f"{W}val") for s in xml(package, "word/document.xml").iter(f"{W}pStyle")]
+    assert styles == ["Step"] * 3  # the template level's linked style
+
+    if VALIDATOR.exists():  # the Open XML SDK too, where it has been built
+        out = tmp_path / "out.docx"
+        out.write_bytes(data)
+        run = subprocess.run([VALIDATOR, out], capture_output=True, text=True, check=False)
+        assert run.returncode == 0, run.stdout + run.stderr
+
+
+def test_unknown_list_names_suggest_template_lists(tmp_path: Path) -> None:
+    data, result = build("\\list[Stpes]{1. a}", tmp_path, make_template(tmp_path))
+    assert data is None
+    assert "did you mean `Steps`?" in result.render_diagnostics()
 
 
 # --- page setup, headers and footers -------------------------------------------------------------

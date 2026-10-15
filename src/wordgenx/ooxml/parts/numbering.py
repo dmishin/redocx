@@ -7,7 +7,7 @@ instance that paragraphs and styles refer to.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
 
 from wordgenx.ir import Numbering, NumberingLevel
@@ -113,8 +113,11 @@ def numbering_xml(
     ctx: EmitContext,
     instances: Sequence[ListInstance] = (),
     offsets: tuple[int, int] = (0, 0),
+    template_lists: Mapping[str, tuple[int, Numbering]] | None = None,
 ) -> Element:
-    """`offsets` (numId, abstractNumId) shift the ids past a template's own."""
+    """`offsets` (numId, abstractNumId) shift the ids past a template's own. Instances of
+    `template_lists` (name -> the template's abstractNumId and definition) that `definitions`
+    does not define refer to the template's w:abstractNum, which is not copied."""
     num_offset, abstract_offset = offsets
     abstract: list[Element] = []
     nums: list[Element] = []
@@ -139,16 +142,18 @@ def numbering_xml(
                 E("w:abstractNumId", {"w:val": str(abstract_id)}),
             )
         )
-    abstract_ids = {numbering.name: abstract_offset + i for i, numbering in enumerate(definitions)}
+    abstract_ids = dict(template_lists or {})
+    for i, numbering in enumerate(definitions):
+        abstract_ids[numbering.name] = (abstract_offset + i, numbering)
     for instance in instances:
-        definition = definitions[abstract_ids[instance.numbering] - abstract_offset]
+        abstract_id, definition = abstract_ids[instance.numbering]
         first = definition.level(1)
         start = instance.start if instance.start is not None else (first.start if first else 1)
         nums.append(
             E(
                 "w:num",
                 {"w:numId": str(instance.num_id)},
-                E("w:abstractNumId", {"w:val": str(abstract_ids[instance.numbering])}),
+                E("w:abstractNumId", {"w:val": str(abstract_id)}),
                 E(
                     "w:lvlOverride",
                     {"w:ilvl": "0"},

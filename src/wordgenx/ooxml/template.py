@@ -112,6 +112,8 @@ class Template:
     """An empty copy of the template's w:document (its namespace declarations)."""
     by_id: dict[str, TemplateStyle] = field(default_factory=lambda: {})
     by_name: dict[str, TemplateStyle] = field(default_factory=lambda: {})
+    lists: dict[str, tuple[int, ir.Numbering]] = field(default_factory=lambda: {})
+    """List definitions by their w:abstractNum w:name: (w:abstractNumId, definition)."""
 
     @property
     def section(self) -> ir.Section:
@@ -223,6 +225,20 @@ def load_template(path: str | PathLike[str]) -> Template:
             template.by_id[sid] = entry
             if name:
                 template.by_name.setdefault(name.lower(), entry)
+    if template.numbering is not None:
+        definitions = {n.name: n for n in reversed(template.definitions.numbering)}
+        for element in template.numbering.findall(f"{W}abstractNum"):
+            name_element = element.find(f"{W}name")
+            name = name_element.get(f"{W}val") if name_element is not None else None
+            abstract_id = element.get(f"{W}abstractNumId")
+            if (
+                name
+                and name in definitions
+                and abstract_id
+                and abstract_id.isdigit()
+                and element.find(f"{W}lvl") is not None  # not a w:numStyleLink
+            ):
+                template.lists.setdefault(name, (int(abstract_id), definitions[name]))
     return template
 
 

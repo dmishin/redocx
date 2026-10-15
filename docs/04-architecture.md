@@ -142,7 +142,10 @@ Implemented in M2 (`ooxml/template.py`, `ooxml/merge.py`):
    - Template styles are matched by name, so localized templates work (Word's German "heading 1" has the ID
      `berschrift1`): our style references are rewritten to the template's IDs.
 4. **Numbering:** the template's lists keep their IDs, so its styles' and body's numbering stays valid. The document's
-   definitions are appended after them.
+   definitions are appended after them. `\list[Name]{...}` can use a list definition only the template has (named by
+   its `w:abstractNum`'s `w:name`; a style sheet's definition of the same name wins, the template's wins over the
+   `-` / `1.` defaults). The definition is not copied: each list gets a new `w:num` (with its `restart=` start)
+   after the template's own, pointing at the template's `w:abstractNum`.
 5. **Settings:** the template's, with what the document sets (field updates, even/odd headers, note settings, default
    tab stop, language). The theme is the template's, and its colours resolve `theme.*` colours.
 6. **Headers and footers:** each kind (default, first, even) the first section does not define comes from the
@@ -154,8 +157,7 @@ Implemented in M2 (`ooxml/template.py`, `ooxml/merge.py`):
    properties are copied with everything they relate to.
 9. **Output:** `.docx`, or a template (`-o out.dotx`: the main part gets the template content type).
 
-Not yet: using a template's list definitions by name in `\list[...]` (template styles that are numbered do work),
-and a template's own footnote separators.
+Not yet: a template's own footnote separators.
 
 ## 4.7 Finalize step (optional)
 

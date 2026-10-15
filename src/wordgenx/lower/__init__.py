@@ -50,14 +50,20 @@ def lower(
         )  # type: ignore[arg-type]
 
     # Lists: default definitions for "-" and "1." lists, then styles and continuation indents.
+    # A list definition only the template has is used as it is (the writer adds instances).
+    template = lowering.template
     numbering = {n.name: n for n in compiled.numbering}
+    template_lists: dict[str, ir.Numbering] = {}
     for use in lowering.list_uses:
         name = use[0]
-        if name not in numbering:
-            if name in DEFAULT_NUMBERING:
+        if name not in numbering and name not in template_lists:
+            if template is not None and name in template.lists:
+                template_lists[name] = template.lists[name][1]
+            elif name in DEFAULT_NUMBERING:
                 numbering[name] = DEFAULT_NUMBERING[name]()
             else:
-                close = difflib.get_close_matches(name, list(numbering), n=1)
+                known = [*numbering, *(template.lists if template is not None else ())]
+                close = difflib.get_close_matches(name, known, n=1)
                 error(
                     use,
                     f"numbering `{name}` is not defined",
@@ -70,9 +76,10 @@ def lower(
         ref = paragraph.list_item
         if ref is None:
             return paragraph
-        if ref.numbering not in numbering:
+        definition = numbering.get(ref.numbering) or template_lists.get(ref.numbering)
+        if definition is None:
             return replace(paragraph, list_item=None)
-        level = complete_levels(numbering[ref.numbering])[ref.level - 1]
+        level = complete_levels(definition)[ref.level - 1]
         style = paragraph.style or level.style or "List Paragraph"
         style_uses.append(StyleUse(style, ir.StyleKind.PARAGRAPH, Span(0, 0), result.source))
         if not ref.continuation:
@@ -92,8 +99,6 @@ def lower(
     # Styles: defined by style sheets, else the template's, else Word built-ins the markup
     # relies on. A built-in the template has is the template's (unchanged built-ins that
     # style sheets brought along are dropped).
-    template = lowering.template
-
     def in_template(name: str) -> bool:
         return template is not None and template.style(name) is not None
 
