@@ -1,0 +1,75 @@
+# ADR-0001: Implementation language
+
+- **Status:** Proposed (to be confirmed by the maintainers)
+- **Date:** 2026-10-15
+
+## Context
+
+The question was asked directly: *is Python a bad choice, and are there better DOCX libraries in other languages?*
+
+The key point is that **the OOXML library is not the hard part of this project, and it is not where most of the value lies.**
+The hard and valuable parts are the language (parser, macros, diagnostics), the semantic model (styles,
+numbering, sections, cross-reference resolution) and the exact knowledge of how Word represents each feature. Any
+library we choose will need to be bypassed for raw XML in many places. Even the most complete libraries give us
+*typed access to the schema*, not the *semantics* of features. Numbering, fields, and table style conditional formatting
+are hard in every language.
+
+So the comparison is: (a) how much schema coverage and validation we get for free, (b) the surrounding ecosystem
+(parsing, syntax highlighting, images, math, citations), (c) how easy it is to distribute to users and attract contributors.
+
+## Options
+
+| Language | Main DOCX library | Schema coverage | Ecosystem for the rest | Distribution | Notes |
+|----------|-------------------|-----------------|------------------------|--------------|-------|
+| **Python** | python-docx (+ lxml) | Partial. Good for editing existing docs. Lacks API for numbering creation, fields, footnotes, sections in headers, etc. lxml lets us write anything. | **Excellent**: Pygments (500+ languages for code highlighting), Pillow (image metadata), citeproc-py (CSL), matplotlib (chart images), latex2mathml, lxml (XSD validation) | pip / pipx / uv. Easy for users. | The audience (report generation, data people) is already here |
+| **C# / .NET** | **Open XML SDK** (Microsoft, MIT) | **Complete**: a strongly typed class for every element in the schema, plus `OpenXmlValidator` | Medium: parsers (Pidgin, Superpower), ColorCode/TextMateSharp for highlighting, no CSL processor of note | `dotnet tool`, single-file self-contained exe | **Strongest library.** Validator alone is valuable. |
+| **Java / Kotlin** | **docx4j** (JAXB on the full schema), Apache POI XWPF (partial) | Complete (docx4j) | Medium–good (ANTLR, citeproc-java) | JVM is heavier for a CLI tool; GraalVM native-image possible | Viable, but heavier for contributors |
+| **Rust** | docx-rs (partial) | Partial | Good parsers, syntect; little else for documents | **Single static binary**, fast; good basis for an LSP | This is how Typst is built. Weakest DOCX library, slowest to iterate |
+| **TypeScript** | `docx` (dolanmiu) | Broad but not complete; declarative | Good (Shiki highlighting, MathJax → MathML), runs in the browser | npm; could power a web playground | Browser playground is a real plus |
+| **Haskell** | Pandoc internals, texmath (LaTeX → OMML) | Pandoc's writer is AST-limited | texmath is excellent | Binary | Small contributor pool |
+
+## Decision (proposed)
+
+**Python 3.12+, with our own OOXML writer built on lxml.** python-docx is not part of the core write path.
+
+Rationale:
+
+1. **We would own the writer anyway.** python-docx's model is "open a document and mutate it". Our needs are
+   "emit a complete, deterministic package from an IR". A thin, purpose-built emitter is simpler than working around
+   a library. It is roughly 1–2k lines for packaging, relationships, content types and part writers.
+2. **We get validation without .NET in the runtime.** lxml validates against the ECMA-376 Transitional XSDs. In CI we
+   *also* run Microsoft's `OpenXmlValidator` through a tiny .NET console tool. This is the Open XML SDK's main
+   advantage, used where it matters and not imposed on users.
+3. **The ecosystem is clearly better for document features:** Pygments for code blocks, citeproc-py for bibliographies,
+   Pillow for image DPI and size, matplotlib for generated figures.
+4. **The audience is here.** Report generation from data is a primary use case, and those users write Python. A Python
+   API over the IR is a feature in its own right.
+5. **Contributor friendliness** for an open-source project.
+
+Mitigations for Python's weaknesses:
+
+- *Performance*: documents are small and the work is linear. Not a concern. Measure if needed.
+- *Typing*: use strict pyright or mypy across the codebase. IR nodes are frozen dataclasses.
+- *Schema typing*: start with handwritten emitters per element group. If they become unmanageable, **generate**
+  typed element builders from the ECMA-376 XSDs, as Open XML SDK and docx4j do.
+
+### Runner-up
+
+**C# with the Open XML SDK** is the right choice if the maintainers value schema-typed safety above ecosystem and audience,
+or if a strong Windows/Word integration story (COM automation for the finalize step) becomes central. Revisit this
+choice if, by the end of M1, we find ourselves fighting the schema more than expected.
+
+### Explicitly rejected for now
+
+- **Rust:** a single binary and fast LSP are attractive, but the DOCX library is weakest and iteration is slowest. If a
+  native binary is later needed, a Rust *frontend* (parser and LSP) could be split off, leaving the Python backend as is,
+  because the IR is serialisable (see architecture).
+- **TypeScript:** a browser playground is nice, but it is a later concern and can be served by a hosted backend.
+
+## Consequences
+
+- Tooling: `uv`, `ruff`, `pyright` (strict), `pytest`, `hypothesis` for parser property tests.
+- Runtime dependencies kept small: `lxml`, `Pillow`, `pygments`. Optional extras: `citeproc-py` (bibliography),
+  `matplotlib` (charts).
+- A small `tools/ooxml-validate/` .NET project in the repository, used only in CI.
+- The IR has a defined JSON serialisation. This keeps the door open for other frontends or backends.
