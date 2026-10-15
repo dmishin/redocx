@@ -2,9 +2,6 @@
 % Payment Gateway Integration - Software Design Specification
 % The spike sample examples/spike/01-design-spec.wgx, ported to language v0.2.
 % Build: wordgenx build examples/design-spec/design-spec.wgx
-%
-% Features that arrive later in M2 (footnotes) are already written here; until
-% then they produce warnings and the document still builds.
 % ============================================================================
 
 \document[lang=en-GB]

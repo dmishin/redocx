@@ -42,6 +42,41 @@ class Meta:
     language: str | None = None
 
 
+NOTE_NUMBER_FORMATS = (
+    "decimal",
+    "lowerRoman",
+    "upperRoman",
+    "lowerLetter",
+    "upperLetter",
+    "chicago",
+)
+NOTE_RESTARTS = ("continuous", "eachSect", "eachPage")
+NOTE_POSITIONS = {
+    "footnote": ("pageBottom", "beneathText"),
+    "endnote": ("sectEnd", "docEnd"),
+}
+
+
+@dataclass(frozen=True)
+class NoteSettings:
+    """Numbering and placement of footnotes or endnotes (w:footnotePr / w:endnotePr).
+
+    None means Word's default: footnotes 1, 2, 3 at the bottom of the page; endnotes i, ii,
+    iii at the end of the document; numbering continuous.
+    """
+
+    format: str | None = None
+    """A value of NOTE_NUMBER_FORMATS."""
+    start: int | None = None
+    restart: str | None = None
+    """A value of NOTE_RESTARTS (eachPage only for footnotes)."""
+    position: str | None = None
+    """A value of NOTE_POSITIONS[kind]."""
+
+    def number_format(self, kind: str) -> str:
+        return self.format or ("decimal" if kind == "footnote" else "lowerRoman")
+
+
 @dataclass(frozen=True)
 class Settings:
     """Document-wide settings (settings.xml)."""
@@ -49,6 +84,11 @@ class Settings:
     default_tab_stop: Length = _DEFAULT_TAB_STOP
     update_fields_on_open: bool = False
     even_and_odd_headers: bool = False
+    footnotes: NoteSettings = field(default_factory=NoteSettings)
+    endnotes: NoteSettings = field(default_factory=NoteSettings)
+
+    def notes(self, kind: str) -> NoteSettings:
+        return self.footnotes if kind == "footnote" else self.endnotes
 
 
 class StyleKind(Enum):
@@ -261,7 +301,38 @@ class Field:
         )
 
 
-Inline = Run | Break | Hyperlink | Image | Field | BookmarkStart | BookmarkEnd
+NOTE_KINDS = ("footnote", "endnote")
+
+
+@dataclass(frozen=True)
+class Note:
+    """A footnote or endnote: the reference mark in the text, and the note's own content.
+
+    Word numbers notes itself (w:footnoteReference has no cached text). The first paragraph
+    of `content` starts with a NoteMark, as in a note Word inserts.
+    """
+
+    kind: str
+    """footnote | endnote"""
+    content: tuple[Block, ...]
+    props: PropertySet = EMPTY_RUN
+    style: str | None = None
+    """Character style of the reference mark (Footnote Reference / Endnote Reference)."""
+
+    def __post_init__(self) -> None:
+        if self.kind not in NOTE_KINDS:
+            raise ValueError(f"note kind must be footnote or endnote, got {self.kind!r}")
+
+
+@dataclass(frozen=True)
+class NoteMark:
+    """The note's own number at the start of its text (w:footnoteRef / w:endnoteRef)."""
+
+    kind: str
+    style: str | None = None
+
+
+Inline = Run | Break | Hyperlink | Image | Field | BookmarkStart | BookmarkEnd | Note | NoteMark
 
 
 @dataclass(frozen=True)
@@ -511,27 +582,46 @@ def table_layout(table: Table) -> list[list[Slot]]:
     return layout
 
 
+def _with_notes(paragraph: Paragraph) -> Iterator[Paragraph]:
+    yield paragraph
+    for item in paragraph.content:
+        if isinstance(item, Note):
+            yield from iter_paragraphs(item.content)
+
+
 def iter_paragraphs(blocks: tuple[Block, ...]) -> Iterator[Paragraph]:
-    """Every paragraph, including those inside table cells."""
+    """Every paragraph, including those inside table cells and notes (after the paragraph
+    that refers to the note)."""
     for block in blocks:
         if isinstance(block, Paragraph):
-            yield block
+            yield from _with_notes(block)
         elif isinstance(block, FieldBlock):
-            yield from block.content
+            for paragraph in block.content:
+                yield from _with_notes(paragraph)
         elif isinstance(block, Table):
             for row in block.rows:
                 for cell in row.cells:
                     yield from iter_paragraphs(cell.content)
 
 
+def iter_notes(blocks: tuple[Block, ...]) -> Iterator[Note]:
+    """Every note, in document order."""
+    for paragraph in iter_paragraphs(blocks):
+        yield from (item for item in paragraph.content if isinstance(item, Note))
+
+
 def iter_tables(blocks: tuple[Block, ...]) -> Iterator[Table]:
-    """Every table, including nested ones."""
+    """Every table, including nested ones and those inside notes."""
     for block in blocks:
         if isinstance(block, Table):
             yield block
             for row in block.rows:
                 for cell in row.cells:
                     yield from iter_tables(cell.content)
+        elif isinstance(block, Paragraph):
+            for item in block.content:
+                if isinstance(item, Note):
+                    yield from iter_tables(item.content)
 
 
 def map_paragraphs(
@@ -541,11 +631,11 @@ def map_paragraphs(
     out: list[Block] = []
     for block in blocks:
         if isinstance(block, Paragraph):
-            out.append(fn(block))
+            out.append(_map_paragraph(block, fn))
         elif isinstance(block, SectionBreak):
             out.append(SectionBreak(map_section(block.section, fn)))
         elif isinstance(block, FieldBlock):
-            out.append(replace(block, content=tuple(fn(p) for p in block.content)))
+            out.append(replace(block, content=tuple(_map_paragraph(p, fn) for p in block.content)))
         else:
             rows = tuple(
                 replace(
@@ -558,6 +648,18 @@ def map_paragraphs(
             )
             out.append(replace(block, rows=rows))
     return tuple(out)
+
+
+def _map_paragraph(paragraph: Paragraph, fn: Callable[[Paragraph], Paragraph]) -> Paragraph:
+    """`fn` applied to the paragraph, then to the paragraphs of its notes."""
+    paragraph = fn(paragraph)
+    if not any(isinstance(item, Note) for item in paragraph.content):
+        return paragraph
+    content = tuple(
+        replace(item, content=map_paragraphs(item.content, fn)) if isinstance(item, Note) else item
+        for item in paragraph.content
+    )
+    return replace(paragraph, content=content)
 
 
 def map_section(section: Section, fn: Callable[[Paragraph], Paragraph]) -> Section:
@@ -597,6 +699,10 @@ class Document:
         for section in self.sections():
             for _, blocks in (*section.headers, *section.footers):
                 yield from iter_paragraphs(blocks)
+
+    def notes(self, kind: str) -> list[Note]:
+        """The document's footnotes or endnotes, in order."""
+        return [note for note in iter_notes(self.body) if note.kind == kind]
 
     def all_tables(self) -> Iterator[Table]:
         yield from iter_tables(self.body)

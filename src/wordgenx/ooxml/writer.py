@@ -13,6 +13,7 @@ from wordgenx.ir import (
     Block,
     Document,
     Image,
+    Note,
     Numbering,
     NumberingRef,
     StyleKind,
@@ -20,14 +21,20 @@ from wordgenx.ir import (
 from wordgenx.ooxml.constants import CT, RT
 from wordgenx.ooxml.opc import Package, Part
 from wordgenx.ooxml.parts.docprops import app_xml, core_xml
-from wordgenx.ooxml.parts.document import BodyContext, document_xml, header_footer_xml
+from wordgenx.ooxml.parts.document import (
+    BodyContext,
+    document_xml,
+    header_footer_xml,
+    note_xml,
+    notes_xml,
+)
 from wordgenx.ooxml.parts.fonts import font_table_xml
 from wordgenx.ooxml.parts.numbering import default_level, list_num_ids, numbering_xml
 from wordgenx.ooxml.parts.settings import settings_xml
 from wordgenx.ooxml.parts.styles import StyleError, resolve_styles, styles_xml
 from wordgenx.ooxml.parts.theme import Theme, theme_xml
 from wordgenx.ooxml.style_names import style_id
-from wordgenx.ooxml.xml import serialize
+from wordgenx.ooxml.xml import Element, serialize
 from wordgenx.props import PropertySet, Target
 
 
@@ -223,6 +230,8 @@ def build_package(document: Document, theme: Theme | None = None) -> Package:
             lambda: next(drawing_ids),
             header_footer,
             bookmark_id,
+            note,
+            document.settings,
         )
 
     def header_footer(family: str, blocks: tuple[Block, ...]) -> str:
@@ -233,8 +242,26 @@ def build_package(document: Document, theme: Theme | None = None) -> Package:
         part.data = serialize(header_footer_xml(family, blocks, context(part)))
         return rel_id
 
+    notes: dict[str, tuple[Part, BodyContext, list[Element]]] = {}
+
+    def note(item: Note) -> int:
+        """Notes are numbered 1, 2, ... per kind in the order the body refers to them."""
+        if item.kind not in notes:
+            footnote = item.kind == "footnote"
+            part = pkg.add_part(
+                f"/word/{item.kind}s.xml", CT.WML_FOOTNOTES if footnote else CT.WML_ENDNOTES
+            )
+            main.relate(part, RT.FOOTNOTES if footnote else RT.ENDNOTES)
+            notes[item.kind] = (part, context(part), [])
+        _, note_context, written = notes[item.kind]
+        note_id = len(written) + 1
+        written.append(note_xml(item, note_id, note_context))
+        return note_id
+
     body = context(main)
     main.data = serialize(document_xml(document, body))
+    for kind, (part, _, written) in notes.items():
+        part.data = serialize(notes_xml(kind, written))
     return pkg
 
 

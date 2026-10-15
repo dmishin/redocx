@@ -1,12 +1,14 @@
-"""The main document part (word/document.xml) and header/footer parts (word/headerN.xml)."""
+"""The main document part (word/document.xml), header/footer parts (word/headerN.xml) and
+footnote/endnote parts."""
 
 from __future__ import annotations
 
 import re
 from collections.abc import Callable, Iterator, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from wordgenx.ir import (
+    NOTE_KINDS,
     PAGE_NUMBER_FORMATS,
     SECTION_STARTS,
     Block,
@@ -19,20 +21,24 @@ from wordgenx.ir import (
     FieldBlock,
     Image,
     Inline,
+    Note,
+    NoteMark,
     Paragraph,
     Row,
     Run,
     Section,
     SectionBreak,
+    Settings,
     Slot,
     Table,
     table_layout,
 )
 from wordgenx.ooxml.parts.properties import paragraph_properties, run_properties
+from wordgenx.ooxml.parts.settings import note_properties
 from wordgenx.ooxml.schema_order import SECT_PR, TBL_BORDERS, TBL_PR, TC_PR, TR_PR, ordered
 from wordgenx.ooxml.style_names import style_id
 from wordgenx.ooxml.xml import E, Element, nsmap, qn
-from wordgenx.props import EmitContext
+from wordgenx.props import EMPTY_RUN, EmitContext
 
 _SPLIT_RE = re.compile(r"(\t|\n)")
 PICTURE_URI = "http://schemas.openxmlformats.org/drawingml/2006/picture"
@@ -60,6 +66,10 @@ class BodyContext:
     """Writes a header ("header") or footer ("footer") part; returns its relationship id."""
     bookmark_id: Callable[[str], int] = lambda name: 0
     """The document-wide w:id of a bookmark name (the same for its start and end)."""
+    note: Callable[[Note], int] = lambda note: 0
+    settings: Settings = field(default_factory=Settings)
+    """Document settings; sections repeat the footnote and endnote numbering."""
+    """Writes a footnote or endnote into its part; returns its w:id."""
 
 
 # --- runs and inline content --------------------------------------------------------------
@@ -163,6 +173,14 @@ def _inline(item: Inline, ctx: BodyContext) -> list[Element]:
         ]
     if isinstance(item, BookmarkEnd):
         return [E("w:bookmarkEnd", {"w:id": str(ctx.bookmark_id(item.name))})]
+    if isinstance(item, Note):
+        style = style_id(item.style) if item.style else None
+        reference = E(f"w:{item.kind}Reference", {"w:id": str(ctx.note(item))})
+        return [E("w:r", run_properties(item.props, ctx.emit, style_id=style), reference)]
+    if isinstance(item, NoteMark):
+        style = style_id(item.style) if item.style else None
+        mark = E(f"w:{item.kind}Ref")
+        return [E("w:r", run_properties(EMPTY_RUN, ctx.emit, style_id=style), mark)]
     target = (
         {"w:anchor": item.anchor} if item.anchor is not None else {"r:id": ctx.hyperlink(item.url)}
     )
@@ -295,6 +313,9 @@ def _section_properties(section: Section, ctx: BodyContext) -> Element:
     children["cols"] = E("w:cols", columns)
     if section.title_page:
         children["titlePg"] = E("w:titlePg")
+    for kind in NOTE_KINDS:  # Word numbers notes by these, not by the copy in settings.xml
+        if properties := note_properties(ctx.settings.notes(kind)):
+            children[f"{kind}Pr"] = E(f"w:{kind}Pr", *properties)
     return E("w:sectPr", *references, *ordered(children, SECT_PR))
 
 
@@ -382,6 +403,32 @@ def document_xml(document: Document, ctx: BodyContext) -> Element:
     body = _blocks(document.body, ctx, final=True)
     final = _section_properties(document.section, ctx)
     return E("w:document", E("w:body", *body, final), nsmap=nsmap(*PART_NAMESPACES))
+
+
+def note_xml(note: Note, note_id: int, ctx: BodyContext) -> Element:
+    """One w:footnote or w:endnote."""
+    return E(f"w:{note.kind}", {"w:id": str(note_id)}, *_blocks(note.content, ctx))
+
+
+SEPARATOR_IDS = {"separator": -1, "continuationSeparator": 0}
+"""Word's ids for the separator notes; the document's own notes are numbered from 1."""
+
+
+def notes_xml(kind: str, notes: list[Element]) -> Element:
+    """The footnotes or endnotes part: Word's separator lines, then the notes."""
+    separators = [
+        E(
+            f"w:{kind}",
+            {"w:type": name, "w:id": str(note_id)},
+            E(
+                "w:p",
+                E("w:pPr", E("w:spacing", {"w:after": "0", "w:line": "240", "w:lineRule": "auto"})),
+                E("w:r", E(f"w:{name}")),
+            ),
+        )
+        for name, note_id in SEPARATOR_IDS.items()
+    ]
+    return E(f"w:{kind}s", *separators, *notes, nsmap=nsmap(*PART_NAMESPACES))
 
 
 def header_footer_xml(family: str, blocks: tuple[Block, ...], ctx: BodyContext) -> Element:

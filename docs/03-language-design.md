@@ -418,6 +418,16 @@ label (`sec:intro` → `_Ref_sec_intro`, at most 40 characters). Cached results 
 list and heading numbers are simulated from the numbering definitions, SEQ fields are counted in document order.
 A `PAGEREF` cannot be known in advance; it gets "1" and the document asks Word to update fields when it opens.
 
+**Notes.** `\footnote[id=fn:x]{…}` and `\endnote{…}` put the reference mark where they stand and their body in
+`footnotes.xml` / `endnotes.xml`, styled `Footnote Text` / `Footnote Reference` (`Endnote …` for endnotes) and starting
+with the note's own number, as notes inserted in Word do. The body may hold several paragraphs, lists and tables, but
+no other note; notes cannot appear in headers or footers. Numbering is set document-wide with
+`\settings[footnotes=(format=decimal|lower-roman|upper-roman|lower-letter|upper-letter|symbols,
+restart=continuous|each-section|each-page, position=page-bottom|beneath-text, start=N)]` (endnotes: `restart` without
+`each-page`, `position=section-end|document-end`). The compiler writes it to `settings.xml` and to every section,
+because Word reads the section's copy. `@fn:x` prints the note number (`NOTEREF`); with `restart=each-page` the number
+is left for Word to update.
+
 Not yet: references from headers and footers, `form=relative` in full-context form (it prints the paragraph's own
 number), and the "Table Table 3" lint.
 

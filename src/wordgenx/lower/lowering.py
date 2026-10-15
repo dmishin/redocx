@@ -69,7 +69,7 @@ BLOCK_COMMANDS = frozenset(
 INLINE_COMMANDS = frozenset(
     (
         "b i u s sup sub hl font style lang hidden strong emph code link url br tab image "
-        "pagenum numpages sectionpages field date ref pageref seq"
+        "pagenum numpages sectionpages field date ref pageref seq footnote endnote"
     ).split()
 )
 FIELD_COMMANDS = {"pagenum": "PAGE", "numpages": "NUMPAGES", "sectionpages": "SECTIONPAGES"}
@@ -83,8 +83,6 @@ TABLE_PARTS = frozenset({"row", "cell"})
 PLANNED: dict[str, str] = {
     **dict.fromkeys(
         [
-            "footnote",
-            "endnote",
             "raw",
         ],
         "M2",
@@ -144,10 +142,11 @@ class Piece:
     format: Format
     kind: str = "text"
     """text (smart punctuation, whitespace collapse) | code (verbatim) | tab | line | page
-    | column | image | field | mark (a bookmark start or end)."""
+    | column | image | field | mark (a bookmark start or end) | note."""
     image: ir.Image | None = None
     field: ir.Field | None = None
     mark: ir.BookmarkStart | ir.BookmarkEnd | None = None
+    note: ir.Note | None = None
 
 
 @dataclass
@@ -210,6 +209,12 @@ SEQ_FORMATS = {
     "upper-roman": "ROMAN",
 }
 SEQ_NAME_RE = re.compile(r"[A-Za-z][A-Za-z0-9_]*")
+NOTE_FORMATS = {**ir.PAGE_NUMBER_FORMATS, "symbols": "chicago"}
+NOTE_RESTARTS = {"continuous": "continuous", "each-section": "eachSect", "each-page": "eachPage"}
+NOTE_POSITIONS = {
+    "footnote": {"page-bottom": "pageBottom", "beneath-text": "beneathText"},
+    "endnote": {"section-end": "sectEnd", "document-end": "docEnd"},
+}
 
 
 @dataclass
@@ -240,6 +245,8 @@ class Lowering:
     header_kinds: set[str] = field(default_factory=lambda: set[str]())
     """Header/footer kinds defined so far ("header:first", ...): what a new section inherits."""
     _container_depth: int = 0
+    _part: str | None = None
+    """header | footer | footnote | endnote while lowering one (notes are not allowed there)."""
     """> 0 while lowering a table cell, header or footer (no section breaks there)."""
     style_uses: list[StyleUse] = field(default_factory=lambda: [])
     list_uses: list[tuple[str, Span, Source]] = field(default_factory=lambda: [])
@@ -845,6 +852,10 @@ class Lowering:
                     Code.NOT_SUPPORTED_YET, f"setting `{flag}` is not supported yet", option.span
                 )
                 continue
+            if option.key in ("footnotes", "endnotes"):
+                notes = self.note_settings(option.key[:-1], option.value, command)
+                self.settings = replace(self.settings, **{option.key: notes})
+                continue
             if option.key not in ("update-fields-on-open", "default-tab-stop"):
                 self.warn(
                     Code.NOT_SUPPORTED_YET,
@@ -866,12 +877,44 @@ class Lowering:
                 )
         return []
 
+    def note_settings(self, kind: str, value: ast.Value, command: ast.Command) -> ir.NoteSettings:
+        """footnotes=(format=lower-roman, restart=each-section, position=page-bottom, start=1)."""
+        notes = self.settings.notes(kind)
+        items = (
+            value.items
+            if isinstance(value, ast.TupleValue)
+            else (ast.Option(None, value, span=value.span),)
+        )
+        positions = NOTE_POSITIONS[kind]
+        restarts = {
+            k: v for k, v in NOTE_RESTARTS.items() if kind == "footnote" or k != "each-page"
+        }
+        for item in items:
+            text = self.text_value(item.value, command, f"{kind}s") or ""
+            if item.key in (None, "format") and text in NOTE_FORMATS:
+                notes = replace(notes, format=NOTE_FORMATS[text])
+            elif item.key == "restart" and text in restarts:
+                notes = replace(notes, restart=restarts[text])
+            elif item.key == "position" and text in positions:
+                notes = replace(notes, position=positions[text])
+            elif item.key == "start" and text.isdigit() and int(text) > 0:
+                notes = replace(notes, start=int(text))
+            else:
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    f"invalid {kind}s setting",
+                    item.span,
+                    help=f"format={'|'.join(NOTE_FORMATS)}, restart={'|'.join(restarts)}, "
+                    f"position={'|'.join(positions)}, start=N",
+                )
+        return notes
+
     def cmd_section(self, command: ast.Command) -> list[ir.Block]:
         """Page setup of the current section; after content, also a section break."""
         if self._container_depth > 0:
             self.report(
                 Code.MISPLACED,
-                "\\section cannot appear inside a table, header or footer",
+                "\\section cannot appear inside a table, header, footer or note",
                 command.span,
             )
             return []
@@ -1044,10 +1087,12 @@ class Lowering:
             )
             return []
         self._container_depth += 1
+        self._part = family
         try:
             blocks = self.blocks(self.markup_blocks(command)) if command.body is not None else []
         finally:
             self._container_depth -= 1
+            self._part = None
         style = "Header" if family == "header" else "Footer"
         self.use_style(style, ir.StyleKind.PARAGRAPH, command.span)
         content = ir.map_paragraphs(
@@ -1766,6 +1811,68 @@ class Lowering:
             ]
         return pieces
 
+    def inline_note(self, command: ast.Command, fmt: Format) -> list[Piece]:
+        r"""\footnote[id=fn:x]{text} and \endnote{...}: the reference mark here, the text in the
+        footnotes or endnotes part. The body may hold several paragraphs, lists and tables."""
+        kind = command.name
+        if self._part is not None:
+            where = "another note" if self._part in ir.NOTE_KINDS else f"a {self._part}"
+            article = "an" if kind == "endnote" else "a"
+            self.report(Code.MISPLACED, f"{article} {kind} cannot be inside {where}", command.span)
+            return []
+        label: str | None = None
+        label_span = command.span
+        for option in command.options.items if command.options else ():
+            text = self.text_value(option.value, command, option.key or "option")
+            if option.key == "id" and text:
+                label, label_span = text, option.value.span
+            elif text is not None:
+                self.report(
+                    Code.INVALID_ARGUMENT, f"invalid \\{kind} option", option.span, help="id=label"
+                )
+        if not isinstance(command.body, ast.MarkupBody):
+            self.report(
+                Code.INVALID_ARGUMENT,
+                f"`\\{kind}` needs a body: \\{kind}{{text}}",
+                command.span,
+            )
+            return []
+        title = kind.capitalize()
+        text_style, mark_style = f"{title} Text", f"{title} Reference"
+        self.use_style(text_style, ir.StyleKind.PARAGRAPH, command.span)
+        self.use_style(mark_style, ir.StyleKind.CHARACTER, command.span)
+        previous, following = self._previous, self._next
+        self._container_depth += 1
+        self._part = kind
+        try:
+            lowered = self.blocks(command.body.blocks)
+        finally:
+            self._container_depth -= 1
+            self._part = None
+            self._previous, self._next = previous, following
+        blocks: list[ir.Block] = [
+            replace(b, style=text_style)
+            if isinstance(b, ir.Paragraph) and b.style is None and b.list_item is None
+            else b
+            for b in lowered
+        ]
+        mark = (ir.NoteMark(kind, mark_style), ir.Run(" "))
+        first = blocks[0] if blocks else None
+        if isinstance(first, ir.Paragraph):
+            blocks[0] = replace(first, content=(*mark, *first.content))
+        else:
+            blocks.insert(0, ir.Paragraph(mark, text_style))
+        note = ir.Note(kind, tuple(blocks), fmt.props, mark_style)
+        pieces = [Piece("", fmt, "note", note=note)]
+        if label is not None:
+            bookmark = self.register_label(label, label_span, "note").bookmark
+            pieces = [
+                Piece("", fmt, "mark", mark=ir.BookmarkStart(bookmark)),
+                *pieces,
+                Piece("", fmt, "mark", mark=ir.BookmarkEnd(bookmark)),
+            ]
+        return pieces
+
     def make_caption(
         self,
         kind: str,
@@ -2123,6 +2230,8 @@ class Lowering:
             return self.inline_ref(command, fmt)
         if name == "seq":
             return self.inline_seq(command, fmt)
+        if name in ("footnote", "endnote"):
+            return self.inline_note(command, fmt)
         if name == "url":
             url = command.body.text.strip() if isinstance(command.body, ast.VerbatimBody) else ""
             self.no_options(command)
@@ -2302,7 +2411,7 @@ class Lowering:
                 flush_link()
                 inlines.append(ir.Break(piece.kind))
                 continue
-            special = piece.image or piece.field or piece.mark
+            special = piece.image or piece.field or piece.mark or piece.note
             if special is not None:  # not inside hyperlinks (yet)
                 flush_link()
                 inlines.append(special)

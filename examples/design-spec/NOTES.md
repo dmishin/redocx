@@ -2,7 +2,7 @@
 
 `design-spec.wgx` is the spike sample [01-design-spec.wgx](../spike/01-design-spec.wgx) rewritten in language v0.2
 and built with the M1 compiler. It built with no errors and 7 warnings, all for features planned for M2 (after M2
-step 2, one warning is left: the footnote). Word opens
+step 3, none are left). Word opens
 the result with numbered headings, continuously numbered requirements (REQ-1 … REQ-5), tables, the diagram,
 callouts and approval lines.
 
@@ -34,7 +34,8 @@ In order of how much the spec misses them:
    the appendix title; the context diagram is a `\figure`, the definitions table and the webhook code have
    captions, and all of them are referenced. Word, after updating every field, shows the same text the compiler
    wrote.
-3. **Footnotes.**
+3. ~~Footnotes~~. **Done in M2 step 3:** the gateway API version note is a real Word footnote. The spec now
+   builds with no warnings.
 
 The spec is 4 pages. The M1 exit criterion ("a real 20-page document") is met in kind but not in length: nothing in
 the port suggests a longer document would hit new problems, but it has not been tried.

@@ -802,9 +802,18 @@
     </w:p>
     <w:p>
       <w:r>
-        <w:t xml:space="preserve">This document specifies the design of the integration between the ACME checkout service and the PayFlow payment gateway. It is intended for developers, testers and the security review board. The vendor documentation is at </w:t>
+        <w:t>This document specifies the design of the integration between the ACME checkout service and the PayFlow payment gateway.</w:t>
       </w:r>
-      <w:hyperlink xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId8" w:history="1">
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="FootnoteReference"/>
+        </w:rPr>
+        <w:footnoteReference w:id="1"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> It is intended for developers, testers and the security review board. The vendor documentation is at </w:t>
+      </w:r>
+      <w:hyperlink xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId9" w:history="1">
         <w:r>
           <w:rPr>
             <w:rStyle w:val="Hyperlink"/>
@@ -1081,7 +1090,7 @@
                     <pic:cNvPicPr/>
                   </pic:nvPicPr>
                   <pic:blipFill>
-                    <a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId9"/>
+                    <a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId10"/>
                     <a:stretch>
                       <a:fillRect/>
                     </a:stretch>
@@ -1559,8 +1568,8 @@
     <w:p>
       <w:pPr>
         <w:sectPr>
-          <w:headerReference xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId10" w:type="default"/>
-          <w:footerReference xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId11" w:type="default"/>
+          <w:headerReference xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId11" w:type="default"/>
+          <w:footerReference xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId12" w:type="default"/>
           <w:pgSz w:h="16838" w:w="11906"/>
           <w:pgMar w:bottom="1417" w:footer="709" w:gutter="0" w:header="709" w:left="1417" w:right="1134" w:top="1417"/>
           <w:pgNumType w:fmt="decimal" w:start="1"/>

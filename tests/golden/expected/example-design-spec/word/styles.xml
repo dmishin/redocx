@@ -245,6 +245,25 @@
       <w:szCs w:val="32"/>
     </w:rPr>
   </w:style>
+  <w:style w:styleId="FootnoteText" w:type="paragraph">
+    <w:name w:val="footnote text"/>
+    <w:basedOn w:val="Normal"/>
+    <w:qFormat/>
+    <w:pPr>
+      <w:spacing w:after="0" w:line="240" w:lineRule="auto"/>
+    </w:pPr>
+    <w:rPr>
+      <w:sz w:val="20"/>
+      <w:szCs w:val="20"/>
+    </w:rPr>
+  </w:style>
+  <w:style w:styleId="FootnoteReference" w:type="character">
+    <w:name w:val="footnote reference"/>
+    <w:qFormat/>
+    <w:rPr>
+      <w:vertAlign w:val="superscript"/>
+    </w:rPr>
+  </w:style>
   <w:style w:styleId="Hyperlink" w:type="character">
     <w:name w:val="Hyperlink"/>
     <w:uiPriority w:val="99"/>

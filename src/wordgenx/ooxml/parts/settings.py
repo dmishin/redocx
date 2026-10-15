@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from wordgenx.ir import Document
+from wordgenx.ir import NOTE_KINDS, Document, NoteSettings
 from wordgenx.ooxml.schema_order import SETTINGS, ordered
 from wordgenx.ooxml.xml import E, Element, nsmap
 
@@ -29,6 +29,20 @@ _COLOR_SCHEME_MAPPING = {
 }
 
 
+def note_properties(notes: NoteSettings) -> list[Element]:
+    """CT_FtnProps / CT_EdnProps content: position, number format, start, restart."""
+    out: list[Element] = []
+    if notes.position is not None:
+        out.append(E("w:pos", {"w:val": notes.position}))
+    if notes.format is not None:
+        out.append(E("w:numFmt", {"w:val": notes.format}))
+    if notes.start is not None:
+        out.append(E("w:numStart", {"w:val": str(notes.start)}))
+    if notes.restart is not None:
+        out.append(E("w:numRestart", {"w:val": notes.restart}))
+    return out
+
+
 def settings_xml(document: Document) -> Element:
     settings = document.settings
     language = document.meta.language or "en-US"
@@ -50,4 +64,10 @@ def settings_xml(document: Document) -> Element:
         children["evenAndOddHeaders"] = E("w:evenAndOddHeaders")
     if settings.update_fields_on_open:
         children["updateFields"] = E("w:updateFields", {"w:val": "true"})
+    for kind in NOTE_KINDS:
+        properties = note_properties(settings.notes(kind))
+        if document.notes(kind):  # the separator lines, as Word writes them
+            properties += [E(f"w:{kind}", {"w:id": str(i)}) for i in (-1, 0)]
+        if properties:
+            children[f"{kind}Pr"] = E(f"w:{kind}Pr", *properties)
     return E("w:settings", *ordered(children, SETTINGS), nsmap=nsmap("w"))

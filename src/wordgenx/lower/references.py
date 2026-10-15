@@ -63,7 +63,7 @@ class Label:
     bookmark: str
     """The main bookmark: the whole heading or paragraph, a caption's "Figure 3", a counter."""
     kind: str
-    """heading | item | paragraph | caption | seq"""
+    """heading | item | paragraph | caption | seq | note"""
     span: Span
     source: Source
     parts: dict[str, str] = field(default_factory=lambda: {})
@@ -127,6 +127,8 @@ def format_number(n: int, number_format: str) -> str:
         return roman.upper() if number_format == "upperRoman" else roman
     if number_format == "decimalZero":
         return f"{n:02d}"
+    if number_format == "chicago":  # *, †, ‡, §, then **, ††, ...
+        return "*†‡§"[(n - 1) % 4] * ((n - 1) // 4 + 1) if n > 0 else ""
     return str(n)
 
 
@@ -226,7 +228,9 @@ class _Target:
     paragraph_text: str
 
 
-def _bookmark_texts(paragraph: ir.Paragraph) -> dict[str, str]:
+def _bookmark_texts(paragraph: ir.Paragraph, notes: Mapping[int, str]) -> dict[str, str]:
+    """Text inside each bookmark of the paragraph; a note counts as its number (`notes`
+    maps id(note) to it)."""
     open_names: list[str] = []
     texts: dict[str, list[str]] = {}
     for item in paragraph.content:
@@ -242,7 +246,7 @@ def _bookmark_texts(paragraph: ir.Paragraph) -> dict[str, str]:
                 if isinstance(item, ir.Run)
                 else item.result
                 if isinstance(item, ir.Field)
-                else ""
+                else notes.get(id(item), "")
             )
             for name in open_names:
                 texts[name].append(text)
@@ -258,6 +262,7 @@ def resolve(
     body: tuple[ir.Block, ...],
     styles: Mapping[str, ir.Style],
     numbering: Mapping[str, ir.Numbering],
+    settings: ir.Settings,
     references: References,
     report: Callable[[Source, Span, str, str], None],
 ) -> tuple[tuple[ir.Block, ...], set[str], bool]:
@@ -291,6 +296,9 @@ def resolve(
     seq_restarts: dict[str, int] = {}
     """SEQ identifier -> heading level that restarts it (the \\s switch)."""
     index = 0
+    note_counts: dict[str, int] = dict.fromkeys(ir.NOTE_KINDS, 0)
+    note_numbers: dict[int, str] = {}
+    """id(note) -> its number as Word shows it."""
 
     def number_pass(paragraph: ir.Paragraph) -> ir.Paragraph:
         nonlocal index
@@ -319,15 +327,27 @@ def resolve(
                     SEQ_SWITCHES.get(switch.group(1), "decimal") if switch else "decimal"
                 )
                 item = replace(item, result=format_number(seq_counts[seq], number_format))
+            elif isinstance(item, ir.Note):
+                notes = settings.notes(item.kind)
+                note_counts[item.kind] += 1
+                value = (notes.start or 1) + note_counts[item.kind] - 1
+                note_numbers[id(item)] = format_number(value, notes.number_format(item.kind))
             content.append(item)
         paragraph = replace(paragraph, content=tuple(content))
-        texts = _bookmark_texts(paragraph)
+        texts = _bookmark_texts(paragraph, note_numbers)
         for name in texts:
             targets[name] = _Target(index, texts, number, paragraph.text())
         entries.append((index, paragraph, number + simulator.separator if number else None))
         return paragraph
 
-    body = ir.map_paragraphs(body, number_pass)
+    numbered: list[ir.Block] = []
+    for block in body:
+        numbered.extend(ir.map_paragraphs((block,), number_pass))
+        if isinstance(block, ir.SectionBreak):
+            for kind in ir.NOTE_KINDS:
+                if settings.notes(kind).restart == "eachSect":
+                    note_counts[kind] = 0
+    body = tuple(numbered)
     order = {id(p): i for i, p, _ in entries}
 
     # 3. References.
@@ -343,8 +363,8 @@ def resolve(
         content: list[ir.Inline] = []
         for item in paragraph.content:
             if isinstance(item, PendingRef):
-                resolved = _resolve_ref(item, references, targets, here, report)
-                needs_update = needs_update or "PAGEREF" in resolved.code
+                resolved = _resolve_ref(item, references, targets, here, settings, report)
+                needs_update = needs_update or resolved.dirty
                 content.append(resolved)
             else:
                 content.append(item)
@@ -369,6 +389,7 @@ def _resolve_ref(
     references: References,
     targets: dict[str, _Target],
     here: int,
+    settings: ir.Settings,
     report: Callable[[Source, Span, str, str], None],
 ) -> ir.Field:
     label = references.labels.get(ref.label)
@@ -398,6 +419,9 @@ def _resolve_ref(
         return field(f" REF {bookmark} \\p \\h ", "below" if below else "above")
     if form == "relative" and label.kind in ("heading", "item", "paragraph"):
         return field(f" REF {bookmark} \\r \\h ", (target.number or "") if target else "")
+    if label.kind == "note":  # footnote numbers restarting on each page are Word's to know
+        per_page = settings.footnotes.restart == "eachPage"
+        return field(f" NOTEREF {bookmark} \\h ", texts.get(bookmark, ""), dirty=per_page)
     if label.kind == "caption":
         name = label.parts.get(form, bookmark)
         return field(f" REF {name} \\h ", texts.get(name, ""))

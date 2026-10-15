@@ -109,7 +109,12 @@ def lower(result: ParseResult, base_dir: Path | None = None) -> tuple[ir.Documen
 
     # Cross-references, counters and tables of contents, now that styles and numbering are final.
     resolved_body, toc_styles, needs_update = resolve(
-        resolved_body, styles, numbering, lowering.references, report_to(diagnostics)
+        resolved_body,
+        styles,
+        numbering,
+        lowering.settings,
+        lowering.references,
+        report_to(diagnostics),
     )
     for name in sorted(toc_styles):
         if style_id(name) not in styles:

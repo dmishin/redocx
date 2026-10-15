@@ -123,6 +123,20 @@ BUILTIN_STYLES: dict[str, Callable[[], Style]] = {
         next="Normal",
         paragraph=para_props(space_after="0pt"),
     ),
+    **{
+        f"{kind} Text": (
+            lambda kind=kind: Style(
+                StyleKind.PARAGRAPH,
+                f"{kind} Text",
+                based_on="Normal",
+                paragraph=para_props(space_after="0pt", line_spacing=1),
+                run=run_props(size="10pt"),
+            )
+        )
+        for kind in ("Footnote", "Endnote")
+    },
+    "Footnote Reference": _character("Footnote Reference", vertical_align="superscript"),
+    "Endnote Reference": _character("Endnote Reference", vertical_align="superscript"),
     "Strong": _character("Strong", bold=True),
     "Emphasis": _character("Emphasis", italic=True),
     "Code": _character("Code", font="Consolas"),
