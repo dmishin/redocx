@@ -170,6 +170,13 @@ def test_blocks_inside_command_bodies() -> None:
     )
 
 
+def test_pipe_row_right_after_opening_brace() -> None:
+    assert one("\\table{| a | b |}") == (
+        '(paragraph (command "table" (markup_body (pipe_table (pipe_row '
+        '(pipe_cell (text "a")) (pipe_cell (text "b")))))))'
+    )
+
+
 def test_crlf_line_endings() -> None:
     assert blocks("a\r\nb\r\n\r\nc") == [
         '(paragraph (text "a") (soft_break) (text "b"))',

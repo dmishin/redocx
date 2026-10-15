@@ -116,6 +116,18 @@
       <w:szCs w:val="19"/>
     </w:rPr>
   </w:style>
+  <w:style w:customStyle="1" w:styleId="CalloutTitle" w:type="paragraph">
+    <w:name w:val="Callout Title"/>
+    <w:basedOn w:val="Normal"/>
+    <w:qFormat/>
+    <w:pPr>
+      <w:spacing w:after="60"/>
+    </w:pPr>
+    <w:rPr>
+      <w:b/>
+      <w:color w:themeColor="accent1" w:themeShade="BF" w:val="175385"/>
+    </w:rPr>
+  </w:style>
   <w:style w:customStyle="1" w:styleId="Term" w:type="character">
     <w:name w:val="Term"/>
     <w:qFormat/>

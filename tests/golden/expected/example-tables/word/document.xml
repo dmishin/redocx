@@ -1,0 +1,640 @@
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    <w:p>
+      <w:r>
+        <w:drawing>
+          <wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distB="0" distL="0" distR="0" distT="0">
+            <wp:extent cx="2160000" cy="720000"/>
+            <wp:effectExtent b="0" l="0" r="0" t="0"/>
+            <wp:docPr descr="wordgenx logo" id="1" name="logo.png"/>
+            <wp:cNvGraphicFramePr>
+              <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>
+            </wp:cNvGraphicFramePr>
+            <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                  <pic:nvPicPr>
+                    <pic:cNvPr descr="wordgenx logo" id="0" name="logo.png"/>
+                    <pic:cNvPicPr/>
+                  </pic:nvPicPr>
+                  <pic:blipFill>
+                    <a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId6"/>
+                    <a:stretch>
+                      <a:fillRect/>
+                    </a:stretch>
+                  </pic:blipFill>
+                  <pic:spPr>
+                    <a:xfrm>
+                      <a:off x="0" y="0"/>
+                      <a:ext cx="2160000" cy="720000"/>
+                    </a:xfrm>
+                    <a:prstGeom prst="rect">
+                      <a:avLst/>
+                    </a:prstGeom>
+                  </pic:spPr>
+                </pic:pic>
+              </a:graphicData>
+            </a:graphic>
+          </wp:inline>
+        </w:drawing>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading1"/>
+      </w:pPr>
+      <w:r>
+        <w:t>Quarterly Report</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t>A pipe table is the quickest way to write a table:</w:t>
+      </w:r>
+    </w:p>
+    <w:tbl>
+      <w:tblPr>
+        <w:tblStyle w:val="TableGrid"/>
+        <w:tblW w:type="dxa" w:w="9639"/>
+        <w:tblLayout w:type="fixed"/>
+        <w:tblLook w:firstColumn="1" w:firstRow="1" w:lastColumn="0" w:lastRow="0" w:noHBand="0" w:noVBand="1" w:val="04A0"/>
+      </w:tblPr>
+      <w:tblGrid>
+        <w:gridCol w:w="3213"/>
+        <w:gridCol w:w="3213"/>
+        <w:gridCol w:w="3213"/>
+      </w:tblGrid>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3213"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>Region</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3213"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>Q1</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3213"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>Q2</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3213"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>North</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3213"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>10.5</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3213"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>12.25</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3213"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>South</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3213"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>8</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3213"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>9.75</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+    </w:tbl>
+    <w:p/>
+    <w:tbl>
+      <w:tblPr>
+        <w:tblStyle w:val="TableGrid"/>
+        <w:tblW w:type="dxa" w:w="9639"/>
+        <w:jc w:val="center"/>
+        <w:tblLayout w:type="fixed"/>
+        <w:tblLook w:firstColumn="1" w:firstRow="1" w:lastColumn="0" w:lastRow="0" w:noHBand="0" w:noVBand="1" w:val="04A0"/>
+      </w:tblPr>
+      <w:tblGrid>
+        <w:gridCol w:w="2835"/>
+        <w:gridCol w:w="3402"/>
+        <w:gridCol w:w="3402"/>
+      </w:tblGrid>
+      <w:tr>
+        <w:trPr>
+          <w:tblHeader/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2835"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Line item</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3402"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="right"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Q3 2026</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3402"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="right"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Q3 2025</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2835"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Revenue</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3402"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="right"/>
+            </w:pPr>
+            <w:r>
+              <w:t>48,210</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3402"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="right"/>
+            </w:pPr>
+            <w:r>
+              <w:t>44,067</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2835"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Cost of services</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3402"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="right"/>
+            </w:pPr>
+            <w:r>
+              <w:t>(35,980)</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3402"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="right"/>
+            </w:pPr>
+            <w:r>
+              <w:t>(31,950)</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="9639"/>
+            <w:gridSpan w:val="3"/>
+            <w:shd w:color="auto" w:fill="FFF2CC" w:val="clear"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="center"/>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rStyle w:val="Strong"/>
+              </w:rPr>
+              <w:t>Operating income: 5,690</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+    </w:tbl>
+    <w:p>
+      <w:r>
+        <w:t>The block form takes any content in a cell, with merged cells, shading and row options:</w:t>
+      </w:r>
+    </w:p>
+    <w:tbl>
+      <w:tblPr>
+        <w:tblStyle w:val="TableGrid"/>
+        <w:tblW w:type="dxa" w:w="9638"/>
+        <w:tblLayout w:type="fixed"/>
+        <w:tblLook w:firstColumn="1" w:firstRow="1" w:lastColumn="0" w:lastRow="0" w:noHBand="0" w:noVBand="1" w:val="04A0"/>
+      </w:tblPr>
+      <w:tblGrid>
+        <w:gridCol w:w="2268"/>
+        <w:gridCol w:w="7370"/>
+      </w:tblGrid>
+      <w:tr>
+        <w:trPr>
+          <w:tblHeader/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2268"/>
+            <w:shd w:color="auto" w:fill="1F6FB2" w:val="clear"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:rPr>
+                <w:rStyle w:val="Strong"/>
+                <w:color w:val="FFFFFF"/>
+              </w:rPr>
+              <w:t>Item</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="7370"/>
+            <w:shd w:color="auto" w:fill="1F6FB2" w:val="clear"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:rPr>
+                <w:rStyle w:val="Strong"/>
+                <w:color w:val="FFFFFF"/>
+              </w:rPr>
+              <w:t>Description</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2268"/>
+            <w:vMerge w:val="restart"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>Merged over two rows</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="7370"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>A first paragraph.</w:t>
+            </w:r>
+          </w:p>
+          <w:p>
+            <w:pPr>
+              <w:pStyle w:val="ListParagraph"/>
+              <w:numPr>
+                <w:ilvl w:val="0"/>
+                <w:numId w:val="2"/>
+              </w:numPr>
+            </w:pPr>
+            <w:r>
+              <w:t>a list inside a cell</w:t>
+            </w:r>
+          </w:p>
+          <w:p>
+            <w:pPr>
+              <w:pStyle w:val="ListParagraph"/>
+              <w:numPr>
+                <w:ilvl w:val="0"/>
+                <w:numId w:val="2"/>
+              </w:numPr>
+            </w:pPr>
+            <w:r>
+              <w:t xml:space="preserve">with </w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:b/>
+              </w:rPr>
+              <w:t>formatting</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:trPr>
+          <w:cantSplit/>
+          <w:trHeight w:hRule="atLeast" w:val="680"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2268"/>
+            <w:vMerge/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p/>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="7370"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t xml:space="preserve">A nested table: </w:t>
+            </w:r>
+            <w:r>
+              <w:drawing>
+                <wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distB="0" distL="0" distR="0" distT="0">
+                  <wp:extent cx="648000" cy="216000"/>
+                  <wp:effectExtent b="0" l="0" r="0" t="0"/>
+                  <wp:docPr id="2" name="logo.png"/>
+                  <wp:cNvGraphicFramePr>
+                    <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>
+                  </wp:cNvGraphicFramePr>
+                  <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+                    <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                      <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                        <pic:nvPicPr>
+                          <pic:cNvPr id="0" name="logo.png"/>
+                          <pic:cNvPicPr/>
+                        </pic:nvPicPr>
+                        <pic:blipFill>
+                          <a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId6"/>
+                          <a:stretch>
+                            <a:fillRect/>
+                          </a:stretch>
+                        </pic:blipFill>
+                        <pic:spPr>
+                          <a:xfrm>
+                            <a:off x="0" y="0"/>
+                            <a:ext cx="648000" cy="216000"/>
+                          </a:xfrm>
+                          <a:prstGeom prst="rect">
+                            <a:avLst/>
+                          </a:prstGeom>
+                        </pic:spPr>
+                      </pic:pic>
+                    </a:graphicData>
+                  </a:graphic>
+                </wp:inline>
+              </w:drawing>
+            </w:r>
+          </w:p>
+          <w:tbl>
+            <w:tblPr>
+              <w:tblStyle w:val="TableGrid"/>
+              <w:tblW w:type="dxa" w:w="9638"/>
+              <w:tblLayout w:type="fixed"/>
+              <w:tblLook w:firstColumn="1" w:firstRow="1" w:lastColumn="0" w:lastRow="0" w:noHBand="0" w:noVBand="1" w:val="04A0"/>
+            </w:tblPr>
+            <w:tblGrid>
+              <w:gridCol w:w="4819"/>
+              <w:gridCol w:w="4819"/>
+            </w:tblGrid>
+            <w:tr>
+              <w:tc>
+                <w:tcPr>
+                  <w:tcW w:type="dxa" w:w="4819"/>
+                </w:tcPr>
+                <w:p>
+                  <w:r>
+                    <w:t>a</w:t>
+                  </w:r>
+                </w:p>
+              </w:tc>
+              <w:tc>
+                <w:tcPr>
+                  <w:tcW w:type="dxa" w:w="4819"/>
+                </w:tcPr>
+                <w:p>
+                  <w:r>
+                    <w:t>b</w:t>
+                  </w:r>
+                </w:p>
+              </w:tc>
+            </w:tr>
+            <w:tr>
+              <w:tc>
+                <w:tcPr>
+                  <w:tcW w:type="dxa" w:w="4819"/>
+                </w:tcPr>
+                <w:p>
+                  <w:r>
+                    <w:t>c</w:t>
+                  </w:r>
+                </w:p>
+              </w:tc>
+              <w:tc>
+                <w:tcPr>
+                  <w:tcW w:type="dxa" w:w="4819"/>
+                </w:tcPr>
+                <w:p>
+                  <w:r>
+                    <w:t>d</w:t>
+                  </w:r>
+                </w:p>
+              </w:tc>
+            </w:tr>
+          </w:tbl>
+          <w:p/>
+        </w:tc>
+      </w:tr>
+    </w:tbl>
+    <w:p>
+      <w:r>
+        <w:t xml:space="preserve">No borders: </w:t>
+      </w:r>
+      <w:r>
+        <w:drawing>
+          <wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distB="0" distL="0" distR="0" distT="0">
+            <wp:extent cx="1530000" cy="510000"/>
+            <wp:effectExtent b="0" l="0" r="0" t="0"/>
+            <wp:docPr descr="small logo" id="3" name="logo.png"/>
+            <wp:cNvGraphicFramePr>
+              <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>
+            </wp:cNvGraphicFramePr>
+            <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                  <pic:nvPicPr>
+                    <pic:cNvPr descr="small logo" id="0" name="logo.png"/>
+                    <pic:cNvPicPr/>
+                  </pic:nvPicPr>
+                  <pic:blipFill>
+                    <a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId6"/>
+                    <a:stretch>
+                      <a:fillRect/>
+                    </a:stretch>
+                  </pic:blipFill>
+                  <pic:spPr>
+                    <a:xfrm>
+                      <a:off x="0" y="0"/>
+                      <a:ext cx="1530000" cy="510000"/>
+                    </a:xfrm>
+                    <a:prstGeom prst="rect">
+                      <a:avLst/>
+                    </a:prstGeom>
+                  </pic:spPr>
+                </pic:pic>
+              </a:graphicData>
+            </a:graphic>
+          </wp:inline>
+        </w:drawing>
+      </w:r>
+    </w:p>
+    <w:tbl>
+      <w:tblPr>
+        <w:tblW w:type="dxa" w:w="9638"/>
+        <w:tblBorders>
+          <w:top w:val="nil"/>
+          <w:left w:val="nil"/>
+          <w:bottom w:val="nil"/>
+          <w:right w:val="nil"/>
+          <w:insideH w:val="nil"/>
+          <w:insideV w:val="nil"/>
+        </w:tblBorders>
+        <w:tblLayout w:type="fixed"/>
+        <w:tblLook w:firstColumn="1" w:firstRow="1" w:lastColumn="0" w:lastRow="0" w:noHBand="0" w:noVBand="1" w:val="04A0"/>
+      </w:tblPr>
+      <w:tblGrid>
+        <w:gridCol w:w="4819"/>
+        <w:gridCol w:w="4819"/>
+      </w:tblGrid>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="4819"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>Signed:</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="4819"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>Date:</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+    </w:tbl>
+    <w:p/>
+    <w:sectPr>
+      <w:pgSz w:h="16838" w:w="11906"/>
+      <w:pgMar w:bottom="1134" w:footer="709" w:gutter="0" w:header="709" w:left="1134" w:right="1134" w:top="1134"/>
+      <w:cols w:space="708"/>
+      <w:docGrid w:linePitch="360"/>
+    </w:sectPr>
+  </w:body>
+</w:document>

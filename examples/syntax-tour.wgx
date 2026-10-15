@@ -27,6 +27,7 @@
 \define{callout}[title="Key takeaway", id]{
   \table[style="Callout", widths=(1fr), id=#id]{\row{\cell{
     \p[style="Callout Title"]{#title}
+
     #body
   }}}
 }
@@ -86,6 +87,7 @@ Inline math: \m{e^{i\pi} + 1 = 0}, and a literal \#{ is escaped.
       - a list inside a cell
     }
   }
+  \row{ \cell{Second row, right column} }   % the left cell is covered by the rowspan
 }
 
 \figure[id=fig:arch, width=12cm, align=center]{

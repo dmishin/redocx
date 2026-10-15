@@ -110,7 +110,32 @@ def _check_cycles(styles: dict[str, Style]) -> None:
             current = styles[sid].based_on
 
 
+def _table_grid() -> Element:
+    """Word's built-in "Table Grid": single thin borders around and between all cells."""
+    border = {"w:val": "single", "w:sz": "4", "w:space": "0", "w:color": "auto"}
+    return E(
+        "w:style",
+        {"w:type": "table", "w:styleId": "TableGrid"},
+        E("w:name", {"w:val": "Table Grid"}),
+        E("w:basedOn", {"w:val": "TableNormal"}),
+        E("w:uiPriority", {"w:val": "39"}),
+        E("w:pPr", E("w:spacing", {"w:after": "0", "w:line": "240", "w:lineRule": "auto"})),
+        E(
+            "w:tblPr",
+            E(
+                "w:tblBorders",
+                *(
+                    E(f"w:{side}", border)
+                    for side in ("top", "left", "bottom", "right", "insideH", "insideV")
+                ),
+            ),
+        ),
+    )
+
+
 def _style(style: Style, sid: str, ctx: EmitContext, num_ids: Mapping[str, int]) -> Element:
+    if style.kind is StyleKind.TABLE:
+        return _table_grid()
     name = stored_name(style.name)
     attrs = {"w:type": style.kind.value, "w:styleId": sid}
     if sid == "Normal":

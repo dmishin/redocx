@@ -153,8 +153,16 @@ def example_hello() -> ir.Document:
     return result.document
 
 
+def example_tables() -> ir.Document:
+    """examples/tables.wgx: pipe and block tables, merges, shading, nested table, images."""
+    result = compile_file(Path(__file__).resolve().parents[2] / "examples" / "tables.wgx")
+    assert result.document is not None, result.render_diagnostics()
+    return result.document
+
+
 CASES: dict[str, Callable[[], ir.Document]] = {
     "example-hello": example_hello,
+    "example-tables": example_tables,
     "minimal": minimal,
     "styled": styled,
     "metadata": metadata,

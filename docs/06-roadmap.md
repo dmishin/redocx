@@ -30,7 +30,8 @@ with no repair prompt, pass both validators, and match their golden snapshots.
 - [x] Headings, paragraphs, lists with real multilevel numbering (separate lists restart; `\list[Name, continue]`,
   `restart=N`).
 - [x] Single-section page setup, page and column breaks, hyperlinks.
-- Inline images, simple tables.
+- [x] Inline images (PNG, JPEG, GIF, BMP) and tables: pipe and block forms, widths, horizontal and vertical merges,
+  shading, header rows, row height, nested tables (borders via `Table Grid`; custom table styles in M2).
 - [x] `\include`, `\use` (style sheets and macro files), `\let`, `\define` (macros with `#param`), `\settings`,
   `\document`, `\meta`.
 - [x] Command registry with argument kinds (markup, string, raw, math); the comment, whitespace and flanking rules from the spike.

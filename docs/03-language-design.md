@@ -642,6 +642,20 @@ Lowering (`wordgenx.lower`) turns the AST into the document IR. It fixes these b
 - **Macros** expand at the AST level when called. A body that is a single paragraph splices into the surrounding text.
   Anything else must stand alone as blocks. Built-in command names cannot be redefined, and expansion deeper than 32
   levels is an error.
-- **Commands not implemented yet** (tables, images, fields, notes, references, math, …) produce a warning
+- **Tables.** A pipe table on its own is a table with the defaults. `\table[...]{...}` takes pipe rows and/or
+  `\row{\cell{...} ...}`, and a pipe row may start right after the `{` (`\table{| a | b |}`). Defaults: Word's
+  `Table Grid` style (`style=none` for no borders; other table styles fall back to Table Grid with a warning until M2),
+  equal column widths filling the text width, fixed layout. `widths=(4cm, 25%, 1fr, auto)` mixes lengths, percentages
+  of the text width, and fractions of what remains. A cell with `colspan=N` in a pipe row covers the next N-1 cells,
+  which must be empty (`| \cell[colspan=3]{x} |||`). `rowspan` cells take the position in the rows below. Short rows
+  are padded with empty cells. `header-rows=N` or `\row[header]` repeat rows on each page. `columns=(left, right, …)`
+  sets the default paragraph alignment per column (`decimal` is shown right-aligned until tab stops arrive in M2).
+  Cells take `colspan`, `rowspan`, `shade=#RRGGBB`, `valign`, `align`, and any block content, including lists and
+  nested tables. Adjacent tables get a paragraph between them, as Word requires.
+- **Images.** `\image[width=…, height=…, alt="…"]{file}` embeds PNG, JPEG, GIF or BMP as an inline picture. The size
+  comes from the pixel size and resolution (96 dpi if unknown). Giving one dimension keeps the aspect ratio, and
+  `width=50%` is relative to the text width. Pictures wider than the text are shrunk to fit. Identical files are
+  stored once.
+- **Commands not implemented yet** (figures, fields, notes, references, math, …) produce a warning
   (`WGX0304`) naming the milestone, and the document still builds. For `\comment`, `\ins` and `\control` the body text is
   kept; for the others the command is dropped.

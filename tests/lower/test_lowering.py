@@ -21,7 +21,11 @@ def diagnostics(text: str, base_dir: Path | None = None) -> CompileResult:
 
 
 def texts(document: ir.Document) -> list[str]:
-    return ["".join(run.text for run in p.runs()) for p in document.body]
+    return ["".join(run.text for run in p.runs()) for p in ir.iter_paragraphs(document.body)]
+
+
+def paragraphs(document: ir.Document) -> list[ir.Paragraph]:
+    return list(ir.iter_paragraphs(document.body))
 
 
 def style_names(document: ir.Document) -> set[str]:
@@ -45,14 +49,14 @@ def test_smart_quotes_can_be_disabled() -> None:
 
 def test_code_spans_are_verbatim() -> None:
     doc = compiled('Run `a  --  "b"` now')
-    (paragraph,) = doc.body
+    (paragraph,) = paragraphs(doc)
     code = paragraph.runs()[1]
     assert (code.text, code.style) == ('a  --  "b"', "Code")
 
 
 def test_inline_sugar_uses_character_styles() -> None:
     doc = compiled("*strong* _emph_ `code`")
-    assert [(r.text, r.style) for r in doc.body[0].runs()] == [
+    assert [(r.text, r.style) for r in paragraphs(doc)[0].runs()] == [
         ("strong", "Strong"), (" ", None), ("emph", "Emphasis"), (" ", None), ("code", "Code"),
     ]  # fmt: skip
     assert {"Strong", "Emphasis", "Code"} <= style_names(doc)
@@ -60,7 +64,7 @@ def test_inline_sugar_uses_character_styles() -> None:
 
 def test_nested_character_styles_keep_the_outer_look() -> None:
     doc = compiled("_a *b*_")
-    runs = doc.body[0].runs()
+    runs = paragraphs(doc)[0].runs()
     assert (runs[1].text, runs[1].style, runs[1].props) == ("b", "Strong", run_props(italic=True))
 
 
@@ -68,7 +72,7 @@ def test_formatting_commands() -> None:
     doc = compiled(
         r"\b{B}\i{I}\u[double]{U}\s{S}\sup{2}\sub{i}\hl{H}\lang[de-DE]{L}\hidden{X}\font[size=14pt, color=#C00000, caps]{F}"
     )
-    props = [r.props for r in doc.body[0].runs()]
+    props = [r.props for r in paragraphs(doc)[0].runs()]
     assert props == [
         run_props(bold=True), run_props(italic=True), run_props(underline="double"),
         run_props(strike=True), run_props(vertical_align="superscript"),
@@ -80,7 +84,7 @@ def test_formatting_commands() -> None:
 
 def test_breaks_and_tabs_trim_spaces() -> None:
     doc = compiled(r"Name: \tab value \br next \pagebreak after")
-    (paragraph,) = doc.body
+    (paragraph,) = paragraphs(doc)
     assert paragraph.content[0] == ir.Run("Name:\tvalue\nnext")
     assert paragraph.content[1] == ir.Break("page")
     assert paragraph.content[2] == ir.Run("after")
@@ -90,7 +94,7 @@ def test_links() -> None:
     doc = compiled(
         r'[site](https://x.org) <https://y.org> \link[to="https://z.org"]{*z*} \url{mailto:a@b.c}'
     )
-    links = [item for item in doc.body[0].content if isinstance(item, ir.Hyperlink)]
+    links = [item for item in paragraphs(doc)[0].content if isinstance(item, ir.Hyperlink)]
     assert [(link.url, "".join(r.text for r in link.content)) for link in links] == [
         ("https://x.org", "site"), ("https://y.org", "https://y.org"),
         ("https://z.org", "z"), ("mailto:a@b.c", "a@b.c"),
@@ -105,7 +109,7 @@ def test_links() -> None:
 
 def test_headings_and_unnumbered_headings() -> None:
     doc = compiled("= One\n\n=== Three\n\n==* Plain")
-    assert [(p.style, p.unnumbered) for p in doc.body] == [
+    assert [(p.style, p.unnumbered) for p in paragraphs(doc)] == [
         ("Heading 1", False), ("Heading 3", False), ("Heading 2", True),
     ]  # fmt: skip
     assert {"Heading 1", "Heading 2", "Heading 3"} <= style_names(doc)
@@ -117,7 +121,7 @@ def test_p_and_align() -> None:
         '\\p[style="Body Text", space-before=12pt, keep-with-next]{Text}\n'
         "\\align[center]{One\n\nTwo}"
     )
-    first, *centred = doc.body
+    first, *centred = paragraphs(doc)
     assert (first.style, first.props) == (
         "Body Text",
         para_props(space_before="12pt", keep_with_next=True),
@@ -127,7 +131,7 @@ def test_p_and_align() -> None:
 
 def test_code_block_lines() -> None:
     doc = compiled("```\na  b\n\nc\n```")
-    assert [(p.style, texts(ir.Document(body=(p,)))[0]) for p in doc.body] == [
+    assert [(p.style, texts(ir.Document(body=(p,)))[0]) for p in paragraphs(doc)] == [
         ("Code Block", "a  b"), ("Code Block", ""), ("Code Block", "c"),
     ]  # fmt: skip
 
@@ -154,20 +158,20 @@ def test_preamble_commands() -> None:
 
 def test_lists_numbering_levels_and_instances() -> None:
     doc = compiled("- a\n- b\n  - c\n\nText\n\n1. d\n   a. e\n\nText\n\n1. f")
-    refs = [p.list_item for p in doc.body]
+    refs = [p.list_item for p in paragraphs(doc)]
     assert [(r.numbering, r.level) if r else None for r in refs] == [
         ("Bullets", 1), ("Bullets", 1), ("Bullets", 2), None, ("Numbers", 1), ("Numbers", 2), None, ("Numbers", 1),
     ]  # fmt: skip
     instances = [r.instance for r in refs if r]
     assert instances[0] == instances[1] == instances[2]  # one bullet list
     assert instances[3] == instances[4] != instances[5]  # separate numbered lists restart
-    assert [p.style for p in doc.body if p.list_item] == ["List Paragraph"] * 6
+    assert [p.style for p in paragraphs(doc) if p.list_item] == ["List Paragraph"] * 6
     assert {"Bullets", "Numbers"} <= {n.name for n in doc.numbering}
 
 
 def test_mixed_nesting_starts_a_new_list_one_level_deeper() -> None:
     doc = compiled("1. a\n   - b")
-    first, second = (p.list_item for p in doc.body)
+    first, second = (p.list_item for p in paragraphs(doc))
     assert first is not None
     assert second is not None
     assert (second.numbering, second.level) == ("Bullets", 2)
@@ -176,7 +180,7 @@ def test_mixed_nesting_starts_a_new_list_one_level_deeper() -> None:
 
 def test_item_continuation_paragraphs_are_indented() -> None:
     doc = compiled("1. first\n\n   more\n2. second")
-    first, more, second = doc.body
+    first, more, second = paragraphs(doc)
     assert first.list_item is not None
     assert second.list_item is not None
     assert more.list_item is None
@@ -189,7 +193,7 @@ def test_named_lists_continue_and_restart() -> None:
         '\\styles{ numbering Legal { level 1 { text: "%1."; } } }\n\n'
         "\\list[Legal]{\n1. a\n}\n\n\\list[Legal, continue]{\n1. b\n}\n\n\\list[Legal, restart=5]{\n1. c\n}"
     )
-    refs = [p.list_item for p in doc.body if p.list_item]
+    refs = [p.list_item for p in paragraphs(doc) if p.list_item]
     assert [r.numbering for r in refs] == ["Legal"] * 3
     assert refs[0].instance == refs[1].instance != refs[2].instance
     assert refs[2].start == 5
@@ -200,7 +204,7 @@ def test_list_level_style_from_numbering() -> None:
         '\\styles{ paragraph "Clause 1" { bold; }\n numbering MSA { level 1 { style: "Clause 1"; } } }\n\n'
         "\\list[MSA]{\n1. Term\n}"
     )
-    assert doc.body[0].style == "Clause 1"
+    assert paragraphs(doc)[0].style == "Clause 1"
 
 
 # --- macros, includes ------------------------------------------------------------------------
@@ -243,7 +247,7 @@ def test_include_and_macro_files(tmp_path: Path) -> None:
     (tmp_path / "self.wgx").write_text("\\include{self.wgx}", encoding="utf-8")
     doc = compiled("\\use{macros.wgx}\n\n= Main \\x\n\n\\include{chapter.wgx}", tmp_path)
     assert texts(doc) == ["Main X", "Included", "Chapter text with it."]
-    assert doc.body[2].runs()[1].props == run_props(bold=True)
+    assert paragraphs(doc)[2].runs()[1].props == run_props(bold=True)
     loop = diagnostics("\\include{self.wgx}", tmp_path)
     assert any("includes itself" in d.message for _, d in loop.diagnostics)
     missing = diagnostics("\\include{nope.wgx}", tmp_path)

@@ -36,6 +36,27 @@ SECT_PR: Sequence[str] = (
 ).split()
 """EG_SectPrContents (after the header/footer references, before sectPrChange)."""
 
+TBL_PR: Sequence[str] = (
+    "tblStyle tblpPr tblOverlap bidiVisual tblStyleRowBandSize tblStyleColBandSize tblW jc "
+    "tblCellSpacing tblInd tblBorders shd tblLayout tblCellMar tblLook tblCaption tblDescription"
+).split()
+"""CT_TblPrBase (followed by tblPrChange in CT_TblPr)."""
+
+TR_PR: Sequence[str] = (
+    "cnfStyle divId gridBefore gridAfter wBefore wAfter cantSplit trHeight tblHeader "
+    "tblCellSpacing jc hidden"
+).split()
+"""CT_TrPrBase (a choice in the schema; Word writes this order)."""
+
+TC_PR: Sequence[str] = (
+    "cnfStyle tcW gridSpan hMerge vMerge tcBorders shd noWrap tcMar textDirection tcFitText "
+    "vAlign hideMark headers"
+).split()
+"""CT_TcPrBase."""
+
+TBL_BORDERS: Sequence[str] = "top start left bottom end right insideH insideV".split()
+"""CT_TblBorders."""
+
 LVL: Sequence[str] = (
     "start numFmt lvlRestart pStyle isLgl suff lvlText lvlPicBulletId legacy lvlJc pPr rPr"
 ).split()

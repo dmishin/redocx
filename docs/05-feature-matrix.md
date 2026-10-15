@@ -2,7 +2,7 @@
 
 The tier is the milestone where a feature first ships (see [roadmap](06-roadmap.md)).
 **Esc** means it is reachable earlier through an escape hatch (`ooxml.*` options or `\raw`).
-Difficulty: ● low · ●● medium · ●●● high.
+Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 
 ## 5.1 Characters (run properties, `w:rPr`)
 
@@ -47,8 +47,8 @@ Difficulty: ● low · ●● medium · ●●● high.
 | Feature | Tier | Diff. |
 |---------|------|-------|
 | Doc defaults (rPrDefault/pPrDefault) | M1 | ● |
-| Paragraph & character styles, basedOn, next | M1 | ● |
-| Linked styles | M2 | ● |
+| Paragraph & character styles, basedOn, next | M1 ✓ | ● |
+| Linked styles | M2 ✓ | ● |
 | Table styles with conditional formatting (tblStylePr: firstRow, lastRow, bands, corners…) | M2 | ●●● |
 | Numbering styles | M2 | ●● |
 | Latent styles, quick-style gallery flags, priorities | M2 | ● |
@@ -60,11 +60,11 @@ Difficulty: ● low · ●● medium · ●●● high.
 
 | Feature | Tier | Diff. |
 |---------|------|-------|
-| Bullets and simple numbered lists | M1 | ●● |
-| Multilevel definitions (format, text, indent, start, suffix, justification) | M1 | ●● |
-| Restart / continue / start-at semantics | M1 | ●● |
-| Heading numbering (style-linked) | M2 | ●● |
-| Legal numbering, `isLgl`, restart-after-level | M2 | ●● |
+| Bullets and simple numbered lists | M1 ✓ | ●● |
+| Multilevel definitions (format, text, indent, start, suffix, justification) | M1 ✓ | ●● |
+| Restart / continue / start-at semantics | M1 ✓ | ●● |
+| Heading numbering (style-linked) | M2 ✓ | ●● |
+| Legal numbering, `isLgl`, restart-after-level | M2 ✓ | ●● |
 | Picture bullets | Later | ●● |
 
 ## 5.5 Sections & page layout
@@ -88,15 +88,15 @@ Difficulty: ● low · ●● medium · ●●● high.
 
 | Feature | Tier | Diff. |
 |---------|------|-------|
-| Simple tables, pipe syntax | M1 | ● |
-| Column widths (fixed, %, fr, auto), layout fixed/auto | M1 | ●● |
-| Cell block content (multiple paragraphs, lists) | M1 | ● |
-| Horizontal / vertical merges | M2 | ●● |
-| Borders (table, cell, inside), shading | M2 | ●● |
-| Cell margins, vertical alignment, text direction | M2 | ● |
-| Row height, can't-split, repeat header rows | M2 | ● |
-| Table alignment, indent, look flags | M2 | ● |
-| Nested tables | M2 | ● |
+| Simple tables, pipe syntax | M1 ✓ | ● |
+| Column widths (fixed, %, fr, auto), layout fixed/auto | M1 ✓ | ●● |
+| Cell block content (multiple paragraphs, lists) | M1 ✓ | ● |
+| Horizontal / vertical merges | M2 ✓ | ●● |
+| Borders (table, cell, inside), shading | M2 (partly: shading done; borders via Table Grid) | ●● |
+| Cell margins, vertical alignment, text direction | M2 (partly: vertical alignment done) | ● |
+| Row height, can't-split, repeat header rows | M2 ✓ | ● |
+| Table alignment, indent, look flags | M2 (partly: alignment done) | ● |
+| Nested tables | M2 ✓ | ● |
 | Floating tables (tblpPr) | M4 | ●● |
 | Diagonal cell borders | Later | ● |
 
@@ -104,7 +104,7 @@ Difficulty: ● low · ●● medium · ●●● high.
 
 | Feature | Tier | Diff. |
 |---------|------|-------|
-| Hyperlinks (external, internal anchor) | M1 | ● |
+| Hyperlinks (external, internal anchor) | M1 (partly: external done) | ● |
 | Bookmarks | M2 | ● |
 | Cross-references (REF, PAGEREF, with pre-computed cached text) | M2 | ●●● |
 | Captions (SEQ, chapter numbering) | M2 | ●● |
@@ -122,7 +122,7 @@ Difficulty: ● low · ●● medium · ●●● high.
 
 | Feature | Tier | Diff. |
 |---------|------|-------|
-| Inline images (PNG/JPEG/GIF; size, alt text) | M1 | ●● |
+| Inline images (PNG/JPEG/GIF; size, alt text) | M1 ✓ | ●● |
 | SVG images (with PNG fallback, `asvg:svgBlip`) | M3 | ●● |
 | Floating images (anchor, wrap modes, positioning) | M4 | ●●● |
 | Cropping, rotation, borders on images | M4 | ●● |

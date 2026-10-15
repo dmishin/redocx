@@ -58,24 +58,25 @@ def lower(result: ParseResult, base_dir: Path | None = None) -> tuple[ir.Documen
                 )
 
     style_uses = list(lowering.style_uses)
-    resolved_body: list[ir.Paragraph] = []
-    for paragraph in body:
+
+    def resolve_list_item(paragraph: ir.Paragraph) -> ir.Paragraph:
         ref = paragraph.list_item
-        if ref is not None and ref.numbering in numbering:
-            level = complete_levels(numbering[ref.numbering])[ref.level - 1]
-            style = paragraph.style or level.style or "List Paragraph"
-            style_uses.append(StyleUse(style, ir.StyleKind.PARAGRAPH, Span(0, 0), result.source))
-            if ref.continuation:
-                indent = level.paragraph.get("indent-left")
-                props = paragraph.props
-                if indent is not None:
-                    props = PropertySet(Target.PARAGRAPH, {"indent-left": indent}).merged(props)
-                paragraph = replace(paragraph, list_item=None, style=style, props=props)
-            else:
-                paragraph = replace(paragraph, style=style)
-        elif ref is not None:
-            paragraph = replace(paragraph, list_item=None)
-        resolved_body.append(paragraph)
+        if ref is None:
+            return paragraph
+        if ref.numbering not in numbering:
+            return replace(paragraph, list_item=None)
+        level = complete_levels(numbering[ref.numbering])[ref.level - 1]
+        style = paragraph.style or level.style or "List Paragraph"
+        style_uses.append(StyleUse(style, ir.StyleKind.PARAGRAPH, Span(0, 0), result.source))
+        if not ref.continuation:
+            return replace(paragraph, style=style)
+        indent = level.paragraph.get("indent-left")
+        props = paragraph.props
+        if indent is not None:
+            props = PropertySet(Target.PARAGRAPH, {"indent-left": indent}).merged(props)
+        return replace(paragraph, list_item=None, style=style, props=props)
+
+    resolved_body = ir.map_paragraphs(tuple(body), resolve_list_item)
 
     # Styles: defined by style sheets, else Word built-ins the markup relies on.
     styles = {style_id(s.name): s for s in compiled.styles}

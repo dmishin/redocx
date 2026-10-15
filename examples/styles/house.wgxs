@@ -33,6 +33,8 @@ paragraph "Code Block" : Normal {
   indent: (left=0.5cm); contextual-spacing;
 }
 
+paragraph "Callout Title" : Normal { bold; color: theme.accent1.darker(25%); space-after: 3pt; }
+
 character Term { italic; color: theme.accent2; }
 character Strong { bold; }
 

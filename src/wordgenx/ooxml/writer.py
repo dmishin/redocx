@@ -2,11 +2,22 @@
 
 from __future__ import annotations
 
+import hashlib
+import itertools
 from collections.abc import Iterator
 from dataclasses import replace
 from os import PathLike
 
-from wordgenx.ir import Document, Numbering, NumberingRef, StyleKind
+from wordgenx.ir import (
+    IMAGE_FORMATS,
+    Document,
+    Image,
+    Numbering,
+    NumberingRef,
+    StyleKind,
+    iter_paragraphs,
+    iter_tables,
+)
 from wordgenx.ooxml.constants import CT, RT
 from wordgenx.ooxml.opc import Package
 from wordgenx.ooxml.parts.docprops import app_xml, core_xml
@@ -48,7 +59,7 @@ def _link_numbering(document: Document) -> Document:
         ref = style.numbering
         if ref is not None and ref.name not in definitions:
             raise StyleError(f"style {style.name!r}: numbering {ref.name!r} is not defined")
-    for paragraph in document.body:
+    for paragraph in iter_paragraphs(document.body):
         item = paragraph.list_item
         if item is not None and item.numbering not in definitions:
             raise StyleError(f"list numbering {item.numbering!r} is not defined")
@@ -92,9 +103,17 @@ def _link_numbering(document: Document) -> Document:
     return replace(document, styles=ordered_styles, numbering=tuple(definitions.values()))
 
 
+IMAGE_CONTENT_TYPES = {"png": CT.PNG, "jpeg": CT.JPEG, "gif": CT.GIF, "bmp": CT.BMP}
+
+
 def _check_style_references(document: Document) -> None:
     styles = resolve_styles(document)
-    for paragraph in document.body:
+    for table in iter_tables(document.body):
+        if table.style is not None:
+            style = styles.get(style_id(table.style))
+            if style is None or style.kind is not StyleKind.TABLE:
+                raise StyleError(f"table style {table.style!r} is not defined")
+    for paragraph in iter_paragraphs(document.body):
         refs = [(paragraph.style, StyleKind.PARAGRAPH)]
         refs += [(run.style, StyleKind.CHARACTER) for run in paragraph.runs()]
         for name, kind in refs:
@@ -112,7 +131,7 @@ def _font_names(document: Document, theme: Theme) -> Iterator[str]:
     yield theme.minor_font
     property_sets = [document.default_run, *(s.run for s in document.styles)]
     property_sets += [level.run for n in document.numbering for level in n.levels]
-    property_sets += [run.props for p in document.body for run in p.runs()]
+    property_sets += [run.props for p in iter_paragraphs(document.body) for run in p.runs()]
     for props in property_sets:
         font = props.get("font")
         if isinstance(font, str) and not font.startswith("theme."):
@@ -154,7 +173,7 @@ def build_package(document: Document, theme: Theme | None = None) -> Package:
 
     used_lists = [
         (p.list_item.numbering, p.list_item.instance, p.list_item.start)
-        for p in document.body
+        for p in iter_paragraphs(document.body)
         if p.list_item is not None
     ]
     instances = list_num_ids(document.numbering, used_lists)
@@ -173,7 +192,28 @@ def build_package(document: Document, theme: Theme | None = None) -> Package:
             links[url] = main.relate_external(url, RT.HYPERLINK)
         return links[url]
 
-    body = BodyContext(theme, hyperlink, {(i.numbering, i.instance): i.num_id for i in instances})
+    media: dict[bytes, str] = {}  # sha256 -> relationship id (identical images are stored once)
+
+    def image(picture: Image) -> str:
+        digest = hashlib.sha256(picture.data).digest()
+        if digest not in media:
+            extension = IMAGE_FORMATS[picture.format]
+            part = pkg.add_part(
+                f"/word/media/image{len(media) + 1}.{extension}",
+                IMAGE_CONTENT_TYPES[picture.format],
+                picture.data,
+            )
+            media[digest] = main.relate(part, RT.IMAGE)
+        return media[digest]
+
+    drawing_ids = itertools.count(1)
+    body = BodyContext(
+        theme,
+        hyperlink,
+        {(i.numbering, i.instance): i.num_id for i in instances},
+        image,
+        lambda: next(drawing_ids),
+    )
     main.data = serialize(document_xml(document, body))
     return pkg
 

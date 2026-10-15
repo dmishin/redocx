@@ -9,7 +9,8 @@ a single section and paragraphs of text runs.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from collections.abc import Callable, Iterator
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from enum import Enum
 
@@ -53,6 +54,8 @@ class Settings:
 class StyleKind(Enum):
     PARAGRAPH = "paragraph"
     CHARACTER = "character"
+    TABLE = "table"
+    """Only Word's built-in "Table Grid" so far; custom table styles arrive in M2."""
 
 
 @dataclass(frozen=True)
@@ -77,6 +80,8 @@ class Style:
             raise ValueError("Style.paragraph / Style.run have the wrong property targets")
         if self.kind is StyleKind.CHARACTER and (self.paragraph or self.numbering):
             raise ValueError(f"character style {self.name!r} cannot have paragraph properties")
+        if self.kind is StyleKind.TABLE and self.name != "Table Grid":
+            raise ValueError("only the built-in table style 'Table Grid' is supported so far")
 
 
 # --- numbering (lists) -------------------------------------------------------------
@@ -194,7 +199,32 @@ class Hyperlink:
     content: tuple[Run, ...]
 
 
-Inline = Run | Break | Hyperlink
+IMAGE_FORMATS = {"png": "png", "jpeg": "jpeg", "gif": "gif", "bmp": "bmp"}
+"""Image formats Word embeds directly -> file extension."""
+
+
+@dataclass(frozen=True)
+class Image:
+    """An inline picture (w:drawing/wp:inline)."""
+
+    data: bytes
+    format: str
+    """A key of IMAGE_FORMATS."""
+    width: Length
+    height: Length
+    description: str = ""
+    """Alternative text."""
+    name: str = ""
+    """Original file name (shown in Word's selection pane)."""
+
+    def __post_init__(self) -> None:
+        if self.format not in IMAGE_FORMATS:
+            raise ValueError(f"unsupported image format {self.format!r}")
+        if self.width.emu <= 0 or self.height.emu <= 0:
+            raise ValueError("image size must be positive")
+
+
+Inline = Run | Break | Hyperlink | Image
 
 
 @dataclass(frozen=True)
@@ -233,6 +263,155 @@ class Paragraph:
         return tuple(out)
 
 
+# --- tables ------------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class Cell:
+    content: tuple[Block, ...] = ()
+    colspan: int = 1
+    rowspan: int = 1
+    shading: str | None = None
+    """Background as RRGGBB."""
+    valign: str | None = None
+    """``top``, ``center`` or ``bottom``."""
+
+    def __post_init__(self) -> None:
+        if self.colspan < 1 or self.rowspan < 1:
+            raise ValueError("colspan and rowspan must be at least 1")
+        if self.valign not in (None, "top", "center", "bottom"):
+            raise ValueError(f"valign must be top, center or bottom, got {self.valign!r}")
+
+
+@dataclass(frozen=True)
+class Row:
+    cells: tuple[Cell, ...]
+    header: bool = False
+    """Repeat at the top of each page (w:tblHeader)."""
+    height: Length | None = None
+    exact_height: bool = False
+    """Exactly `height` (otherwise at least `height`)."""
+    cant_split: bool = False
+
+
+@dataclass(frozen=True)
+class Table:
+    rows: tuple[Row, ...]
+    widths: tuple[Length, ...]
+    """One width per grid column."""
+    style: str | None = "Table Grid"
+    align: str | None = None
+    """``left``, ``center`` or ``right`` (the table's position)."""
+
+    def __post_init__(self) -> None:
+        if not self.widths or any(w.emu <= 0 for w in self.widths):
+            raise ValueError("a table needs positive column widths")
+        if self.align not in (None, "left", "center", "right"):
+            raise ValueError(f"table align must be left, center or right, got {self.align!r}")
+        table_layout(self)  # raises ValueError when spans do not fit the grid
+
+
+Block = Paragraph | Table
+
+
+@dataclass(frozen=True)
+class Slot:
+    """One grid position's cell in a row: the cell itself, or the continuation of a rowspan."""
+
+    cell: Cell
+    column: int
+    continues: bool
+    """True for positions covered by a cell spanning from a row above (w:vMerge continue)."""
+
+
+def table_layout(table: Table) -> list[list[Slot]]:
+    """Place cells on the grid, resolving colspans and rowspans.
+
+    Each row must cover every grid column exactly once.
+    """
+    columns = len(table.widths)
+    covered: dict[tuple[int, int], Cell] = {}
+    layout: list[list[Slot]] = []
+
+    def take_covered(r: int, column: int, slots: list[Slot]) -> int:
+        """Emit continuation slots for positions covered from above; return the next free column."""
+        while (r, column) in covered:
+            origin = covered[(r, column)]
+            slots.append(Slot(origin, column, continues=True))
+            column += origin.colspan
+        return column
+
+    for r, row in enumerate(table.rows):
+        slots: list[Slot] = []
+        column = 0
+        for cell in row.cells:
+            column = take_covered(r, column, slots)
+            if column + cell.colspan > columns:
+                raise ValueError(
+                    f"row {r + 1} has more columns than the table's {columns}"
+                    + (" (check colspan)" if cell.colspan > 1 else "")
+                )
+            if r + cell.rowspan > len(table.rows):
+                raise ValueError(f"row {r + 1}: rowspan {cell.rowspan} goes past the last row")
+            slots.append(Slot(cell, column, continues=False))
+            for below in range(r + 1, r + cell.rowspan):
+                for c in range(column, column + cell.colspan):
+                    if (below, c) in covered:
+                        raise ValueError(f"row {below + 1}: overlapping rowspans")
+                covered[(below, column)] = cell
+                for c in range(column + 1, column + cell.colspan):
+                    covered[(below, c)] = cell  # marks the span; only the first column emits a slot
+            column += cell.colspan
+        column = take_covered(r, column, slots)
+        if column != columns:
+            raise ValueError(f"row {r + 1} covers {column} of the table's {columns} columns")
+        layout.append(slots)
+    return layout
+
+
+def iter_paragraphs(blocks: tuple[Block, ...]) -> Iterator[Paragraph]:
+    """Every paragraph, including those inside table cells."""
+    for block in blocks:
+        if isinstance(block, Paragraph):
+            yield block
+        else:
+            for row in block.rows:
+                for cell in row.cells:
+                    yield from iter_paragraphs(cell.content)
+
+
+def iter_tables(blocks: tuple[Block, ...]) -> Iterator[Table]:
+    """Every table, including nested ones."""
+    for block in blocks:
+        if isinstance(block, Table):
+            yield block
+            for row in block.rows:
+                for cell in row.cells:
+                    yield from iter_tables(cell.content)
+
+
+def map_paragraphs(
+    blocks: tuple[Block, ...], fn: Callable[[Paragraph], Paragraph]
+) -> tuple[Block, ...]:
+    """`blocks` with `fn` applied to every paragraph, including those inside tables."""
+    out: list[Block] = []
+    for block in blocks:
+        if isinstance(block, Paragraph):
+            out.append(fn(block))
+        else:
+            rows = tuple(
+                replace(
+                    row,
+                    cells=tuple(
+                        replace(c, content=map_paragraphs(c.content, fn)) for c in row.cells
+                    ),
+                )
+                for row in block.rows
+            )
+            out.append(replace(block, rows=rows))
+    return tuple(out)
+
+
 @dataclass(frozen=True)
 class PageSetup:
     width: Length = _A4_WIDTH
@@ -252,7 +431,7 @@ class PageSetup:
 
 @dataclass(frozen=True)
 class Document:
-    body: tuple[Paragraph, ...] = ()
+    body: tuple[Block, ...] = ()
     meta: Meta = field(default_factory=Meta)
     settings: Settings = field(default_factory=Settings)
     styles: tuple[Style, ...] = ()

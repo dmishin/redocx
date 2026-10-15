@@ -199,8 +199,18 @@ class Parser:
     def at_block_end(self) -> bool:
         return self.pos >= self.n or (self.body_depth > 0 and self.text[self.pos] == "}")
 
-    def blocks(self, min_indent: int) -> list[Node | Token]:
+    def blocks(self, min_indent: int, body_start: bool = False) -> list[Node | Token]:
+        """Blocks up to the end of the text, the enclosing `}`, or a line indented less than
+        `min_indent`.
+
+        With `body_start`, a pipe row right after the opening `{` (``\\table{| a | b |}``)
+        starts a table even though it is not at the start of a line.
+        """
         out: list[Node | Token] = []
+        if body_start:
+            self.whitespace(out)
+            if self.text.startswith("|", self.pos):
+                out.append(self.pipe_table(min_indent))
         while not self.at_block_end():
             before = self.pos
             line_start = self.line_begin(self.pos)
@@ -697,7 +707,7 @@ class Parser:
             node.children.append(self.token(K.L_BRACE, start + 1))
             self.body_depth += 1
             self.depth += 1
-            node.children.extend(self.blocks(min_indent=0))
+            node.children.extend(self.blocks(min_indent=0, body_start=True))
             self.depth -= 1
             self.body_depth -= 1
             self.close_brace(node, start)

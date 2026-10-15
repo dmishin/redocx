@@ -74,6 +74,7 @@ BUILTIN_STYLES: dict[str, Callable[[], Style]] = {
         paragraph=para_props(space_after="0pt", line_spacing=1, contextual_spacing=True),
         run=run_props(font="Consolas", size="9.5pt"),
     ),
+    "Table Grid": lambda: Style(StyleKind.TABLE, "Table Grid"),
     "Strong": _character("Strong", bold=True),
     "Emphasis": _character("Emphasis", italic=True),
     "Code": _character("Code", font="Consolas"),

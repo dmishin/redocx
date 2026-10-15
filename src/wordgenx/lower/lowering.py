@@ -17,11 +17,16 @@ read, so a \\styles block may appear anywhere. Built-in styles the markup relies
 from __future__ import annotations
 
 import difflib
+import io
 import re
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field, replace
+from decimal import Decimal
 from pathlib import Path
 from typing import get_args
+
+from PIL import Image as PILImage
+from PIL import UnidentifiedImageError
 
 from wordgenx import ir
 from wordgenx.lower.builtins import BUILTIN_STYLES
@@ -42,19 +47,22 @@ from wordgenx.stylesheet.syntax import parse_stylesheet
 from wordgenx.syntax import ParseResult, ast, parse
 from wordgenx.syntax.diagnostics import Code, Diagnostic, Severity
 from wordgenx.syntax.source import Source, Span
-from wordgenx.values import InvalidValueError, Length
+from wordgenx.values import Color, InvalidValueError, Length
 
 Located = tuple[Source, Diagnostic]
 
-BLOCK_COMMANDS = frozenset("p align list include use styles document meta settings section".split())
+BLOCK_COMMANDS = frozenset(
+    "p align list include use styles document meta settings section table".split()
+)
 INLINE_COMMANDS = frozenset(
-    "b i u s sup sub hl font style lang hidden strong emph code link url br tab".split()
+    "b i u s sup sub hl font style lang hidden strong emph code link url br tab image".split()
 )
 BREAK_COMMANDS = frozenset({"pagebreak", "columnbreak"})
 """Allowed both inline and as a block of their own."""
+TABLE_PARTS = frozenset({"row", "cell"})
+"""Only valid inside \\table (rows) and \\row (cells)."""
 
 PLANNED: dict[str, str] = {
-    **dict.fromkeys(["table", "row", "cell", "image"], "M1 (tables and images)"),
     **dict.fromkeys(
         [
             "figure",
@@ -98,9 +106,10 @@ PLANNED: dict[str, str] = {
 """Commands of the language that are not implemented yet -> the milestone that adds them."""
 
 PLANNED_BLOCKS = frozenset(
-    "table figure caption toc listof header footer watermark bibliography printbibliography "
-    "index".split()
+    "figure caption toc listof header footer watermark bibliography printbibliography index".split()
 )
+CELL_ALIGN = {"top": "top", "center": "center", "middle": "center", "bottom": "bottom"}
+DEFAULT_DPI = 96
 TRANSPARENT = frozenset({"comment", "ins", "control"})
 """Planned commands whose body text is kept (with a warning) rather than dropped."""
 
@@ -134,7 +143,42 @@ class Piece:
     format: Format
     kind: str = "text"
     """text (smart punctuation, whitespace collapse) | code (verbatim) | tab | line | page
-    | column."""
+    | column | image."""
+    image: ir.Image | None = None
+
+
+@dataclass
+class TableSpec:
+    """Table options from \\table[...] (defaults for a stand-alone pipe table)."""
+
+    style: str | None = "Table Grid"
+    widths: list[tuple[str, Length | Decimal]] | None = None
+    """("length", Length) | ("percent", Decimal) | ("fraction", Decimal) per column."""
+    header_rows: int = 0
+    align: str | None = None
+    columns: list[str] = field(default_factory=lambda: [])
+    """Paragraph alignment per column (left, center, right, justify, decimal)."""
+
+
+@dataclass
+class CellSpec:
+    content: list[ir.Block]
+    span: Span
+    colspan: int = 1
+    rowspan: int = 1
+    shading: str | None = None
+    valign: str | None = None
+    align: str | None = None
+
+
+@dataclass
+class RowSpec:
+    cells: list[CellSpec]
+    span: Span
+    header: bool = False
+    height: Length | None = None
+    exact: bool = False
+    cant_split: bool = False
 
 
 @dataclass
@@ -219,18 +263,18 @@ class Lowering:
 
     # --- documents and blocks --------------------------------------------------------------
 
-    def document(self, document: ast.Document) -> list[ir.Paragraph]:
+    def document(self, document: ast.Document) -> list[ir.Block]:
         return self.blocks(document.blocks)
 
     def blocks(
         self, blocks: Iterable[ast.Block], lists: ListContext | None = None
-    ) -> list[ir.Paragraph]:
-        out: list[ir.Paragraph] = []
+    ) -> list[ir.Block]:
+        out: list[ir.Block] = []
         for block in blocks:
             out.extend(self.block(block, lists))
         return out
 
-    def block(self, block: ast.Block, lists: ListContext | None = None) -> list[ir.Paragraph]:
+    def block(self, block: ast.Block, lists: ListContext | None = None) -> list[ir.Block]:
         if isinstance(block, ast.Paragraph):
             return self.paragraph(block)
         self.has_content = True
@@ -249,21 +293,8 @@ class Lowering:
             )
             return [self.code_paragraph(line) for line in block.source.split("\n")]
         assert isinstance(block, ast.PipeTable)
-        self.warn(
-            Code.NOT_SUPPORTED_YET,
-            "tables are not supported yet; rows are written as tab-separated lines",
-            block.span,
-            help="planned for milestone M1 (tables)",
-        )
-        paragraphs: list[ir.Paragraph] = []
-        for row in block.rows:
-            pieces: list[Piece] = []
-            for i, cell in enumerate(row.cells):
-                if i:
-                    pieces.append(Piece("\t", Format(), "tab"))
-                pieces.extend(self.inlines(cell.content, Format()))
-            paragraphs.append(ir.Paragraph(self.assemble(pieces)))
-        return paragraphs
+        table = self.make_table(TableSpec(), self.pipe_rows(block), block.span)
+        return [table] if table is not None else []
 
     def heading(self, heading: ast.Heading) -> ir.Paragraph:
         name = f"Heading {heading.level}"
@@ -271,7 +302,7 @@ class Lowering:
         content = self.assemble(self.inlines(heading.content, Format()))
         return ir.Paragraph(content, name, unnumbered=not heading.numbered)
 
-    def code_block(self, block: ast.CodeBlock) -> list[ir.Paragraph]:
+    def code_block(self, block: ast.CodeBlock) -> list[ir.Block]:
         if block.options is not None:
             for option in block.options.items:
                 if option.key == "caption":
@@ -289,7 +320,7 @@ class Lowering:
 
     # --- paragraphs: inline content or block commands ------------------------------------------
 
-    def paragraph(self, paragraph: ast.Paragraph) -> list[ir.Paragraph]:
+    def paragraph(self, paragraph: ast.Paragraph) -> list[ir.Block]:
         items = self.expand(paragraph.content)
         blocks = [item for item in items if self.is_block_item(item)]
         content = [item for item in items if not self.is_block_item(item)]
@@ -304,7 +335,7 @@ class Lowering:
                 )
             blocks = []
         if blocks:
-            out: list[ir.Paragraph] = []
+            out: list[ir.Block] = []
             for item in items:
                 if isinstance(item, ast.Command):
                     out.extend(self.block_command(item))
@@ -417,9 +448,9 @@ class Lowering:
 
     # --- block commands ----------------------------------------------------------------------
 
-    def block_command(self, command: ast.Command) -> list[ir.Paragraph]:
+    def block_command(self, command: ast.Command) -> list[ir.Block]:
         name = command.name
-        handler: Callable[[ast.Command], list[ir.Paragraph]] | None = {
+        handler: Callable[[ast.Command], list[ir.Block]] | None = {
             "p": self.cmd_p,
             "align": self.cmd_align,
             "list": self.cmd_list,
@@ -430,6 +461,7 @@ class Lowering:
             "meta": self.cmd_meta,
             "settings": self.cmd_settings,
             "section": self.cmd_section,
+            "table": self.cmd_table,
         }.get(name)
         if handler is not None:
             return handler(command)
@@ -469,7 +501,7 @@ class Lowering:
                 content.extend(block.content)
         return content
 
-    def cmd_p(self, command: ast.Command) -> list[ir.Paragraph]:
+    def cmd_p(self, command: ast.Command) -> list[ir.Block]:
         self.has_content = True
         extra, props = self.option_props(command, Target.PARAGRAPH, extra=("style",))
         style = None
@@ -481,7 +513,7 @@ class Lowering:
         pieces = self.inlines([c for c in content if not isinstance(c, BLOCK_TYPES)], Format())  # type: ignore[misc]
         return [ir.Paragraph(self.assemble(pieces), style, props)]
 
-    def cmd_align(self, command: ast.Command) -> list[ir.Paragraph]:
+    def cmd_align(self, command: ast.Command) -> list[ir.Block]:
         positional = self.positional(command, 1)
         alignment = positional[0] if positional else None
         if alignment not in ALIGN_WORDS:
@@ -496,9 +528,13 @@ class Lowering:
         if alignment is None:
             return paragraphs
         aligned = PropertySet(Target.PARAGRAPH, {"align": alignment})
-        return [replace(p, props=p.props.merged(aligned)) for p in paragraphs]
+        return list(
+            ir.map_paragraphs(
+                tuple(paragraphs), lambda p: replace(p, props=p.props.merged(aligned))
+            )
+        )
 
-    def cmd_list(self, command: ast.Command) -> list[ir.Paragraph]:
+    def cmd_list(self, command: ast.Command) -> list[ir.Block]:
         name: str | None = None
         continue_list = False
         start: int | None = None
@@ -535,7 +571,7 @@ class Lowering:
         else:
             instance = self.new_instance(name, start)
         context = ListContext(name, instance, 0, ordered=True, named=True, start=start)
-        out: list[ir.Paragraph] = []
+        out: list[ir.Block] = []
         for block in self.markup_blocks(command):
             if isinstance(block, ast.ListBlock):
                 self.has_content = True
@@ -544,7 +580,7 @@ class Lowering:
                 out.extend(self.block(block))
         return out
 
-    def cmd_include(self, command: ast.Command) -> list[ir.Paragraph]:
+    def cmd_include(self, command: ast.Command) -> list[ir.Block]:
         path = self.path_value(command)
         if path is None:
             return []
@@ -564,7 +600,7 @@ class Lowering:
             self._include_stack.pop()
             self.source, self.base_dir = source, base_dir
 
-    def cmd_use(self, command: ast.Command) -> list[ir.Paragraph]:
+    def cmd_use(self, command: ast.Command) -> list[ir.Block]:
         target = command.body.text.strip() if isinstance(command.body, ast.VerbatimBody) else ""
         if target.startswith("std:"):
             self.warn(
@@ -617,7 +653,7 @@ class Lowering:
             self.source, self.base_dir = source, base_dir
         return []
 
-    def cmd_styles(self, command: ast.Command) -> list[ir.Paragraph]:
+    def cmd_styles(self, command: ast.Command) -> list[ir.Block]:
         body = command.body
         if not isinstance(body, ast.VerbatimBody):
             self.report(
@@ -630,7 +666,7 @@ class Lowering:
         self.stylesheets.add(parse_stylesheet(self.source, body.span.start + 1, end))
         return []
 
-    def cmd_document(self, command: ast.Command) -> list[ir.Paragraph]:
+    def cmd_document(self, command: ast.Command) -> list[ir.Block]:
         self.no_body(command)
         for option in command.options.items if command.options else ():
             text = self.text_value(option.value, command, option.key or "option")
@@ -654,7 +690,7 @@ class Lowering:
                 )
         return []
 
-    def cmd_meta(self, command: ast.Command) -> list[ir.Paragraph]:
+    def cmd_meta(self, command: ast.Command) -> list[ir.Block]:
         self.no_body(command)
         fields_map = {
             "title": "title",
@@ -695,7 +731,7 @@ class Lowering:
                 )
         return []
 
-    def cmd_settings(self, command: ast.Command) -> list[ir.Paragraph]:
+    def cmd_settings(self, command: ast.Command) -> list[ir.Block]:
         self.no_body(command)
         for option in command.options.items if command.options else ():
             if option.key is None:
@@ -728,7 +764,7 @@ class Lowering:
                 )
         return []
 
-    def cmd_section(self, command: ast.Command) -> list[ir.Paragraph]:
+    def cmd_section(self, command: ast.Command) -> list[ir.Block]:
         if self.has_content:
             self.warn(
                 Code.NOT_SUPPORTED_YET,
@@ -838,6 +874,443 @@ class Lowering:
                 )
         return page
 
+    # --- tables ---------------------------------------------------------------------------------
+
+    def cmd_table(self, command: ast.Command) -> list[ir.Block]:
+        self.has_content = True
+        spec = self.table_spec(command)
+        rows: list[RowSpec] = []
+        for block in self.markup_blocks(command):
+            if isinstance(block, ast.PipeTable):
+                rows.extend(self.pipe_rows(block))
+            elif isinstance(block, ast.Paragraph):
+                for item in self.expand(block.content):
+                    if isinstance(item, ast.Command) and item.name == "row":
+                        rows.append(self.row_spec(item))
+                    elif not _is_blank(item):
+                        self.misplaced_in_table(item.span)
+            else:
+                self.misplaced_in_table(block.span)
+        table = self.make_table(spec, rows, command.span)
+        return [table] if table is not None else []
+
+    def misplaced_in_table(self, span: Span) -> None:
+        self.report(
+            Code.MISPLACED,
+            "a \\table contains pipe rows (| a | b |) or \\row commands",
+            span,
+            help="put other content inside a \\cell",
+        )
+
+    def table_spec(self, command: ast.Command) -> TableSpec:
+        spec = TableSpec()
+        for option in command.options.items if command.options else ():
+            key, value = option.key, option.value
+            if key == "style":
+                name = self.text_value(value, command, key)
+                if name == "none":
+                    spec.style = None
+                elif name and name != "Table Grid":
+                    self.warn(
+                        Code.NOT_SUPPORTED_YET,
+                        f"custom table styles are not supported yet; `{name}` is drawn "
+                        "as Table Grid",
+                        value.span,
+                        help="planned for milestone M2",
+                    )
+            elif key == "header-rows":
+                text = self.text_value(value, command, key) or ""
+                if text.isdigit():
+                    spec.header_rows = int(text)
+                else:
+                    self.report(
+                        Code.INVALID_ARGUMENT, "header-rows must be a whole number", value.span
+                    )
+            elif key == "widths":
+                spec.widths = self.width_list(value, command)
+            elif key == "align":
+                align = self.text_value(value, command, key)
+                if align in ("left", "center", "right"):
+                    spec.align = align
+                else:
+                    self.report(
+                        Code.INVALID_ARGUMENT, "table align is left, center or right", value.span
+                    )
+            elif key == "columns":
+                items = value.items if isinstance(value, ast.TupleValue) else ()
+                words = [self.text_value(item.value, command, key) or "" for item in items]
+                bad = [w for w in words if w not in ALIGN_WORDS | {"decimal"}]
+                if not words or bad:
+                    self.report(
+                        Code.INVALID_ARGUMENT,
+                        "columns is a tuple of alignments",
+                        value.span,
+                        help="e.g. columns=(left, right, center)",
+                    )
+                else:
+                    spec.columns = words
+            elif key == "id":
+                pass  # labels become bookmarks in M2
+            elif key == "caption":
+                self.warn(
+                    Code.NOT_SUPPORTED_YET,
+                    "table captions are not supported yet",
+                    option.span,
+                    help="planned for milestone M2",
+                )
+            else:
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    f"unknown \\table option `{key}`",
+                    option.span,
+                    help="style, header-rows, widths, align, columns",
+                )
+        return spec
+
+    def width_list(
+        self, value: ast.Value, command: ast.Command
+    ) -> list[tuple[str, Length | Decimal]] | None:
+        if not isinstance(value, ast.TupleValue) or not value.items:
+            self.report(
+                Code.INVALID_ARGUMENT, "widths is a tuple: widths=(4cm, 1fr, 25%)", value.span
+            )
+            return None
+        widths: list[tuple[str, Length | Decimal]] = []
+        for item in value.items:
+            text = (self.text_value(item.value, command, "widths") or "").strip()
+            try:
+                if text == "auto":
+                    widths.append(("fraction", Decimal(1)))
+                elif text.endswith("fr"):
+                    widths.append(("fraction", Decimal(text[:-2] or "1")))
+                elif text.endswith("%"):
+                    widths.append(("percent", Decimal(text[:-1])))
+                else:
+                    widths.append(("length", Length.parse(text)))
+            except (InvalidValueError, ArithmeticError):
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    f"invalid column width `{text}`",
+                    item.span,
+                    help="a length (4cm), a percentage of the text width (25%), "
+                    "or a fraction (1fr)",
+                )
+                return None
+        return widths
+
+    def pipe_rows(self, table: ast.PipeTable) -> list[RowSpec]:
+        rows: list[RowSpec] = []
+        for row in table.rows:
+            cells: list[CellSpec] = []
+            covered = 0
+            for pipe_cell in row.cells:
+                content = self.expand(pipe_cell.content)
+                text = [c for c in content if not _is_blank(c)]
+                if covered:
+                    covered -= 1
+                    if text:
+                        self.report(
+                            Code.INVALID_ARGUMENT,
+                            "this cell is covered by a colspan and must be empty",
+                            pipe_cell.span,
+                        )
+                    continue
+                if len(text) == 1 and isinstance(text[0], ast.Command) and text[0].name == "cell":
+                    cell = self.cell_spec(text[0])
+                    covered = cell.colspan - 1
+                elif text:
+                    pieces = self.spliced_inlines(content, Format(), pipe_cell.span)
+                    cell = CellSpec([ir.Paragraph(self.assemble(pieces))], pipe_cell.span)
+                else:
+                    cell = CellSpec([], pipe_cell.span)
+                cells.append(cell)
+            rows.append(RowSpec(cells, row.span))
+        return rows
+
+    def row_spec(self, command: ast.Command) -> RowSpec:
+        row = RowSpec([], command.span)
+        for option in command.options.items if command.options else ():
+            key, value = option.key, option.value
+            flag = self.text_value(value, command, "option") if key is None else None
+            if flag == "header":
+                row.header = True
+            elif flag == "cant-split":
+                row.cant_split = True
+            elif key == "height":
+                parts = value.items if isinstance(value, ast.TupleValue) else (option,)
+                texts = [self.text_value(p.value, command, key) or "" for p in parts]
+                row.height = self.length(texts[0], value.span)
+                if len(texts) > 1:
+                    if texts[1] not in ("exact", "at-least"):
+                        self.report(
+                            Code.INVALID_ARGUMENT,
+                            "row height rule is exact or at-least",
+                            value.span,
+                        )
+                    row.exact = texts[1] == "exact"
+            else:
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    "unknown \\row option",
+                    option.span,
+                    help="header, cant-split, height=1cm or height=(1cm, exact)",
+                )
+        for block in self.markup_blocks(command):
+            if not isinstance(block, ast.Paragraph):
+                self.report(Code.MISPLACED, "a \\row contains \\cell commands", block.span)
+                continue
+            for item in self.expand(block.content):
+                if isinstance(item, ast.Command) and item.name == "cell":
+                    row.cells.append(self.cell_spec(item))
+                elif not _is_blank(item):
+                    self.report(
+                        Code.MISPLACED,
+                        "a \\row contains \\cell commands",
+                        item.span,
+                        help="put the text inside \\cell{...}",
+                    )
+        return row
+
+    def cell_spec(self, command: ast.Command) -> CellSpec:
+        cell = CellSpec([], command.span)
+        for option in command.options.items if command.options else ():
+            key, value = option.key, option.value
+            text = self.text_value(value, command, key or "option") or ""
+            if key in ("colspan", "rowspan"):
+                if text.isdigit() and int(text) >= 1:
+                    setattr(cell, key, int(text))
+                else:
+                    self.report(
+                        Code.INVALID_ARGUMENT,
+                        f"{key} must be a whole number of at least 1",
+                        value.span,
+                    )
+            elif key == "shade":
+                try:
+                    color = Color.parse(text)
+                except InvalidValueError as e:
+                    self.report(Code.INVALID_ARGUMENT, str(e), value.span)
+                    continue
+                if color.rgb is None:
+                    self.report(
+                        Code.INVALID_ARGUMENT,
+                        "cell shading takes an RGB colour (#RRGGBB)",
+                        value.span,
+                        help="theme colours for shading are planned for M2",
+                    )
+                else:
+                    cell.shading = color.rgb
+            elif key == "valign":
+                if text in CELL_ALIGN:
+                    cell.valign = CELL_ALIGN[text]
+                else:
+                    self.report(
+                        Code.INVALID_ARGUMENT, "valign is top, center or bottom", value.span
+                    )
+            elif key == "align":
+                if text in ALIGN_WORDS:
+                    cell.align = text
+                else:
+                    self.report(
+                        Code.INVALID_ARGUMENT, "align is left, center, right or justify", value.span
+                    )
+            else:
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    "unknown \\cell option",
+                    option.span,
+                    help="colspan, rowspan, shade, valign, align",
+                )
+        if command.body is not None:
+            cell.content = self.blocks(self.markup_blocks(command))
+        return cell
+
+    def make_table(self, spec: TableSpec, rows: list[RowSpec], span: Span) -> ir.Table | None:
+        if not rows:
+            self.report(Code.INVALID_ARGUMENT, "a table needs at least one row", span)
+            return None
+        if spec.style == "Table Grid":
+            self.use_style("Table Grid", ir.StyleKind.TABLE, span)
+        # Each row's extent on an unbounded grid (rowspans from rows above take positions).
+        covered: set[tuple[int, int]] = set()
+        extents: list[int] = []
+        for r, row in enumerate(rows):
+            column = 0
+            for cell in row.cells:
+                while (r, column) in covered:
+                    column += 1
+                for below in range(r + 1, r + cell.rowspan):
+                    covered.update((below, c) for c in range(column, column + cell.colspan))
+                column += cell.colspan
+            while (r, column) in covered:
+                column += 1
+            extents.append(column)
+        columns = len(spec.widths) if spec.widths else max(extents)
+        if spec.widths and max(extents) > columns:
+            self.report(
+                Code.INVALID_ARGUMENT,
+                f"the table has {max(extents)} columns but widths lists {columns}",
+                span,
+            )
+            return None
+        for row, extent in zip(rows, extents, strict=True):  # short rows get empty cells
+            row.cells.extend(CellSpec([], row.span) for _ in range(columns - extent))
+
+        widths = self.resolve_widths(spec, columns, span)
+        if widths is None:
+            return None
+        if "decimal" in spec.columns:
+            self.warn(
+                Code.NOT_SUPPORTED_YET,
+                "decimal column alignment is not supported yet; right is used",
+                span,
+                help="planned for milestone M2 (tab stops)",
+            )
+        alignments = ["right" if a == "decimal" else a for a in spec.columns]
+
+        ir_rows: list[ir.Row] = []
+        for r, row in enumerate(rows):
+            column = 0
+            cells: list[ir.Cell] = []
+            for cell in row.cells:
+                align = cell.align or (alignments[column] if column < len(alignments) else None)
+                content = tuple(cell.content)
+                if align is not None:
+                    content = _align_paragraphs(content, align)
+                cells.append(
+                    ir.Cell(content, cell.colspan, cell.rowspan, cell.shading, cell.valign)
+                )
+                column += cell.colspan
+            header = row.header or r < spec.header_rows
+            ir_rows.append(ir.Row(tuple(cells), header, row.height, row.exact, row.cant_split))
+        try:
+            return ir.Table(tuple(ir_rows), widths, spec.style, spec.align)
+        except ValueError as e:
+            self.report(Code.INVALID_ARGUMENT, str(e), span, help="check colspan and rowspan")
+            return None
+
+    def text_width(self) -> Length:
+        page = self.page
+        return Length(
+            page.width.emu - page.margin_left.emu - page.margin_right.emu - page.gutter.emu
+        )
+
+    def resolve_widths(
+        self, spec: TableSpec, columns: int, span: Span
+    ) -> tuple[Length, ...] | None:
+        available = self.text_width().emu
+        entries = spec.widths or [("fraction", Decimal(1))] * columns
+        fixed = 0
+        fractions = Decimal(0)
+        for kind, amount in entries:
+            if kind == "length":
+                assert isinstance(amount, Length)
+                fixed += amount.emu
+            elif kind == "percent":
+                assert isinstance(amount, Decimal)
+                fixed += int(available * amount / 100)
+            else:
+                assert isinstance(amount, Decimal)
+                fractions += amount
+        remaining = available - fixed
+        if fractions and remaining <= 0:
+            self.report(
+                Code.INVALID_ARGUMENT, "fixed column widths leave no room for the 1fr columns", span
+            )
+            return None
+        widths: list[Length] = []
+        for kind, amount in entries:
+            if kind == "length":
+                assert isinstance(amount, Length)
+                widths.append(amount)
+            elif kind == "percent":
+                assert isinstance(amount, Decimal)
+                widths.append(Length(int(available * amount / 100)))
+            else:
+                assert isinstance(amount, Decimal)
+                widths.append(Length(int(remaining * amount / fractions)))
+        if any(w.emu <= 0 for w in widths):
+            self.report(Code.INVALID_ARGUMENT, "column widths must be positive", span)
+            return None
+        return tuple(widths)
+
+    # --- images --------------------------------------------------------------------------------
+
+    def inline_image(self, command: ast.Command, fmt: Format) -> list[Piece]:
+        path = self.path_value(command)
+        if path is None:
+            return []
+        width: Length | None = None
+        height: Length | None = None
+        description = name = ""
+        for option in command.options.items if command.options else ():
+            text = self.text_value(option.value, command, option.key or "option") or ""
+            if option.key == "width" and text.endswith("%"):
+                try:
+                    width = Length(int(self.text_width().emu * Decimal(text[:-1]) / 100))
+                except ArithmeticError:
+                    self.report(Code.INVALID_ARGUMENT, f"invalid width `{text}`", option.value.span)
+            elif option.key in ("width", "height"):
+                length = self.length(text, option.value.span)
+                if option.key == "width":
+                    width = length
+                else:
+                    height = length
+            elif option.key == "alt":
+                description = text
+            elif option.key == "name":
+                name = text
+            else:
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    "unknown \\image option",
+                    option.span,
+                    help="width, height, alt, name",
+                )
+        try:
+            data = path.read_bytes()
+        except OSError as e:
+            self.report(
+                Code.INVALID_ARGUMENT,
+                f"cannot read image `{path.name}`: {e.strerror}",
+                command.span,
+                help=f"paths are relative to {self.base_dir}",
+            )
+            return []
+        try:
+            with PILImage.open(io.BytesIO(data)) as picture:
+                image_format = (picture.format or "").lower()
+                pixels = picture.size
+                dpi = picture.info.get("dpi")
+        except (UnidentifiedImageError, OSError):
+            self.report(
+                Code.INVALID_ARGUMENT, f"`{path.name}` is not an image Word can show", command.span
+            )
+            return []
+        if image_format not in ir.IMAGE_FORMATS:
+            self.report(
+                Code.INVALID_ARGUMENT,
+                f"unsupported image format {image_format.upper() or '?'}",
+                command.span,
+                help="use PNG, JPEG, GIF or BMP",
+            )
+            return []
+        dpi_x, dpi_y = _dpi(dpi)
+        natural = (Length.inch(Decimal(pixels[0]) / dpi_x), Length.inch(Decimal(pixels[1]) / dpi_y))
+        if width is None and height is None and natural[0].emu > self.text_width().emu:
+            width = self.text_width()  # shrink to fit, as Word does on insert
+        if width is not None and height is None:
+            height = Length(natural[1].emu * width.emu // natural[0].emu)
+        elif height is not None and width is None:
+            width = Length(natural[0].emu * height.emu // natural[1].emu)
+        size = (width or natural[0], height or natural[1])
+        try:
+            image = ir.Image(data, image_format, size[0], size[1], description, name or path.name)
+        except ValueError as e:
+            self.report(Code.INVALID_ARGUMENT, str(e), command.span)
+            return []
+        return [Piece("", fmt, "image", image)]
+
     # --- lists ---------------------------------------------------------------------------------
 
     def new_instance(self, numbering: str, start: int | None) -> int:
@@ -845,7 +1318,7 @@ class Lowering:
         self._last_instance[numbering] = (self._instances, start)
         return self._instances
 
-    def list_block(self, block: ast.ListBlock, parent: ListContext | None) -> list[ir.Paragraph]:
+    def list_block(self, block: ast.ListBlock, parent: ListContext | None) -> list[ir.Block]:
         if parent is not None and (parent.named or parent.ordered == block.ordered):
             context = replace(parent, level=parent.level + 1, ordered=block.ordered)
         else:
@@ -858,14 +1331,14 @@ class Lowering:
         if context.level > 9:
             self.report(Code.INVALID_ARGUMENT, "lists nest at most 9 levels deep", block.span)
             context = replace(context, level=9)
-        out: list[ir.Paragraph] = []
+        out: list[ir.Block] = []
         for item in block.items:
             out.extend(self.list_item(item, context))
         return out
 
-    def list_item(self, item: ast.ListItem, context: ListContext) -> list[ir.Paragraph]:
+    def list_item(self, item: ast.ListItem, context: ListContext) -> list[ir.Block]:
         ref = ir.ListItemRef(context.numbering, context.instance, context.level, context.start)
-        out: list[ir.Paragraph] = []
+        out: list[ir.Block] = []
         numbered = False
         for block in item.blocks:
             if isinstance(block, ast.ListBlock):
@@ -874,15 +1347,19 @@ class Lowering:
                     numbered = True
                 out.extend(self.list_block(block, context))
                 continue
-            paragraphs = self.block(block, context)
-            for paragraph in paragraphs:
-                if not numbered:
-                    out.append(replace(paragraph, list_item=ref))
+            for lowered in self.block(block, context):
+                if not isinstance(lowered, ir.Paragraph):
+                    if not numbered:  # an item starting with a table still gets its number
+                        out.append(ir.Paragraph(list_item=ref))
+                        numbered = True
+                    out.append(lowered)
+                elif not numbered:
+                    out.append(replace(lowered, list_item=ref))
                     numbered = True
                 elif isinstance(block, ast.Paragraph):
-                    out.append(replace(paragraph, list_item=replace(ref, continuation=True)))
+                    out.append(replace(lowered, list_item=replace(ref, continuation=True)))
                 else:
-                    out.append(paragraph)
+                    out.append(lowered)
         if not numbered:
             out.append(ir.Paragraph(list_item=ref))
         return out
@@ -970,6 +1447,12 @@ class Lowering:
                 help="put it on its own line",
             )
             return []
+        if name in TABLE_PARTS:
+            where = "\\table" if name == "row" else "\\row"
+            self.report(
+                Code.MISPLACED, f"`\\{name}` is only valid directly inside {where}", command.span
+            )
+            return []
         if name in PLANNED:
             self.not_yet(command)
             if name in TRANSPARENT and isinstance(command.body, ast.MarkupBody):
@@ -978,6 +1461,8 @@ class Lowering:
         if name not in INLINE_COMMANDS:
             self.unknown_command(command)
             return []
+        if name == "image":
+            return self.inline_image(command, fmt)
         if name == "url":
             url = command.body.text.strip() if isinstance(command.body, ast.VerbatimBody) else ""
             self.no_options(command)
@@ -1155,6 +1640,10 @@ class Lowering:
                 flush_link()
                 inlines.append(ir.Break(piece.kind))
                 continue
+            if piece.image is not None:  # pictures are not part of hyperlinks (yet)
+                flush_link()
+                inlines.append(piece.image)
+                continue
             if not piece.text:
                 continue
             if piece.format.link != link:
@@ -1299,6 +1788,32 @@ class Lowering:
 
     def use_style(self, name: str, kind: ir.StyleKind, span: Span) -> None:
         self.style_uses.append(StyleUse(name, kind, span, self.source))
+
+
+def _align_paragraphs(blocks: tuple[ir.Block, ...], align: str) -> tuple[ir.Block, ...]:
+    """Apply a column/cell alignment to paragraphs that do not set their own."""
+    aligned = PropertySet(Target.PARAGRAPH, {"align": align})
+
+    def apply(paragraph: ir.Paragraph) -> ir.Paragraph:
+        if "align" in paragraph.props:
+            return paragraph
+        return replace(paragraph, props=aligned.merged(paragraph.props))
+
+    return ir.map_paragraphs(blocks, apply)
+
+
+def _dpi(info: object) -> tuple[Decimal, Decimal]:
+    """Pillow's (x, y) resolution, falling back to 96 dpi for missing or implausible values."""
+    if isinstance(info, tuple) and len(info) == 2:  # pyright: ignore[reportUnknownArgumentType]
+        x, y = info  # pyright: ignore[reportUnknownVariableType]
+        if isinstance(x, int | float) and isinstance(y, int | float) and x >= 10 and y >= 10:
+            return _near_integer(x), _near_integer(y)
+    return Decimal(DEFAULT_DPI), Decimal(DEFAULT_DPI)
+
+
+def _near_integer(dpi: float) -> Decimal:
+    """PNG stores resolution per metre, so 96 dpi reads back as 95.9866: snap such values."""
+    return Decimal(round(dpi)) if abs(dpi - round(dpi)) < 0.05 else Decimal(str(dpi))
 
 
 def _is_blank(item: ast.Inline | ast.Block) -> bool:

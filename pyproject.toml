@@ -7,7 +7,10 @@ license = "Apache-2.0"
 license-files = ["LICENSE"]
 authors = [{ name = "wordgenx contributors" }]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "lxml>=5.3",
+    "pillow>=10.4",
+]
 classifiers = [
     "Development Status :: 1 - Planning",
     "Intended Audience :: Developers",
@@ -25,7 +28,6 @@ wordgenx = "wordgenx.cli:main"
 
 [dependency-groups]
 dev = [
-    "lxml>=5.3",
     "pyright>=1.1.400",
     "hypothesis>=6.100",
     "pytest>=8.3",

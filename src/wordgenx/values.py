@@ -49,19 +49,19 @@ class Length:
         return cls(_round(number * EMU_PER_UNIT[unit]))
 
     @classmethod
-    def pt(cls, amount: float | int | str) -> Length:
+    def pt(cls, amount: float | int | str | Decimal) -> Length:
         return cls.of(amount, "pt")
 
     @classmethod
-    def cm(cls, amount: float | int | str) -> Length:
+    def cm(cls, amount: float | int | str | Decimal) -> Length:
         return cls.of(amount, "cm")
 
     @classmethod
-    def mm(cls, amount: float | int | str) -> Length:
+    def mm(cls, amount: float | int | str | Decimal) -> Length:
         return cls.of(amount, "mm")
 
     @classmethod
-    def inch(cls, amount: float | int | str) -> Length:
+    def inch(cls, amount: float | int | str | Decimal) -> Length:
         return cls.of(amount, "in")
 
     @classmethod
