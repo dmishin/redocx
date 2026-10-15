@@ -3,7 +3,7 @@
 ## 4.1 Pipeline
 
 ```
- .wex / .wexs sources
+ .wgx / .wgxs sources
         │
         ▼
  ┌──────────────┐   tokens/modes: markup, command, math, code, raw, stylesheet
@@ -37,7 +37,7 @@ Each can be tested on its own and is accessible from the Python API.
 ## 4.2 Package layout (proposed)
 
 ```
-src/wex/
+src/wordgenx/
   syntax/        lexer, parser, CST, AST, source map, pretty-printer (formatter)
   expand/        includes, macros, desugaring
   commands/      command registry; one module per family (text, para, table, section, refs, math, …)
@@ -50,16 +50,16 @@ src/wex/
   math/          LaTeX-subset parser → OMML
   highlight/     Pygments → runs + generated code styles
   diagnostics/   error codes, rendering
-  cli/           `wex build`, `wex watch`, `wex check`, `wex fmt`, `wex finalize`
+  cli/           `wordgenx build`, `wordgenx watch`, `wordgenx check`, `wordgenx fmt`, `wordgenx finalize`
   api/           public Python builder API over the IR
 tests/
-  golden/        .wex input → canonicalized XML snapshots
+  golden/        .wgx input → canonicalized XML snapshots
   features/      one gallery doc per feature, for manual Word review
 tools/
   ooxml-validate/   tiny .NET console app wrapping OpenXmlValidator (CI only)
   word-probe/       scripts to create a feature in Word and diff its XML (reverse-engineering aid)
 schemas/         ECMA-376 Transitional XSDs (for lxml validation)
-docs/            design docs → later: user manual written in WEX
+docs/            design docs → later: user manual written in wordgenx
 ```
 
 ## 4.3 The IR
@@ -97,7 +97,7 @@ Rules:
   Adding a Word property should mean adding one registry entry plus tests.
 - Units are normalized at lowering: lengths in twips (or EMUs for drawings), font sizes in half-points.
 - Merged table cells are represented logically (colspan, rowspan) and converted to `gridSpan` / `vMerge` at emit.
-- IR is serializable to JSON. This enables `wex build --emit-ir`, debugging and alternate frontends.
+- IR is serializable to JSON. This enables `wordgenx build --emit-ir`, debugging and alternate frontends.
 
 ## 4.4 Resolve phase responsibilities
 
@@ -125,7 +125,7 @@ Rules:
 
 ## 4.6 Templates
 
-`wex build doc.wex --template corp.dotx` (or `\document[template=…]`):
+`wordgenx build doc.wgx --template corp.dotx` (or `\document[template=…]`):
 
 1. Read the template package and keep all parts we don't manage, such as theme, fonts, glossary and customXml.
 2. Replace `document.xml` body content with ours. Keep the template's final `sectPr` as the base page setup unless overridden.
@@ -134,7 +134,7 @@ Rules:
 
 ## 4.7 Finalize step (optional)
 
-Word computes page numbers, TOC pages and `PAGEREF`. `wex finalize out.docx` (or `wex build --finalize`) can:
+Word computes page numbers, TOC pages and `PAGEREF`. `wordgenx finalize out.docx` (or `wordgenx build --finalize`) can:
 
 - **Windows + Word installed:** COM automation: open, `Fields.Update`, update TOCs, save. Gives the most faithful result.
 - **LibreOffice headless:** a UNO macro that updates indexes and fields. Portable, slightly less faithful.
@@ -145,13 +145,13 @@ The same mechanism gives `--pdf` export.
 ## 4.8 Public Python API (sketch)
 
 ```python
-from wex import Document, para, table, styles as S
+from wordgenx import Document, para, table, styles as S
 
 doc = Document(template="corp.dotx")
 doc.heading(1, "Quarterly report", label="sec:q")
 doc.add(para("Revenue grew ", S.strong("12%"), " year over year."))
 doc.add(table(df, style="Data Grid", header_rows=1))     # pandas DataFrame accepted
-doc.include("appendix.wex", vars={"quarter": "Q3"})       # mix source and API
+doc.include("appendix.wgx", vars={"quarter": "Q3"})       # mix source and API
 doc.save("report.docx")
 ```
 
@@ -161,5 +161,5 @@ The API builds the **same IR** the language produces. The language is a frontend
 
 - **Command plugins:** Python entry points register new commands with an option schema and an IR builder.
 - **Post-IR transforms:** hooks run between Resolve and Emit (for example, auto-linking glossary terms).
-- Plugins are trusted Python code. Untrusted `.wex` sources cannot run code: there is no scripting, and `\include` and `\image`
+- Plugins are trusted Python code. Untrusted `.wgx` sources cannot run code: there is no scripting, and `\include` and `\image`
   are restricted to the project root by default.

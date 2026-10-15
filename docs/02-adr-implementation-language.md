@@ -1,6 +1,6 @@
 # ADR-0001: Implementation language
 
-- **Status:** Proposed (to be confirmed by the maintainers)
+- **Status:** Accepted (2026-10-15)
 - **Date:** 2026-10-15
 
 ## Context
@@ -28,7 +28,7 @@ So the comparison is: (a) how much schema coverage and validation we get for fre
 | **TypeScript** | `docx` (dolanmiu) | Broad but not complete; declarative | Good (Shiki highlighting, MathJax → MathML), runs in the browser | npm; could power a web playground | Browser playground is a real plus |
 | **Haskell** | Pandoc internals, texmath (LaTeX → OMML) | Pandoc's writer is AST-limited | texmath is excellent | Binary | Small contributor pool |
 
-## Decision (proposed)
+## Decision
 
 **Python 3.12+, with our own OOXML writer built on lxml.** python-docx is not part of the core write path.
 
@@ -71,5 +71,7 @@ choice if, by the end of M1, we find ourselves fighting the schema more than exp
 - Tooling: `uv`, `ruff`, `pyright` (strict), `pytest`, `hypothesis` for parser property tests.
 - Runtime dependencies kept small: `lxml`, `Pillow`, `pygments`. Optional extras: `citeproc-py` (bibliography),
   `matplotlib` (charts).
-- A small `tools/ooxml-validate/` .NET project in the repository, used only in CI.
+- A small `tools/ooxml-validate/` .NET project in the repository, used in CI and optionally by developers. Contributors who
+  want to run it locally need the **.NET 8+ SDK** (only the runtime is needed to run a prebuilt validator). End users never
+  need .NET.
 - The IR has a defined JSON serialisation. This keeps the door open for other frontends or backends.

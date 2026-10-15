@@ -139,7 +139,7 @@ Difficulty: ● low · ●● medium · ●●● high.
 | Comments (anchored ranges, replies, resolved state) | M5 | ●● |
 | Tracked insertions/deletions | M5 | ●● |
 | Tracked formatting changes | Later | ●●● |
-| `wex diff` → redline docx | M5 | ●●● |
+| `wordgenx diff` → redline docx | M5 | ●●● |
 | Content controls (text, rich text, dropdown, combo, date, checkbox, picture) | M5 | ●● |
 | Repeating sections, data binding to custom XML | Later | ●●● |
 | Legacy form fields | Later | ●● |

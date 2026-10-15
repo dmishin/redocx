@@ -1,10 +1,13 @@
 # 3. Language Design
 
 > This is a **draft** for discussion. The examples show intent. The exact grammar is fixed in M1.
-> File extension: `.wex`. Encoding: UTF-8.
+> File extension: `.wgx`. Encoding: UTF-8.
 
 ## 3.1 Design goals for the syntax
 
+0. **DOCX is the only target.** wordgenx is not a universal, output-neutral markup language. Every construct exists
+   because Word has a matching concept, and it is named and shaped after that concept. We do not add abstractions to
+   make documents portable to HTML or PDF. When "the obvious markup design" and "how Word models it" disagree, Word wins.
 1. **Prose reads like prose.** A paragraph of plain text needs no markup.
 2. **One uniform command form** covers everything that isn't common enough for sugar.
 3. **Common things are short:** headings, emphasis, lists, simple tables, links, math.
@@ -22,9 +25,8 @@
 | Paragraph break | blank line | As in TeX and Markdown |
 | Line break | `\br` | `w:br` |
 | Page / column break | `\pagebreak`, `\columnbreak` | |
-| Line comment | `%% …` | `%` alone is ordinary text, because percentages are common. See open questions. |
-| Block comment | `%{ … }%` | |
-| Escape | `\\ \{ \} \[ \] \* \_ \` \$ \# \= \|` | Escapes the next character |
+| Comment | `% …` to end of line | As in TeX. A literal percent sign is `\%`. There are no block comments. Because `50% of` is common in business text, the compiler warns when `%` directly follows a digit (likely a forgotten `\%`). |
+| Escape | `\\ \% \{ \} \[ \] \* \_ \` \$ \# \= \|` | Escapes the next character |
 | Non-breaking space | `~` | As in TeX. Literal tilde is `\~`. |
 | Typographic | `--` en dash, `---` em dash, smart quotes | Smart punctuation can be turned off per document |
 | Identifier/label | `{#label}` after a block, or `id=label` option | Creates a bookmark |
@@ -43,21 +45,21 @@ and `w:themeShade`, so they follow theme changes in Word.
 
 ## 3.3 Document skeleton
 
-```wex
+```wgx
 \document[template="templates/corporate.dotx", lang=en-US, smart-quotes=on]
 
 \meta[
-  title    = "WEX Architecture Specification",
+  title    = "wordgenx Architecture Specification",
   author   = "Jane Doe",
   subject  = "Compiler design",
   keywords = (docx, compiler),
-  custom.project-code = "WX-001",   %% custom document property
+  custom.project-code = "WX-001",   % custom document property
 ]
 
-\use{styles/house.wexs}             %% style sheet (see §3.5)
+\use{styles/house.wgxs}             % style sheet (see §3.5)
 
 \page[size=A4, margins=(top=2.5cm, bottom=2.5cm, inside=3cm, outside=2cm), mirror]
-\header[first]{}                    %% empty first-page header
+\header[first]{}                    % empty first-page header
 \header{ \field{STYLEREF "Heading 1"} \tab \field{TITLE} }
 \footer{ \align[center]{Page \pagenum of \numpages} }
 
@@ -89,26 +91,26 @@ A setting can map them to direct bold or italic instead.
 
 Direct formatting is always available:
 
-```wex
+```wgx
 \font[family="Consolas", size=10pt, color=theme.accent1, caps, spacing=0.5pt]{text}
 \b{bold} \i{italic} \u[double]{underlined} \s{struck} \sup{2} \sub{i} \hl[yellow]{highlight}
-\style{Term}{defined term}        %% apply a named character style
-\lang[de-DE]{Fahrvergnügen}       %% language, for spell-check and hyphenation
-\hidden{text}                     %% hidden text
+\style{Term}{defined term}        % apply a named character style
+\lang[de-DE]{Fahrvergnügen}       % language, for spell-check and hyphenation
+\hidden{text}                     % hidden text
 ```
 
 ## 3.5 Styles and style sheets
 
-Styles are the center of the design. A style sheet (`.wexs`, or inline in `\styles{…}`) uses a CSS-like block syntax
+Styles are the center of the design. A style sheet (`.wgxs`, or inline in `\styles{…}`) uses a CSS-like block syntax
 with Word's property names:
 
-```wexs
+```wgxs
 defaults {
   font: theme.minor; size: 11pt; lang: en-US;
   space-after: 8pt; line-spacing: 1.08;
 }
 
-paragraph "Body Text" : Normal {          %% : basedOn
+paragraph "Body Text" : Normal {          % : basedOn
   first-line-indent: 0; space-after: 6pt; justify;
   widow-control;
   next: "Body Text";
@@ -118,13 +120,13 @@ paragraph "Heading 1" : Normal {
   font: theme.major; size: 16pt; color: theme.accent1.darker(25%);
   space-before: 24pt; space-after: 6pt; keep-with-next; keep-lines;
   outline-level: 1;
-  numbering: Headings level 1;            %% link to multilevel list (§3.7)
+  numbering: Headings level 1;            % link to multilevel list (§3.7)
   page-break-before: false;
 }
 
 character Term { italic; color: theme.accent2; }
 
-linked "Quote" : Normal {                 %% linked paragraph+character style
+linked "Quote" : Normal {                 % linked paragraph+character style
   indent: (left=1cm, right=1cm); italic;
   border-left: single 3pt theme.accent1 space=6pt;
 }
@@ -149,7 +151,7 @@ The full property vocabulary is in the [feature matrix](05-feature-matrix.md). I
 
 ## 3.6 Paragraph-level formatting
 
-```wex
+```wgx
 \p[style="Body Text", align=center, space-before=12pt, keep-with-next]{A paragraph with options.}
 
 \align[right]{Short form for alignment.}
@@ -161,23 +163,23 @@ Paragraph options and style-sheet properties use the **same vocabulary**.
 
 ## 3.7 Headings and lists
 
-```wex
-= Heading 1            %% maps to style "Heading 1"
+```wgx
+= Heading 1            % maps to style "Heading 1"
 == Heading 2
 === Heading 3 {#sec:details}
-=* Unnumbered heading  %% suppress numbering, keep outline level
+=* Unnumbered heading  % suppress numbering, keep outline level
 
 - bullet
 - bullet
   - nested bullet
 1. numbered
 2. numbered
-   a. nested, lettered     %% format comes from the list definition, not the marker
+   a. nested, lettered     % format comes from the list definition, not the marker
 ```
 
 Lists use **Word multilevel numbering definitions** (`abstractNum` / `num`) declared in style sheets:
 
-```wexs
+```wgxs
 numbering Headings {
   level 1 { format: decimal;     text: "%1";       style: "Heading 1"; }
   level 2 { format: decimal;     text: "%1.%2";    style: "Heading 2"; }
@@ -193,7 +195,7 @@ numbering Legal {
 numbering Checklist { level 1 { bullet: "☐" font: "Segoe UI Symbol"; } }
 ```
 
-```wex
+```wgx
 \list[Legal]{
   - First clause
     - sub-clause
@@ -210,7 +212,7 @@ expect.
 
 Pipe tables cover simple cases. The full command covers everything else.
 
-```wex
+```wgx
 \table[style="Data Grid", header-rows=1, widths=(4cm, 1fr, 1fr), align=center, id=tbl:rev]{
   | Item     | Q1  | Q2  |
   | Revenue  | 10  | 12  |
@@ -222,7 +224,7 @@ Pipe tables cover simple cases. The full command covers everything else.
 
 Cells can hold any block content (paragraphs, lists, nested tables) using the block form:
 
-```wex
+```wgx
 \table[widths=(1fr, 2fr)]{
   \row[header, height=1cm exact]{ \cell{Name} \cell{Description} }
   \row{
@@ -233,7 +235,7 @@ Cells can hold any block content (paragraphs, lists, nested tables) using the bl
       - a list inside a cell
     }
   }
-  \row{ \cell{Second row, right column} }   %% left cell covered by rowspan
+  \row{ \cell{Second row, right column} }   % left cell covered by rowspan
 }
 ```
 
@@ -245,9 +247,9 @@ and indent, floating tables, nested tables, and table-style conditional formatti
 
 `\page[…]` opens a **new section** (except in the preamble, where it configures the first section).
 
-```wex
+```wgx
 \page[orientation=landscape, break=next-page]
-\header{Landscape appendix header}        %% headers belong to the current section
+\header{Landscape appendix header}        % headers belong to the current section
 …wide table…
 \page[orientation=portrait, columns=(count=2, gap=1cm, separator), break=continuous]
 ```
@@ -259,19 +261,19 @@ first page), and whether headers and footers link to the previous section (`link
 
 ## 3.10 References: bookmarks, cross-references, captions, notes
 
-```wex
+```wgx
 = Results {#sec:results}
 
 \figure[id=fig:arch, width=12cm, align=center]{
   \image{img/architecture.png}
-  \caption{Overall architecture}        %% caption label "Figure" + SEQ field
+  \caption{Overall architecture}        % caption label "Figure" + SEQ field
 }
 
 As shown in @fig:arch (page \pageref{fig:arch}), see also \ref[form=number]{sec:results}.
-\ref[form=full]{fig:arch}      %% "Figure 3: Overall architecture"
-\ref[form=label-number]{…}     %% "Figure 3"  (default for figures)
-\ref[form=text]{…}             %% heading or caption text
-\ref[form=above-below]{…}      %% "above" / "below"
+\ref[form=full]{fig:arch}      % "Figure 3: Overall architecture"
+\ref[form=label-number]{…}     % "Figure 3"  (default for figures)
+\ref[form=text]{…}             % heading or caption text
+\ref[form=above-below]{…}      % "above" / "below"
 
 A claim.\footnote{With a footnote.} Another.\endnote{And an endnote.}
 ```
@@ -284,13 +286,13 @@ A claim.\footnote{With a footnote.} Another.\endnote{And an endnote.}
 
 ## 3.11 Fields and generated content
 
-```wex
+```wgx
 \toc[levels=1-3, hyperlinks, title="Contents"]
 \listof[figures]   \listof[tables]
-\index                         %% from \ix{term} / \ix{term!subterm} entries (XE fields)
+\index                         % from \ix{term} / \ix{term!subterm} entries (XE fields)
 \pagenum   \numpages   \sectionpages
-\date[format="d MMMM yyyy"]    %% DATE field;  \date[fixed] for literal text
-\field{AUTHOR}                 %% any Word field, raw instruction
+\date[format="d MMMM yyyy"]    % DATE field;  \date[fixed] for literal text
+\field{AUTHOR}                 % any Word field, raw instruction
 \field[result="cached text"]{IF { MERGEFIELD x } = 1 "yes" "no"}
 ```
 
@@ -301,7 +303,7 @@ A claim.\footnote{With a footnote.} Another.\endnote{And an endnote.}
 
 LaTeX-style math, compiled **directly to OMML** (Office Math). It is native and editable in Word's equation editor.
 
-```wex
+```wgx
 Inline $e^{i\pi} + 1 = 0$ and display:
 
 $$ \int_0^\infty e^{-x^2}\,dx = \frac{\sqrt{\pi}}{2} $$ {#eq:gauss}
@@ -317,7 +319,7 @@ on a setting. The supported LaTeX subset is documented. Unsupported macros are e
 
 ## 3.13 Code blocks
 
-````wex
+````wgx
 ```python {#lst:hello, caption="Hello world", line-numbers}
 def hello():
     print("hi")
@@ -329,8 +331,8 @@ style sheet and themeable, or into direct colors. The block uses a `Code Block` 
 
 ## 3.14 Images, drawings, boxes
 
-```wex
-\image[width=8cm, alt="Logo"]{img/logo.png}                     %% inline
+```wgx
+\image[width=8cm, alt="Logo"]{img/logo.png}                     % inline
 \image[float, wrap=square, side=right, x=(0cm, from=margin), y=(0cm, from=paragraph), width=5cm]{img/photo.jpg}
 \textbox[width=6cm, border=single 1pt theme.accent1, float, wrap=tight]{ Callout content… }
 \watermark[text="DRAFT", color=#D9D9D9, rotation=-45]
@@ -338,23 +340,23 @@ style sheet and themeable, or into direct colors. The block uses a `Code Block` 
 
 ## 3.15 Collaboration features
 
-```wex
+```wgx
 \comment[author="J. Doe", date=2026-10-15]{reviewed text}{Is this number right?}
-\ins[author="J. Doe"]{inserted text}   \del[author="J. Doe"]{deleted text}   %% tracked revisions
-\control[type=dropdown, items=("Draft","Final"), tag=status]{Draft}            %% content control
+\ins[author="J. Doe"]{inserted text}   \del[author="J. Doe"]{deleted text}   % tracked revisions
+\control[type=dropdown, items=("Draft","Final"), tag=status]{Draft}            % content control
 \control[type=checkbox, checked]
 \control[type=text, placeholder="Enter name", lock=content]
 ```
 
-A later CLI feature, `wex diff old.wex new.wex -o redline.docx`, produces a **tracked-changes redline** between two
+A later CLI feature, `wordgenx diff old.wgx new.wgx -o redline.docx`, produces a **tracked-changes redline** between two
 versions of a source. This would be very useful for legal and specification work.
 
 ## 3.16 Macros, includes, variables
 
-```wex
-\include{chapters/02-design.wex}
+```wgx
+\include{chapters/02-design.wgx}
 
-\let{product}{WEX Compiler}
+\let{product}{wordgenx Compiler}
 The \product is great.
 
 \define{note}[kind=info]{body}{
@@ -365,9 +367,10 @@ The \product is great.
 
 - Macros are **hygienic and declarative**. They use named parameters with defaults and substitute at the AST level, not
   through token-level expansion as in TeX.
-- **There is no general-purpose scripting in v1.** Programmability comes from the **Python API** (build the IR
-  directly, or render `.wex` from Jinja). The syntax `#{ … }` is **reserved** for a possible future expression
-  language (conditionals, loops, data access), so it can be added without breaking documents. See open questions.
+- **There is no scripting in the language** (decided; see [decisions](08-open-questions.md)). There are no conditionals,
+  loops or expressions. Programmability comes from the **Python API**: build the IR directly, or render `.wgx` from Jinja.
+  Untrusted sources can then be compiled safely. If scripting is reconsidered later, the syntax `#{ … }` is kept
+  reserved so it can be added without breaking documents.
 
 ## 3.17 Escape hatches (in order of preference)
 
@@ -381,11 +384,11 @@ Raw content is validated with the rest of the output. A bad escape hatch fails t
 
 ## 3.18 Diagnostics
 
-Every error has a code (`WEX1203`), a span, a message and, where possible, a suggestion:
+Every error has a code (`WGX1203`), a span, a message and, where possible, a suggestion:
 
 ```
-error[WEX1203]: unknown paragraph property `space-befor`
-  --> chapters/02-design.wex:14:22
+error[WGX1203]: unknown paragraph property `space-befor`
+  --> chapters/02-design.wgx:14:22
    |
 14 | \p[style=Body, space-befor=12pt]{…}
    |                ^^^^^^^^^^^ did you mean `space-before`?

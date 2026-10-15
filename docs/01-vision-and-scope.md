@@ -31,17 +31,22 @@ A plain-text language and compiler where:
 
 ## 1.3 Design principles
 
-1. **Word's model, not the browser's model.** Concepts are named after Word (paragraph style, character style, section,
-   field, tab stop), not HTML or CSS. Users who know Word should recognise everything.
-2. **Semantic first, direct formatting allowed.** Styles are the main path. Direct formatting (`\font[size=14pt]{…}`)
+1. **Designed for DOCX, and only DOCX.** wordgenx is not a general-purpose or output-neutral markup language. Its
+   concepts are named after Word (paragraph style, character style, section, field, tab stop), not HTML or CSS, and
+   are shaped the way WordprocessingML models them. We add no abstractions to make sources portable to other formats.
+   Users who know Word should recognise everything.
+2. **Idiomatic Word output.** We generate what a skilled Word user would build: named styles rather than direct
+   formatting, real multilevel numbering, real fields, captions and bookmarks. When choosing how to emit a feature,
+   we prefer the representation Word itself writes.
+3. **Semantic first, direct formatting allowed.** Styles are the main path. Direct formatting (`\font[size=14pt]{…}`)
    is available because real documents need it.
-3. **Layered sugar.** Lightweight markup (`*bold*`, `= Heading`, lists, pipe tables) desugars to commands. Every command maps
+4. **Layered sugar.** Lightweight markup (`*bold*`, `= Heading`, lists, pipe tables) desugars to commands. Every command maps
    to a documented node of the intermediate representation (IR). Every IR property maps to OOXML. You can drop down a level at any point,
    down to raw OOXML.
-4. **No silent loss.** If a construct cannot be represented, compilation fails or warns. It never quietly drops content.
-5. **Valid by construction.** Output validates against the ECMA-376 schemas and opens in Word with no repair prompt. This
+5. **No silent loss.** If a construct cannot be represented, compilation fails or warns. It never quietly drops content.
+6. **Valid by construction.** Output validates against the ECMA-376 schemas and opens in Word with no repair prompt. This
    is a release-blocking invariant.
-6. **Deterministic output.** The same input gives a byte-identical `.docx` (stable IDs, fixed zip timestamps). This lets
+7. **Deterministic output.** The same input gives a byte-identical `.docx` (stable IDs, fixed zip timestamps). This lets
    golden tests and reproducible builds work.
 
 ## 1.4 Non-goals (at least initially)
@@ -50,7 +55,7 @@ A plain-text language and compiler where:
   This is the biggest conceptual difference from TeX. See §1.6.
 - We are not a WYSIWYG editor.
 - We do not imitate TeX syntax or semantics. There are no catcodes and no expansion-order puzzles.
-- We do not convert *from* arbitrary DOCX with full fidelity. A `docx → wex` importer is a later, best-effort tool.
+- We do not convert *from* arbitrary DOCX with full fidelity. A `docx → wordgenx` importer is a later, best-effort tool.
 - We do not support legacy `.doc`, ODT output or PDF typesetting. PDF comes from Word or LibreOffice converting our DOCX.
 - We do not support SmartArt, OLE embedding, VBA or macros.
 
@@ -91,14 +96,14 @@ protection settings, compatibility settings and embedded fonts.
 **Hard, deferred:**
 - Native charts (DrawingML chart parts plus embedded workbook). This is a lot of work, so charts start as images.
 - Bibliography through Word's own `sources.xml` and `CITATION` fields. We first render citations ourselves with CSL.
-- Reading arbitrary DOCX back into WEX.
+- Reading arbitrary DOCX back into wordgenx.
 
 **Out of scope:** SmartArt, OLE objects, VBA and ActiveX.
 
 ## 1.7 Target users and first use cases
 
 1. **Engineers writing specifications or design documents** that must be delivered as Word with a corporate template. This is the
-   primary dogfooding case: WEX's own docs will be written in WEX.
+   primary dogfooding case: wordgenx's own docs will be written in wordgenx.
 2. **Automated report generation** from data through the Python API, with macros and includes.
 3. **Academic and technical writing** that needs math, citations and cross-references, delivered as DOCX for journals or
    reviewers.
