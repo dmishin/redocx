@@ -1,0 +1,30 @@
+% std:signature - signature blocks for approvals and contracts.
+%
+%   \use{std:signature}
+%   \signature-block[party="the Customer", name="Jane Doe", role="Director"]
+%   \approval[role="Approved by"]
+%
+% The lines are underlined tabs in a borderless table, which is how they are usually
+% built by hand in Word: they print as lines and stay editable.
+
+\define{signature-block}[party, name, role]{
+  \p[keep-with-next, space-before=18pt]{*Signed* for and on behalf of #party:}
+
+  \table[style=none, widths=(1fr, 1fr)]{
+    \row[cant-split, height=(1.2cm, at-least)]{
+      \cell[valign=bottom]{Signature: \u{\tab\tab\tab\tab\tab}}
+      \cell[valign=bottom]{Date: \u{\tab\tab\tab\tab}}
+    }
+    \row{ \cell{#name} \cell{} }
+    \row{ \cell{#role} \cell{} }
+  }
+}
+
+\define{approval}[role="Approved by"]{
+  \table[style=none, widths=(1fr, 1fr)]{
+    \row[cant-split, height=(1.2cm, at-least)]{
+      \cell[valign=bottom]{#role: \u{\tab\tab\tab\tab\tab}}
+      \cell[valign=bottom]{Date: \u{\tab\tab\tab\tab}}
+    }
+  }
+}

@@ -1,0 +1,41 @@
+% ACME specification house style.
+
+defaults {
+  font: theme.minor; size: 10.5pt; lang: en-GB;
+  space-after: 6pt; line-spacing: 1.1;
+}
+
+paragraph Normal { widow-control; }
+
+paragraph Title : Normal {
+  font: theme.major; size: 30pt; color: theme.accent1.darker(25%);
+  space-before: 120pt; space-after: 6pt;
+}
+paragraph Subtitle : Normal { size: 16pt; color: theme.text2; space-after: 36pt; }
+paragraph "Title Meta" : Normal { size: 10pt; color: theme.text1.lighter(35%); space-after: 0; }
+
+paragraph "Heading 1" : Normal {
+  font: theme.major; size: 16pt; color: theme.accent1.darker(25%);
+  space-before: 18pt; space-after: 6pt; keep-with-next; keep-lines; outline-level: 1;
+  next: Normal;
+}
+paragraph "Heading 2" : "Heading 1" { size: 13pt; space-before: 12pt; outline-level: 2; }
+paragraph "Heading 3" : "Heading 2" { size: 11pt; outline-level: 3; }
+
+numbering Headings {
+  level 1 { text: "%1";       style: "Heading 1"; indent: 0.76cm hanging; }
+  level 2 { text: "%1.%2";    style: "Heading 2"; indent: 1.02cm hanging; }
+  level 3 { text: "%1.%2.%3"; style: "Heading 3"; indent: 1.27cm hanging; }
+}
+
+% Requirements are a numbered list: REQ-1, REQ-2, ... continuing through the document.
+paragraph Requirement : Normal { space-after: 4pt; keep-lines; }
+numbering Requirements {
+  level 1 { text: "REQ-%1"; style: Requirement; suffix: space; bold; color: theme.accent1;
+            indent: 0 hanging; }
+}
+
+character Term { italic; }
+paragraph "Code Block" : Normal {
+  font: "Consolas"; size: 9pt; space-after: 0; line-spacing: 1; indent: (left=0.4cm); contextual-spacing;
+}

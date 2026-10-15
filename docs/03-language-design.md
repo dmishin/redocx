@@ -530,14 +530,17 @@ The \product is great.
 Conveniences that Word has no native concept for ship as a readable `.wgx` library, loaded with `\use{std:…}`, built only
 from Word primitives:
 
-| Module | Provides | Built from |
-|--------|----------|------------|
-| `std:theorem` | `\theorem`, `\lemma`, `\definition`, `\proof` | Styled paragraphs + `SEQ Theorem` |
-| `std:callout` | `\callout[kind=info\|warning\|…]` | One-cell table with a table style |
-| `std:subfigure` | `\subfigures{…}` | Borderless layout table with images and letter-format `SEQ` captions |
-| `std:signature` | `\signature-block[…]` | Tab stops with underscore leaders |
+| Module | Provides | Built from | Status |
+|--------|----------|------------|--------|
+| `std:callout` | `\callout[title, shade]`, `\note`, `\tip`, `\warning`, `\caution` (each with `title`) | A borderless one-cell table with a shaded cell and a bold title | M1 ✓ |
+| `std:signature` | `\signature-block[party, name, role]`, `\approval[role]` | Borderless tables with underlined tabs as signature lines | M1 ✓ |
+| `std:theorem` | `\theorem`, `\lemma`, `\definition`, `\proof` | Styled paragraphs + `SEQ Theorem` | M2 (needs `\seq`) |
+| `std:subfigure` | `\subfigures{…}` | Borderless layout table with images and letter-format `SEQ` captions | M2 (needs captions) |
 
-Users can copy and override any of these. The prelude also checks that the macro system is expressive enough.
+The modules live in `src/wordgenx/std/` as ordinary macro files. Users can copy and override any of them. A module is
+loaded once even if `\use`d repeatedly. Because the language has no conditionals, a variant such as the callout kind
+is a separate macro (`\warning`), not a `kind=` option. Writing the library confirmed that macros calling macros,
+`#body` forwarding and parameters in option values are expressive enough.
 
 ## 3.19 Citations and bibliography (F-11)
 
@@ -656,6 +659,9 @@ Lowering (`wordgenx.lower`) turns the AST into the document IR. It fixes these b
   comes from the pixel size and resolution (96 dpi if unknown). Giving one dimension keeps the aspect ratio, and
   `width=50%` is relative to the text width. Pictures wider than the text are shrunk to fit. Identical files are
   stored once.
+- **Text options** (`title`, `alt`, `style`, …) take a word, a `"string"` (which ends on its line), or plain text in
+  braces, which may span lines: `alt={a long description …}`. In option values, `#` plus six hex digits is always a
+  colour, even inside `\define`.
 - **Commands not implemented yet** (figures, fields, notes, references, math, …) produce a warning
   (`WGX0304`) naming the milestone, and the document still builds. For `\comment`, `\ins` and `\control` the body text is
   kept; for the others the command is dropped.

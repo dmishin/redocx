@@ -35,9 +35,13 @@ with no repair prompt, pass both validators, and match their golden snapshots.
 - [x] `\include`, `\use` (style sheets and macro files), `\let`, `\define` (macros with `#param`), `\settings`,
   `\document`, `\meta`.
 - [x] Command registry with argument kinds (markup, string, raw, math); the comment, whitespace and flanking rules from the spike.
-- Standard macro library skeleton (`std:callout`, `std:signature`).
+- [x] Standard macro library (`std:callout`, `std:signature`), packaged with the compiler.
+- [x] Trial: the spike's design specification ported to v0.2 (`examples/design-spec/`, findings in its `NOTES.md`).
 - [x] CLI: `wordgenx build` (and `check` runs the full compile).
 - **Exit:** a real 20-page document can be authored entirely in wordgenx. Language grammar v0.1 is frozen.
+  *Status:* the 4-page specification trial builds cleanly, and its remaining gaps (headers and footers, TOC,
+  cross-references, captions, footnotes, sections) are M2 items. The grammar has been stable through M1 (v0.2 plus the
+  §3.22–3.23 rules); freezing it is the last step.
 
 ## M2: Word structure (where wordgenx goes beyond Pandoc)
 

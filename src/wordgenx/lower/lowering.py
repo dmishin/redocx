@@ -22,6 +22,7 @@ import re
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field, replace
 from decimal import Decimal
+from importlib import resources
 from pathlib import Path
 from typing import get_args
 
@@ -221,6 +222,7 @@ class Lowering:
     _links: int = 0
     _macro_depth: int = 0
     _include_stack: list[Path] = field(default_factory=lambda: [])
+    _std_loaded: set[str] = field(default_factory=lambda: set[str]())
 
     # --- reporting ----------------------------------------------------------------------
 
@@ -603,12 +605,7 @@ class Lowering:
     def cmd_use(self, command: ast.Command) -> list[ir.Block]:
         target = command.body.text.strip() if isinstance(command.body, ast.VerbatimBody) else ""
         if target.startswith("std:"):
-            self.warn(
-                Code.NOT_SUPPORTED_YET,
-                f"the standard library (`{target}`) is not available yet",
-                command.span,
-                help="planned with the macro library in M1",
-            )
+            self.use_std(target.removeprefix("std:"), command)
             return []
         path = self.path_value(command)
         if path is None:
@@ -625,12 +622,38 @@ class Lowering:
                     help=f"paths are relative to {self.base_dir}",
                 )
             return []
-        # A macro file: register its definitions, ignore anything else.
         result = self.load(path, command)
-        if result is None:
-            return []
-        source, base_dir = self.source, self.base_dir
-        self.source, self.base_dir = result.source, path.resolve().parent
+        if result is not None:
+            self.macro_file(result, path.resolve().parent)
+        return []
+
+    def use_std(self, module: str, command: ast.Command) -> None:
+        """\\use{std:name}: a macro file from the standard library (wordgenx/std/name.wgx)."""
+        if module in self._std_loaded:
+            return
+        available = std_modules()
+        if module not in available:
+            close = difflib.get_close_matches(module, available, n=1)
+            self.report(
+                Code.INCLUDE,
+                f"unknown standard library module `std:{module}`",
+                command.span,
+                f"did you mean `std:{close[0]}`?" if close else "",
+                help=f"available: {', '.join(f'std:{m}' for m in available)}",
+            )
+            return
+        self._std_loaded.add(module)
+        source = Source(
+            f"std:{module}", (resources.files("wordgenx.std") / f"{module}.wgx").read_text("utf-8")
+        )
+        result = parse(source)
+        self.diagnostics.extend((source, d) for d in result.diagnostics)
+        self.macro_file(result, self.base_dir)
+
+    def macro_file(self, result: ParseResult, base_dir: Path) -> None:
+        """Register a macro file's definitions; other content is ignored with a warning."""
+        source, previous_dir = self.source, self.base_dir
+        self.source, self.base_dir = result.source, base_dir
         try:
             for block in result.ast.blocks:
                 if not isinstance(block, ast.Paragraph):
@@ -650,8 +673,7 @@ class Lowering:
                             item.span,
                         )
         finally:
-            self.source, self.base_dir = source, base_dir
-        return []
+            self.source, self.base_dir = source, previous_dir
 
     def cmd_styles(self, command: ast.Command) -> list[ir.Block]:
         body = command.body
@@ -1665,11 +1687,17 @@ class Lowering:
     # --- options and values ---------------------------------------------------------------------
 
     def text_value(self, value: ast.Value, command: ast.Command, what: str) -> str | None:
+        """The text of an option value: a word, a "string", or plain text in braces.
+
+        The brace form ``alt={a long text ...}`` may span lines; line breaks become spaces.
+        """
         if isinstance(value, ast.BareValue | ast.StringValue):
             return value.text
+        if isinstance(value, ast.MarkupBody) and (text := _plain_text(value)) is not None:
+            return text
         self.report(
             Code.INVALID_ARGUMENT,
-            f'`{what}` of `\\{command.name}` must be a word or a "string"',
+            f'`{what}` of `\\{command.name}` must be a word, a "string" or plain text in braces',
             value.span,
         )
         return None
@@ -1788,6 +1816,31 @@ class Lowering:
 
     def use_style(self, name: str, kind: ir.StyleKind, span: Span) -> None:
         self.style_uses.append(StyleUse(name, kind, span, self.source))
+
+
+def _plain_text(body: ast.MarkupBody) -> str | None:
+    """The text of a markup value holding only plain text (None if it has markup)."""
+    parts: list[str] = []
+    for block in body.blocks:
+        if not isinstance(block, ast.Paragraph):
+            return None
+        for inline in block.content:
+            if isinstance(inline, ast.Text):
+                parts.append(inline.text)
+            elif isinstance(inline, ast.SoftBreak | ast.NonBreakingSpace):
+                parts.append(" ")
+            else:
+                return None
+        parts.append(" ")
+    return WHITESPACE_RE.sub(" ", "".join(parts)).strip()
+
+
+def std_modules() -> list[str]:
+    """Names of the standard library modules (``\\use{std:name}``)."""
+    root = resources.files("wordgenx.std")
+    return sorted(
+        entry.name.removesuffix(".wgx") for entry in root.iterdir() if entry.name.endswith(".wgx")
+    )
 
 
 def _align_paragraphs(blocks: tuple[ir.Block, ...], align: str) -> tuple[ir.Block, ...]:

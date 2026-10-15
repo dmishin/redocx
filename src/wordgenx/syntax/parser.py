@@ -31,6 +31,8 @@ LABEL_RE = re.compile(r"\{#" + LABEL_NAME + r"\}")
 REF_RE = re.compile(r"@" + LABEL_NAME)
 HASH_LABEL_RE = re.compile(r"#" + LABEL_NAME)
 PARAM_RE = re.compile(r"#[A-Za-z][A-Za-z0-9_-]*")
+HEX_COLOR_RE = re.compile(r"#[0-9A-Fa-f]{6}(?![A-Za-z0-9_-])")
+"""In option values, `#` and six hex digits is a colour, never a macro parameter."""
 AUTOLINK_RE = re.compile(r"<[A-Za-z][A-Za-z0-9+.-]*:[^\s<>]+>")
 HEADING_RE = re.compile(r"={1,9}\*?(?=[ \t])")
 BULLET_RE = re.compile(r"-(?=[ \t])")
@@ -842,6 +844,13 @@ class Parser:
             option = self.option(fence_attributes)
             if option is not None:
                 node.children.append(option)
+                if _has_unclosed_string(option):
+                    # The rest of the list is probably part of the broken string: skip it
+                    # rather than reporting every word after it.
+                    end = self.text.find(close, self.pos)
+                    if end > self.pos:
+                        node.children.append(self.token(K.ERROR_TOKEN, end))
+                    continue
                 self.option_trivia(node.children)
             c = self.char()
             if c == ",":
@@ -905,7 +914,13 @@ class Parser:
             return node
         if c == "{":
             return self.body(ArgKind.MARKUP)
-        if c == "#" and self.define_depth > 0 and (m := PARAM_RE.match(self.text, self.pos)):
+        is_color = HEX_COLOR_RE.match(self.text, self.pos) is not None
+        if (
+            c == "#"
+            and self.define_depth > 0
+            and not is_color
+            and (m := PARAM_RE.match(self.text, self.pos))
+        ):
             return self.token(K.PARAM, m.end())
         end = self.pos
         while end < self.n and self.text[end] not in BARE_STOP:
@@ -944,6 +959,13 @@ class Parser:
             )
         )
         return self.token(K.STRING, max(self.content_end(start), start + 1))
+
+
+def _has_unclosed_string(option: Node) -> bool:
+    return any(
+        t.kind is K.STRING and (len(t.text) < 2 or not t.text.endswith('"'))
+        for t in option.child_tokens()
+    )
 
 
 def parse_cst(source: Source) -> tuple[Node, list[Diagnostic]]:

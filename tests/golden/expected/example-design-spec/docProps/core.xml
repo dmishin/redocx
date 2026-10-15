@@ -1,0 +1,7 @@
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties">
+  <dc:title xmlns:dc="http://purl.org/dc/elements/1.1/">Payment Gateway Integration: Software Design Specification</dc:title>
+  <dc:subject xmlns:dc="http://purl.org/dc/elements/1.1/">PGI-SDS</dc:subject>
+  <dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Platform Team</dc:creator>
+  <cp:keywords>payments, design, specification</cp:keywords>
+  <dc:language xmlns:dc="http://purl.org/dc/elements/1.1/">en-GB</dc:language>
+</cp:coreProperties>

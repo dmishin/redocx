@@ -160,7 +160,16 @@ def example_tables() -> ir.Document:
     return result.document
 
 
+def example_design_spec() -> ir.Document:
+    """examples/design-spec: the ported spike sample (M1 trial document)."""
+    path = Path(__file__).resolve().parents[2] / "examples" / "design-spec" / "design-spec.wgx"
+    result = compile_file(path)
+    assert result.document is not None, result.render_diagnostics()
+    return result.document
+
+
 CASES: dict[str, Callable[[], ir.Document]] = {
+    "example-design-spec": example_design_spec,
     "example-hello": example_hello,
     "example-tables": example_tables,
     "minimal": minimal,
