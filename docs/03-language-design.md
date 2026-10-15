@@ -33,7 +33,7 @@
 | Tab | `\tab` | `w:tab` |
 | Page / column break | `\pagebreak`, `\columnbreak` | |
 | Comment | `%` to end of line, **only at the start of a line or after whitespace** | TeX-style (F-2). `12%` and `a%20b` are literal text. `\%` is always a literal percent sign. There are no block comments. |
-| Escape | `\\ \% \{ \} \[ \] \* \_ \` \$ \# \= \| \@ \~` | Escapes the next character |
+| Escape | `` \\ \% \{ \} \[ \] \* \_ \` \$ \# \= \| \@ \~ `` | Escapes the next character |
 | Non-breaking space | `~` | As in TeX |
 | Typographic | `--` en dash, `---` em dash, smart quotes | Smart punctuation can be turned off per document |
 | Label | `{#label}` after a heading, list-item marker or display block; or the `id=label` option | Creates a bookmark (§3.11) |
@@ -670,7 +670,7 @@ The parser (`wordgenx.syntax`) fixes these details that the sections above leave
   list.
 - **List continuation** lines must be indented at least to the item's text column; there is no Markdown-style "lazy"
   continuation. A line indented less ends the item.
-- **Code spans** close on the same line. Use N backticks to include fewer than N, as in `` ``a ` b`` ``.
+- **Code spans** close on the same line. Use N backticks to include fewer than N, as in ``` ``a ` b`` ```.
 - **Unclosed `*` / `_`** are a warning and are kept as literal text.
 - **Pipe-table cells** are separated by `|` outside code spans, math and command bodies. A final whitespace-only cell after the
   last `|` is ignored.

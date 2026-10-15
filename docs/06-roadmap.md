@@ -64,6 +64,11 @@ with no repair prompt, pass both validators, and match their golden snapshots.
   and the escape hatches (`\raw[ooxml]`, `ooxml.*` properties). Moved out of M2: list (numbering) styles (later),
   columns of different widths (M4).
 - **Exit:** wordgenx's own design docs are rebuilt in wordgenx with a corporate-style template and look professionally typeset in Word.
+  *Status: met.* `docs/book/design.wgx` builds the eight design documents into one 38-page book with the
+  `docs/book/wordgenx.dotx` template (itself written in wordgenx): cover page, contents, numbered chapters with
+  running heads, styled tables with repeated header rows, boxed code, notes, front matter with roman page numbers.
+  It builds without diagnostics, passes both validators and opens cleanly in Word. The chapters are converted from
+  the Markdown sources by `tools/md2wgx.py`, and the test suite keeps them in step.
 
 ## M3: Technical writing
 

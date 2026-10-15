@@ -1,0 +1,66 @@
+% ============================================================================
+% The wordgenx documentation template.
+%   wordgenx build docs/book/template.wgx -o docs/book/wordgenx.dotx
+% ============================================================================
+
+\document[lang=en-GB]
+
+\styles{
+  defaults { font: theme.minor; size: 10.5pt; space-after: 6pt; line-spacing: 1.15; }
+
+  paragraph Title : Normal {
+    font: theme.major; size: 34pt; color: theme.accent1.darker(25%); space-before: 150pt; space-after: 6pt;
+  }
+  paragraph Subtitle : Normal { size: 15pt; color: theme.text2; space-after: 30pt; }
+  paragraph "Title Meta" : Normal { size: 10pt; color: theme.text1.lighter(35%); space-after: 0pt; }
+
+  paragraph "Heading 1" : Normal {
+    font: theme.major; size: 20pt; color: theme.accent1.darker(25%); page-break-before;
+    space-before: 0pt; space-after: 12pt; keep-with-next; keep-lines; outline-level: 1;
+    border-bottom: (single, 1pt, theme.accent1, space=4pt);
+  }
+  paragraph "Heading 2" : Normal {
+    font: theme.major; size: 14pt; color: theme.accent1.darker(25%);
+    space-before: 16pt; space-after: 6pt; keep-with-next; keep-lines; outline-level: 2;
+  }
+  paragraph "Heading 3" : Normal {
+    font: theme.major; size: 11.5pt; bold; color: theme.text1.lighter(25%);
+    space-before: 12pt; space-after: 4pt; keep-with-next; keep-lines; outline-level: 3;
+  }
+
+  numbering Headings {
+    level 1 { text: "%1";       style: "Heading 1"; indent: 0.9cm hanging; }
+    level 2 { text: "%1.%2";    style: "Heading 2"; indent: 1.1cm hanging; }
+    level 3 { text: "%1.%2.%3"; style: "Heading 3"; indent: 1.4cm hanging; }
+  }
+
+  paragraph Note : Normal {
+    indent: (left=0.3cm); space-before: 6pt; space-after: 12pt;
+    border-left: (single, 3pt, theme.accent1, space=8pt); shading: theme.accent1.lighter(90%);
+  }
+
+  paragraph "Code Block" : Normal {
+    font: "Consolas"; size: 8.5pt; space-before: 4pt; space-after: 10pt; line-spacing: 1;
+    contextual-spacing;                   % no space between the lines of one block
+    indent: (left=0.25cm, right=0.25cm); shading: #F5F6F8;
+    borders: (left=(single, 0.5pt, #D0D4DA, space=4pt), right=(single, 0.5pt, #D0D4DA, space=4pt),
+              top=(single, 0.5pt, #D0D4DA, space=1pt), bottom=(single, 0.5pt, #D0D4DA, space=1pt));
+  }
+  character Code { font: "Consolas"; size: 9.5pt; color: #8A2B4A; }
+
+  table "Book Table" : "Table Grid" {
+    borders: (outer=(single, 0.75pt, theme.accent1.darker(25%)), inner=(single, 0.5pt, #C8CDD4));
+    cell-margins: (top=0.05cm, bottom=0.05cm, left=0.12cm, right=0.12cm);
+    size: 9pt; space-after: 0pt; line-spacing: 1.05;
+    header-row { bold; color: #FFFFFF; shading: theme.accent1.darker(25%); repeat; }
+    banded-rows { odd { shading: #F3F6FA; } }
+  }
+
+  modify paragraph "TOC Heading" { color: theme.accent1.darker(25%); size: 20pt; }
+}
+
+\section[size=A4, margins=(top=2.4cm, bottom=2.4cm, left=2.2cm, right=2.2cm), title-page]
+\header[first]{\image[height=1.3cm]{../../examples/img/logo.png}}
+\header{\field{TITLE} \tab \tab \field{STYLEREF "Heading 1" \n}}
+\footer[first]{}
+\footer{wordgenx design \tab \tab \pagenum}
