@@ -87,10 +87,23 @@ def _sample(name: str, target: Target) -> object:
         "tabs": "8cm center",
         "table-align": "center",
         "valign": "center",
+        "scale": "90%",
+        "kerning": "12pt",
+        "text-direction": "up",
     }
     if name in special:
         return special[name]
     spec = REGISTRY[target][name]
+    if name.startswith("ooxml."):
+        return (
+            "<w:snapToGrid w:val='0'/>"
+            if target is Target.PARAGRAPH
+            else {
+                Target.RUN: "<w:noProof/>",
+                Target.TABLE: "<w:tblCaption w:val='x'/>",
+                Target.CELL: "<w:noWrap/>",
+            }[target]
+        )
     if name.startswith("border-"):
         return "(single, 0.5pt)"
     return "1pt" if "length" in spec.values else True

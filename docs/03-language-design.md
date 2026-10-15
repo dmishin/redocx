@@ -119,9 +119,10 @@ architecture §4.6. `wordgenx build corp.wgx -o corp.dotx` writes a template;
 
 ### Document settings (F-14)
 
-`\settings[…]` maps to `settings.xml`. Examples: `protection=(mode=forms|read-only|comments|tracked-changes, enforce)`,
-`update-fields-on-open=on|off`, `even-odd-headers`, `track-changes`, `default-tab-stop=1.27cm`,
-`footnotes=(format=lower-roman, restart=each-section, position=page-bottom)`, `hyphenation=auto`.
+`\settings[…]` maps to `settings.xml`. Implemented: `protection=(mode=forms|read-only|comments|tracked-changes,
+enforce)` (without a password), `update-fields-on-open=on|off`, `even-odd-headers`, `mirror-margins`,
+`default-tab-stop=1.27cm`, `footnotes=(…)` and `endnotes=(…)` (§3.11), `captions=(chapter-numbers, …)` (§3.9).
+Planned: `track-changes` (M5), `hyphenation=auto`.
 
 ## 3.4 Inline markup
 
@@ -387,7 +388,7 @@ bookmark around the caption, as Word's Insert Cross-reference does.
   lines. A block command in the middle of a line of text is still an error.
 - Chapter-numbered captions ("Figure 3.2") use a document setting:
   `\settings[captions=(chapter-numbers, chapter-style="Heading 1", separator=".")]`, which emits `STYLEREF` + `SEQ … \s 1`
-  (not implemented yet).
+  (separators: `.`, `-`, `:`, en and em dash). Numbers restart with each chapter, and references print "Figure 3.2".
 - Code blocks and display equations can take `caption="…"` directly.
 
 ## 3.10 Sections and page setup (F-6)
@@ -401,10 +402,13 @@ bookmark around the caption, as Word's Insert Cross-reference does.
 \section[orientation=portrait, columns=(count=2, gap=1cm, separator), break=continuous]
 ```
 
-Options: size (`A4`, `Letter`, or `(w, h)`), orientation, margins (including gutter and mirror), columns (equal or
-custom widths), break type (next-page, continuous, even, odd), vertical alignment, page numbers
-(`page-numbers=(format=lower-roman, start=1)`), line numbering, page borders, text direction, title page (different
-first page), and whether headers and footers link to the previous section (`link-headers=false`).
+Options: size (`A4`, `Letter`, or `(w, h)`), orientation, margins (including gutter; `inside=`/`outside=` or the
+flag `mirror` turn on Word's mirror margins, a document-wide setting), columns (equal widths, gap, separator), break
+type (next-page, continuous, even, odd), vertical alignment (`valign=top|center|bottom|justify`), page numbers
+(`page-numbers=(format=lower-roman, start=1)`), line numbering
+(`line-numbers=on` or `(count-by=5, start=1, distance=0.5cm, restart=each-page|each-section|continuous)`), title page
+(different first page), and whether headers and footers link to the previous section (`link-headers=false`).
+Columns of different widths, page borders and text direction come later (M4).
 
 ## 3.11 References, labels, notes
 
@@ -452,8 +456,8 @@ restart=continuous|each-section|each-page, position=page-bottom|beneath-text, st
 because Word reads the section's copy. `@fn:x` prints the note number (`NOTEREF`); with `restart=each-page` the number
 is left for Word to update.
 
-Not yet: references from headers and footers, `form=relative` in full-context form (it prints the paragraph's own
-number), and the "Table Table 3" lint.
+References in headers and footers resolve like any other. Not yet: `form=relative` in full-context form (it prints
+the paragraph's own number), and the "Table Table 3" lint.
 
 ## 3.12 Fields and generated content
 
@@ -616,12 +620,18 @@ uses a `Bibliography` paragraph style. Native Word citations (`CITATION` fields,
 ## 3.20 Escape hatches (in order of preference)
 
 1. `\style{Name}{…}`: use any style that exists in the template.
-2. Option `ooxml.rPr` / `ooxml.pPr` / `ooxml.tblPr`: inject raw property XML into the generated element.
-3. `\raw[ooxml]{<w:r>…</w:r>}`: raw run- or block-level WordprocessingML. The body is raw. It is checked for well-formedness,
-   and namespaces are declared automatically.
-4. `\embed-docx{part.docx}`: insert another document as `altChunk`. Word merges it on open.
+2. Option or style-sheet key `ooxml.rPr` / `ooxml.pPr` / `ooxml.tblPr` / `ooxml.tcPr`: raw property XML for the
+   generated element (`\p[ooxml.pPr="<w:snapToGrid w:val='0'/>"]{…}`). Each element replaces the one wordgenx would
+   write under the same name; the elements must be ones that container holds.
+3. `\raw[ooxml]{<w:r>…</w:r>}`: raw run- or block-level WordprocessingML. The body is raw. A body of `w:p`, `w:tbl`
+   (or a `w:sdt` holding them) is a block of its own; anything else goes inline. Run-level and block-level elements
+   cannot be mixed.
+4. `\embed-docx{part.docx}`: insert another document as `altChunk`. Word merges it on open (M3).
 
-Raw content is validated with the rest of the output. A bad escape hatch fails the build. It does not produce a corrupt file.
+Raw XML is checked when the document compiles: it must be well-formed WordprocessingML (`w:` elements; the usual
+prefixes `w:`, `r:`, `a:`, `wp:`, `pic:`, `w14:`, `mc:`, `v:`, `o:`, `m:` need no declaration). A bad escape hatch is a
+compile error, not a corrupt file. Relationship ids (`r:id`) are not rewritten, so raw XML cannot refer to images or
+links of its own yet.
 
 ## 3.21 Diagnostics and lints
 
@@ -708,7 +718,8 @@ Lowering (`wordgenx.lower`) turns the AST into the document IR. It fixes these b
   of the text width, and fractions of what remains. A cell with `colspan=N` in a pipe row covers the next N-1 cells,
   which must be empty (`| \cell[colspan=3]{x} |||`). `rowspan` cells take the position in the rows below. Short rows
   are padded with empty cells. `header-rows=N` or `\row[header]` repeat rows on each page. `columns=(left, right, …)`
-  sets the default paragraph alignment per column (`decimal` is shown right-aligned until tab stops arrive in M2).
+  sets the default paragraph alignment per column. `decimal` lines numbers up on a decimal tab stop near the right of
+  the cell (or `(decimal, tab=1.8cm)` from its left); header rows and merged cells are right-aligned instead.
   Tables also take `borders`, `border-*`, `cell-margins`, `table-indent` (overriding the style) and
   `look=(header-row, last-row, first-column, last-column, banded-rows, banded-columns)` or `look=none`.
   Cells take `colspan`, `rowspan`, `shade` (RGB or theme colour), `valign`, `align`, `borders`/`border-*`, and any

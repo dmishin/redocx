@@ -156,8 +156,10 @@ def lower(
     if template is not None:
         known_styles = {style_id(s.name): s for s in template.definitions.styles} | styles
         known_numbering = {n.name: n for n in template.definitions.numbering} | numbering
-    resolved_body, toc_styles, needs_update = resolve(
-        resolved_body,
+    # The final section rides along, so references in its headers and footers resolve too.
+    with_section = (*resolved_body, ir.SectionBreak(resolved_section))
+    resolved_all, toc_styles, needs_update = resolve(
+        with_section,
         known_styles,
         known_numbering,
         lowering.settings,
@@ -165,6 +167,9 @@ def lower(
         report_to(diagnostics),
         first_page.text_width,
     )
+    final = resolved_all[-1]
+    assert isinstance(final, ir.SectionBreak)
+    resolved_body, resolved_section = resolved_all[:-1], final.section
     for name in sorted(toc_styles):
         if style_id(name) not in styles and not in_template(name):
             styles[style_id(name)] = _builtin(name, first_page)

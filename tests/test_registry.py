@@ -72,5 +72,6 @@ def test_every_property_is_documented() -> None:
         for spec in REGISTRY[target].values():
             assert spec.doc, spec.name
             assert spec.values, spec.name
-            assert spec.name == spec.name.lower()
+            if not spec.name.startswith("ooxml."):  # ooxml.pPr names the element
+                assert spec.name == spec.name.lower()
             assert " " not in spec.name

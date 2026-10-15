@@ -41,8 +41,10 @@ from wordgenx.lower.fields import (
 from wordgenx.lower.macros import Binding, Macro, Substitution, define_macro, let_macro
 from wordgenx.lower.references import REF_FORMS, Label, PendingRef, PendingToc, References
 from wordgenx.lower.typography import smarten
+from wordgenx.ooxml.constants import NS
 from wordgenx.ooxml.style_names import style_id
 from wordgenx.ooxml.template import Template, TemplateError, load_template
+from wordgenx.ooxml.xml import Element, parse_fragment
 from wordgenx.props import (
     EMPTY_CELL,
     EMPTY_PARAGRAPH,
@@ -73,7 +75,7 @@ BLOCK_COMMANDS = frozenset(
 INLINE_COMMANDS = frozenset(
     (
         "b i u s sup sub hl font style lang hidden strong emph code link url br tab image "
-        "pagenum numpages sectionpages field date ref pageref seq footnote endnote"
+        "pagenum numpages sectionpages field date ref pageref seq footnote endnote raw"
     ).split()
 )
 FIELD_COMMANDS = {"pagenum": "PAGE", "numpages": "NUMPAGES", "sectionpages": "SECTIONPAGES"}
@@ -86,12 +88,6 @@ TABLE_PARTS = frozenset({"row", "cell"})
 """Only valid inside \\table (rows) and \\row (cells)."""
 
 PLANNED: dict[str, str] = {
-    **dict.fromkeys(
-        [
-            "raw",
-        ],
-        "M2",
-    ),
     **dict.fromkeys(
         [
             "m",
@@ -152,6 +148,7 @@ class Piece:
     field: ir.Field | None = None
     mark: ir.BookmarkStart | ir.BookmarkEnd | None = None
     note: ir.Note | None = None
+    raw: ir.RawXml | None = None
 
 
 @dataclass
@@ -168,6 +165,8 @@ class TableSpec:
     """Paragraph alignment per column (left, center, right, justify, decimal)."""
     props: PropertySet = EMPTY_TABLE
     look: frozenset[str] | None = None
+    decimal_tabs: dict[int, Length] = field(default_factory=lambda: {})
+    """Column -> decimal tab position given as (decimal, tab=...)."""
 
 
 @dataclass
@@ -255,6 +254,8 @@ class Lowering:
     """Header/footer kinds defined so far ("header:first", ...): what a new section inherits."""
     _container_depth: int = 0
     _part: str | None = None
+    caption_chapters: tuple[str, str] | None = None
+    """(chapter style, separator) when captions are numbered per chapter ("Figure 2.1")."""
     template: Template | None = None
     """The .dotx or .docx the document is compiled into."""
     _template_fixed: bool = False
@@ -443,6 +444,8 @@ class Lowering:
             return True  # a block spliced in by a macro
         if isinstance(item, ast.Command):
             # \pagebreak and \columnbreak are inline: alone they still make their own paragraph.
+            if item.name == "raw":
+                return _raw_kind(item) == "block"
             return item.name in BLOCK_COMMANDS or item.name in PLANNED_BLOCKS
         return False
 
@@ -567,6 +570,13 @@ class Lowering:
             self.no_body(command)
             self.no_options(command)
             return [ir.Paragraph((ir.Break("page" if name == "pagebreak" else "column"),))]
+        if name == "raw":
+            xml = self.raw_xml(command)
+            if xml is None:
+                return []
+            self.has_content = True
+            ends = parse_fragment(xml)[-1].tag == f"{{{NS.W}}}tbl"
+            return [ir.RawBlock(xml, ends_with_table=ends)]
         self.not_yet(command)
         return []
 
@@ -898,6 +908,9 @@ class Lowering:
                 if flag == "even-odd-headers":
                     self.settings = replace(self.settings, even_and_odd_headers=True)
                     continue
+                if flag == "mirror-margins":
+                    self.settings = replace(self.settings, mirror_margins=True)
+                    continue
                 self.warn(
                     Code.NOT_SUPPORTED_YET, f"setting `{flag}` is not supported yet", option.span
                 )
@@ -905,6 +918,12 @@ class Lowering:
             if option.key in ("footnotes", "endnotes"):
                 notes = self.note_settings(option.key[:-1], option.value, command)
                 self.settings = replace(self.settings, **{option.key: notes})
+                continue
+            if option.key == "protection":
+                self.protection(option.value, command)
+                continue
+            if option.key == "captions":
+                self.captions(option.value, command)
                 continue
             if option.key not in ("update-fields-on-open", "default-tab-stop"):
                 self.warn(
@@ -926,6 +945,61 @@ class Lowering:
                     option.span,
                 )
         return []
+
+    def protection(self, value: ast.Value, command: ast.Command) -> None:
+        """protection=read-only or protection=(mode=forms, enforce)."""
+        items = (
+            value.items
+            if isinstance(value, ast.TupleValue)
+            else (ast.Option(None, value, span=value.span),)
+        )
+        mode, enforce = None, False
+        for item in items:
+            text = self.text_value(item.value, command, "protection") or ""
+            if item.key in (None, "mode") and text in ir.PROTECTION_MODES:
+                mode = text
+            elif item.key is None and text == "enforce":
+                enforce = True
+            else:
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    "invalid protection",
+                    item.span,
+                    help=f"protection=(mode={'|'.join(ir.PROTECTION_MODES)}, enforce)",
+                )
+        if mode is None:
+            self.report(Code.INVALID_ARGUMENT, "protection needs a mode", value.span)
+            return
+        self.settings = replace(self.settings, protection=mode, protection_enforced=enforce)
+
+    def captions(self, value: ast.Value, command: ast.Command) -> None:
+        """captions=(chapter-numbers, chapter-style="Heading 1", separator=".")."""
+        items = value.items if isinstance(value, ast.TupleValue) else ()
+        chapters, style, separator = False, "Heading 1", "."
+        for item in items:
+            text = self.text_value(item.value, command, "captions") or ""
+            if item.key is None and text == "chapter-numbers":
+                chapters = True
+            elif item.key == "chapter-style" and text:
+                style = text
+                self.use_style(style, ir.StyleKind.PARAGRAPH, item.value.span)
+            elif item.key == "separator" and text in (".", "-", ":", "\u2013", "\u2014"):
+                separator = text
+            else:
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    "invalid captions setting",
+                    item.span,
+                    help='captions=(chapter-numbers, chapter-style="Heading 1", separator=".")',
+                )
+        if not items:
+            self.report(
+                Code.INVALID_ARGUMENT,
+                "captions takes a tuple",
+                value.span,
+                help='captions=(chapter-numbers, chapter-style="Heading 1", separator=".")',
+            )
+        self.caption_chapters = (style, separator) if chapters else None
 
     def note_settings(self, kind: str, value: ast.Value, command: ast.Command) -> ir.NoteSettings:
         """footnotes=(format=lower-roman, restart=each-section, position=page-bottom, start=1)."""
@@ -993,6 +1067,8 @@ class Lowering:
                 flag = self.text_value(value, command, "option")
                 if flag == "title-page":
                     section = replace(section, title_page=True)
+                elif flag == "mirror":
+                    self.settings = replace(self.settings, mirror_margins=True)
                 elif flag == "separator":
                     section = replace(section, column_separator=True)
                 else:
@@ -1033,6 +1109,18 @@ class Lowering:
                 section = self.columns(section, value, command)
             elif key == "link-headers":
                 link_headers = self.text_value(value, command, key) not in ("false", "off", "no")
+            elif key == "valign":
+                text = self.text_value(value, command, key)
+                if text in ir.VERTICAL_ALIGNMENTS:
+                    section = replace(section, vertical_align=text)
+                else:
+                    self.report(
+                        Code.INVALID_ARGUMENT,
+                        "section valign is top, center, bottom or justify",
+                        value.span,
+                    )
+            elif key == "line-numbers":
+                section = replace(section, line_numbers=self.line_numbers(value, command))
             else:
                 self.warn(
                     Code.NOT_SUPPORTED_YET,
@@ -1048,6 +1136,35 @@ class Lowering:
             )
         self.section = replace(section, page=page)
         return out
+
+    def line_numbers(self, value: ast.Value, command: ast.Command) -> ir.LineNumbers | None:
+        """line-numbers=on or line-numbers=(count-by=5, start=1, distance=0.5cm,
+        restart=each-page|each-section|continuous); off removes them."""
+        if not isinstance(value, ast.TupleValue):
+            text = self.text_value(value, command, "line-numbers")
+            if text in ("on", "true"):
+                return ir.LineNumbers()
+            if text not in ("off", "false"):
+                self.report(Code.INVALID_ARGUMENT, "line-numbers is on, off or a tuple", value.span)
+            return None
+        fields: dict[str, object] = {}
+        for item in value.items:
+            text = self.text_value(item.value, command, "line-numbers") or ""
+            if item.key in ("count-by", "start") and text.isdigit() and int(text) >= 1:
+                fields[item.key.replace("-", "_")] = int(text)
+            elif item.key == "distance" and (length := self.length(text, item.value.span)):
+                fields["distance"] = length
+            elif item.key == "restart" and text in ir.LINE_NUMBER_RESTARTS:
+                fields["restart"] = text
+            else:
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    "invalid line-numbers",
+                    item.span,
+                    help="line-numbers=(count-by=5, start=1, distance=0.5cm, "
+                    f"restart={'|'.join(ir.LINE_NUMBER_RESTARTS)})",
+                )
+        return ir.LineNumbers(**fields)  # type: ignore[arg-type]
 
     def empty_parts(self, family: str) -> ir.HeaderFooterParts:
         kinds = [k.split(":")[1] for k in self.header_kinds if k.startswith(family + ":")]
@@ -1226,13 +1343,8 @@ class Lowering:
                     margin_right=length,
                 )
             elif item.key in sides:
-                if item.key in ("inside", "outside"):
-                    self.warn(
-                        Code.NOT_SUPPORTED_YET,
-                        "mirrored margins are not supported yet; "
-                        f"{item.key} is used as {'left' if item.key == 'inside' else 'right'}",
-                        item.span,
-                    )
+                if item.key in ("inside", "outside"):  # facing pages: Word's mirror margins
+                    self.settings = replace(self.settings, mirror_margins=True)
                 page = replace(page, **{sides[item.key]: length})
             else:
                 self.report(
@@ -1302,14 +1414,19 @@ class Lowering:
                     )
             elif key == "columns":
                 items = value.items if isinstance(value, ast.TupleValue) else ()
-                words = [self.text_value(item.value, command, key) or "" for item in items]
+                words: list[str] = []
+                for index, item in enumerate(items):
+                    if isinstance(item.value, ast.TupleValue):  # (decimal, tab=1.8cm)
+                        words.append(self.decimal_column(item.value, command, index, spec))
+                    else:
+                        words.append(self.text_value(item.value, command, key) or "")
                 bad = [w for w in words if w not in ALIGN_WORDS | {"decimal"}]
                 if not words or bad:
                     self.report(
                         Code.INVALID_ARGUMENT,
                         "columns is a tuple of alignments",
                         value.span,
-                        help="e.g. columns=(left, right, center)",
+                        help="e.g. columns=(left, right, center, (decimal, tab=1.8cm))",
                     )
                 else:
                     spec.columns = words
@@ -1326,6 +1443,23 @@ class Lowering:
                     "cell-margins, border-top, ... (use \\caption for captions)",
                 )
         return spec
+
+    def decimal_column(
+        self, value: ast.TupleValue, command: ast.Command, index: int, spec: TableSpec
+    ) -> str:
+        """(decimal, tab=1.8cm): a decimal column with its tab position from the cell's left."""
+        word = ""
+        for item in value.items:
+            text = self.text_value(item.value, command, "columns") or ""
+            if item.key is None:
+                word = text
+            elif item.key == "tab" and (length := self.length(text, item.value.span)):
+                spec.decimal_tabs[index] = length
+            else:
+                self.report(
+                    Code.INVALID_ARGUMENT, "invalid column", item.span, help="(decimal, tab=1.8cm)"
+                )
+        return word if word == "decimal" else "?"
 
     def table_look(self, value: ast.Value, command: ast.Command) -> frozenset[str] | None:
         """look=(header-row, banded-rows) or look=none: which table-style parts apply."""
@@ -1553,27 +1687,23 @@ class Lowering:
         widths = self.resolve_widths(spec, columns, span)
         if widths is None:
             return None
-        if "decimal" in spec.columns:
-            self.warn(
-                Code.NOT_SUPPORTED_YET,
-                "decimal column alignment is not supported yet; right is used",
-                span,
-                help="planned for milestone M2 (tab stops)",
-            )
-        alignments = ["right" if a == "decimal" else a for a in spec.columns]
-
         ir_rows: list[ir.Row] = []
         for r, row in enumerate(rows):
             column = 0
             cells: list[ir.Cell] = []
+            header = row.header or r < spec.header_rows or (repeat_header and r == 0)
             for cell in row.cells:
-                align = cell.align or (alignments[column] if column < len(alignments) else None)
+                align = cell.align or (spec.columns[column] if column < len(spec.columns) else None)
                 content = tuple(cell.content)
-                if align is not None:
+                if align == "decimal" and (header or cell.colspan > 1):
+                    align = "right"  # headings and merged cells have no figures to line up
+                if align == "decimal":
+                    tab = spec.decimal_tabs.get(column) or _decimal_tab(widths[column])
+                    content = _decimal_paragraphs(content, tab)
+                elif align is not None:
                     content = _align_paragraphs(content, align)
                 cells.append(ir.Cell(content, cell.colspan, cell.rowspan, cell.props))
                 column += cell.colspan
-            header = row.header or r < spec.header_rows or (repeat_header and r == 0)
             ir_rows.append(ir.Row(tuple(cells), header, row.height, row.exact, row.cant_split))
         try:
             look = ir.DEFAULT_TABLE_LOOK if spec.look is None else spec.look
@@ -1812,6 +1942,33 @@ class Lowering:
         )
         return [Piece("", fmt, "field", field=ref)]
 
+    def raw_xml(self, command: ast.Command) -> str | None:
+        """The body of \\raw[ooxml]{...}, checked: well-formed w: elements, all run-level or
+        all block-level (w:p, w:tbl)."""
+        for option in command.options.items if command.options else ():
+            text = self.text_value(option.value, command, "format")
+            if option.key is not None or text != "ooxml":
+                self.report(Code.INVALID_ARGUMENT, "\\raw takes the format ooxml", option.span)
+        if not isinstance(command.body, ast.VerbatimBody) or not command.body.text.strip():
+            self.report(
+                Code.INVALID_ARGUMENT, "\\raw needs XML: \\raw[ooxml]{<w:r>...</w:r>}", command.span
+            )
+            return None
+        try:
+            elements = parse_fragment(command.body.text)
+        except ValueError as e:
+            self.report(Code.INVALID_ARGUMENT, str(e), command.body.span)
+            return None
+        kinds = {_raw_element_kind(e) for e in elements}
+        if not elements or len(kinds) > 1:
+            self.report(
+                Code.INVALID_ARGUMENT,
+                "\\raw holds either run-level (w:r, ...) or block-level (w:p, w:tbl) elements",
+                command.body.span,
+            )
+            return None
+        return command.body.text.strip()
+
     def inline_ref(self, command: ast.Command, fmt: Format) -> list[Piece]:
         r"""\ref[form=number]{label} and \pageref{label}."""
         label = command.body.text.strip() if isinstance(command.body, ast.VerbatimBody) else ""
@@ -1959,9 +2116,17 @@ class Lowering:
         """A Caption paragraph, "Figure {SEQ Figure} : text", with the bookmarks Word's
         Insert Cross-reference would use: label and number, number only, text only, whole."""
         self.use_style("Caption", ir.StyleKind.PARAGRAPH, span)
-        number: tuple[ir.Inline, ...] = (
-            ir.Field((f" SEQ {kind.replace(' ', '_')} \\* ARABIC ",), "1"),
-        )
+        seq = kind.replace(" ", "_")
+        number: tuple[ir.Inline, ...] = (ir.Field((f" SEQ {seq} \\* ARABIC ",), "1"),)
+        if self.caption_chapters is not None:
+            style, separator = self.caption_chapters
+            match = re.fullmatch(r"[Hh]eading ([1-9])", style)
+            level = match.group(1) if match else "1"
+            number = (
+                ir.Field((f' STYLEREF "{style}" \\s ',), "1"),
+                ir.Run(separator),
+                ir.Field((f" SEQ {seq} \\* ARABIC \\s {level} ",), "1"),
+            )
         body = text
         separator = (ir.Run(": "),) if text else ()
         if label is not None:
@@ -2303,6 +2468,9 @@ class Lowering:
             return self.inline_date(command, fmt)
         if name in ("ref", "pageref"):
             return self.inline_ref(command, fmt)
+        if name == "raw":
+            xml = self.raw_xml(command)
+            return [Piece("", fmt, "field", raw=ir.RawXml(xml))] if xml is not None else []
         if name == "seq":
             return self.inline_seq(command, fmt)
         if name in ("footnote", "endnote"):
@@ -2490,7 +2658,7 @@ class Lowering:
                 flush_link()
                 inlines.append(ir.Break(piece.kind))
                 continue
-            special = piece.image or piece.field or piece.mark or piece.note
+            special = piece.image or piece.field or piece.mark or piece.note or piece.raw
             if special is not None:  # not inside hyperlinks (yet)
                 flush_link()
                 inlines.append(special)
@@ -2689,6 +2857,32 @@ def std_modules() -> list[str]:
     )
 
 
+CELL_MARGINS = Length.twips(2 * 108)
+"""Word's default left + right cell margins (Normal Table)."""
+DECIMAL_ROOM = Length.cm("0.6")
+"""Room right of a decimal tab for the decimals."""
+
+
+def _decimal_tab(column: Length) -> Length:
+    """Where the decimal points of a column line up: near the right, leaving room for
+    two or three decimals."""
+    inner = column.emu - CELL_MARGINS.emu
+    return Length(max(inner - DECIMAL_ROOM.emu, inner // 2))
+
+
+def _decimal_paragraphs(blocks: tuple[ir.Block, ...], tab: Length) -> tuple[ir.Block, ...]:
+    """A decimal tab stop on each paragraph; in a table cell Word lines text up on it
+    without a tab character."""
+    props = PropertySet(Target.PARAGRAPH, {"align": "left", "tabs": (TabStop(tab, "decimal"),)})
+
+    def apply(paragraph: ir.Paragraph) -> ir.Paragraph:
+        if "align" in paragraph.props or "tabs" in paragraph.props:
+            return paragraph
+        return replace(paragraph, props=props.merged(paragraph.props))
+
+    return ir.map_paragraphs(blocks, apply)
+
+
 def _align_paragraphs(blocks: tuple[ir.Block, ...], align: str) -> tuple[ir.Block, ...]:
     """Apply a column/cell alignment to paragraphs that do not set their own."""
     aligned = PropertySet(Target.PARAGRAPH, {"align": align})
@@ -2751,6 +2945,32 @@ def _on_own_line(items: Sequence[ast.Inline | ast.Block], index: int) -> bool:
         return True
 
     return boundary(-1) and boundary(1)
+
+
+_BLOCK_ELEMENTS = frozenset({"p", "tbl"})
+
+
+def _raw_element_kind(element: Element) -> str:
+    local = str(element.tag).rsplit("}", 1)[-1]
+    if local == "sdt":  # a content control: block-level when it holds paragraphs or tables
+        content = element.find(f"{{{NS.W}}}sdtContent")
+        inner: set[str] = (
+            {str(c.tag).rsplit("}", 1)[-1] for c in content} if content is not None else set()
+        )
+        return "block" if inner & _BLOCK_ELEMENTS else "inline"
+    return "block" if local in _BLOCK_ELEMENTS else "inline"
+
+
+def _raw_kind(command: ast.Command) -> str:
+    """block or inline: where a \\raw command goes (inline if its XML is broken; the error is
+    reported when it is lowered)."""
+    if not isinstance(command.body, ast.VerbatimBody):
+        return "inline"
+    try:
+        elements = parse_fragment(command.body.text)
+    except ValueError:
+        return "inline"
+    return "block" if elements and _raw_element_kind(elements[0]) == "block" else "inline"
 
 
 def _marked(name: str, content: Iterable[ir.Inline]) -> tuple[ir.Inline, ...]:

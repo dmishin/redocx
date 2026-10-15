@@ -17,8 +17,8 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Super/subscript, raised/lowered position | `w:vertAlign`, `w:position` | M1 | ● |
 | Color (rgb, theme + tint/shade) | `w:color` | M1 | ● |
 | Highlight, shading | `w:highlight`, `w:shd` | M1 | ● |
-| Character spacing, scale, kerning | `w:spacing`, `w:w`, `w:kern` | M2 | ● |
-| Hidden, emboss, imprint, outline, shadow | `w:vanish`, … | M2 | ● |
+| Character spacing, scale, kerning | `w:spacing`, `w:w`, `w:kern` | M2 ✓ | ● |
+| Hidden, emboss, imprint, outline, shadow | `w:vanish`, … | M2 ✓ | ● |
 | Language (spell-check, hyphenation) | `w:lang` | M1 | ● |
 | Run border | `w:bdr` | M4 | ● |
 | RTL, complex script | `w:rtl`, `w:cs` | M4 | ●● |
@@ -37,7 +37,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Outline level | M1 | ● |
 | Tab stops (alignment, leaders, clear) | M2 ✓ | ● |
 | Paragraph borders (incl. between, bar), shading | M2 ✓ | ● |
-| Suppress line numbers, suppress auto-hyphens | M2 | ● |
+| Suppress line numbers, suppress auto-hyphens | M2 ✓ | ● |
 | Drop caps, text frames | M4 | ●● |
 | Bidi paragraph, text direction | M4 | ●● |
 | East Asian typography (kinsoku, snap to grid, …) | Later / Esc | ● |
@@ -50,8 +50,8 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Paragraph & character styles, basedOn, next | M1 ✓ | ● |
 | Linked styles | M2 ✓ | ● |
 | Table styles with conditional formatting (tblStylePr: firstRow, lastRow, bands, corners…) | M2 ✓ | ●●● |
-| Numbering styles | M2 | ●● |
-| Latent styles, quick-style gallery flags, priorities | M2 | ● |
+| Numbering (list) styles | Later (template list styles work) | ●● |
+| Latent styles, quick-style gallery flags, priorities | M2 (partly: priority and gallery flag; latent styles come from templates) | ● |
 | Modify/replace template styles; localized built-in style names | M2 ✓ (`replace` acts as `modify` on template styles) | ●● |
 | Theme colors/fonts references | M1 | ● |
 | Custom theme (generate theme1.xml) | M4 | ●● |
@@ -73,12 +73,12 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 |---------|------|-------|
 | Page size, orientation, margins | M1 | ● |
 | Multiple sections, break types | M2 ✓ | ●● |
-| Gutter, mirror margins | M2 (partly: gutter done) | ● |
-| Columns (equal / custom, separator) | M2 (partly: equal columns and separator done) | ● |
+| Gutter, mirror margins | M2 ✓ | ● |
+| Columns (equal / custom, separator) | M2 (equal widths, separator) ✓; custom widths M4 | ● |
 | Headers/footers: default, first, even; link-to-previous | M2 ✓ | ●● |
 | Page numbering format & restart per section | M2 ✓ | ● |
-| Line numbering | M2 | ● |
-| Vertical alignment | M2 | ● |
+| Line numbering | M2 ✓ | ● |
+| Vertical alignment | M2 ✓ | ● |
 | Page borders | M4 | ● |
 | Watermark (VML/DrawingML in header) | M4 | ●● |
 | Page background color | M4 | ● |
@@ -93,7 +93,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Cell block content (multiple paragraphs, lists) | M1 ✓ | ● |
 | Horizontal / vertical merges | M2 ✓ | ●● |
 | Borders (table, cell, inside), shading | M2 ✓ (theme colours too) | ●● |
-| Cell margins, vertical alignment, text direction | M2 (partly: table-wide cell margins and vertical alignment done) | ● |
+| Cell margins, vertical alignment, text direction | M2 ✓ | ● |
 | Row height, can't-split, repeat header rows | M2 ✓ | ● |
 | Table alignment, indent, look flags | M2 ✓ | ● |
 | Nested tables | M2 ✓ | ● |
@@ -107,7 +107,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Hyperlinks (external, internal anchor) | M1 (partly: external done) | ● |
 | Bookmarks | M2 ✓ | ● |
 | Cross-references (REF, PAGEREF, with pre-computed cached text) | M2 ✓ | ●●● |
-| Captions (SEQ ✓; chapter numbering not yet) | M2 | ●● |
+| Captions (SEQ, chapter numbering) | M2 ✓ | ●● |
 | TOC (with pre-rendered entries), list of figures/tables | M2 ✓ | ●● |
 | Simple fields (PAGE, NUMPAGES, SECTIONPAGES, DATE, TITLE, AUTHOR, STYLEREF…) | M2 ✓ | ● |
 | Arbitrary / nested fields | M2 ✓ | ●● |
@@ -145,7 +145,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Repeating-section content controls | M5 | ●● |
 | Content-control data binding to custom XML | Later | ●●● |
 | Legacy form fields | Later | ●● |
-| Document protection (read-only, forms, comments) | M5 | ● |
+| Document protection (read-only, forms, comments, tracked changes; no password) | M2 ✓ (password: M5) | ● |
 
 ## 5.10 Document-level
 
@@ -153,7 +153,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 |---------|------|-------|
 | Templates (.dotx/.docx base); writing .dotx | M2 ✓ | ●●● |
 | Compatibility mode settings | M1 | ● |
-| updateFields on open | M2 | ● |
+| updateFields on open | M2 ✓ | ● |
 | Embedded fonts | Later | ●● |
 | altChunk (embed docx/html) | M3 | ● |
 | Glossary / building blocks | Later | ●● |

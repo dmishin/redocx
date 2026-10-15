@@ -210,6 +210,10 @@ def _settings_taken(document: Document) -> frozenset[str]:
         taken.add("evenAndOddHeaders")
     if settings.update_fields_on_open:
         taken.add("updateFields")
+    if settings.mirror_margins:
+        taken.add("mirrorMargins")
+    if settings.protection is not None:
+        taken.add("documentProtection")
     if settings.default_tab_stop != type(settings)().default_tab_stop:
         taken.add("defaultTabStop")
     if document.meta.language:

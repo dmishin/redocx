@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from wordgenx.ooxml.schema_order import NUM_PR, PPR, RPR, TBL_PR, TC_PR, ordered
-from wordgenx.ooxml.xml import E, Element
+from wordgenx.ooxml.xml import E, Element, parse_fragment
 from wordgenx.props import EmitContext, PropertySet, Target
 
 
 def _children(props: PropertySet, ctx: EmitContext) -> dict[str, Element]:
     nested = props.emit_children(ctx)
-    return {
+    children = {
         name: E(
             f"w:{name}",
             {f"w:{key}": value for key, value in attrs.items()},
@@ -20,6 +20,11 @@ def _children(props: PropertySet, ctx: EmitContext) -> dict[str, Element]:
         )
         for name, attrs in props.emit(ctx).items()
     }
+    raw = props.get(f"ooxml.{props.target.value}")
+    if isinstance(raw, str):  # the escape hatch: replaces what wordgenx wrote
+        for element in parse_fragment(raw):
+            children[str(element.tag).rsplit("}", 1)[-1]] = element
+    return children
 
 
 def run_properties(

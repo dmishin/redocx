@@ -34,6 +34,34 @@ PREFIXES: dict[str, str] = {
 Element = etree._Element  # pyright: ignore[reportPrivateUsage]
 
 
+RAW_NAMESPACES = {
+    **{prefix: uri for prefix, uri in PREFIXES.items() if prefix not in ("xml",)},
+    "w14": "http://schemas.microsoft.com/office/word/2010/wordml",
+    "mc": "http://schemas.openxmlformats.org/markup-compatibility/2006",
+    "v": "urn:schemas-microsoft-com:vml",
+    "o": "urn:schemas-microsoft-com:office:office",
+    "m": "http://schemas.openxmlformats.org/officeDocument/2006/math",
+}
+"""Prefixes raw XML (\\raw, ooxml.* options) may use without declaring them."""
+
+
+def parse_fragment(text: str) -> list[Element]:
+    """Parse raw WordprocessingML written by hand: elements with the usual prefixes (w:,
+    r:, a:, ...), which need not be declared. Raises ValueError with lxml's message."""
+    declarations = " ".join(f'xmlns:{p}="{u}"' for p, u in RAW_NAMESPACES.items())
+    try:
+        root = etree.fromstring(f"<wgx-raw {declarations}>{text}</wgx-raw>".encode())
+    except etree.XMLSyntaxError as e:
+        raise ValueError(f"not well-formed XML: {e.msg}") from None
+    if (root.text or "").strip() or any((child.tail or "").strip() for child in root):
+        raise ValueError("raw XML must be elements only (text belongs inside w:t)")
+    elements = [child for child in root if isinstance(child.tag, str)]
+    for element in elements:
+        if not str(element.tag).startswith(f"{{{NS.W}}}"):
+            raise ValueError(f"raw XML must be WordprocessingML (w:) elements, got {element.tag}")
+    return elements
+
+
 def qn(name: str) -> str:
     """Clark notation for a prefixed name: ``w:p`` -> ``{http://...main}p``."""
     prefix, _, local = name.partition(":")

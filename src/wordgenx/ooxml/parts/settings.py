@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from wordgenx.ir import NOTE_KINDS, Document, NoteSettings
+from wordgenx.ir import NOTE_KINDS, PROTECTION_MODES, Document, NoteSettings
 from wordgenx.ooxml.schema_order import SETTINGS, ordered
 from wordgenx.ooxml.xml import E, Element, nsmap
 
@@ -64,6 +64,16 @@ def settings_xml(document: Document) -> Element:
         children["evenAndOddHeaders"] = E("w:evenAndOddHeaders")
     if settings.update_fields_on_open:
         children["updateFields"] = E("w:updateFields", {"w:val": "true"})
+    if settings.mirror_margins:
+        children["mirrorMargins"] = E("w:mirrorMargins")
+    if settings.protection is not None:
+        children["documentProtection"] = E(
+            "w:documentProtection",
+            {
+                "w:edit": PROTECTION_MODES[settings.protection],
+                "w:enforcement": "1" if settings.protection_enforced else "0",
+            },
+        )
     for kind in NOTE_KINDS:
         properties = note_properties(settings.notes(kind))
         if document.notes(kind):  # the separator lines, as Word writes them

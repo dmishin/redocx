@@ -153,6 +153,15 @@ def _line_spacing(value: object) -> LineSpacing:
     )
 
 
+def _percent(value: object) -> int:
+    text = value.rstrip("%") if isinstance(value, str) else value
+    if isinstance(text, str) and text.isdigit():
+        text = int(text)
+    if isinstance(text, int) and not isinstance(text, bool) and 1 <= text <= 600:
+        return text
+    raise InvalidValueError(f"expected a percentage 1%-600%, got {value!r}")
+
+
 def _outline_level(value: object) -> int:
     if isinstance(value, str) and value.isdigit():
         value = int(value)
@@ -332,6 +341,15 @@ def _margin_side(side: str) -> Callable[[object, EmitContext], list[tuple[str, A
     return children
 
 
+_TEXT_DIRECTIONS = {"horizontal": "lrTb", "up": "btLr", "down": "tbRl"}
+
+
+def _text_direction(value: object) -> object:
+    if isinstance(value, str) and value in _TEXT_DIRECTIONS:
+        return _TEXT_DIRECTIONS[value]
+    raise InvalidValueError(f"expected one of {', '.join(_TEXT_DIRECTIONS)}, got {value!r}")
+
+
 def _emit_shading(value: object, ctx: EmitContext) -> Emitted:
     assert isinstance(value, Color)
     return [("shd", {"val": "clear", "color": "auto", **_color_attrs(value, ctx, "Fill")})]
@@ -392,6 +410,26 @@ _SPECS: tuple[PropSpec, ...] = (
     PropSpec("double-strike", R, _bool, _toggle("dstrike"), "Double strikethrough.", _BOOL),
     PropSpec("hidden", R, _bool, _toggle("vanish"), "Hidden text.", _BOOL),
     PropSpec("color", R, _color, _emit_color, "Text color.", "#RRGGBB | auto | theme.<name>"),
+    PropSpec("emboss", R, _bool, _toggle("emboss"), "Embossed (raised) text.", _BOOL),
+    PropSpec("imprint", R, _bool, _toggle("imprint"), "Engraved (imprinted) text.", _BOOL),
+    PropSpec("outline", R, _bool, _toggle("outline"), "Outlined (hollow) letters.", _BOOL),
+    PropSpec("shadow", R, _bool, _toggle("shadow"), "Shadowed text.", _BOOL),
+    PropSpec(
+        "scale",
+        R,
+        _percent,
+        _val("w"),
+        "Horizontal scale of the characters (100% is normal).",
+        "1%-600%",
+    ),
+    PropSpec(
+        "kerning",
+        R,
+        _font_size,
+        lambda value, ctx: [("kern", {"val": str(value.in_half_points)})],  # type: ignore[attr-defined]
+        "Kern pairs of letters from this font size up.",
+        "length, e.g. 12pt",
+    ),
     PropSpec(
         "character-spacing",
         R,
@@ -499,6 +537,22 @@ _SPECS: tuple[PropSpec, ...] = (
         _attr("ind", "hanging", _twips),
         "Outdent of the first line.",
         _LEN,
+    ),
+    PropSpec(
+        "suppress-line-numbers",
+        P,
+        _bool,
+        _toggle("suppressLineNumbers"),
+        "Leave the paragraph out of line numbering.",
+        _BOOL,
+    ),
+    PropSpec(
+        "suppress-hyphenation",
+        P,
+        _bool,
+        _toggle("suppressAutoHyphens"),
+        "Do not hyphenate the paragraph automatically.",
+        _BOOL,
     ),
     PropSpec(
         "contextual-spacing",
@@ -612,6 +666,26 @@ _CELL_SPECS: tuple[PropSpec, ...] = (
         "Background colour of the cell.",
         "#RRGGBB | theme.<name>",
     ),
+    *(
+        PropSpec(
+            f"cell-margin-{side}",
+            C,
+            _nonnegative_length,
+            lambda value, ctx: [("tcMar", {})],
+            f"The {side} margin inside this cell (overrides the table's).",
+            _LEN,
+            children=_margin_side(side),
+        )
+        for side in MARGIN_SIDES
+    ),
+    PropSpec(
+        "text-direction",
+        C,
+        _text_direction,
+        _val("textDirection"),
+        "Direction of the text in the cell: rotated up (bottom-to-top) or down.",
+        "horizontal | up | down",
+    ),
     PropSpec(
         "valign",
         C,
@@ -634,7 +708,50 @@ _PARAGRAPH_SPECS: tuple[PropSpec, ...] = (
     ),
 )
 
-_ALL_SPECS = (*_SPECS, *_PARAGRAPH_SPECS, *_TABLE_SPECS, *_CELL_SPECS)
+_RAW_CONTAINERS = {R: "rPr", P: "pPr", T: "tblPr", C: "tcPr"}
+
+
+def _raw(target: Target) -> Callable[[object], object]:
+    """Validate raw property XML for a container: well-formed w: elements it may hold."""
+
+    def coerce(value: object) -> object:
+        from wordgenx.ooxml import schema_order
+        from wordgenx.ooxml.xml import parse_fragment
+
+        if not isinstance(value, str):
+            raise InvalidValueError(f"expected raw XML text, got {value!r}")
+        try:
+            elements = parse_fragment(value)
+        except ValueError as e:
+            raise InvalidValueError(str(e)) from None
+        order = {
+            "rPr": schema_order.RPR,
+            "pPr": schema_order.PPR,
+            "tblPr": schema_order.TBL_PR,
+            "tcPr": schema_order.TC_PR,
+        }[_RAW_CONTAINERS[target]]
+        for element in elements:
+            local = str(element.tag).rsplit("}", 1)[-1]
+            if local not in order:
+                raise InvalidValueError(f"w:{local} is not a w:{_RAW_CONTAINERS[target]} property")
+        return value.strip()
+
+    return coerce
+
+
+_RAW_SPECS: tuple[PropSpec, ...] = tuple(
+    PropSpec(
+        f"ooxml.{container}",
+        target,
+        _raw(target),
+        lambda value, ctx: [],
+        f"Raw w:{container} XML; its elements replace those wordgenx writes (escape hatch).",
+        "WordprocessingML elements, e.g. \"<w:snapToGrid w:val='0'/>\"",
+    )
+    for target, container in _RAW_CONTAINERS.items()
+)
+
+_ALL_SPECS = (*_SPECS, *_PARAGRAPH_SPECS, *_TABLE_SPECS, *_CELL_SPECS, *_RAW_SPECS)
 
 REGISTRY: dict[Target, dict[str, PropSpec]] = {
     target: {spec.name: spec for spec in _ALL_SPECS if spec.target is target} for target in Target

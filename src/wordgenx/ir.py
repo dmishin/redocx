@@ -99,6 +99,15 @@ class NoteSettings:
         return self.format or ("decimal" if kind == "footnote" else "lowerRoman")
 
 
+PROTECTION_MODES = {
+    "read-only": "readOnly",
+    "comments": "comments",
+    "tracked-changes": "trackedChanges",
+    "forms": "forms",
+}
+"""wordgenx protection mode -> w:documentProtection/@w:edit."""
+
+
 @dataclass(frozen=True)
 class Settings:
     """Document-wide settings (settings.xml)."""
@@ -108,6 +117,12 @@ class Settings:
     even_and_odd_headers: bool = False
     footnotes: NoteSettings = field(default_factory=NoteSettings)
     endnotes: NoteSettings = field(default_factory=NoteSettings)
+    mirror_margins: bool = False
+    """Left and right margins are inside and outside (facing pages); Word sets this for the
+    whole document."""
+    protection: str | None = None
+    """What editing is allowed: a value of PROTECTION_MODES (w:documentProtection)."""
+    protection_enforced: bool = False
 
     def notes(self, kind: str) -> NoteSettings:
         return self.footnotes if kind == "footnote" else self.endnotes
@@ -393,7 +408,16 @@ class NoteMark:
     style: str | None = None
 
 
-Inline = Run | Break | Hyperlink | Image | Field | BookmarkStart | BookmarkEnd | Note | NoteMark
+@dataclass(frozen=True)
+class RawXml:
+    """Run-level WordprocessingML written by hand (\\raw; the escape hatch)."""
+
+    xml: str
+
+
+Inline = (
+    Run | Break | Hyperlink | Image | Field | BookmarkStart | BookmarkEnd | Note | NoteMark | RawXml
+)
 
 
 @dataclass(frozen=True)
@@ -572,8 +596,13 @@ class Section:
     columns: int = 1
     column_gap: Length = _DEFAULT_COLUMN_GAP
     column_separator: bool = False
+    line_numbers: LineNumbers | None = None
+    vertical_align: str | None = None
+    """top | center | bottom | justify: where the text sits between the top and bottom margins."""
 
     def __post_init__(self) -> None:
+        if self.vertical_align not in (None, *VERTICAL_ALIGNMENTS):
+            raise ValueError(f"vertical alignment must be one of {', '.join(VERTICAL_ALIGNMENTS)}")
         if self.start not in SECTION_STARTS:
             raise ValueError(f"section start must be one of {', '.join(SECTION_STARTS)}")
         if self.page_number_format not in (None, *PAGE_NUMBER_FORMATS):
@@ -583,6 +612,33 @@ class Section:
                 raise ValueError(f"header/footer kind must be one of {', '.join(HEADER_KINDS)}")
         if not 1 <= self.columns <= 45:
             raise ValueError("columns must be 1-45")
+
+
+VERTICAL_ALIGNMENTS = {"top": "top", "center": "center", "bottom": "bottom", "justify": "both"}
+LINE_NUMBER_RESTARTS = {
+    "each-page": "newPage",
+    "each-section": "newSection",
+    "continuous": "continuous",
+}
+
+
+@dataclass(frozen=True)
+class LineNumbers:
+    """Line numbers in the margin (w:lnNumType)."""
+
+    count_by: int = 1
+    """Show every n-th number."""
+    start: int = 1
+    distance: Length | None = None
+    """From the text; Word chooses when None."""
+    restart: str = "each-page"
+    """A key of LINE_NUMBER_RESTARTS."""
+
+    def __post_init__(self) -> None:
+        if self.restart not in LINE_NUMBER_RESTARTS:
+            raise ValueError(f"line numbers restart {', '.join(LINE_NUMBER_RESTARTS)}")
+        if self.count_by < 1 or self.start < 1:
+            raise ValueError("line numbers count by and start at whole numbers of at least 1")
 
 
 @dataclass(frozen=True)
@@ -604,7 +660,16 @@ class FieldBlock:
     content: tuple[Paragraph, ...]
 
 
-Block = Paragraph | Table | SectionBreak | FieldBlock
+@dataclass(frozen=True)
+class RawBlock:
+    """Block-level WordprocessingML (w:p, w:tbl, w:sdt) written by hand (\\raw)."""
+
+    xml: str
+    ends_with_table: bool = False
+    """Word needs a paragraph between it and a following table."""
+
+
+Block = Paragraph | Table | SectionBreak | FieldBlock | RawBlock
 
 
 @dataclass(frozen=True)
@@ -716,6 +781,8 @@ def map_paragraphs(
             out.append(SectionBreak(map_section(block.section, fn)))
         elif isinstance(block, FieldBlock):
             out.append(replace(block, content=tuple(_map_paragraph(p, fn) for p in block.content)))
+        elif isinstance(block, RawBlock):
+            out.append(block)
         else:
             rows = tuple(
                 replace(

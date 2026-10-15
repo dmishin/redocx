@@ -8,9 +8,11 @@ from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass, field
 
 from wordgenx.ir import (
+    LINE_NUMBER_RESTARTS,
     NOTE_KINDS,
     PAGE_NUMBER_FORMATS,
     SECTION_STARTS,
+    VERTICAL_ALIGNMENTS,
     Block,
     BookmarkEnd,
     BookmarkStart,
@@ -24,6 +26,8 @@ from wordgenx.ir import (
     Note,
     NoteMark,
     Paragraph,
+    RawBlock,
+    RawXml,
     Row,
     Run,
     Section,
@@ -42,7 +46,7 @@ from wordgenx.ooxml.parts.properties import (
 from wordgenx.ooxml.parts.settings import note_properties
 from wordgenx.ooxml.schema_order import SECT_PR, TR_PR, ordered
 from wordgenx.ooxml.style_names import style_id
-from wordgenx.ooxml.xml import E, Element, nsmap, qn
+from wordgenx.ooxml.xml import E, Element, nsmap, parse_fragment, qn
 from wordgenx.props import EMPTY_RUN, EmitContext, PropertySet, Target
 from wordgenx.values import Border
 
@@ -172,6 +176,8 @@ def _drawing(image: Image, ctx: BodyContext) -> Element:
 def _inline(item: Inline, ctx: BodyContext) -> list[Element]:
     if isinstance(item, Run):
         return [_run(item, ctx)]
+    if isinstance(item, RawXml):
+        return parse_fragment(item.xml)
     if isinstance(item, Break):
         return [E("w:r", E("w:br", {"w:type": item.kind}))]
     if isinstance(item, Image):
@@ -243,10 +249,16 @@ def _blocks(blocks: tuple[Block, ...], ctx: BodyContext, *, final: bool = False)
             previous = None
             continue
         if isinstance(block, Table):
-            if isinstance(previous, Table):
+            if _ends_with_table(previous):
                 elements.append(E("w:p"))
             elements.append(_table(block, ctx))
             last_paragraph = None
+        elif isinstance(block, RawBlock):
+            raw = parse_fragment(block.xml)
+            if raw and raw[0].tag == qn("w:tbl") and _ends_with_table(previous):
+                elements.append(E("w:p"))
+            elements.extend(raw)
+            last_paragraph = raw[-1] if raw and raw[-1].tag == qn("w:p") else None
         elif isinstance(block, FieldBlock):
             paragraphs = _field_block(block, ctx)
             elements.extend(paragraphs)
@@ -255,9 +267,13 @@ def _blocks(blocks: tuple[Block, ...], ctx: BodyContext, *, final: bool = False)
             last_paragraph = _paragraph(block, ctx)
             elements.append(last_paragraph)
         previous = block
-    if isinstance(previous, Table) or (not elements and not final):
+    if _ends_with_table(previous) or (not elements and not final):
         elements.append(E("w:p"))
     return elements
+
+
+def _ends_with_table(block: Block | None) -> bool:
+    return isinstance(block, Table) or (isinstance(block, RawBlock) and block.ends_with_table)
 
 
 def _field_block(block: FieldBlock, ctx: BodyContext) -> list[Element]:
@@ -325,6 +341,17 @@ def _section_properties(section: Section, ctx: BodyContext) -> Element:
     children["cols"] = E("w:cols", columns)
     if section.title_page:
         children["titlePg"] = E("w:titlePg")
+    if section.vertical_align is not None:
+        children["vAlign"] = E("w:vAlign", {"w:val": VERTICAL_ALIGNMENTS[section.vertical_align]})
+    if (numbers := section.line_numbers) is not None:
+        attrs = {
+            "w:countBy": str(numbers.count_by),
+            "w:start": str(numbers.start - 1),  # Word stores the start as an offset from 1
+            "w:restart": LINE_NUMBER_RESTARTS[numbers.restart],
+        }
+        if numbers.distance is not None:
+            attrs["w:distance"] = str(numbers.distance.in_twips)
+        children["lnNumType"] = E("w:lnNumType", attrs)
     for kind in NOTE_KINDS:  # Word numbers notes by these, not by the copy in settings.xml
         if properties := note_properties(ctx.settings.notes(kind)):
             children[f"{kind}Pr"] = E(f"w:{kind}Pr", *properties)

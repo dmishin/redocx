@@ -36,6 +36,8 @@ SEQ_SWITCHES = {
 """SEQ \\* format switches -> list number formats."""
 TOC_NUMBER_TAB = 440
 """Twips per level for the tab after a heading number in a TOC entry (Word's own value)."""
+STYLEREF_RE = re.compile(r'^\s*STYLEREF\s+"([^"]+)"\s+\\s\b', re.IGNORECASE)
+"""A chapter number in a caption: the paragraph number of the latest heading."""
 SEQ_RE = re.compile(r"^\s*SEQ\s+(\S+)(.*)$", re.IGNORECASE)
 
 
@@ -302,6 +304,8 @@ def resolve(
     """SEQ identifier -> heading level that restarts it (the \\s switch)."""
     index = 0
     note_counts: dict[str, int] = dict.fromkeys(ir.NOTE_KINDS, 0)
+    chapter_numbers: dict[str, str] = {}
+    """Lower-cased style name -> the number of its latest paragraph (STYLEREF ... \\s)."""
     note_numbers: dict[int, str] = {}
     """id(note) -> its number as Word shows it."""
 
@@ -309,6 +313,8 @@ def resolve(
         nonlocal index
         index += 1
         number = simulator.number(paragraph)
+        if number:
+            chapter_numbers[(paragraph.style or "Normal").lower()] = number.rstrip(".")
         level = simulator.outline_level(paragraph)
         if level is not None and level >= 1:
             for name in list(seq_counts):
@@ -332,6 +338,8 @@ def resolve(
                     SEQ_SWITCHES.get(switch.group(1), "decimal") if switch else "decimal"
                 )
                 item = replace(item, result=format_number(seq_counts[seq], number_format))
+            elif isinstance(item, ir.Field) and (styleref := STYLEREF_RE.match(item.code)):
+                item = replace(item, result=chapter_numbers.get(styleref.group(1).lower(), "0"))
             elif isinstance(item, ir.Note):
                 notes = settings.notes(item.kind)
                 note_counts[item.kind] += 1

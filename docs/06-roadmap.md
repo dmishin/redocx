@@ -58,6 +58,11 @@ with no repair prompt, pass both validators, and match their golden snapshots.
 - [x] Heading numbering, legal numbering, tab stops, paragraph borders (sides, between, bar) and shading.
 - [x] Document properties: core, custom (`\meta[custom.NAME = ...]`, merged with a template's) and `DOCPROPERTY`;
   general `\field`.
+- [x] Sweep: document protection, mirror margins, line numbering, section vertical alignment, decimal table columns,
+  chapter-numbered captions, references in headers and footers, per-cell margins and text direction, more run and
+  paragraph properties (scale, kerning, emboss, imprint, outline, shadow, suppress line numbers and hyphenation),
+  and the escape hatches (`\raw[ooxml]`, `ooxml.*` properties). Moved out of M2: list (numbering) styles (later),
+  columns of different widths (M4).
 - **Exit:** wordgenx's own design docs are rebuilt in wordgenx with a corporate-style template and look professionally typeset in Word.
 
 ## M3: Technical writing
