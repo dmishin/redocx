@@ -34,6 +34,8 @@ uv run pytest              # tests (validator tests are skipped without the .NET
 uv run ruff check          # lint
 uv run ruff format         # format
 uv run pyright             # strict type check
+uv run wordgenx check examples/syntax-tour.wgx       # parse and report diagnostics
+uv run wordgenx parse examples/syntax-tour.wgx       # print the AST (--tree cst for the CST)
 ```
 
 Golden snapshots (`tests/golden/expected/`) record the exact XML of each test document. After an intended output
@@ -57,9 +59,12 @@ from wordgenx.ooxml.writer import write_docx
 
 doc = ir.Document(
     styles=(
-        ir.paragraph_style("Heading 1", next="Normal",
-                           paragraph=para_props(keep_with_next=True, outline_level=1),
-                           run=run_props(font="theme.major", size="16pt", color="theme.accent1")),
+        ir.paragraph_style(
+            "Heading 1",
+            next="Normal",
+            paragraph=para_props(keep_with_next=True, outline_level=1),
+            run=run_props(font="theme.major", size="16pt", color="theme.accent1"),
+        ),
     ),
     body=(
         ir.paragraph("Hello", style="Heading 1"),

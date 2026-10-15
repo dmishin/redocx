@@ -19,15 +19,17 @@ with no repair prompt, pass both validators, and match their golden snapshots.
 
 ## M1: Core language (roughly "Pandoc parity")
 
-- Lexer and parser (all modes), CST to AST, source spans, diagnostics renderer.
-- Inline sugar, commands, options type-checking, units and colors.
+- [x] Parser for all modes, lossless CST, typed AST, source spans, diagnostics renderer (`wordgenx.syntax`; rules in
+  design §3.22). Checked by property-based fuzzing (Hypothesis) and a syntax tour (`examples/syntax-tour.wgx`).
+- [x] CLI `wordgenx check` and `wordgenx parse` (`--tree ast|cst`).
+- Inline sugar, commands, options type-checking, units and colors (lowering AST -> IR).
 - Style sheets: defaults, paragraph and character styles, theme references.
 - Headings, paragraphs, lists with real multilevel numbering (restart and continue).
 - Single-section page setup, breaks, hyperlinks, inline images, simple tables.
 - `\include`, `\use`, `\let`, `\define` (macros with `#param`), `\settings`.
 - Command registry with argument kinds (markup, string, raw, math); the comment, whitespace and flanking rules from the spike.
 - Standard macro library skeleton (`std:callout`, `std:signature`).
-- CLI: `wordgenx build`, `wordgenx check`.
+- CLI: `wordgenx build`.
 - **Exit:** a real 20-page document can be authored entirely in wordgenx. Language grammar v0.1 is frozen.
 
 ## M2: Word structure (where wordgenx goes beyond Pandoc)

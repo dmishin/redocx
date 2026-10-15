@@ -125,7 +125,7 @@ preamble-only. In the preamble, `\section` configures the first section. After c
 | `_text_` | emphasis (character style `Emphasis`) | `\emph{text}` |
 | `` `code` `` | inline code (character style `Code`) | `\code{code}` |
 | `\m{x^2}` | inline math (there is no sugar; `$` is literal) | `\m{x^2}` |
-| `<https://…>` | autolink | `\link{https://…}` |
+| `<https://…>` | autolink | `\url{https://…}` (string body) |
 | `[text](url)` | hyperlink | `\link[to="url"]{text}` |
 | `@label` | cross-reference (§3.11) | `\ref{label}` |
 
@@ -545,3 +545,35 @@ error[WGX1203]: unknown paragraph property `space-befor`
 
 Planned lints: a repeated label word before `@label` (§3.11); an unused label; for contracts, a defined term that is
 never used, or a capitalised term used but never defined.
+
+Syntax errors use the codes `WGX01xx` (`wordgenx.syntax.diagnostics.Code`). Later stages use other ranges.
+
+## 3.22 Parsing rules (settled in M1)
+
+The parser (`wordgenx.syntax`) fixes these details that the sections above leave open:
+
+- **Command names** are letters and digits with inner hyphens (`\embed-docx`) and are read greedily: `\product-based`
+  is the command `product-based`. Write `\product{}-based` instead.
+- **Options and body must touch the name.** `\b{x}` is a command with a body. `\b {x}` is the command `\b`, a space,
+  then a stray `{` (an error). `[` must directly follow the name, and `{` must directly follow the name or `]`.
+- **Bare `{` in text is an error.** Escape it as `\{`. `\#{` is a literal `#{`.
+- **`\define` and `\let`** are the only forms with two brace groups: `\define{name}[params]{body}`.
+- **Labels** match `[A-Za-z][A-Za-z0-9_-]*(:[A-Za-z0-9_-]+)*`, e.g. `fig:arch`, `cl:term`. Trailing sentence punctuation is
+  not part of a reference: `see @fig:arch.` refers to `fig:arch`.
+- **Autolinks** `<scheme:…>` map to `\url{…}` (string body). `\link[to="…"]{text}` has a markup body.
+- **Block starts** are recognised at the start of a line (after indentation): `=` headings followed by a space, `- ` and
+  `1. ` list markers, ` ``` ` fences, `$$`, and `|` table rows. These also end a running paragraph. `$$` is special only at
+  a block start.
+- **Letter list markers** (`a. `) are recognised only inside a list item, so a sentence starting with "A. Smith wrote" is never a
+  list.
+- **List continuation** lines must be indented at least to the item's text column; there is no Markdown-style "lazy"
+  continuation. A line indented less ends the item.
+- **Code spans** close on the same line. Use N backticks to include fewer than N, as in `` ``a ` b`` ``.
+- **Unclosed `*` / `_`** are a warning and are kept as literal text.
+- **Pipe-table cells** are separated by `|` outside code spans, math and command bodies. A final whitespace-only cell after the
+  last `|` is ignored.
+- **Whitespace** is kept as written in the AST. Collapsing runs of spaces, line breaks into spaces, and smart punctuation
+  (`--`, `---`, quotes) happen at lowering.
+- **Limits:** nesting deeper than 64 levels is an error (`WGX0116`). To avoid exponential backtracking, the parser bounds
+  the work it spends on unclosed `*`, `_` and `[` openers. Ordinary documents never reach the bound; adversarial input
+  degrades to literal text.
