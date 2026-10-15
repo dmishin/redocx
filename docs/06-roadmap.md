@@ -5,15 +5,17 @@ with no repair prompt, pass both validators, and match their golden snapshots.
 
 ## M0: Foundations
 
-- Repository setup: `uv`, `ruff`, `pyright --strict`, `pytest`, GitHub Actions (Windows, Linux, macOS), license, CONTRIBUTING.
-- OPC package writer: content types, relationships, deterministic zip.
-- Minimal part writers: document, styles (defaults only), settings, core and app props, fontTable, theme (embedded default).
-- Validation pipeline: lxml + ECMA-376 XSDs; `tools/ooxml-validate` (.NET OpenXmlValidator) in CI. This needs the .NET 8+ SDK on dev machines (currently only the runtime is installed).
-- Golden-test harness (canonical XML diff).
-- First version of the property registry, with run and paragraph basics.
-- **Spike:** hand-write 5 representative documents in the proposed syntax (spec, report, contract, thesis chapter,
-  form) to stress-test the language before freezing the grammar.
-- **Exit:** the Python API produces a valid "hello world" with styled paragraphs. CI is green on all three OSes.
+- [x] Repository setup: `uv`, `ruff`, `pyright --strict`, `pytest`, GitHub Actions (Windows, Linux, macOS), license.
+  CONTRIBUTING is still to do.
+- [x] OPC package writer: content types, relationships, deterministic zip.
+- [x] Minimal part writers: document, styles (docDefaults, the four default styles, user styles), settings, core and app
+  props, fontTable, theme (own default theme).
+- [x] Validation pipeline: lxml + ECMA-376 Transitional XSDs (`schemas/`); `tools/ooxml-validate` (.NET OpenXmlValidator).
+- [x] Golden-test harness (canonical XML snapshots in `tests/golden/expected/`).
+- [x] First version of the property registry: 15 run and 14 paragraph properties, with schema-order tables checked against `wml.xsd`.
+- [x] **Spike:** 5 representative documents in the proposed syntax. See the [findings](../examples/spike/FINDINGS.md).
+- **Exit:** the Python API produces a valid document with styled paragraphs. This is met locally: the golden cases pass both validators
+  and open in Word 365 with the expected formatting. CI has not run yet because the repository has no GitHub remote.
 
 ## M1: Core language (roughly "Pandoc parity")
 

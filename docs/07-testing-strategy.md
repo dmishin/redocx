@@ -6,7 +6,7 @@ property, or a layout different from what was intended. So testing has several l
 | Layer | What | Runs |
 |-------|------|------|
 | **Unit** | Parser (incl. property-based tests with Hypothesis: parse ∘ print = id), unit conversion, option validation, counters, LaTeX→OMML | every commit |
-| **Golden snapshots** | `.wgx` → canonicalized XML of each part (sorted attributes, normalized whitespace), diffed against committed snapshots | every commit |
+| **Golden snapshots** | Document → canonicalized XML of each part (C14N 2.0: sorted attributes, no insignificant whitespace; indented), diffed against committed snapshots in `tests/golden/expected/`. Inputs are Python API cases (`tests/golden/cases.py`) until the parser exists, then `.wgx` files. | every commit |
 | **Schema validation** | Every test output validated against ECMA-376 Transitional XSDs (lxml) **and** OpenXmlValidator (.NET, Office 2019+ file format) | every commit |
 | **Structural read-back** | Open output with python-docx and assert high-level facts (style of paragraph N, table cell count) | every commit |
 | **Rendering smoke** | LibreOffice headless → PDF → PNG; check it renders without crash; optional perceptual diff against baselines | nightly |

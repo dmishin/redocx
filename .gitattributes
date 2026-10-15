@@ -14,3 +14,8 @@
 *.jpeg binary
 *.gif  binary
 *.zip  binary
+
+# Third-party schemas are stored byte-for-byte as published.
+schemas/ecma-376-transitional/** -text
+schemas/opc/** -text
+schemas/w3c/** -text

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Minimal local stand-in for the DCMI terms schema, written for wordgenx.
+  OPC requires dcterms:created / dcterms:modified to carry xsi:type="dcterms:W3CDTF".
+  Not the official DCMI schema.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://purl.org/dc/terms/"
+           elementFormDefault="qualified">
+  <xs:complexType name="W3CDTF">
+    <xs:simpleContent>
+      <xs:extension base="xs:dateTime"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name="created" type="xs:anyType"/>
+  <xs:element name="modified" type="xs:anyType"/>
+</xs:schema>

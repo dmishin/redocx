@@ -7,7 +7,9 @@ from pathlib import Path
 
 import pytest
 
+from tests.golden.cases import CASES
 from wordgenx.ooxml import Package
+from wordgenx.ooxml.writer import write_docx
 
 PROJECT = Path(__file__).resolve().parents[2] / "tools" / "ooxml-validate"
 
@@ -48,6 +50,14 @@ def test_hello_package_is_valid(
 ) -> None:
     path = tmp_path / "hello.docx"
     hello_package().save(path)
+    result = _validate(validator_dll, path)
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize("case", sorted(CASES))
+def test_golden_case_is_valid(validator_dll: Path, case: str, tmp_path: Path) -> None:
+    path = tmp_path / f"{case}.docx"
+    write_docx(CASES[case](), path)
     result = _validate(validator_dll, path)
     assert result.returncode == 0, result.stdout + result.stderr
 

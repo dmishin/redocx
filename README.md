@@ -36,8 +36,38 @@ uv run ruff format         # format
 uv run pyright             # strict type check
 ```
 
-Layout: `src/wordgenx/` (package), `tests/`, `tools/ooxml-validate/` (.NET validator, CI and dev only),
-`docs/` (design), `examples/` (sample sources).
+Golden snapshots (`tests/golden/expected/`) record the exact XML of each test document. After an intended output
+change, regenerate them and review the diff before committing:
+
+```bash
+WORDGENX_UPDATE_GOLDEN=1 uv run pytest tests/golden
+```
+
+Every golden document is also validated against the ECMA-376 schemas (`schemas/`) and by Microsoft's Open XML SDK.
+
+Layout: `src/wordgenx/` (package), `tests/`, `schemas/` (XSDs for tests), `tools/ooxml-validate/` (.NET validator,
+CI and dev only), `docs/` (design), `examples/` (sample sources).
+
+### Python API (early)
+
+```python
+from wordgenx import ir
+from wordgenx.props import para_props, run_props
+from wordgenx.ooxml.writer import write_docx
+
+doc = ir.Document(
+    styles=(
+        ir.paragraph_style("Heading 1", next="Normal",
+                           paragraph=para_props(keep_with_next=True, outline_level=1),
+                           run=run_props(font="theme.major", size="16pt", color="theme.accent1")),
+    ),
+    body=(
+        ir.paragraph("Hello", style="Heading 1"),
+        ir.paragraph("Plain text and ", ir.run("bold text", bold=True), ".", align="justify"),
+    ),
+)
+write_docx(doc, "hello.docx")
+```
 
 ## License
 
