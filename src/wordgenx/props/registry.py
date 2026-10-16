@@ -285,7 +285,7 @@ def _emit_color(value: object, ctx: EmitContext) -> Emitted:
     return [("color", {"val": value.rgb or "auto"})]
 
 
-def _color_attrs(color: Color, ctx: EmitContext, prefix: str = "") -> Attrs:
+def color_attrs(color: Color, ctx: EmitContext, prefix: str = "") -> Attrs:
     """val/color, themeColor, themeTint, themeShade (or fill, themeFill, ... with a prefix)."""
     main = "fill" if prefix else "color"
     if color.theme is None:
@@ -320,17 +320,21 @@ def _border_side(
 
     def children(value: object, ctx: EmitContext) -> list[tuple[str, Attrs]]:
         assert isinstance(value, Border)
-        if value.style == "nil":
-            return [(side, {"val": "nil"})]
-        attrs: Attrs = {
-            "val": value.style,
-            "sz": str(value.eighths),
-            "space": str(value.space_points),
-            **_color_attrs(value.color, ctx),
-        }
-        return [(side, attrs)]
+        return [(side, border_attrs(value, ctx))]
 
     return emit, children
+
+
+def border_attrs(border: Border, ctx: EmitContext) -> Attrs:
+    """The attributes of a border element (w:top, w:bdr, ...), without the w: prefix."""
+    if border.style == "nil":
+        return {"val": "nil"}
+    return {
+        "val": border.style,
+        "sz": str(border.eighths),
+        "space": str(border.space_points),
+        **color_attrs(border.color, ctx),
+    }
 
 
 def _margin_side(side: str) -> Callable[[object, EmitContext], list[tuple[str, Attrs]]]:
@@ -352,7 +356,7 @@ def _text_direction(value: object) -> object:
 
 def _emit_shading(value: object, ctx: EmitContext) -> Emitted:
     assert isinstance(value, Color)
-    return [("shd", {"val": "clear", "color": "auto", **_color_attrs(value, ctx, "Fill")})]
+    return [("shd", {"val": "clear", "color": "auto", **color_attrs(value, ctx, "Fill")})]
 
 
 def _emit_line_spacing(value: object, ctx: EmitContext) -> Emitted:
@@ -448,6 +452,22 @@ _SPECS: tuple[PropSpec, ...] = (
         _val("highlight"),
         "Highlighter color.",
         " | ".join(_kebab(v) for v in _HIGHLIGHTS),
+    ),
+    PropSpec(
+        "border",
+        R,
+        _border,
+        lambda value, ctx: [("bdr", border_attrs(value, ctx))],  # type: ignore[arg-type]
+        "A border around the text (Word's character border).",
+        "(style, width, colour, space=…) | none",
+    ),
+    PropSpec(
+        "shading",
+        R,
+        _color,
+        _emit_shading,
+        "Background colour behind the text (any colour; highlight has 16).",
+        "#RRGGBB | theme.<name>",
     ),
     PropSpec(
         "underline",

@@ -77,6 +77,8 @@ BANDS: dict[str, tuple[str, str]] = {
 }
 """Banding blocks -> (odd, even) w:tblStylePr types."""
 CONDITION_TARGETS = (Target.RUN, Target.CELL, Target.PARAGRAPH)
+RUN_LAST = frozenset({"shading"})
+"""Keys a run shares with paragraphs or cells, where styles mean the other one."""
 """In table styles, borders and shading are the table's and the cells', not paragraphs'."""
 NUMBERING_REF_RE = re.compile(r'\s*(?:"([^"]*)"|(\S+))(?:\s+level\s+(\d))?\s*')
 
@@ -341,6 +343,10 @@ class StyleSheetCompiler:
     ) -> None:
         # The first listed target that knows the key wins (in table styles, borders are
         # table borders at the top level and cell borders in a header-row block).
+        # `shading` is a run property too, but in a paragraph or table style it means
+        # the paragraph's or the cells'; only character styles shade the run.
+        if key in RUN_LAST and len(targets) > 1:
+            targets = [*(t for t in targets if t is not Target.RUN), Target.RUN]
         ordered = [*targets, *(t for t in Target if t not in targets)]
         for target in ordered:
             if key not in REGISTRY[target]:

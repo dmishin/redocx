@@ -7,10 +7,11 @@ from typing import TYPE_CHECKING, Any
 
 from wordgenx import ir
 from wordgenx.commands.bind import Args
-from wordgenx.commands.types import Fields, PageSize
+from wordgenx.commands.types import Fields, PageBorderSpec, PageSize
 from wordgenx.lower.common import BlockHandler, markup
 from wordgenx.syntax import ast
 from wordgenx.syntax.diagnostics import Code
+from wordgenx.syntax.source import Span
 from wordgenx.values import Length
 
 if TYPE_CHECKING:
@@ -84,6 +85,8 @@ def section(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
         )
     if (valign := args.text("valign")) is not None:
         s = replace(s, vertical_align=valign)
+    if (borders := args.get("borders", PageBorderSpec)) is not None:
+        s = replace(s, borders=_page_borders(lw, borders, s.borders, args.span_of("borders")))
     if "line-numbers" in args:
         numbering = args.record("line-numbers")
         s = replace(s, line_numbers=_line_numbers(numbering) if numbering is not None else None)
@@ -104,6 +107,23 @@ def _margins(lw: Lowering, page: ir.PageSetup, margins: Fields) -> ir.PageSetup:
             lw.settings = replace(lw.settings, mirror_margins=True)
         page = replace(page, **dict.fromkeys(MARGINS[side], value))
     return page
+
+
+def _page_borders(
+    lw: Lowering, spec: PageBorderSpec, current: ir.PageBorders | None, span: Span
+) -> ir.PageBorders | None:
+    """The section's page borders, replacing the ones it inherited (`current`). Sides
+    that are `none` have no border; with no side left, there are no page borders."""
+    sides = {name: b for name, b in spec.sides.items() if b.style != "nil"}
+    if not sides:
+        return None
+    try:
+        return ir.PageBorders(
+            **sides, offset_from=spec.offset_from or "page", pages=spec.pages or "all"
+        )
+    except ValueError as e:
+        lw.report(Code.INVALID_ARGUMENT, str(e), span)
+        return current
 
 
 def _line_numbers(fields: Fields) -> ir.LineNumbers:

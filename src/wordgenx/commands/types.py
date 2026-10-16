@@ -16,7 +16,7 @@ from decimal import Decimal, InvalidOperation
 from wordgenx.props import PropertySet, Target, UnknownPropertyError
 from wordgenx.syntax import ast
 from wordgenx.syntax.source import Span
-from wordgenx.values import InvalidValueError, Length, TabStop
+from wordgenx.values import Border, InvalidValueError, Length, TabStop
 
 WHITESPACE_RE = re.compile(r"[ \t\r\n]+")
 
@@ -405,6 +405,73 @@ class Fields:
 
 
 # --- specific values -------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class PageBorderSpec:
+    """`borders=...` of \\section: borders per side (None: no border) and their options."""
+
+    sides: Mapping[str, Border]
+    offset_from: str | None = None
+    pages: str | None = None
+
+
+PAGE_BORDER_GROUPS: dict[str, tuple[str, ...]] = {
+    "top": ("top",),
+    "left": ("left",),
+    "bottom": ("bottom",),
+    "right": ("right",),
+    "all": ("top", "left", "bottom", "right"),
+}
+
+
+@dataclass(frozen=True)
+class PageBordersValue(ValueType):
+    """``(single, 1pt)`` for all four sides, or ``(all=..., top=..., from=text, pages=first)``;
+    ``none`` removes them."""
+
+    def parse(self, value: ast.Value) -> PageBorderSpec:
+        items = items_of(value) if isinstance(value, ast.TupleValue) else ()
+        known = {*PAGE_BORDER_GROUPS, "from", "pages"}
+        if not any(item.key in known for item in items):
+            return PageBorderSpec(dict.fromkeys(PAGE_BORDER_GROUPS["all"], self._border(value)))
+        sides: dict[str, Border] = {}
+        offset_from = pages = None
+        for item in items:
+            if item.key == "from":
+                offset_from = str(Choice.of("page", "text").parse(item.value))
+            elif item.key == "pages":
+                pages = str(Choice.of("all", "first", "not-first").parse(item.value))
+            elif item.key in PAGE_BORDER_GROUPS:
+                border = self._border(item.value)
+                for side in PAGE_BORDER_GROUPS[item.key]:
+                    sides[side] = border
+            else:
+                word = item.key or text_of(item.value)
+                raise OptionError(
+                    f"unknown page border part `{word}`",
+                    item.span,
+                    help=self.describe(),
+                    label=suggestion(word, sorted(known)),
+                )
+        return PageBorderSpec(sides, offset_from, pages)
+
+    @staticmethod
+    def _border(value: ast.Value) -> Border:
+        words = [
+            (f"{item.key}=" if item.key else "") + text_of(item.value) for item in items_of(value)
+        ]
+        try:
+            return Border.parse(" ".join(words))
+        except InvalidValueError as e:
+            raise OptionError(str(e), value.span) from None
+
+    def describe(self) -> str:
+        return (
+            "a border such as (single, 1pt, theme.accent1), or "
+            "(all=..., top=..., left=..., bottom=..., right=..., from=page|text, "
+            "pages=all|first|not-first), or none"
+        )
 
 
 @dataclass(frozen=True)

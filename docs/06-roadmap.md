@@ -103,9 +103,25 @@ Steps, in order:
 
 ## M4: Advanced layout
 
-- Floating images and wrapping, text boxes, shapes, watermarks, page borders and backgrounds.
-- Drop caps, frames, floating tables.
-- RTL and complex scripts; custom themes.
+Steps, in order (the small ones first; the drawing steps share one positioning model):
+
+1. [x] **Page decoration**: page borders on sections (`borders=`), the page colour
+   (`\document[page-color=…]`), borders and shading on runs.
+2. **Custom themes**: theme colours and fonts set in the document or a style sheet (`theme1.xml` written by
+   wordgenx), so `theme.accent1` and `theme.major` mean the document's own choices.
+3. **Floating images**: `\image[float, wrap=…, x=…, y=…]` as `wp:anchor` (square, tight, top-and-bottom, behind,
+   in front), positioned against the page, margin, column or paragraph; crop, rotation and a border on any image.
+4. **Text boxes and watermarks**: `\textbox` (a `wps` shape with markup inside, inline or floating, with fill and
+   border), `\watermark` (text or a picture behind every page of a section, in the header).
+5. **Frames and floating tables**: drop caps and text frames (`w:framePr`), floating tables (`w:tblpPr`), columns
+   of different widths.
+6. **Right-to-left and complex scripts**: right-to-left paragraphs, runs and sections, complex-script fonts and
+   sizes, the text direction of sections and cells.
+
+Basic shapes (lines, arrows, rectangles) come only if they stay small; see [Postponed features](09-postponed.md).
+
+- **Exit:** a magazine-style report: a cover page with a full-bleed picture, floating figures with text around them,
+  a pull quote in a text box, a drop cap, a "DRAFT" watermark and its own theme.
 
 ## M5: Collaboration & forms
 

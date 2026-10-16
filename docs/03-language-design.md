@@ -117,6 +117,9 @@ page). Style sheets modify its styles. A built-in the markup needs is the templa
 architecture §4.6. `wordgenx build corp.wgx -o corp.dotx` writes a template;
 [examples/templates/corporate.wgx](../examples/templates/corporate.wgx) is one.
 
+`\document[page-color=#FDF6E3]` colours every page (Word's Design > Page Color; `w:background`). Word shows it on
+screen and in PDF export, but prints it only when *Print background colors and images* is on.
+
 ### Document settings (F-14)
 
 `\settings[…]` maps to `settings.xml`. Implemented: `protection=(mode=forms|read-only|comments|tracked-changes,
@@ -145,6 +148,7 @@ Direct formatting is always available:
 
 ```wgx
 \font[family="Consolas", size=10pt, color=theme.accent1, caps, spacing=0.5pt]{text}
+\font[border=(single, 0.5pt, #C00000, space=1pt), shading=#FFF2CC]{boxed}   % a character border and shading
 \b{bold} \i{italic} \u[double]{underlined} \s{struck} \sup{2} \sub{i} \hl[yellow]{highlight}
 \style[Term]{defined term}        % apply a named character style
 \lang[de-DE]{Fahrvergnügen}       % language, for spell-check and hyphenation
@@ -408,7 +412,13 @@ type (next-page, continuous, even, odd), vertical alignment (`valign=top|center|
 (`page-numbers=(format=lower-roman, start=1)`), line numbering
 (`line-numbers=on` or `(count-by=5, start=1, distance=0.5cm, restart=each-page|each-section|continuous)`), title page
 (different first page), and whether headers and footers link to the previous section (`link-headers=false`).
-Columns of different widths, page borders and text direction come later (M4).
+
+Page borders: `borders=(single, 1.5pt, theme.accent1)` puts the same line on all four sides;
+`borders=(all=…, top=…, left=none, from=page|text, pages=all|first|not-first)` sets sides, what their distance is
+measured from (the page edge, the default, or the text) and which pages of the section have them. A side's
+`space=` is its distance, at most 31pt; without it Word's defaults apply (24pt from the page edge, 4pt from the
+text). A section without `borders=` keeps the previous section's; `borders=` replaces them, and `borders=none` removes
+them. Columns of different widths and text direction come later (M4).
 
 ## 3.11 References, labels, notes
 

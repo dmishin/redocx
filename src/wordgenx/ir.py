@@ -27,7 +27,7 @@ from wordgenx.props import (
     para_props,
     run_props,
 )
-from wordgenx.values import Length
+from wordgenx.values import Border, Color, Length
 
 if TYPE_CHECKING:
     from wordgenx.ooxml.template import Template
@@ -125,6 +125,8 @@ class Settings:
     protection: str | None = None
     """What editing is allowed: a value of PROTECTION_MODES (w:documentProtection)."""
     protection_enforced: bool = False
+    page_color: Color | None = None
+    """The colour of every page (w:background; Design > Page Color in Word)."""
 
     def notes(self, kind: str) -> NoteSettings:
         return self.footnotes if kind == "footnote" else self.endnotes
@@ -633,6 +635,8 @@ class Section:
     line_numbers: LineNumbers | None = None
     vertical_align: str | None = None
     """top | center | bottom | justify: where the text sits between the top and bottom margins."""
+    borders: PageBorders | None = None
+    """Lines around the pages of the section (w:pgBorders)."""
 
     def __post_init__(self) -> None:
         if self.vertical_align not in (None, *VERTICAL_ALIGNMENTS):
@@ -649,6 +653,43 @@ class Section:
 
 
 VERTICAL_ALIGNMENTS = {"top": "top", "center": "center", "bottom": "bottom", "justify": "both"}
+PAGE_BORDER_SIDES = ("top", "left", "bottom", "right")
+PAGE_BORDER_PAGES = {"all": "allPages", "first": "firstPage", "not-first": "notFirstPage"}
+PAGE_BORDER_OFFSETS = ("page", "text")
+MAX_PAGE_BORDER_SPACE = Length.pt(31)
+"""The largest distance Word allows between a page border and what it is measured from."""
+
+
+@dataclass(frozen=True)
+class PageBorders:
+    """Page borders of a section: a line per side, measured from the page edge or the text."""
+
+    top: Border | None = None
+    left: Border | None = None
+    bottom: Border | None = None
+    right: Border | None = None
+    offset_from: str = "page"
+    """page | text: what each border's space is measured from."""
+    pages: str = "all"
+    """all | first | not-first (a key of PAGE_BORDER_PAGES)."""
+
+    def __post_init__(self) -> None:
+        if self.offset_from not in PAGE_BORDER_OFFSETS:
+            raise ValueError("page borders are measured from the page or the text")
+        if self.pages not in PAGE_BORDER_PAGES:
+            raise ValueError(f"page borders apply to {', '.join(PAGE_BORDER_PAGES)} pages")
+        for side in self.sides():
+            if side[1].space.emu > MAX_PAGE_BORDER_SPACE.emu:
+                raise ValueError("a page border is at most 31pt from the page edge or the text")
+
+    def sides(self) -> list[tuple[str, Border]]:
+        return [
+            (name, border)
+            for name in PAGE_BORDER_SIDES
+            if (border := getattr(self, name)) is not None
+        ]
+
+
 LINE_NUMBER_RESTARTS = {
     "each-page": "newPage",
     "each-section": "newSection",

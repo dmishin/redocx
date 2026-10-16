@@ -19,7 +19,7 @@ from wordgenx.stylesheet.syntax import parse_stylesheet
 from wordgenx.syntax import ParseResult, ast, parse
 from wordgenx.syntax.diagnostics import Code
 from wordgenx.syntax.source import Source, Span
-from wordgenx.values import Length
+from wordgenx.values import Color, Length
 
 if TYPE_CHECKING:
     from wordgenx.lower.lowering import Lowering
@@ -39,6 +39,10 @@ def document(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
         lw.meta = replace(lw.meta, language=language)
     if "smart-quotes" in args:
         lw.smart_quotes = args.flag("smart-quotes")
+    if (color := args.get("page-color", Color)) is not None:
+        lw.settings = replace(
+            lw.settings, page_color=None if color.rgb is None and color.theme is None else color
+        )
     if (template := args.text("template")) is not None:
         if lw.has_content:
             lw.report(

@@ -20,7 +20,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Character spacing, scale, kerning | `w:spacing`, `w:w`, `w:kern` | M2 ✓ | ● |
 | Hidden, emboss, imprint, outline, shadow | `w:vanish`, … | M2 ✓ | ● |
 | Language (spell-check, hyphenation) | `w:lang` | M1 | ● |
-| Run border | `w:bdr` | M4 | ● |
+| Run border | `w:bdr` | M4 ✓ | ● |
 | RTL, complex script | `w:rtl`, `w:cs` | M4 | ●● |
 | East Asian layout, emphasis marks, ruby | `w:eastAsianLayout`, `w:em`, `w:ruby` | Later | ●● |
 | Text effects (glow, reflection, etc. – w14) | `w14:*` | Later / Esc | ●● |
@@ -79,9 +79,9 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Page numbering format & restart per section | M2 ✓ | ● |
 | Line numbering | M2 ✓ | ● |
 | Vertical alignment | M2 ✓ | ● |
-| Page borders | M4 | ● |
+| Page borders | M4 ✓ | ● |
 | Watermark (VML/DrawingML in header) | M4 | ●● |
-| Page background color | M4 | ● |
+| Page background color | M4 ✓ | ● |
 | Text direction / RTL section | M4 | ●● |
 
 ## 5.6 Tables

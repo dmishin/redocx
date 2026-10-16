@@ -79,6 +79,7 @@ def _sample(name: str, target: Target) -> object:
         "size": "11pt",
         "lang": "en-US",
         "highlight": "yellow",
+        "border": "single 0.5pt",
         "underline": "single",
         "vertical-align": "superscript",
         "align": "center",

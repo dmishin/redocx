@@ -5,11 +5,12 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable, Iterator, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from wordgenx.ir import (
     LINE_NUMBER_RESTARTS,
     NOTE_KINDS,
+    PAGE_BORDER_PAGES,
     PAGE_NUMBER_FORMATS,
     SECTION_STARTS,
     VERTICAL_ALIGNMENTS,
@@ -27,6 +28,7 @@ from wordgenx.ir import (
     Math,
     Note,
     NoteMark,
+    PageBorders,
     Paragraph,
     RawBlock,
     RawXml,
@@ -51,7 +53,8 @@ from wordgenx.ooxml.schema_order import SECT_PR, TR_PR, ordered
 from wordgenx.ooxml.style_names import style_id
 from wordgenx.ooxml.xml import E, Element, nsmap, parse_fragment, qn
 from wordgenx.props import EMPTY_RUN, EmitContext, PropertySet, Target
-from wordgenx.values import Border
+from wordgenx.props.registry import border_attrs, color_attrs
+from wordgenx.values import Border, Length
 
 _SPLIT_RE = re.compile(r"(\t|\n)")
 PICTURE_URI = "http://schemas.openxmlformats.org/drawingml/2006/picture"
@@ -323,6 +326,21 @@ def _attach_section(paragraph: Element, section: Element) -> None:
         paragraph.insert(0, E("w:pPr", section))
 
 
+def _page_borders(borders: PageBorders, ctx: BodyContext) -> Element:
+    """w:pgBorders. A side without a space gets Word's: 24pt from the page edge, 4pt from
+    the text."""
+    attrs = {"w:offsetFrom": borders.offset_from}
+    if borders.pages != "all":
+        attrs["w:display"] = PAGE_BORDER_PAGES[borders.pages]
+    default = Length.pt(24 if borders.offset_from == "page" else 4)
+    sides: list[Element] = []
+    for name, border in borders.sides():
+        spaced = border if border.space.emu else replace(border, space=default)
+        side_attrs = border_attrs(spaced, ctx.emit)
+        sides.append(E(f"w:{name}", {f"w:{k}": v for k, v in side_attrs.items()}))
+    return E("w:pgBorders", attrs, *sides)
+
+
 def _section_properties(section: Section, ctx: BodyContext) -> Element:
     page = section.page
     references: list[Element] = []
@@ -369,6 +387,8 @@ def _section_properties(section: Section, ctx: BodyContext) -> Element:
         children["titlePg"] = E("w:titlePg")
     if section.vertical_align is not None:
         children["vAlign"] = E("w:vAlign", {"w:val": VERTICAL_ALIGNMENTS[section.vertical_align]})
+    if (borders := section.borders) is not None:
+        children["pgBorders"] = _page_borders(borders, ctx)
     if (numbers := section.line_numbers) is not None:
         attrs = {
             "w:countBy": str(numbers.count_by),
@@ -479,6 +499,9 @@ def document_xml(document: Document, ctx: BodyContext, root: Element | None = No
     final = _section_properties(document.section, ctx)
     if root is None:
         root = E("w:document", nsmap=nsmap(*PART_NAMESPACES))
+    if (color := document.settings.page_color) is not None:
+        attrs = {f"w:{k}": v for k, v in color_attrs(color, ctx.emit).items()}
+        root.append(E("w:background", attrs))
     root.append(E("w:body", *body, final))
     return root
 

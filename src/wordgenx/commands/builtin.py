@@ -22,6 +22,7 @@ from wordgenx.commands.types import (
     LengthValue,
     LevelRange,
     ListOf,
+    PageBordersValue,
     PageSize,
     PageSizeValue,
     PropValue,
@@ -121,6 +122,7 @@ _command(
     _o("lang", PropValue(Target.RUN, "lang"), "the document language (en-US)"),
     _o("smart-quotes", FLAG, "curly quotes and dashes"),
     _o("template", TEXT, "a .dotx or .docx to compile into"),
+    _o("page-color", PropValue(Target.RUN, "color"), "the colour of every page"),
     body=None,
 )  # fmt: skip
 _command(
@@ -236,6 +238,7 @@ _command(
         ),
     ),
     _o("valign", Choice.of(*ir.VERTICAL_ALIGNMENTS), "where the text sits on the page"),
+    _o("borders", PageBordersValue(), "lines around the pages"),
     _o(
         "line-numbers",
         Toggle(
