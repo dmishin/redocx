@@ -298,6 +298,20 @@ def test_planned_features_warn_but_build() -> None:
     assert texts(result.document) == ["Text and kept"]
 
 
+def test_postponed_commands_warn_and_say_so() -> None:
+    result = diagnostics(r"A \ins[author=J]{new}\del[author=J]{old} b.")
+    assert result.document is not None
+    assert texts(result.document) == ["A new b."]
+    found = [(d.message, d.help) for _, d in result.diagnostics]
+    assert found == [
+        (
+            "`\\ins` is postponed indefinitely; it is ignored (its text is kept)",
+            "see docs/09-postponed.md",
+        ),
+        ("`\\del` is postponed indefinitely; it is ignored", "see docs/09-postponed.md"),
+    ]
+
+
 # --- build ------------------------------------------------------------------------------------
 
 

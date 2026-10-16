@@ -28,7 +28,7 @@ from wordgenx import ir
 from wordgenx.bibliography import Bibliography
 from wordgenx.commands.bind import Args, bind
 from wordgenx.commands.builtin import COMMANDS, is_block
-from wordgenx.commands.spec import CommandSpec, Placement
+from wordgenx.commands.spec import POSTPONED, CommandSpec, Placement
 from wordgenx.highlight import DEFAULT_THEME
 from wordgenx.lower import (
     citations,
@@ -182,12 +182,14 @@ class Lowering:
         self.report(code, message, span, help=help, severity=Severity.WARNING)
 
     def not_yet(self, command: ast.Command, spec: CommandSpec) -> None:
-        self.warn(
-            Code.NOT_SUPPORTED_YET,
-            f"`\\{command.name}` is not supported yet; it is ignored",
-            command.span,
-            help=f"planned for milestone {spec.planned}",
-        )
+        kept = " (its text is kept)" if spec.keep_body else ""
+        if spec.planned == POSTPONED:
+            message = f"`\\{command.name}` is postponed indefinitely; it is ignored{kept}"
+            help = "see docs/09-postponed.md"
+        else:
+            message = f"`\\{command.name}` is not supported yet; it is ignored{kept}"
+            help = f"planned for milestone {spec.planned}"
+        self.warn(Code.NOT_SUPPORTED_YET, message, command.span, help=help)
 
     def unknown_command(self, command: ast.Command) -> None:
         close = difflib.get_close_matches(command.name, [*COMMANDS, *self.macros], n=1)

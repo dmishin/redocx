@@ -596,7 +596,6 @@ figures) and takes a .docx only, not a macro-enabled document or a template.
 ```wgx
 \comment[author="R. Patel", date=2026-10-13, text="Please confirm the commercial position."]{thirty (30) days}
 \comment[author="R. Patel", text={Rich comment with *markup*.}]{commented range}
-\ins[author="J. Doe"]{inserted text}   \del[author="J. Doe"]{deleted text}          % tracked revisions
 
 \control[type=text, tag=name, placeholder="Enter name", lock=content]
 \control[type=dropdown, tag=status, items=("Draft", "Final")]{Draft}
@@ -607,10 +606,11 @@ figures) and takes a .docx only, not a macro-enabled document or a template.
 \control[type=repeating, tag=contacts, min=1, max=3]{ …block content repeated per entry… }
 ```
 
-Form protection is set with `\settings[protection=(mode=forms, enforce)]`.
+Form protection is set with `\settings[protection=(mode=forms, enforce)]`, and `\settings[track-changes]` turns on
+Word's Track Changes for edits made later in Word.
 
-A later CLI feature, `wordgenx diff old.wgx new.wgx -o redline.docx`, produces a **tracked-changes redline** between two
-versions of a source.
+Tracked revisions written in the source (`\ins`, `\del`) and the `wordgenx diff` redline are postponed indefinitely
+(see [Postponed features](09-postponed.md)): `\ins` keeps its text and `\del` drops it, each with a warning.
 
 ## 3.18 Macros, includes, constants (F-8)
 

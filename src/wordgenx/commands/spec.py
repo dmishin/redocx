@@ -29,6 +29,10 @@ class Placement(Enum):
     """Only directly inside another command (\\row in \\table, \\cell in \\row)."""
 
 
+POSTPONED = "postponed"
+"""`planned` for commands postponed indefinitely (docs/09-postponed.md)."""
+
+
 @dataclass(frozen=True)
 class OptionSpec:
     name: str
@@ -57,7 +61,8 @@ class CommandSpec:
     body_doc: str = "a body"
     """What the body holds, for messages: "a file name", "a formula"."""
     planned: str | None = None
-    """The milestone that implements the command; it is ignored with a warning until then."""
+    """The milestone that implements the command (or POSTPONED); it is ignored with a
+    warning until then."""
     keep_body: bool = False
     """A planned command whose body text is kept (rather than dropped) meanwhile."""
     planned_options: Mapping[str, str] = field(default_factory=lambda: {})

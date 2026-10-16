@@ -109,7 +109,8 @@ Steps, in order:
 
 ## M5: Collaboration & forms
 
-- Comments, tracked insertions and deletions, `wordgenx diff` redlines.
+- Comments; `\settings[track-changes]` (Word's Track Changes on for later edits). Tracked revisions in the source
+  and `wordgenx diff` redlines are [postponed](09-postponed.md).
 - Content controls; document protection.
 
 ## M6: Ecosystem
@@ -124,7 +125,7 @@ Steps, in order:
 ## Later / candidates
 
 Native charts, native Word bibliography, content-control data binding, embedded fonts,
-building blocks, tracked formatting changes.
+building blocks. Postponed indefinitely: see [Postponed features](09-postponed.md).
 
 ## Suggested immediate next steps
 

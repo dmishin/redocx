@@ -11,7 +11,7 @@ from collections.abc import Sequence
 from typing import Any
 
 from wordgenx import ir
-from wordgenx.commands.spec import CommandSpec, OptionSpec, Placement
+from wordgenx.commands.spec import POSTPONED, CommandSpec, OptionSpec, Placement
 from wordgenx.commands.types import (
     Bool,
     Choice,
@@ -469,8 +469,8 @@ for _note in ("footnote", "endnote"):
 _command("textbox", INLINE, "A text box.", planned="M4")
 _command("watermark", BLOCK, "A page watermark.", planned="M4")
 _command("comment", INLINE, "A comment.", planned="M5", keep_body=True)
-_command("ins", INLINE, "Tracked inserted text.", planned="M5", keep_body=True)
-_command("del", INLINE, "Tracked deleted text.", planned="M5")
+_command("ins", INLINE, "Tracked inserted text.", planned=POSTPONED, keep_body=True)
+_command("del", INLINE, "Tracked deleted text.", planned=POSTPONED)
 _command("control", INLINE, "A content control.", planned="M5", keep_body=True)
 
 # --- fenced code block attributes (design §3.15) ------------------------------------------

@@ -138,9 +138,9 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Feature | Tier | Diff. |
 |---------|------|-------|
 | Comments (anchored ranges, replies, resolved state) | M5 | ●● |
-| Tracked insertions/deletions | M5 | ●● |
-| Tracked formatting changes | Later | ●●● |
-| `wordgenx diff` → redline docx | M5 | ●●● |
+| Tracked insertions/deletions | Postponed (§9.1) | ●● |
+| Tracked formatting changes | Postponed (§9.1) | ●●● |
+| `wordgenx diff` → redline docx | Postponed (§9.1) | ●●● |
 | Content controls (text, rich text, dropdown, combo, date, checkbox, picture) | M5 | ●● |
 | Repeating-section content controls | M5 | ●● |
 | Content-control data binding to custom XML | Later | ●●● |
