@@ -1,0 +1,27 @@
+= Introduction {#ch:intro}
+
+Congestion on urban motorways costs time, fuel and reliability. Traffic managers react to
+it with ramp metering\ix{ramp metering}, variable speed limits and travel-time
+information, and every one of these measures needs to know the current *traffic state*:
+how many vehicles there are on each stretch of road, and how fast they move.
+
+Loop detectors\ix{loop detector} count vehicles at fixed points, typically every 500 m.
+Between them the state is unknown. Floating cars\ix{floating car}, vehicles that report
+their position and speed, cover the gaps but only sample a few percent of the traffic.
+Neither source alone gives the full picture.\footnote{The detector spacing on the study
+site varies between 300 m and 900 m; see Chapter @ch:method.}
+
+== Research questions
+
+This thesis answers three questions:
+
+1. How can a kinematic wave model be written in a form a Kalman filter can use?
+2. How much do floating-car speeds improve density estimates over detector counts alone?
+3. Does the filter locate stop-and-go waves\ix{stop-and-go wave} accurately enough for
+   incident detection?
+
+== Outline
+
+Chapter @ch:flow reviews traffic flow theory and the cell transmission model. Chapter
+@ch:method describes the filter and its implementation, Chapter @ch:results evaluates it on data
+from the \city ring road, and Chapter @ch:conclusion concludes.

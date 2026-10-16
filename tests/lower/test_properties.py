@@ -60,6 +60,16 @@ def test_paragraph_style_borders_and_shading() -> None:
     }
 
 
+def test_an_unknown_border_side_is_named() -> None:
+    result = compile_source(
+        '\\styles{ table T : "Table Grid" { borders: (top=(single, 1pt), inner-h=none); } }'
+    )
+    messages = [d.message for _, d in result.diagnostics]
+    assert any("unknown border side `inner-h`" in m for m in messages), messages
+    # space= inside a single border is not a side
+    compiled("\\p[borders=(single, 1pt, space=4pt)]{x}")
+
+
 def test_direct_paragraph_borders() -> None:
     doc = compiled("\\p[borders=(bottom=(double, 1.5pt)), shading=theme.accent2.lighter(80%)]{x}")
     (paragraph,) = doc.all_paragraphs()

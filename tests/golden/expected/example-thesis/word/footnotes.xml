@@ -1,0 +1,78 @@
+<w:footnotes xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:footnote w:id="-1" w:type="separator">
+    <w:p>
+      <w:pPr>
+        <w:spacing w:after="0" w:line="240" w:lineRule="auto"/>
+      </w:pPr>
+      <w:r>
+        <w:separator/>
+      </w:r>
+    </w:p>
+  </w:footnote>
+  <w:footnote w:id="0" w:type="continuationSeparator">
+    <w:p>
+      <w:pPr>
+        <w:spacing w:after="0" w:line="240" w:lineRule="auto"/>
+      </w:pPr>
+      <w:r>
+        <w:continuationSeparator/>
+      </w:r>
+    </w:p>
+  </w:footnote>
+  <w:footnote w:id="1">
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="FootnoteText"/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="FootnoteReference"/>
+        </w:rPr>
+        <w:footnoteRef/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> </w:t>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">The detector spacing on the study site varies between 300 m and 900 m; see Chapter </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_ch_method \w \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>3</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t>.</w:t>
+      </w:r>
+    </w:p>
+  </w:footnote>
+  <w:footnote w:id="2">
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="FootnoteText"/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="FootnoteReference"/>
+        </w:rPr>
+        <w:footnoteRef/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> </w:t>
+      </w:r>
+      <w:r>
+        <w:t>Detector 7 failed on the second day; its counts were left out.</w:t>
+      </w:r>
+    </w:p>
+  </w:footnote>
+</w:footnotes>

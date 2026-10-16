@@ -159,9 +159,20 @@ def test_numbered_equation_uses_words_hash() -> None:
     (row,) = array.findall(f"{M}e")
     texts = [t.text for t in row.iter(f"{M}t")]
     assert texts == ["x=1", "#", "2.1"]
-    start = row.find(f"{W}bookmarkStart")
-    assert start is not None
+    # The bookmark holds the number without its parentheses: a REF adds its own.
+    inside = row.find(f"{M}d/{M}e")
+    assert inside is not None
+    assert [etree.QName(c).localname for c in inside] == ["bookmarkStart", "r", "bookmarkEnd"]
+    start = inside[0]
     assert (start.get(f"{W}name"), start.get(f"{W}id")) == ("_Ref_eq", "7")
+    assert inside.find(f"{M}r/{M}rPr/{M}nor") is None
+
+
+def test_equation_number_with_a_dash_is_text() -> None:
+    element = omml(parse_math("x = 1"), display=True, number="2–1")
+    number = element.find(f".//{M}d/{M}e/{M}r")
+    assert number is not None
+    assert number.find(f"{M}rPr/{M}nor") is not None  # not spaced like a minus sign
 
 
 # --- in documents -------------------------------------------------------------------------------------

@@ -1,0 +1,12 @@
+= Conclusion {#ch:conclusion}
+
+The answers to the research questions of Chapter @ch:intro are:
+
+1. The cell transmission model becomes a nonlinear state-space model, @eq:state-space,
+   that an extended Kalman filter can use, provided the corrected densities are clipped.
+2. Floating-car speeds reduce the density error by 31% overall and by 47% in congestion
+   (@tab:errors).
+3. The filter locates stop-and-go waves within one cell in 92% of the incidents.
+
+Future work should replace the fixed fundamental diagram of @tab:fd with parameters
+estimated online, and test the filter on a network with junctions\ix{junction}.

@@ -1,0 +1,31 @@
+= Results {#ch:results}
+
+== Density estimates
+
+@tab:errors compares the root mean square error\ix{RMSE} of the density estimates
+against the reference densities of the validation detectors. Adding floating-car speeds
+reduces the error by 31% overall, and by almost half in congestion, where detector data
+alone react late to the queue tail.
+
+\caption[Table, id=tab:errors]{Density error (RMSE, veh/km) by traffic condition}
+\table[style="Thesis Table", header-rows=1, widths=(5cm, 3cm, 3cm, 2.5cm), columns=(left, decimal, decimal, decimal)]{
+  | Condition   | Detectors | Detectors + FCD | Change |
+  | Free flow   | 4.1       | 3.6             | -12%   |
+  | Transition  | 9.8       | 6.9             | -30%   |
+  | Congestion  | 17.2      | 9.1             | -47%   |
+  | \cell[colspan=1]{*All*} | *8.6* | *5.9*    | *-31%* |
+}
+
+== Stop-and-go waves
+
+@fig:speed shows the estimated speeds on the morning of the first day. A stop-and-go wave
+starts near the downstream end at 7:40 and travels upstream at about 18 km/h, the wave
+speed of @tab:fd, as kinematic wave theory predicts \cite[page=89]{treiber2013}.
+
+\figure[id=fig:speed, width=13cm]{
+  \image[alt="Speed by time and position: a red band runs diagonally from the lower right to the upper left"]{../img/speed-field.png}
+  \caption{Estimated speeds, 7:00 to 9:00; red is slow, green is free flow}
+}
+
+The filter places the wave front within one cell (500 m) of the position seen in the
+floating-car data in 34 of the 37 logged incidents.

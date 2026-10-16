@@ -1,0 +1,81 @@
+% ============================================================================
+% A thesis-style document: the M3 exit sample (math, citations, code, figures).
+% Build: wordgenx build examples/thesis/thesis.wgx
+% Word fills in the contents, lists, index and page numbers when it opens the file.
+% ============================================================================
+
+\document[lang=en-GB]
+\meta[
+  title    = "Estimating Traffic States on Urban Motorways",
+  author   = "A. N. Author",
+  subject  = "MSc thesis",
+  keywords = ("traffic flow", "state estimation", "Kalman filter"),
+]
+\settings[captions=(chapter-numbers, chapter-style="Heading 1", separator="–")]
+\use{thesis.wgxs}
+\bibliography[file=refs.bib, style=apa]
+
+\let{city}{Rotterdam}
+
+% ---------------------------------------------------------------------------- front matter
+% No header or footer on the title page; roman page numbers for the front matter.
+\section[size=A4, margins=(top=2.5cm, bottom=2.5cm, inside=3cm, outside=2.2cm), mirror,
+         title-page, page-numbers=lower-roman]
+\footer{\align[center]{\pagenum}}
+
+\p[style=Title]{Estimating Traffic States on Urban Motorways}
+\p[style=Subtitle]{A macroscopic approach with loop detectors and floating cars}
+
+\p[style="Title Meta"]{A. N. Author}
+\p[style="Title Meta"]{Thesis submitted for the degree of Master of Science}
+\p[style="Title Meta"]{Faculty of Civil Engineering}
+\p[style="Title Meta"]{October 2026}
+
+\pagebreak
+
+=* Abstract
+
+\p[style=Abstract]{
+Reliable estimates of traffic density are the basis of ramp metering, travel-time
+information and incident detection. This thesis combines the first-order kinematic wave
+model with a Kalman filter that fuses loop detector counts and floating-car speeds. On a
+12 km stretch of the \city ring road the filter reduces the density error by 31% compared
+with detector data alone, and it locates stop-and-go waves within one cell of their true
+position.
+}
+
+=* Acknowledgements
+
+I thank my supervisors for their patience, and the road authority for the detector data.
+
+\toc[levels=1-3, title="Contents"]
+
+\listof[Figure, title="List of Figures"]
+
+\listof[Table, title="List of Tables"]
+
+\listof[Listing, title="List of Listings"]
+
+% ---------------------------------------------------------------------------- main matter
+% A new section: arabic page numbers from 1, and the chapter in the header.
+\section[page-numbers=(format=decimal, start=1), title-page]
+\header{\field{STYLEREF "Heading 1" \n}\tab \field{STYLEREF "Heading 1"}}
+\footer{\align[center]{\pagenum}}
+\footer[first]{\align[center]{\pagenum}}  % a chapter's first page: no header, but a number
+
+\include{chapters/01-introduction.wgx}
+\include{chapters/02-traffic-flow.wgx}
+\include{chapters/03-method.wgx}
+\include{chapters/04-results.wgx}
+\include{chapters/05-conclusion.wgx}
+
+% ---------------------------------------------------------------------------- back matter
+% Unnumbered chapters: the header shows the title alone (STYLEREF \n would show 0).
+\section[break=next-page, title-page]
+\header{\tab \field{STYLEREF "Heading 1"}}
+\footer{\align[center]{\pagenum}}
+\footer[first]{\align[center]{\pagenum}}
+
+\printbibliography[title="References"]
+
+\index[headings, title="Index"]

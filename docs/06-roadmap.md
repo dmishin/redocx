@@ -92,6 +92,14 @@ Steps, in order:
    JSON, one-way).
 
 - **Exit:** a thesis-style document with math, citations, code and figures.
+  *Status: met.* `examples/thesis/thesis.wgx` is a 13-page MSc thesis in five included chapter files with its own
+  style sheet: title page, abstract, contents, lists of figures, tables and listings, front matter with roman page
+  numbers, chapters with running heads, numbered equations referenced per chapter ("(2–1)"), APA citations and
+  references, highlighted code listings, an SVG and a PNG figure, tables with repeated header rows, footnotes and a
+  two-column index. It builds without diagnostics, passes both validators, and after Word updates its fields the
+  contents, lists, index and references are all right. Building it found two bugs, both fixed: the equation bookmark
+  covered the parentheses, so Word's update of a reference showed "((2.1))", and a chapter separator other than "."
+  was set as math, spacing an en dash like a minus sign.
 
 ## M4: Advanced layout
 

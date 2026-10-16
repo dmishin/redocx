@@ -1,0 +1,108 @@
+<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="wordgenx">
+  <a:themeElements>
+    <a:clrScheme name="wordgenx">
+      <a:dk1>
+        <a:srgbClr val="000000"/>
+      </a:dk1>
+      <a:lt1>
+        <a:srgbClr val="FFFFFF"/>
+      </a:lt1>
+      <a:dk2>
+        <a:srgbClr val="1F2A44"/>
+      </a:dk2>
+      <a:lt2>
+        <a:srgbClr val="E8ECF2"/>
+      </a:lt2>
+      <a:accent1>
+        <a:srgbClr val="1F6FB2"/>
+      </a:accent1>
+      <a:accent2>
+        <a:srgbClr val="E07A1F"/>
+      </a:accent2>
+      <a:accent3>
+        <a:srgbClr val="3A9D5D"/>
+      </a:accent3>
+      <a:accent4>
+        <a:srgbClr val="7E57C2"/>
+      </a:accent4>
+      <a:accent5>
+        <a:srgbClr val="C0392B"/>
+      </a:accent5>
+      <a:accent6>
+        <a:srgbClr val="16A2A8"/>
+      </a:accent6>
+      <a:hlink>
+        <a:srgbClr val="0563C1"/>
+      </a:hlink>
+      <a:folHlink>
+        <a:srgbClr val="954F72"/>
+      </a:folHlink>
+    </a:clrScheme>
+    <a:fontScheme name="wordgenx">
+      <a:majorFont>
+        <a:latin typeface="Calibri Light"/>
+        <a:ea typeface=""/>
+        <a:cs typeface=""/>
+      </a:majorFont>
+      <a:minorFont>
+        <a:latin typeface="Calibri"/>
+        <a:ea typeface=""/>
+        <a:cs typeface=""/>
+      </a:minorFont>
+    </a:fontScheme>
+    <a:fmtScheme name="wordgenx">
+      <a:fillStyleLst>
+        <a:solidFill>
+          <a:schemeClr val="phClr"/>
+        </a:solidFill>
+        <a:solidFill>
+          <a:schemeClr val="phClr"/>
+        </a:solidFill>
+        <a:solidFill>
+          <a:schemeClr val="phClr"/>
+        </a:solidFill>
+      </a:fillStyleLst>
+      <a:lnStyleLst>
+        <a:ln w="6350">
+          <a:solidFill>
+            <a:schemeClr val="phClr"/>
+          </a:solidFill>
+        </a:ln>
+        <a:ln w="12700">
+          <a:solidFill>
+            <a:schemeClr val="phClr"/>
+          </a:solidFill>
+        </a:ln>
+        <a:ln w="19050">
+          <a:solidFill>
+            <a:schemeClr val="phClr"/>
+          </a:solidFill>
+        </a:ln>
+      </a:lnStyleLst>
+      <a:effectStyleLst>
+        <a:effectStyle>
+          <a:effectLst/>
+        </a:effectStyle>
+        <a:effectStyle>
+          <a:effectLst/>
+        </a:effectStyle>
+        <a:effectStyle>
+          <a:effectLst/>
+        </a:effectStyle>
+      </a:effectStyleLst>
+      <a:bgFillStyleLst>
+        <a:solidFill>
+          <a:schemeClr val="phClr"/>
+        </a:solidFill>
+        <a:solidFill>
+          <a:schemeClr val="phClr"/>
+        </a:solidFill>
+        <a:solidFill>
+          <a:schemeClr val="phClr"/>
+        </a:solidFill>
+      </a:bgFillStyleLst>
+    </a:fmtScheme>
+  </a:themeElements>
+  <a:objectDefaults/>
+  <a:extraClrSchemeLst/>
+</a:theme>

@@ -1,0 +1,59 @@
+= Traffic flow theory {#ch:flow}
+
+== Conservation of vehicles
+
+Macroscopic models describe traffic as a fluid with density \m{k(x,t)} (vehicles per
+kilometre), flow \m{q(x,t)} (vehicles per hour) and speed \m{v = q/k}. Vehicles are
+neither created nor destroyed between junctions, which gives the conservation law of
+\textcite{lighthill1955} and \textcite{richards1956}:
+
+$$ \frac{\partial k}{\partial t} + \frac{\partial q}{\partial x} = 0 $$ {#eq:conservation}
+
+On its own @eq:conservation has two unknowns. The LWR model\ix{LWR model} closes it by
+assuming that flow is a function of density alone, \m{q = Q(k)}: the *fundamental
+diagram*\ix{fundamental diagram} (@fig:fd).
+
+\figure[id=fig:fd, width=11cm]{
+  \image[alt="Flow against density: a parabola with its maximum at the capacity"]{../img/fundamental-diagram.svg}
+  \caption{The Greenshields fundamental diagram with a free-flow speed of 100 km/h}
+}
+
+== The fundamental diagram
+
+\textcite{greenshields1935} proposed a linear relation between speed and density, which
+makes the fundamental diagram a parabola:
+
+$$ Q(k) = v_f\, k \left(1 - \frac{k}{k_j}\right) $$ {#eq:greenshields}
+
+where \m{v_f} is the free-flow speed and \m{k_j} the jam density\ix{jam density}. Its
+maximum, the capacity\ix{capacity}, lies at \m{k_c = k_j/2}:
+
+$$ q_{\max} = Q(k_c) = \frac{v_f\, k_j}{4} $$ {#eq:capacity}
+
+Later work favours a triangular diagram, which fits measured data better at high
+densities \cite{daganzo1997, treiber2013}. @tab:fd lists the parameters used in this
+thesis.
+
+\caption[Table, id=tab:fd]{Fundamental diagram parameters for the study site}
+\table[style="Thesis Table", header-rows=1, widths=(6cm, 2.5cm, 2.5cm), columns=(left, decimal, left)]{
+  | Parameter          | Value | Unit    |
+  | Free-flow speed    | 100   | km/h    |
+  | Jam density        | 150   | veh/km  |
+  | Capacity per lane  | 2100  | veh/h   |
+  | Wave speed         | 18.5  | km/h    |
+}
+
+== The cell transmission model
+
+\textcite{daganzo1994} discretises @eq:conservation into cells of length \m{\Delta x} and
+time steps \m{\Delta t}. The flow between cells \m{i} and \m{i+1} is the smaller of what
+cell \m{i} can send and what cell \m{i+1} can receive:
+
+$$ q_{i+1/2} = \min\left\{ S(k_i),\ R(k_{i+1}) \right\} $$ {#eq:ctm-flow}
+
+and the densities are updated with
+
+$$ k_i^{t+1} = k_i^t + \frac{\Delta t}{\Delta x}\left(q_{i-1/2} - q_{i+1/2}\right) $$ {#eq:ctm-update}
+
+The model is stable when a vehicle at free-flow speed cannot cross a whole cell in one
+time step, \m{v_f\, \Delta t \leq \Delta x}: the CFL condition\ix{CFL condition}.

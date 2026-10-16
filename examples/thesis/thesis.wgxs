@@ -1,0 +1,40 @@
+% Thesis house style: a serif body, numbered chapters that start on a new page.
+
+defaults {
+  font: "Cambria"; size: 11pt; lang: en-GB;
+  space-after: 6pt; line-spacing: 1.15;
+}
+
+paragraph Normal { widow-control; align: justify; }
+
+paragraph Title : Normal {
+  font: theme.major; size: 26pt; align: center; space-before: 96pt; space-after: 12pt;
+}
+paragraph Subtitle : Normal { size: 14pt; align: center; space-after: 48pt; }
+paragraph "Title Meta" : Normal { align: center; space-after: 4pt; }
+
+paragraph "Heading 1" : Normal {
+  font: theme.major; size: 20pt; bold; align: left;
+  space-before: 0; space-after: 24pt; keep-with-next; keep-lines; outline-level: 1;
+  page-break-before; next: Normal;
+}
+paragraph "Heading 2" : "Heading 1" {
+  size: 14pt; space-before: 18pt; space-after: 6pt; outline-level: 2; page-break-before: off;
+}
+paragraph "Heading 3" : "Heading 2" { size: 12pt; space-before: 12pt; outline-level: 3; }
+
+numbering Headings {
+  level 1 { text: "%1";       style: "Heading 1"; indent: 0.9cm hanging; }
+  level 2 { text: "%1.%2";    style: "Heading 2"; indent: 1.2cm hanging; }
+  level 3 { text: "%1.%2.%3"; style: "Heading 3"; indent: 1.5cm hanging; }
+}
+
+paragraph Abstract : Normal { indent: (left=1cm, right=1cm); size: 10.5pt; }
+paragraph Quote : Normal { indent: (left=1cm, right=1cm); italic; }
+
+table "Thesis Table" : "Table Grid" {
+  borders: (top=(single, 1pt, #000000), bottom=(single, 1pt, #000000), inner=none, left=none, right=none);
+  cell-margins: (top=0.04cm, bottom=0.04cm, left=0.12cm, right=0.12cm);
+  size: 10pt;
+  header-row { bold; border-bottom: (single, 0.5pt, auto); repeat; }
+}

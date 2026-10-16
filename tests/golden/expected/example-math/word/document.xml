@@ -291,7 +291,6 @@
                 </w:rPr>
                 <ns0:t>#</ns0:t>
               </ns0:r>
-              <w:bookmarkStart w:id="0" w:name="_Ref_eq_gauss"/>
               <ns0:d>
                 <ns0:dPr>
                   <ns0:ctrlPr>
@@ -302,15 +301,16 @@
                   </ns0:ctrlPr>
                 </ns0:dPr>
                 <ns0:e>
+                  <w:bookmarkStart w:id="0" w:name="_Ref_eq_gauss"/>
                   <ns0:r>
                     <w:rPr>
                       <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
                     </w:rPr>
                     <ns0:t>1.1</ns0:t>
                   </ns0:r>
+                  <w:bookmarkEnd w:id="0"/>
                 </ns0:e>
               </ns0:d>
-              <w:bookmarkEnd w:id="0"/>
             </ns0:e>
           </ns0:eqArr>
         </ns0:oMath>
@@ -556,7 +556,6 @@
                 </w:rPr>
                 <ns0:t>#</ns0:t>
               </ns0:r>
-              <w:bookmarkStart w:id="1" w:name="_Ref_eq_limit"/>
               <ns0:d>
                 <ns0:dPr>
                   <ns0:ctrlPr>
@@ -567,15 +566,16 @@
                   </ns0:ctrlPr>
                 </ns0:dPr>
                 <ns0:e>
+                  <w:bookmarkStart w:id="1" w:name="_Ref_eq_limit"/>
                   <ns0:r>
                     <w:rPr>
                       <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
                     </w:rPr>
                     <ns0:t>1.2</ns0:t>
                   </ns0:r>
+                  <w:bookmarkEnd w:id="1"/>
                 </ns0:e>
               </ns0:d>
-              <w:bookmarkEnd w:id="1"/>
             </ns0:e>
           </ns0:eqArr>
         </ns0:oMath>
@@ -992,7 +992,6 @@
                 </w:rPr>
                 <ns0:t>#</ns0:t>
               </ns0:r>
-              <w:bookmarkStart w:id="2" w:name="_Ref_eq_det"/>
               <ns0:d>
                 <ns0:dPr>
                   <ns0:ctrlPr>
@@ -1003,15 +1002,16 @@
                   </ns0:ctrlPr>
                 </ns0:dPr>
                 <ns0:e>
+                  <w:bookmarkStart w:id="2" w:name="_Ref_eq_det"/>
                   <ns0:r>
                     <w:rPr>
                       <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
                     </w:rPr>
                     <ns0:t>2.1</ns0:t>
                   </ns0:r>
+                  <w:bookmarkEnd w:id="2"/>
                 </ns0:e>
               </ns0:d>
-              <w:bookmarkEnd w:id="2"/>
             </ns0:e>
           </ns0:eqArr>
         </ns0:oMath>
@@ -1147,7 +1147,6 @@
                 </w:rPr>
                 <ns0:t>#</ns0:t>
               </ns0:r>
-              <w:bookmarkStart w:id="3" w:name="_Ref_eq_square"/>
               <ns0:d>
                 <ns0:dPr>
                   <ns0:ctrlPr>
@@ -1158,15 +1157,16 @@
                   </ns0:ctrlPr>
                 </ns0:dPr>
                 <ns0:e>
+                  <w:bookmarkStart w:id="3" w:name="_Ref_eq_square"/>
                   <ns0:r>
                     <w:rPr>
                       <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
                     </w:rPr>
                     <ns0:t>2.2</ns0:t>
                   </ns0:r>
+                  <w:bookmarkEnd w:id="3"/>
                 </ns0:e>
               </ns0:d>
-              <w:bookmarkEnd w:id="3"/>
             </ns0:e>
           </ns0:eqArr>
         </ns0:oMath>
@@ -1364,7 +1364,6 @@
                 </w:rPr>
                 <ns0:t>#</ns0:t>
               </ns0:r>
-              <w:bookmarkStart w:id="4" w:name="_Ref_eq_euler"/>
               <ns0:d>
                 <ns0:dPr>
                   <ns0:ctrlPr>
@@ -1375,15 +1374,16 @@
                   </ns0:ctrlPr>
                 </ns0:dPr>
                 <ns0:e>
+                  <w:bookmarkStart w:id="4" w:name="_Ref_eq_euler"/>
                   <ns0:r>
                     <w:rPr>
                       <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
                     </w:rPr>
                     <ns0:t>2.3</ns0:t>
                   </ns0:r>
+                  <w:bookmarkEnd w:id="4"/>
                 </ns0:e>
               </ns0:d>
-              <w:bookmarkEnd w:id="4"/>
             </ns0:e>
           </ns0:eqArr>
         </ns0:oMath>

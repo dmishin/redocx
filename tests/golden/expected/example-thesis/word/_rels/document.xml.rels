@@ -1,0 +1,22 @@
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Target="styles.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles"/>
+  <Relationship Id="rId2" Target="settings.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings"/>
+  <Relationship Id="rId3" Target="fontTable.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/fontTable"/>
+  <Relationship Id="rId4" Target="theme/theme1.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme"/>
+  <Relationship Id="rId5" Target="numbering.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering"/>
+  <Relationship Id="rId6" Target="footer1.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer"/>
+  <Relationship Id="rId7" Target="footnotes.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footnotes"/>
+  <Relationship Id="rId8" Target="media/image1.png" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"/>
+  <Relationship Id="rId9" Target="media/image2.svg" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"/>
+  <Relationship Id="rId10" Target="media/image3.png" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"/>
+  <Relationship Id="rId11" Target="header1.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header"/>
+  <Relationship Id="rId12" Target="footer2.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer"/>
+  <Relationship Id="rId13" Target="footer3.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer"/>
+  <Relationship Id="rId14" Target="https://doi.org/10.1016/0191-2615(94)90002-7" TargetMode="External" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink"/>
+  <Relationship Id="rId15" Target="https://doi.org/10.1098/rspa.1955.0089" TargetMode="External" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink"/>
+  <Relationship Id="rId16" Target="https://doi.org/10.1287/opre.4.1.42" TargetMode="External" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink"/>
+  <Relationship Id="rId17" Target="https://doi.org/10.1007/978-3-642-32460-4" TargetMode="External" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink"/>
+  <Relationship Id="rId18" Target="header2.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header"/>
+  <Relationship Id="rId19" Target="footer4.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer"/>
+  <Relationship Id="rId20" Target="footer5.xml" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer"/>
+</Relationships>

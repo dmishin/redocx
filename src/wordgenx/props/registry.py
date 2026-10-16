@@ -959,8 +959,12 @@ def expand_shorthand(key: str, raw: str, target: Target = Target.TABLE) -> dict[
         groups = _PARAGRAPH_BORDER_GROUPS if target is Target.PARAGRAPH else _BORDER_GROUPS
         parts = split_parts(raw)
         keys = [k for k, _ in parts if k]
-        if not keys or not all(k in groups for k in keys):  # one border for all sides
+        if not any(k in groups for k in keys):  # one border for all sides (space=... aside)
             parts = [("all", raw)]
+        elif unknown := next((k for k in keys if k not in groups), None):
+            raise InvalidValueError(
+                f"unknown border side `{unknown}`; expected one of {', '.join(groups)}"
+            )
         elif any(k is None for k, _ in parts):
             raise InvalidValueError("write borders as one border or as side=border pairs, not both")
         out: dict[str, object] = {}

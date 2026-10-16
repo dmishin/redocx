@@ -1,0 +1,67 @@
+= Method {#ch:method}
+
+== State-space form
+
+The cell densities form the state vector \m{\mathbf{x}_t = (k_1, \dots, k_n)^\top}. The
+cell transmission model, @eq:ctm-update, is the process model, and the measurements are
+detector counts and floating-car speeds:
+
+$$\begin{aligned}
+  \mathbf{x}_{t+1} &= f(\mathbf{x}_t) + \mathbf{w}_t, & \mathbf{w}_t &\sim \mathcal{N}(0, Q) \\
+  \mathbf{y}_t     &= h(\mathbf{x}_t) + \mathbf{v}_t, & \mathbf{v}_t &\sim \mathcal{N}(0, R)
+\end{aligned}$$ {#eq:state-space}
+
+== The extended Kalman filter
+
+The Kalman filter\ix{Kalman filter} \cite{kalman1960} alternates a prediction with the
+model and a correction with the measurements. Because \m{f} and \m{h} are not linear, the
+extended filter\ix{Kalman filter!extended} linearises them around the current estimate,
+with Jacobians \m{F_t} and \m{H_t}:
+
+$$ K_t = P_t^- H_t^\top \left( H_t P_t^- H_t^\top + R \right)^{-1} $$ {#eq:gain}
+
+$$ \hat{\mathbf{x}}_t = \hat{\mathbf{x}}_t^- + K_t \left( \mathbf{y}_t - h(\hat{\mathbf{x}}_t^-) \right) $$ {#eq:correction}
+
+Densities cannot be negative or exceed the jam density, so the corrected state is
+clipped to \m{[0, k_j]} after each step.
+
+== Implementation
+
+The filter is written in Python with NumPy. @lst:predict shows the prediction step; the
+flows follow @eq:ctm-flow, with the sending and receiving functions of a triangular
+fundamental diagram.
+
+```python {#lst:predict, caption="The prediction step of the cell transmission model", line-numbers}
+import numpy as np
+
+def predict(k, dt, dx, vf=100.0, w=18.5, kj=150.0, qmax=2100.0):
+    """One CTM step: densities k (veh/km) -> densities after dt hours."""
+    send = np.minimum(vf * k, qmax)               # S(k): what a cell can send
+    receive = np.minimum(w * (kj - k), qmax)      # R(k): what a cell can receive
+    q = np.minimum(send[:-1], receive[1:])        # flows between cells
+    k_next = k.copy()
+    k_next[1:-1] += dt / dx * (q[:-1] - q[1:])
+    return np.clip(k_next, 0.0, kj)
+```
+
+Detector counts are aggregated to one-minute intervals; floating-car reports are matched
+to cells by their position (@lst:match).
+
+```python {#lst:match, caption="Matching floating-car reports to cells"}
+def cell_of(position_km, dx=0.5):
+    return int(position_km // dx)
+```
+
+== Study site and data
+
+The study site is a 12 km stretch of the \city ring road with 19 loop detectors, divided
+into 24 cells of 500 m. @tab:data summarises the data, which cover four weekdays in
+March.\footnote{Detector 7 failed on the second day; its counts were left out.}
+
+\caption[Table, id=tab:data]{The data sets}
+\table[style="Thesis Table", header-rows=1, widths=(5cm, 3cm, 1fr)]{
+  | Source         | Interval | Records    |
+  | Loop detectors | 1 min    | 109 440    |
+  | Floating cars  | 10 s     | 2 316 004  |
+  | Incident log   | --       | 37         |
+}

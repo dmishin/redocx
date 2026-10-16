@@ -211,7 +211,13 @@ class _Writer:
             ident = str(self.bookmark_id(bookmark))
             start = [E("w:bookmarkStart", {"w:id": ident, "w:name": bookmark})]
             end = [E("w:bookmarkEnd", {"w:id": ident})]
-        tail = [self.run(Run("#")), *start, self.node(Delim("(", ")", (Run(number),))), *end]
+        # The bookmark holds the number alone, so a REF to it (which adds its own
+        # parentheses) shows "(2.1)", not "((2.1))". A separator other than "." is text:
+        # as math, an en dash would be spaced like a minus sign.
+        text = Run(number, normal=any(c not in "0123456789." for c in number))
+        delim = self.node(Delim("(", ")", ()))
+        delim[-1].extend([*start, self.run(text), *end])
+        tail = [self.run(Run("#")), delim]
         elements = [E("m:e", *self.row(r)) for r in rows]
         elements[-1].extend(tail)
         return E("m:eqArr", E("m:eqArrPr", _val("m:maxDist", "1"), _ctrl()), *elements)

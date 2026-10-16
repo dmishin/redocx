@@ -1,0 +1,7 @@
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties">
+  <dc:title xmlns:dc="http://purl.org/dc/elements/1.1/">Estimating Traffic States on Urban Motorways</dc:title>
+  <dc:subject xmlns:dc="http://purl.org/dc/elements/1.1/">MSc thesis</dc:subject>
+  <dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">A. N. Author</dc:creator>
+  <cp:keywords>traffic flow, state estimation, Kalman filter</cp:keywords>
+  <dc:language xmlns:dc="http://purl.org/dc/elements/1.1/">en-GB</dc:language>
+</cp:coreProperties>

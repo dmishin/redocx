@@ -1,0 +1,6259 @@
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Title"/>
+      </w:pPr>
+      <w:r>
+        <w:t>Estimating Traffic States on Urban Motorways</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Subtitle"/>
+      </w:pPr>
+      <w:r>
+        <w:t>A macroscopic approach with loop detectors and floating cars</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TitleMeta"/>
+      </w:pPr>
+      <w:r>
+        <w:t>A. N. Author</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TitleMeta"/>
+      </w:pPr>
+      <w:r>
+        <w:t>Thesis submitted for the degree of Master of Science</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TitleMeta"/>
+      </w:pPr>
+      <w:r>
+        <w:t>Faculty of Civil Engineering</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TitleMeta"/>
+      </w:pPr>
+      <w:r>
+        <w:t>October 2026</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:br w:type="page"/>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading1"/>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="0"/>
+        </w:numPr>
+      </w:pPr>
+      <w:bookmarkStart w:id="0" w:name="_Toc000000001"/>
+      <w:r>
+        <w:t>Abstract</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="0"/>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Abstract"/>
+      </w:pPr>
+      <w:r>
+        <w:t>Reliable estimates of traffic density are the basis of ramp metering, travel-time information and incident detection. This thesis combines the first-order kinematic wave model with a Kalman filter that fuses loop detector counts and floating-car speeds. On a 12 km stretch of the Rotterdam ring road the filter reduces the density error by 31% compared with detector data alone, and it locates stop-and-go waves within one cell of their true position.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading1"/>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="0"/>
+        </w:numPr>
+      </w:pPr>
+      <w:bookmarkStart w:id="1" w:name="_Toc000000002"/>
+      <w:r>
+        <w:t>Acknowledgements</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="1"/>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t>I thank my supervisors for their patience, and the road authority for the detector data.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOCHeading"/>
+      </w:pPr>
+      <w:r>
+        <w:t>Contents</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC1"/>
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:r>
+        <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> TOC \o "1-3" \h \z \u </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:hyperlink w:anchor="_Toc000000001" w:history="1">
+        <w:r>
+          <w:t>Abstract</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000001 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC1"/>
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000002" w:history="1">
+        <w:r>
+          <w:t>Acknowledgements</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000002 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC1"/>
+        <w:tabs>
+          <w:tab w:pos="440" w:val="left"/>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000003" w:history="1">
+        <w:r>
+          <w:t>1</w:t>
+          <w:tab/>
+          <w:t>Introduction</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000003 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC2"/>
+        <w:tabs>
+          <w:tab w:pos="880" w:val="left"/>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000004" w:history="1">
+        <w:r>
+          <w:t>1.1</w:t>
+          <w:tab/>
+          <w:t>Research questions</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000004 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC2"/>
+        <w:tabs>
+          <w:tab w:pos="880" w:val="left"/>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000005" w:history="1">
+        <w:r>
+          <w:t>1.2</w:t>
+          <w:tab/>
+          <w:t>Outline</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000005 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC1"/>
+        <w:tabs>
+          <w:tab w:pos="440" w:val="left"/>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000006" w:history="1">
+        <w:r>
+          <w:t>2</w:t>
+          <w:tab/>
+          <w:t>Traffic flow theory</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000006 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC2"/>
+        <w:tabs>
+          <w:tab w:pos="880" w:val="left"/>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000007" w:history="1">
+        <w:r>
+          <w:t>2.1</w:t>
+          <w:tab/>
+          <w:t>Conservation of vehicles</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000007 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC2"/>
+        <w:tabs>
+          <w:tab w:pos="880" w:val="left"/>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000008" w:history="1">
+        <w:r>
+          <w:t>2.2</w:t>
+          <w:tab/>
+          <w:t>The fundamental diagram</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000008 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC2"/>
+        <w:tabs>
+          <w:tab w:pos="880" w:val="left"/>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000009" w:history="1">
+        <w:r>
+          <w:t>2.3</w:t>
+          <w:tab/>
+          <w:t>The cell transmission model</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000009 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC1"/>
+        <w:tabs>
+          <w:tab w:pos="440" w:val="left"/>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000010" w:history="1">
+        <w:r>
+          <w:t>3</w:t>
+          <w:tab/>
+          <w:t>Method</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000010 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC2"/>
+        <w:tabs>
+          <w:tab w:pos="880" w:val="left"/>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000011" w:history="1">
+        <w:r>
+          <w:t>3.1</w:t>
+          <w:tab/>
+          <w:t>State-space form</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000011 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC2"/>
+        <w:tabs>
+          <w:tab w:pos="880" w:val="left"/>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000012" w:history="1">
+        <w:r>
+          <w:t>3.2</w:t>
+          <w:tab/>
+          <w:t>The extended Kalman filter</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000012 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC2"/>
+        <w:tabs>
+          <w:tab w:pos="880" w:val="left"/>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000013" w:history="1">
+        <w:r>
+          <w:t>3.3</w:t>
+          <w:tab/>
+          <w:t>Implementation</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000013 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC2"/>
+        <w:tabs>
+          <w:tab w:pos="880" w:val="left"/>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000014" w:history="1">
+        <w:r>
+          <w:t>3.4</w:t>
+          <w:tab/>
+          <w:t>Study site and data</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000014 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC1"/>
+        <w:tabs>
+          <w:tab w:pos="440" w:val="left"/>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000015" w:history="1">
+        <w:r>
+          <w:t>4</w:t>
+          <w:tab/>
+          <w:t>Results</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000015 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC2"/>
+        <w:tabs>
+          <w:tab w:pos="880" w:val="left"/>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000016" w:history="1">
+        <w:r>
+          <w:t>4.1</w:t>
+          <w:tab/>
+          <w:t>Density estimates</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000016 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC2"/>
+        <w:tabs>
+          <w:tab w:pos="880" w:val="left"/>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000017" w:history="1">
+        <w:r>
+          <w:t>4.2</w:t>
+          <w:tab/>
+          <w:t>Stop-and-go waves</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000017 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC1"/>
+        <w:tabs>
+          <w:tab w:pos="440" w:val="left"/>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000018" w:history="1">
+        <w:r>
+          <w:t>5</w:t>
+          <w:tab/>
+          <w:t>Conclusion</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000018 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC1"/>
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000019" w:history="1">
+        <w:r>
+          <w:t>References</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000019 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOC1"/>
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Toc000000020" w:history="1">
+        <w:r>
+          <w:t>Index</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Toc000000020 \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOCHeading"/>
+      </w:pPr>
+      <w:r>
+        <w:t>List of Figures</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TableofFigures"/>
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:r>
+        <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> TOC \h \z \c "Figure" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:hyperlink w:anchor="_Ref_fig_fd_f" w:history="1">
+        <w:r>
+          <w:t>Figure 2–1: The Greenshields fundamental diagram with a free-flow speed of 100 km/h</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Ref_fig_fd_f \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TableofFigures"/>
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Ref_fig_speed_f" w:history="1">
+        <w:r>
+          <w:t>Figure 4–1: Estimated speeds, 7:00 to 9:00; red is slow, green is free flow</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Ref_fig_speed_f \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOCHeading"/>
+      </w:pPr>
+      <w:r>
+        <w:t>List of Tables</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TableofFigures"/>
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:r>
+        <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> TOC \h \z \c "Table" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:hyperlink w:anchor="_Ref_tab_fd_f" w:history="1">
+        <w:r>
+          <w:t>Table 2–1: Fundamental diagram parameters for the study site</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Ref_tab_fd_f \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TableofFigures"/>
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Ref_tab_data_f" w:history="1">
+        <w:r>
+          <w:t>Table 3–1: The data sets</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Ref_tab_data_f \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TableofFigures"/>
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Ref_tab_errors_f" w:history="1">
+        <w:r>
+          <w:t>Table 4–1: Density error (RMSE, veh/km) by traffic condition</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Ref_tab_errors_f \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TOCHeading"/>
+      </w:pPr>
+      <w:r>
+        <w:t>List of Listings</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TableofFigures"/>
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+      </w:pPr>
+      <w:r>
+        <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> TOC \h \z \c "Listing" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:hyperlink w:anchor="_Ref_lst_predict_f" w:history="1">
+        <w:r>
+          <w:t>Listing 3–1: The prediction step of the cell transmission model</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Ref_lst_predict_f \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="TableofFigures"/>
+        <w:tabs>
+          <w:tab w:leader="dot" w:pos="8957" w:val="right"/>
+        </w:tabs>
+        <w:sectPr>
+          <w:footerReference xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId6" w:type="default"/>
+          <w:pgSz w:h="16838" w:w="11906"/>
+          <w:pgMar w:bottom="1417" w:footer="709" w:gutter="0" w:header="709" w:left="1701" w:right="1247" w:top="1417"/>
+          <w:pgNumType w:fmt="lowerRoman"/>
+          <w:cols w:space="708"/>
+          <w:titlePg/>
+          <w:docGrid w:linePitch="360"/>
+        </w:sectPr>
+      </w:pPr>
+      <w:hyperlink w:anchor="_Ref_lst_match_f" w:history="1">
+        <w:r>
+          <w:t>Listing 3–2: Matching floating-car reports to cells</w:t>
+        </w:r>
+        <w:r>
+          <w:tab/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve"> PAGEREF _Ref_lst_match_f \h </w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:hyperlink>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading1"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="2" w:name="_Toc000000003"/>
+      <w:bookmarkStart w:id="3" w:name="_Ref_ch_intro"/>
+      <w:r>
+        <w:t>Introduction</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="3"/>
+      <w:bookmarkEnd w:id="2"/>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t>Congestion on urban motorways costs time, fuel and reliability. Traffic managers react to it with ramp metering</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "ramp metering" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">, variable speed limits and travel-time information, and every one of these measures needs to know the current </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="Strong"/>
+        </w:rPr>
+        <w:t>traffic state</w:t>
+      </w:r>
+      <w:r>
+        <w:t>: how many vehicles there are on each stretch of road, and how fast they move.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t>Loop detectors</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "loop detector" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> count vehicles at fixed points, typically every 500 m. Between them the state is unknown. Floating cars</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "floating car" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t>, vehicles that report their position and speed, cover the gaps but only sample a few percent of the traffic. Neither source alone gives the full picture.</w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="FootnoteReference"/>
+        </w:rPr>
+        <w:footnoteReference w:id="1"/>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading2"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="4" w:name="_Toc000000004"/>
+      <w:r>
+        <w:t>Research questions</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="4"/>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t>This thesis answers three questions:</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="ListParagraph"/>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="3"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:t>How can a kinematic wave model be written in a form a Kalman filter can use?</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="ListParagraph"/>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="3"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:t>How much do floating-car speeds improve density estimates over detector counts alone?</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="ListParagraph"/>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="3"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:t>Does the filter locate stop-and-go waves</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "stop-and-go wave" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> accurately enough for incident detection?</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading2"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="5" w:name="_Toc000000005"/>
+      <w:r>
+        <w:t>Outline</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="5"/>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t xml:space="preserve">Chapter </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_ch_flow \w \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>2</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> reviews traffic flow theory and the cell transmission model. Chapter </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_ch_method \w \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>3</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> describes the filter and its implementation, Chapter </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_ch_results \w \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>4</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> evaluates it on data from the Rotterdam ring road, and Chapter </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_ch_conclusion \w \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>5</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> concludes.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading1"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="6" w:name="_Toc000000006"/>
+      <w:bookmarkStart w:id="7" w:name="_Ref_ch_flow"/>
+      <w:r>
+        <w:t>Traffic flow theory</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="7"/>
+      <w:bookmarkEnd w:id="6"/>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading2"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="8" w:name="_Toc000000007"/>
+      <w:r>
+        <w:t>Conservation of vehicles</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="8"/>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t xml:space="preserve">Macroscopic models describe traffic as a fluid with density </w:t>
+      </w:r>
+      <ns0:oMath xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:r>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>k(x,t)</ns0:t>
+        </ns0:r>
+      </ns0:oMath>
+      <w:r>
+        <w:t xml:space="preserve"> (vehicles per kilometre), flow </w:t>
+      </w:r>
+      <ns0:oMath xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:r>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>q(x,t)</ns0:t>
+        </ns0:r>
+      </ns0:oMath>
+      <w:r>
+        <w:t xml:space="preserve"> (vehicles per hour) and speed </w:t>
+      </w:r>
+      <ns0:oMath xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:r>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>v=q/k</ns0:t>
+        </ns0:r>
+      </ns0:oMath>
+      <w:r>
+        <w:t xml:space="preserve">. Vehicles are neither created nor destroyed between junctions, which gives the conservation law of </w:t>
+      </w:r>
+      <w:hyperlink w:anchor="_Ref_bib_lighthill1955" w:history="1">
+        <w:r>
+          <w:t>Lighthill and Whitham (1955)</w:t>
+        </w:r>
+      </w:hyperlink>
+      <w:r>
+        <w:t xml:space="preserve"> and </w:t>
+      </w:r>
+      <w:hyperlink w:anchor="_Ref_bib_richards1956" w:history="1">
+        <w:r>
+          <w:t>Richards (1956)</w:t>
+        </w:r>
+      </w:hyperlink>
+      <w:r>
+        <w:t>:</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <ns0:oMathPara xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:oMath>
+          <ns0:eqArr>
+            <ns0:eqArrPr>
+              <ns0:maxDist ns0:val="1"/>
+              <ns0:ctrlPr>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                  <w:i/>
+                </w:rPr>
+              </ns0:ctrlPr>
+            </ns0:eqArrPr>
+            <ns0:e>
+              <ns0:f>
+                <ns0:fPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:fPr>
+                <ns0:num>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>∂k</ns0:t>
+                  </ns0:r>
+                </ns0:num>
+                <ns0:den>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>∂t</ns0:t>
+                  </ns0:r>
+                </ns0:den>
+              </ns0:f>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>+</ns0:t>
+              </ns0:r>
+              <ns0:f>
+                <ns0:fPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:fPr>
+                <ns0:num>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>∂q</ns0:t>
+                  </ns0:r>
+                </ns0:num>
+                <ns0:den>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>∂x</ns0:t>
+                  </ns0:r>
+                </ns0:den>
+              </ns0:f>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>=0</ns0:t>
+              </ns0:r>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>#</ns0:t>
+              </ns0:r>
+              <ns0:d>
+                <ns0:dPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:dPr>
+                <ns0:e>
+                  <w:bookmarkStart w:id="9" w:name="_Ref_eq_conservation"/>
+                  <ns0:r>
+                    <ns0:rPr>
+                      <ns0:nor/>
+                    </ns0:rPr>
+                    <ns0:t>2–1</ns0:t>
+                  </ns0:r>
+                  <w:bookmarkEnd w:id="9"/>
+                </ns0:e>
+              </ns0:d>
+            </ns0:e>
+          </ns0:eqArr>
+        </ns0:oMath>
+      </ns0:oMathPara>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t xml:space="preserve">On its own </w:t>
+      </w:r>
+      <w:r>
+        <w:t>(</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_eq_conservation \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>2–1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t>)</w:t>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> has two unknowns. The LWR model</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "LWR model" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> closes it by assuming that flow is a function of density alone, </w:t>
+      </w:r>
+      <ns0:oMath xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:r>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>q=Q(k)</ns0:t>
+        </ns0:r>
+      </ns0:oMath>
+      <w:r>
+        <w:t xml:space="preserve">: the </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="Strong"/>
+        </w:rPr>
+        <w:t>fundamental diagram</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "fundamental diagram" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> (</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_fig_fd \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>Figure 2–1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t>).</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:keepNext/>
+        <w:jc w:val="center"/>
+      </w:pPr>
+      <w:r>
+        <w:drawing>
+          <wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distB="0" distL="0" distR="0" distT="0">
+            <wp:extent cx="3960000" cy="2475000"/>
+            <wp:effectExtent b="0" l="0" r="0" t="0"/>
+            <wp:docPr descr="Flow against density: a parabola with its maximum at the capacity" id="1" name="fundamental-diagram.svg"/>
+            <wp:cNvGraphicFramePr>
+              <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>
+            </wp:cNvGraphicFramePr>
+            <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                  <pic:nvPicPr>
+                    <pic:cNvPr descr="Flow against density: a parabola with its maximum at the capacity" id="0" name="fundamental-diagram.svg"/>
+                    <pic:cNvPicPr/>
+                  </pic:nvPicPr>
+                  <pic:blipFill>
+                    <a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId8">
+                      <a:extLst>
+                        <a:ext uri="{96DAC541-7B7A-43D3-8B79-37D633B846F1}">
+                          <asvg:svgBlip xmlns:asvg="http://schemas.microsoft.com/office/drawing/2016/SVG/main" r:embed="rId9"/>
+                        </a:ext>
+                      </a:extLst>
+                    </a:blip>
+                    <a:stretch>
+                      <a:fillRect/>
+                    </a:stretch>
+                  </pic:blipFill>
+                  <pic:spPr>
+                    <a:xfrm>
+                      <a:off x="0" y="0"/>
+                      <a:ext cx="3960000" cy="2475000"/>
+                    </a:xfrm>
+                    <a:prstGeom prst="rect">
+                      <a:avLst/>
+                    </a:prstGeom>
+                  </pic:spPr>
+                </pic:pic>
+              </a:graphicData>
+            </a:graphic>
+          </wp:inline>
+        </w:drawing>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Caption"/>
+        <w:keepNext w:val="0"/>
+        <w:jc w:val="center"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="10" w:name="_Ref_fig_fd_f"/>
+      <w:bookmarkStart w:id="11" w:name="_Ref_fig_fd"/>
+      <w:r>
+        <w:t xml:space="preserve">Figure </w:t>
+      </w:r>
+      <w:bookmarkStart w:id="12" w:name="_Ref_fig_fd_n"/>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> STYLEREF "Heading 1" \s </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>2</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t>–</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> SEQ Figure \* ARABIC \s 1 </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:bookmarkEnd w:id="12"/>
+      <w:bookmarkEnd w:id="11"/>
+      <w:r>
+        <w:t xml:space="preserve">: </w:t>
+      </w:r>
+      <w:bookmarkStart w:id="13" w:name="_Ref_fig_fd_t"/>
+      <w:r>
+        <w:t>The Greenshields fundamental diagram with a free-flow speed of 100 km/h</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="13"/>
+      <w:bookmarkEnd w:id="10"/>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading2"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="14" w:name="_Toc000000008"/>
+      <w:r>
+        <w:t>The fundamental diagram</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="14"/>
+    </w:p>
+    <w:p>
+      <w:hyperlink w:anchor="_Ref_bib_greenshields1935" w:history="1">
+        <w:r>
+          <w:t>Greenshields (1935)</w:t>
+        </w:r>
+      </w:hyperlink>
+      <w:r>
+        <w:t xml:space="preserve"> proposed a linear relation between speed and density, which makes the fundamental diagram a parabola:</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <ns0:oMathPara xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:oMath>
+          <ns0:eqArr>
+            <ns0:eqArrPr>
+              <ns0:maxDist ns0:val="1"/>
+              <ns0:ctrlPr>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                  <w:i/>
+                </w:rPr>
+              </ns0:ctrlPr>
+            </ns0:eqArrPr>
+            <ns0:e>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>Q(k)=</ns0:t>
+              </ns0:r>
+              <ns0:sSub>
+                <ns0:sSubPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:sSubPr>
+                <ns0:e>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>v</ns0:t>
+                  </ns0:r>
+                </ns0:e>
+                <ns0:sub>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>f</ns0:t>
+                  </ns0:r>
+                </ns0:sub>
+              </ns0:sSub>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t xml:space="preserve"> k</ns0:t>
+              </ns0:r>
+              <ns0:d>
+                <ns0:dPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:dPr>
+                <ns0:e>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>1−</ns0:t>
+                  </ns0:r>
+                  <ns0:f>
+                    <ns0:fPr>
+                      <ns0:ctrlPr>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                          <w:i/>
+                        </w:rPr>
+                      </ns0:ctrlPr>
+                    </ns0:fPr>
+                    <ns0:num>
+                      <ns0:r>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                        </w:rPr>
+                        <ns0:t>k</ns0:t>
+                      </ns0:r>
+                    </ns0:num>
+                    <ns0:den>
+                      <ns0:sSub>
+                        <ns0:sSubPr>
+                          <ns0:ctrlPr>
+                            <w:rPr>
+                              <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                              <w:i/>
+                            </w:rPr>
+                          </ns0:ctrlPr>
+                        </ns0:sSubPr>
+                        <ns0:e>
+                          <ns0:r>
+                            <w:rPr>
+                              <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                            </w:rPr>
+                            <ns0:t>k</ns0:t>
+                          </ns0:r>
+                        </ns0:e>
+                        <ns0:sub>
+                          <ns0:r>
+                            <w:rPr>
+                              <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                            </w:rPr>
+                            <ns0:t>j</ns0:t>
+                          </ns0:r>
+                        </ns0:sub>
+                      </ns0:sSub>
+                    </ns0:den>
+                  </ns0:f>
+                </ns0:e>
+              </ns0:d>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>#</ns0:t>
+              </ns0:r>
+              <ns0:d>
+                <ns0:dPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:dPr>
+                <ns0:e>
+                  <w:bookmarkStart w:id="15" w:name="_Ref_eq_greenshields"/>
+                  <ns0:r>
+                    <ns0:rPr>
+                      <ns0:nor/>
+                    </ns0:rPr>
+                    <ns0:t>2–2</ns0:t>
+                  </ns0:r>
+                  <w:bookmarkEnd w:id="15"/>
+                </ns0:e>
+              </ns0:d>
+            </ns0:e>
+          </ns0:eqArr>
+        </ns0:oMath>
+      </ns0:oMathPara>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t xml:space="preserve">where </w:t>
+      </w:r>
+      <ns0:oMath xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:sSub>
+          <ns0:sSubPr>
+            <ns0:ctrlPr>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                <w:i/>
+              </w:rPr>
+            </ns0:ctrlPr>
+          </ns0:sSubPr>
+          <ns0:e>
+            <ns0:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>v</ns0:t>
+            </ns0:r>
+          </ns0:e>
+          <ns0:sub>
+            <ns0:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>f</ns0:t>
+            </ns0:r>
+          </ns0:sub>
+        </ns0:sSub>
+      </ns0:oMath>
+      <w:r>
+        <w:t xml:space="preserve"> is the free-flow speed and </w:t>
+      </w:r>
+      <ns0:oMath xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:sSub>
+          <ns0:sSubPr>
+            <ns0:ctrlPr>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                <w:i/>
+              </w:rPr>
+            </ns0:ctrlPr>
+          </ns0:sSubPr>
+          <ns0:e>
+            <ns0:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>k</ns0:t>
+            </ns0:r>
+          </ns0:e>
+          <ns0:sub>
+            <ns0:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>j</ns0:t>
+            </ns0:r>
+          </ns0:sub>
+        </ns0:sSub>
+      </ns0:oMath>
+      <w:r>
+        <w:t xml:space="preserve"> the jam density</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "jam density" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t>. Its maximum, the capacity</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "capacity" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">, lies at </w:t>
+      </w:r>
+      <ns0:oMath xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:sSub>
+          <ns0:sSubPr>
+            <ns0:ctrlPr>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                <w:i/>
+              </w:rPr>
+            </ns0:ctrlPr>
+          </ns0:sSubPr>
+          <ns0:e>
+            <ns0:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>k</ns0:t>
+            </ns0:r>
+          </ns0:e>
+          <ns0:sub>
+            <ns0:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>c</ns0:t>
+            </ns0:r>
+          </ns0:sub>
+        </ns0:sSub>
+        <ns0:r>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>=</ns0:t>
+        </ns0:r>
+        <ns0:sSub>
+          <ns0:sSubPr>
+            <ns0:ctrlPr>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                <w:i/>
+              </w:rPr>
+            </ns0:ctrlPr>
+          </ns0:sSubPr>
+          <ns0:e>
+            <ns0:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>k</ns0:t>
+            </ns0:r>
+          </ns0:e>
+          <ns0:sub>
+            <ns0:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>j</ns0:t>
+            </ns0:r>
+          </ns0:sub>
+        </ns0:sSub>
+        <ns0:r>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>/2</ns0:t>
+        </ns0:r>
+      </ns0:oMath>
+      <w:r>
+        <w:t>:</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <ns0:oMathPara xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:oMath>
+          <ns0:eqArr>
+            <ns0:eqArrPr>
+              <ns0:maxDist ns0:val="1"/>
+              <ns0:ctrlPr>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                  <w:i/>
+                </w:rPr>
+              </ns0:ctrlPr>
+            </ns0:eqArrPr>
+            <ns0:e>
+              <ns0:sSub>
+                <ns0:sSubPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:sSubPr>
+                <ns0:e>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>q</ns0:t>
+                  </ns0:r>
+                </ns0:e>
+                <ns0:sub>
+                  <ns0:func>
+                    <ns0:funcPr>
+                      <ns0:ctrlPr>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                          <w:i/>
+                        </w:rPr>
+                      </ns0:ctrlPr>
+                    </ns0:funcPr>
+                    <ns0:fName>
+                      <ns0:r>
+                        <ns0:rPr>
+                          <ns0:sty ns0:val="p"/>
+                        </ns0:rPr>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                        </w:rPr>
+                        <ns0:t>max</ns0:t>
+                      </ns0:r>
+                    </ns0:fName>
+                    <ns0:e/>
+                  </ns0:func>
+                </ns0:sub>
+              </ns0:sSub>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>=Q(</ns0:t>
+              </ns0:r>
+              <ns0:sSub>
+                <ns0:sSubPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:sSubPr>
+                <ns0:e>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>k</ns0:t>
+                  </ns0:r>
+                </ns0:e>
+                <ns0:sub>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>c</ns0:t>
+                  </ns0:r>
+                </ns0:sub>
+              </ns0:sSub>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>)=</ns0:t>
+              </ns0:r>
+              <ns0:f>
+                <ns0:fPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:fPr>
+                <ns0:num>
+                  <ns0:sSub>
+                    <ns0:sSubPr>
+                      <ns0:ctrlPr>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                          <w:i/>
+                        </w:rPr>
+                      </ns0:ctrlPr>
+                    </ns0:sSubPr>
+                    <ns0:e>
+                      <ns0:r>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                        </w:rPr>
+                        <ns0:t>v</ns0:t>
+                      </ns0:r>
+                    </ns0:e>
+                    <ns0:sub>
+                      <ns0:r>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                        </w:rPr>
+                        <ns0:t>f</ns0:t>
+                      </ns0:r>
+                    </ns0:sub>
+                  </ns0:sSub>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t xml:space="preserve"> </ns0:t>
+                  </ns0:r>
+                  <ns0:sSub>
+                    <ns0:sSubPr>
+                      <ns0:ctrlPr>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                          <w:i/>
+                        </w:rPr>
+                      </ns0:ctrlPr>
+                    </ns0:sSubPr>
+                    <ns0:e>
+                      <ns0:r>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                        </w:rPr>
+                        <ns0:t>k</ns0:t>
+                      </ns0:r>
+                    </ns0:e>
+                    <ns0:sub>
+                      <ns0:r>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                        </w:rPr>
+                        <ns0:t>j</ns0:t>
+                      </ns0:r>
+                    </ns0:sub>
+                  </ns0:sSub>
+                </ns0:num>
+                <ns0:den>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>4</ns0:t>
+                  </ns0:r>
+                </ns0:den>
+              </ns0:f>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>#</ns0:t>
+              </ns0:r>
+              <ns0:d>
+                <ns0:dPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:dPr>
+                <ns0:e>
+                  <w:bookmarkStart w:id="16" w:name="_Ref_eq_capacity"/>
+                  <ns0:r>
+                    <ns0:rPr>
+                      <ns0:nor/>
+                    </ns0:rPr>
+                    <ns0:t>2–3</ns0:t>
+                  </ns0:r>
+                  <w:bookmarkEnd w:id="16"/>
+                </ns0:e>
+              </ns0:d>
+            </ns0:e>
+          </ns0:eqArr>
+        </ns0:oMath>
+      </ns0:oMathPara>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t xml:space="preserve">Later work favours a triangular diagram, which fits measured data better at high densities </w:t>
+      </w:r>
+      <w:hyperlink w:anchor="_Ref_bib_daganzo1997" w:history="1">
+        <w:r>
+          <w:t>(Daganzo, 1997; Treiber &amp; Kesting, 2013)</w:t>
+        </w:r>
+      </w:hyperlink>
+      <w:r>
+        <w:t xml:space="preserve">. </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_tab_fd \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>Table 2–1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> lists the parameters used in this thesis.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Caption"/>
+        <w:keepNext/>
+      </w:pPr>
+      <w:bookmarkStart w:id="17" w:name="_Ref_tab_fd_f"/>
+      <w:bookmarkStart w:id="18" w:name="_Ref_tab_fd"/>
+      <w:r>
+        <w:t xml:space="preserve">Table </w:t>
+      </w:r>
+      <w:bookmarkStart w:id="19" w:name="_Ref_tab_fd_n"/>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> STYLEREF "Heading 1" \s </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>2</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t>–</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> SEQ Table \* ARABIC \s 1 </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:bookmarkEnd w:id="19"/>
+      <w:bookmarkEnd w:id="18"/>
+      <w:r>
+        <w:t xml:space="preserve">: </w:t>
+      </w:r>
+      <w:bookmarkStart w:id="20" w:name="_Ref_tab_fd_t"/>
+      <w:r>
+        <w:t>Fundamental diagram parameters for the study site</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="20"/>
+      <w:bookmarkEnd w:id="17"/>
+    </w:p>
+    <w:tbl>
+      <w:tblPr>
+        <w:tblStyle w:val="ThesisTable"/>
+        <w:tblW w:type="dxa" w:w="6236"/>
+        <w:tblLayout w:type="fixed"/>
+        <w:tblLook w:firstColumn="1" w:firstRow="1" w:lastColumn="0" w:lastRow="0" w:noHBand="0" w:noVBand="1" w:val="04A0"/>
+      </w:tblPr>
+      <w:tblGrid>
+        <w:gridCol w:w="3402"/>
+        <w:gridCol w:w="1417"/>
+        <w:gridCol w:w="1417"/>
+      </w:tblGrid>
+      <w:tr>
+        <w:trPr>
+          <w:tblHeader/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3402"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Parameter</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1417"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="right"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Value</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1417"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Unit</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3402"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Free-flow speed</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1417"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:tabs>
+                <w:tab w:pos="861" w:val="decimal"/>
+              </w:tabs>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>100</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1417"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>km/h</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3402"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Jam density</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1417"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:tabs>
+                <w:tab w:pos="861" w:val="decimal"/>
+              </w:tabs>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>150</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1417"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>veh/km</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3402"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Capacity per lane</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1417"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:tabs>
+                <w:tab w:pos="861" w:val="decimal"/>
+              </w:tabs>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>2100</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1417"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>veh/h</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="3402"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Wave speed</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1417"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:tabs>
+                <w:tab w:pos="861" w:val="decimal"/>
+              </w:tabs>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>18.5</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1417"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>km/h</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+    </w:tbl>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading2"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="21" w:name="_Toc000000009"/>
+      <w:r>
+        <w:t>The cell transmission model</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="21"/>
+    </w:p>
+    <w:p>
+      <w:hyperlink w:anchor="_Ref_bib_daganzo1994" w:history="1">
+        <w:r>
+          <w:t>Daganzo (1994)</w:t>
+        </w:r>
+      </w:hyperlink>
+      <w:r>
+        <w:t xml:space="preserve"> discretises </w:t>
+      </w:r>
+      <w:r>
+        <w:t>(</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_eq_conservation \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>2–1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t>)</w:t>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> into cells of length </w:t>
+      </w:r>
+      <ns0:oMath xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:r>
+          <ns0:rPr>
+            <ns0:sty ns0:val="p"/>
+          </ns0:rPr>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>Δ</ns0:t>
+        </ns0:r>
+        <ns0:r>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>x</ns0:t>
+        </ns0:r>
+      </ns0:oMath>
+      <w:r>
+        <w:t xml:space="preserve"> and time steps </w:t>
+      </w:r>
+      <ns0:oMath xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:r>
+          <ns0:rPr>
+            <ns0:sty ns0:val="p"/>
+          </ns0:rPr>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>Δ</ns0:t>
+        </ns0:r>
+        <ns0:r>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>t</ns0:t>
+        </ns0:r>
+      </ns0:oMath>
+      <w:r>
+        <w:t xml:space="preserve">. The flow between cells </w:t>
+      </w:r>
+      <ns0:oMath xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:r>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>i</ns0:t>
+        </ns0:r>
+      </ns0:oMath>
+      <w:r>
+        <w:t xml:space="preserve"> and </w:t>
+      </w:r>
+      <ns0:oMath xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:r>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>i+1</ns0:t>
+        </ns0:r>
+      </ns0:oMath>
+      <w:r>
+        <w:t xml:space="preserve"> is the smaller of what cell </w:t>
+      </w:r>
+      <ns0:oMath xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:r>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>i</ns0:t>
+        </ns0:r>
+      </ns0:oMath>
+      <w:r>
+        <w:t xml:space="preserve"> can send and what cell </w:t>
+      </w:r>
+      <ns0:oMath xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:r>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>i+1</ns0:t>
+        </ns0:r>
+      </ns0:oMath>
+      <w:r>
+        <w:t xml:space="preserve"> can receive:</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <ns0:oMathPara xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:oMath>
+          <ns0:eqArr>
+            <ns0:eqArrPr>
+              <ns0:maxDist ns0:val="1"/>
+              <ns0:ctrlPr>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                  <w:i/>
+                </w:rPr>
+              </ns0:ctrlPr>
+            </ns0:eqArrPr>
+            <ns0:e>
+              <ns0:sSub>
+                <ns0:sSubPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:sSubPr>
+                <ns0:e>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>q</ns0:t>
+                  </ns0:r>
+                </ns0:e>
+                <ns0:sub>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>i+1/2</ns0:t>
+                  </ns0:r>
+                </ns0:sub>
+              </ns0:sSub>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>=</ns0:t>
+              </ns0:r>
+              <ns0:func>
+                <ns0:funcPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:funcPr>
+                <ns0:fName>
+                  <ns0:r>
+                    <ns0:rPr>
+                      <ns0:sty ns0:val="p"/>
+                    </ns0:rPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>min</ns0:t>
+                  </ns0:r>
+                </ns0:fName>
+                <ns0:e>
+                  <ns0:d>
+                    <ns0:dPr>
+                      <ns0:begChr ns0:val="{"/>
+                      <ns0:endChr ns0:val="}"/>
+                      <ns0:ctrlPr>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                          <w:i/>
+                        </w:rPr>
+                      </ns0:ctrlPr>
+                    </ns0:dPr>
+                    <ns0:e>
+                      <ns0:r>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                        </w:rPr>
+                        <ns0:t>S(</ns0:t>
+                      </ns0:r>
+                      <ns0:sSub>
+                        <ns0:sSubPr>
+                          <ns0:ctrlPr>
+                            <w:rPr>
+                              <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                              <w:i/>
+                            </w:rPr>
+                          </ns0:ctrlPr>
+                        </ns0:sSubPr>
+                        <ns0:e>
+                          <ns0:r>
+                            <w:rPr>
+                              <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                            </w:rPr>
+                            <ns0:t>k</ns0:t>
+                          </ns0:r>
+                        </ns0:e>
+                        <ns0:sub>
+                          <ns0:r>
+                            <w:rPr>
+                              <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                            </w:rPr>
+                            <ns0:t>i</ns0:t>
+                          </ns0:r>
+                        </ns0:sub>
+                      </ns0:sSub>
+                      <ns0:r>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                        </w:rPr>
+                        <ns0:t>), R(</ns0:t>
+                      </ns0:r>
+                      <ns0:sSub>
+                        <ns0:sSubPr>
+                          <ns0:ctrlPr>
+                            <w:rPr>
+                              <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                              <w:i/>
+                            </w:rPr>
+                          </ns0:ctrlPr>
+                        </ns0:sSubPr>
+                        <ns0:e>
+                          <ns0:r>
+                            <w:rPr>
+                              <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                            </w:rPr>
+                            <ns0:t>k</ns0:t>
+                          </ns0:r>
+                        </ns0:e>
+                        <ns0:sub>
+                          <ns0:r>
+                            <w:rPr>
+                              <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                            </w:rPr>
+                            <ns0:t>i+1</ns0:t>
+                          </ns0:r>
+                        </ns0:sub>
+                      </ns0:sSub>
+                      <ns0:r>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                        </w:rPr>
+                        <ns0:t>)</ns0:t>
+                      </ns0:r>
+                    </ns0:e>
+                  </ns0:d>
+                </ns0:e>
+              </ns0:func>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>#</ns0:t>
+              </ns0:r>
+              <ns0:d>
+                <ns0:dPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:dPr>
+                <ns0:e>
+                  <w:bookmarkStart w:id="22" w:name="_Ref_eq_ctm_flow"/>
+                  <ns0:r>
+                    <ns0:rPr>
+                      <ns0:nor/>
+                    </ns0:rPr>
+                    <ns0:t>2–4</ns0:t>
+                  </ns0:r>
+                  <w:bookmarkEnd w:id="22"/>
+                </ns0:e>
+              </ns0:d>
+            </ns0:e>
+          </ns0:eqArr>
+        </ns0:oMath>
+      </ns0:oMathPara>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t>and the densities are updated with</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <ns0:oMathPara xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:oMath>
+          <ns0:eqArr>
+            <ns0:eqArrPr>
+              <ns0:maxDist ns0:val="1"/>
+              <ns0:ctrlPr>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                  <w:i/>
+                </w:rPr>
+              </ns0:ctrlPr>
+            </ns0:eqArrPr>
+            <ns0:e>
+              <ns0:sSubSup>
+                <ns0:sSubSupPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:sSubSupPr>
+                <ns0:e>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>k</ns0:t>
+                  </ns0:r>
+                </ns0:e>
+                <ns0:sub>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>i</ns0:t>
+                  </ns0:r>
+                </ns0:sub>
+                <ns0:sup>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>t+1</ns0:t>
+                  </ns0:r>
+                </ns0:sup>
+              </ns0:sSubSup>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>=</ns0:t>
+              </ns0:r>
+              <ns0:sSubSup>
+                <ns0:sSubSupPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:sSubSupPr>
+                <ns0:e>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>k</ns0:t>
+                  </ns0:r>
+                </ns0:e>
+                <ns0:sub>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>i</ns0:t>
+                  </ns0:r>
+                </ns0:sub>
+                <ns0:sup>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>t</ns0:t>
+                  </ns0:r>
+                </ns0:sup>
+              </ns0:sSubSup>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>+</ns0:t>
+              </ns0:r>
+              <ns0:f>
+                <ns0:fPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:fPr>
+                <ns0:num>
+                  <ns0:r>
+                    <ns0:rPr>
+                      <ns0:sty ns0:val="p"/>
+                    </ns0:rPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>Δ</ns0:t>
+                  </ns0:r>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>t</ns0:t>
+                  </ns0:r>
+                </ns0:num>
+                <ns0:den>
+                  <ns0:r>
+                    <ns0:rPr>
+                      <ns0:sty ns0:val="p"/>
+                    </ns0:rPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>Δ</ns0:t>
+                  </ns0:r>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>x</ns0:t>
+                  </ns0:r>
+                </ns0:den>
+              </ns0:f>
+              <ns0:d>
+                <ns0:dPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:dPr>
+                <ns0:e>
+                  <ns0:sSub>
+                    <ns0:sSubPr>
+                      <ns0:ctrlPr>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                          <w:i/>
+                        </w:rPr>
+                      </ns0:ctrlPr>
+                    </ns0:sSubPr>
+                    <ns0:e>
+                      <ns0:r>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                        </w:rPr>
+                        <ns0:t>q</ns0:t>
+                      </ns0:r>
+                    </ns0:e>
+                    <ns0:sub>
+                      <ns0:r>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                        </w:rPr>
+                        <ns0:t>i−1/2</ns0:t>
+                      </ns0:r>
+                    </ns0:sub>
+                  </ns0:sSub>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>−</ns0:t>
+                  </ns0:r>
+                  <ns0:sSub>
+                    <ns0:sSubPr>
+                      <ns0:ctrlPr>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                          <w:i/>
+                        </w:rPr>
+                      </ns0:ctrlPr>
+                    </ns0:sSubPr>
+                    <ns0:e>
+                      <ns0:r>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                        </w:rPr>
+                        <ns0:t>q</ns0:t>
+                      </ns0:r>
+                    </ns0:e>
+                    <ns0:sub>
+                      <ns0:r>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                        </w:rPr>
+                        <ns0:t>i+1/2</ns0:t>
+                      </ns0:r>
+                    </ns0:sub>
+                  </ns0:sSub>
+                </ns0:e>
+              </ns0:d>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>#</ns0:t>
+              </ns0:r>
+              <ns0:d>
+                <ns0:dPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:dPr>
+                <ns0:e>
+                  <w:bookmarkStart w:id="23" w:name="_Ref_eq_ctm_update"/>
+                  <ns0:r>
+                    <ns0:rPr>
+                      <ns0:nor/>
+                    </ns0:rPr>
+                    <ns0:t>2–5</ns0:t>
+                  </ns0:r>
+                  <w:bookmarkEnd w:id="23"/>
+                </ns0:e>
+              </ns0:d>
+            </ns0:e>
+          </ns0:eqArr>
+        </ns0:oMath>
+      </ns0:oMathPara>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t xml:space="preserve">The model is stable when a vehicle at free-flow speed cannot cross a whole cell in one time step, </w:t>
+      </w:r>
+      <ns0:oMath xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:sSub>
+          <ns0:sSubPr>
+            <ns0:ctrlPr>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                <w:i/>
+              </w:rPr>
+            </ns0:ctrlPr>
+          </ns0:sSubPr>
+          <ns0:e>
+            <ns0:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>v</ns0:t>
+            </ns0:r>
+          </ns0:e>
+          <ns0:sub>
+            <ns0:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>f</ns0:t>
+            </ns0:r>
+          </ns0:sub>
+        </ns0:sSub>
+        <ns0:r>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t xml:space="preserve"> </ns0:t>
+        </ns0:r>
+        <ns0:r>
+          <ns0:rPr>
+            <ns0:sty ns0:val="p"/>
+          </ns0:rPr>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>Δ</ns0:t>
+        </ns0:r>
+        <ns0:r>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>t≤</ns0:t>
+        </ns0:r>
+        <ns0:r>
+          <ns0:rPr>
+            <ns0:sty ns0:val="p"/>
+          </ns0:rPr>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>Δ</ns0:t>
+        </ns0:r>
+        <ns0:r>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>x</ns0:t>
+        </ns0:r>
+      </ns0:oMath>
+      <w:r>
+        <w:t>: the CFL condition</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "CFL condition" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t>.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading1"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="24" w:name="_Toc000000010"/>
+      <w:bookmarkStart w:id="25" w:name="_Ref_ch_method"/>
+      <w:r>
+        <w:t>Method</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="25"/>
+      <w:bookmarkEnd w:id="24"/>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading2"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="26" w:name="_Toc000000011"/>
+      <w:r>
+        <w:t>State-space form</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="26"/>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t xml:space="preserve">The cell densities form the state vector </w:t>
+      </w:r>
+      <ns0:oMath xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:sSub>
+          <ns0:sSubPr>
+            <ns0:ctrlPr>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                <w:i/>
+              </w:rPr>
+            </ns0:ctrlPr>
+          </ns0:sSubPr>
+          <ns0:e>
+            <ns0:r>
+              <ns0:rPr>
+                <ns0:sty ns0:val="b"/>
+              </ns0:rPr>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>x</ns0:t>
+            </ns0:r>
+          </ns0:e>
+          <ns0:sub>
+            <ns0:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>t</ns0:t>
+            </ns0:r>
+          </ns0:sub>
+        </ns0:sSub>
+        <ns0:r>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>=(</ns0:t>
+        </ns0:r>
+        <ns0:sSub>
+          <ns0:sSubPr>
+            <ns0:ctrlPr>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                <w:i/>
+              </w:rPr>
+            </ns0:ctrlPr>
+          </ns0:sSubPr>
+          <ns0:e>
+            <ns0:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>k</ns0:t>
+            </ns0:r>
+          </ns0:e>
+          <ns0:sub>
+            <ns0:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>1</ns0:t>
+            </ns0:r>
+          </ns0:sub>
+        </ns0:sSub>
+        <ns0:r>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>,…,</ns0:t>
+        </ns0:r>
+        <ns0:sSub>
+          <ns0:sSubPr>
+            <ns0:ctrlPr>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                <w:i/>
+              </w:rPr>
+            </ns0:ctrlPr>
+          </ns0:sSubPr>
+          <ns0:e>
+            <ns0:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>k</ns0:t>
+            </ns0:r>
+          </ns0:e>
+          <ns0:sub>
+            <ns0:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>n</ns0:t>
+            </ns0:r>
+          </ns0:sub>
+        </ns0:sSub>
+        <ns0:sSup>
+          <ns0:sSupPr>
+            <ns0:ctrlPr>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                <w:i/>
+              </w:rPr>
+            </ns0:ctrlPr>
+          </ns0:sSupPr>
+          <ns0:e>
+            <ns0:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>)</ns0:t>
+            </ns0:r>
+          </ns0:e>
+          <ns0:sup>
+            <ns0:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>⊤</ns0:t>
+            </ns0:r>
+          </ns0:sup>
+        </ns0:sSup>
+      </ns0:oMath>
+      <w:r>
+        <w:t xml:space="preserve">. The cell transmission model, </w:t>
+      </w:r>
+      <w:r>
+        <w:t>(</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_eq_ctm_update \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>2–5</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t>)</w:t>
+      </w:r>
+      <w:r>
+        <w:t>, is the process model, and the measurements are detector counts and floating-car speeds:</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <ns0:oMathPara xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:oMath>
+          <ns0:eqArr>
+            <ns0:eqArrPr>
+              <ns0:maxDist ns0:val="1"/>
+              <ns0:ctrlPr>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                  <w:i/>
+                </w:rPr>
+              </ns0:ctrlPr>
+            </ns0:eqArrPr>
+            <ns0:e>
+              <ns0:sSub>
+                <ns0:sSubPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:sSubPr>
+                <ns0:e>
+                  <ns0:r>
+                    <ns0:rPr>
+                      <ns0:sty ns0:val="b"/>
+                    </ns0:rPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>x</ns0:t>
+                  </ns0:r>
+                </ns0:e>
+                <ns0:sub>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>t+1</ns0:t>
+                  </ns0:r>
+                </ns0:sub>
+              </ns0:sSub>
+              <ns0:r>
+                <ns0:rPr>
+                  <ns0:aln/>
+                </ns0:rPr>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>=f(</ns0:t>
+              </ns0:r>
+              <ns0:sSub>
+                <ns0:sSubPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:sSubPr>
+                <ns0:e>
+                  <ns0:r>
+                    <ns0:rPr>
+                      <ns0:sty ns0:val="b"/>
+                    </ns0:rPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>x</ns0:t>
+                  </ns0:r>
+                </ns0:e>
+                <ns0:sub>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>t</ns0:t>
+                  </ns0:r>
+                </ns0:sub>
+              </ns0:sSub>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>)+</ns0:t>
+              </ns0:r>
+              <ns0:sSub>
+                <ns0:sSubPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:sSubPr>
+                <ns0:e>
+                  <ns0:r>
+                    <ns0:rPr>
+                      <ns0:sty ns0:val="b"/>
+                    </ns0:rPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>w</ns0:t>
+                  </ns0:r>
+                </ns0:e>
+                <ns0:sub>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>t</ns0:t>
+                  </ns0:r>
+                </ns0:sub>
+              </ns0:sSub>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>,</ns0:t>
+              </ns0:r>
+              <ns0:r>
+                <ns0:rPr>
+                  <ns0:aln/>
+                </ns0:rPr>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t xml:space="preserve"/>
+              </ns0:r>
+              <ns0:sSub>
+                <ns0:sSubPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:sSubPr>
+                <ns0:e>
+                  <ns0:r>
+                    <ns0:rPr>
+                      <ns0:sty ns0:val="b"/>
+                    </ns0:rPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>w</ns0:t>
+                  </ns0:r>
+                </ns0:e>
+                <ns0:sub>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>t</ns0:t>
+                  </ns0:r>
+                </ns0:sub>
+              </ns0:sSub>
+              <ns0:r>
+                <ns0:rPr>
+                  <ns0:aln/>
+                </ns0:rPr>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>∼</ns0:t>
+              </ns0:r>
+              <ns0:r>
+                <ns0:rPr>
+                  <ns0:scr ns0:val="script"/>
+                  <ns0:sty ns0:val="p"/>
+                </ns0:rPr>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>N</ns0:t>
+              </ns0:r>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>(0,Q)</ns0:t>
+              </ns0:r>
+            </ns0:e>
+            <ns0:e>
+              <ns0:sSub>
+                <ns0:sSubPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:sSubPr>
+                <ns0:e>
+                  <ns0:r>
+                    <ns0:rPr>
+                      <ns0:sty ns0:val="b"/>
+                    </ns0:rPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>y</ns0:t>
+                  </ns0:r>
+                </ns0:e>
+                <ns0:sub>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>t</ns0:t>
+                  </ns0:r>
+                </ns0:sub>
+              </ns0:sSub>
+              <ns0:r>
+                <ns0:rPr>
+                  <ns0:aln/>
+                </ns0:rPr>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>=h(</ns0:t>
+              </ns0:r>
+              <ns0:sSub>
+                <ns0:sSubPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:sSubPr>
+                <ns0:e>
+                  <ns0:r>
+                    <ns0:rPr>
+                      <ns0:sty ns0:val="b"/>
+                    </ns0:rPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>x</ns0:t>
+                  </ns0:r>
+                </ns0:e>
+                <ns0:sub>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>t</ns0:t>
+                  </ns0:r>
+                </ns0:sub>
+              </ns0:sSub>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>)+</ns0:t>
+              </ns0:r>
+              <ns0:sSub>
+                <ns0:sSubPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:sSubPr>
+                <ns0:e>
+                  <ns0:r>
+                    <ns0:rPr>
+                      <ns0:sty ns0:val="b"/>
+                    </ns0:rPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>v</ns0:t>
+                  </ns0:r>
+                </ns0:e>
+                <ns0:sub>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>t</ns0:t>
+                  </ns0:r>
+                </ns0:sub>
+              </ns0:sSub>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>,</ns0:t>
+              </ns0:r>
+              <ns0:r>
+                <ns0:rPr>
+                  <ns0:aln/>
+                </ns0:rPr>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t xml:space="preserve"/>
+              </ns0:r>
+              <ns0:sSub>
+                <ns0:sSubPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:sSubPr>
+                <ns0:e>
+                  <ns0:r>
+                    <ns0:rPr>
+                      <ns0:sty ns0:val="b"/>
+                    </ns0:rPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>v</ns0:t>
+                  </ns0:r>
+                </ns0:e>
+                <ns0:sub>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>t</ns0:t>
+                  </ns0:r>
+                </ns0:sub>
+              </ns0:sSub>
+              <ns0:r>
+                <ns0:rPr>
+                  <ns0:aln/>
+                </ns0:rPr>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>∼</ns0:t>
+              </ns0:r>
+              <ns0:r>
+                <ns0:rPr>
+                  <ns0:scr ns0:val="script"/>
+                  <ns0:sty ns0:val="p"/>
+                </ns0:rPr>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>N</ns0:t>
+              </ns0:r>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>(0,R)</ns0:t>
+              </ns0:r>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>#</ns0:t>
+              </ns0:r>
+              <ns0:d>
+                <ns0:dPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:dPr>
+                <ns0:e>
+                  <w:bookmarkStart w:id="27" w:name="_Ref_eq_state_space"/>
+                  <ns0:r>
+                    <ns0:rPr>
+                      <ns0:nor/>
+                    </ns0:rPr>
+                    <ns0:t>3–1</ns0:t>
+                  </ns0:r>
+                  <w:bookmarkEnd w:id="27"/>
+                </ns0:e>
+              </ns0:d>
+            </ns0:e>
+          </ns0:eqArr>
+        </ns0:oMath>
+      </ns0:oMathPara>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading2"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="28" w:name="_Toc000000012"/>
+      <w:r>
+        <w:t>The extended Kalman filter</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="28"/>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t>The Kalman filter</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Kalman filter" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> </w:t>
+      </w:r>
+      <w:hyperlink w:anchor="_Ref_bib_kalman1960" w:history="1">
+        <w:r>
+          <w:t>(Kalman, 1960)</w:t>
+        </w:r>
+      </w:hyperlink>
+      <w:r>
+        <w:t xml:space="preserve"> alternates a prediction with the model and a correction with the measurements. Because </w:t>
+      </w:r>
+      <ns0:oMath xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:r>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>f</ns0:t>
+        </ns0:r>
+      </ns0:oMath>
+      <w:r>
+        <w:t xml:space="preserve"> and </w:t>
+      </w:r>
+      <ns0:oMath xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:r>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>h</ns0:t>
+        </ns0:r>
+      </ns0:oMath>
+      <w:r>
+        <w:t xml:space="preserve"> are not linear, the extended filter</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "Kalman filter:extended" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> linearises them around the current estimate, with Jacobians </w:t>
+      </w:r>
+      <ns0:oMath xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:sSub>
+          <ns0:sSubPr>
+            <ns0:ctrlPr>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                <w:i/>
+              </w:rPr>
+            </ns0:ctrlPr>
+          </ns0:sSubPr>
+          <ns0:e>
+            <ns0:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>F</ns0:t>
+            </ns0:r>
+          </ns0:e>
+          <ns0:sub>
+            <ns0:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>t</ns0:t>
+            </ns0:r>
+          </ns0:sub>
+        </ns0:sSub>
+      </ns0:oMath>
+      <w:r>
+        <w:t xml:space="preserve"> and </w:t>
+      </w:r>
+      <ns0:oMath xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:sSub>
+          <ns0:sSubPr>
+            <ns0:ctrlPr>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                <w:i/>
+              </w:rPr>
+            </ns0:ctrlPr>
+          </ns0:sSubPr>
+          <ns0:e>
+            <ns0:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>H</ns0:t>
+            </ns0:r>
+          </ns0:e>
+          <ns0:sub>
+            <ns0:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>t</ns0:t>
+            </ns0:r>
+          </ns0:sub>
+        </ns0:sSub>
+      </ns0:oMath>
+      <w:r>
+        <w:t>:</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <ns0:oMathPara xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:oMath>
+          <ns0:eqArr>
+            <ns0:eqArrPr>
+              <ns0:maxDist ns0:val="1"/>
+              <ns0:ctrlPr>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                  <w:i/>
+                </w:rPr>
+              </ns0:ctrlPr>
+            </ns0:eqArrPr>
+            <ns0:e>
+              <ns0:sSub>
+                <ns0:sSubPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:sSubPr>
+                <ns0:e>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>K</ns0:t>
+                  </ns0:r>
+                </ns0:e>
+                <ns0:sub>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>t</ns0:t>
+                  </ns0:r>
+                </ns0:sub>
+              </ns0:sSub>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>=</ns0:t>
+              </ns0:r>
+              <ns0:sSubSup>
+                <ns0:sSubSupPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:sSubSupPr>
+                <ns0:e>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>P</ns0:t>
+                  </ns0:r>
+                </ns0:e>
+                <ns0:sub>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>t</ns0:t>
+                  </ns0:r>
+                </ns0:sub>
+                <ns0:sup>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>−</ns0:t>
+                  </ns0:r>
+                </ns0:sup>
+              </ns0:sSubSup>
+              <ns0:sSubSup>
+                <ns0:sSubSupPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:sSubSupPr>
+                <ns0:e>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>H</ns0:t>
+                  </ns0:r>
+                </ns0:e>
+                <ns0:sub>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>t</ns0:t>
+                  </ns0:r>
+                </ns0:sub>
+                <ns0:sup>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>⊤</ns0:t>
+                  </ns0:r>
+                </ns0:sup>
+              </ns0:sSubSup>
+              <ns0:sSup>
+                <ns0:sSupPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:sSupPr>
+                <ns0:e>
+                  <ns0:d>
+                    <ns0:dPr>
+                      <ns0:ctrlPr>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                          <w:i/>
+                        </w:rPr>
+                      </ns0:ctrlPr>
+                    </ns0:dPr>
+                    <ns0:e>
+                      <ns0:sSub>
+                        <ns0:sSubPr>
+                          <ns0:ctrlPr>
+                            <w:rPr>
+                              <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                              <w:i/>
+                            </w:rPr>
+                          </ns0:ctrlPr>
+                        </ns0:sSubPr>
+                        <ns0:e>
+                          <ns0:r>
+                            <w:rPr>
+                              <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                            </w:rPr>
+                            <ns0:t>H</ns0:t>
+                          </ns0:r>
+                        </ns0:e>
+                        <ns0:sub>
+                          <ns0:r>
+                            <w:rPr>
+                              <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                            </w:rPr>
+                            <ns0:t>t</ns0:t>
+                          </ns0:r>
+                        </ns0:sub>
+                      </ns0:sSub>
+                      <ns0:sSubSup>
+                        <ns0:sSubSupPr>
+                          <ns0:ctrlPr>
+                            <w:rPr>
+                              <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                              <w:i/>
+                            </w:rPr>
+                          </ns0:ctrlPr>
+                        </ns0:sSubSupPr>
+                        <ns0:e>
+                          <ns0:r>
+                            <w:rPr>
+                              <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                            </w:rPr>
+                            <ns0:t>P</ns0:t>
+                          </ns0:r>
+                        </ns0:e>
+                        <ns0:sub>
+                          <ns0:r>
+                            <w:rPr>
+                              <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                            </w:rPr>
+                            <ns0:t>t</ns0:t>
+                          </ns0:r>
+                        </ns0:sub>
+                        <ns0:sup>
+                          <ns0:r>
+                            <w:rPr>
+                              <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                            </w:rPr>
+                            <ns0:t>−</ns0:t>
+                          </ns0:r>
+                        </ns0:sup>
+                      </ns0:sSubSup>
+                      <ns0:sSubSup>
+                        <ns0:sSubSupPr>
+                          <ns0:ctrlPr>
+                            <w:rPr>
+                              <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                              <w:i/>
+                            </w:rPr>
+                          </ns0:ctrlPr>
+                        </ns0:sSubSupPr>
+                        <ns0:e>
+                          <ns0:r>
+                            <w:rPr>
+                              <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                            </w:rPr>
+                            <ns0:t>H</ns0:t>
+                          </ns0:r>
+                        </ns0:e>
+                        <ns0:sub>
+                          <ns0:r>
+                            <w:rPr>
+                              <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                            </w:rPr>
+                            <ns0:t>t</ns0:t>
+                          </ns0:r>
+                        </ns0:sub>
+                        <ns0:sup>
+                          <ns0:r>
+                            <w:rPr>
+                              <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                            </w:rPr>
+                            <ns0:t>⊤</ns0:t>
+                          </ns0:r>
+                        </ns0:sup>
+                      </ns0:sSubSup>
+                      <ns0:r>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                        </w:rPr>
+                        <ns0:t>+R</ns0:t>
+                      </ns0:r>
+                    </ns0:e>
+                  </ns0:d>
+                </ns0:e>
+                <ns0:sup>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>−1</ns0:t>
+                  </ns0:r>
+                </ns0:sup>
+              </ns0:sSup>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>#</ns0:t>
+              </ns0:r>
+              <ns0:d>
+                <ns0:dPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:dPr>
+                <ns0:e>
+                  <w:bookmarkStart w:id="29" w:name="_Ref_eq_gain"/>
+                  <ns0:r>
+                    <ns0:rPr>
+                      <ns0:nor/>
+                    </ns0:rPr>
+                    <ns0:t>3–2</ns0:t>
+                  </ns0:r>
+                  <w:bookmarkEnd w:id="29"/>
+                </ns0:e>
+              </ns0:d>
+            </ns0:e>
+          </ns0:eqArr>
+        </ns0:oMath>
+      </ns0:oMathPara>
+    </w:p>
+    <w:p>
+      <ns0:oMathPara xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:oMath>
+          <ns0:eqArr>
+            <ns0:eqArrPr>
+              <ns0:maxDist ns0:val="1"/>
+              <ns0:ctrlPr>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                  <w:i/>
+                </w:rPr>
+              </ns0:ctrlPr>
+            </ns0:eqArrPr>
+            <ns0:e>
+              <ns0:sSub>
+                <ns0:sSubPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:sSubPr>
+                <ns0:e>
+                  <ns0:acc>
+                    <ns0:accPr>
+                      <ns0:ctrlPr>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                          <w:i/>
+                        </w:rPr>
+                      </ns0:ctrlPr>
+                    </ns0:accPr>
+                    <ns0:e>
+                      <ns0:r>
+                        <ns0:rPr>
+                          <ns0:sty ns0:val="b"/>
+                        </ns0:rPr>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                        </w:rPr>
+                        <ns0:t>x</ns0:t>
+                      </ns0:r>
+                    </ns0:e>
+                  </ns0:acc>
+                </ns0:e>
+                <ns0:sub>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>t</ns0:t>
+                  </ns0:r>
+                </ns0:sub>
+              </ns0:sSub>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>=</ns0:t>
+              </ns0:r>
+              <ns0:sSubSup>
+                <ns0:sSubSupPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:sSubSupPr>
+                <ns0:e>
+                  <ns0:acc>
+                    <ns0:accPr>
+                      <ns0:ctrlPr>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                          <w:i/>
+                        </w:rPr>
+                      </ns0:ctrlPr>
+                    </ns0:accPr>
+                    <ns0:e>
+                      <ns0:r>
+                        <ns0:rPr>
+                          <ns0:sty ns0:val="b"/>
+                        </ns0:rPr>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                        </w:rPr>
+                        <ns0:t>x</ns0:t>
+                      </ns0:r>
+                    </ns0:e>
+                  </ns0:acc>
+                </ns0:e>
+                <ns0:sub>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>t</ns0:t>
+                  </ns0:r>
+                </ns0:sub>
+                <ns0:sup>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>−</ns0:t>
+                  </ns0:r>
+                </ns0:sup>
+              </ns0:sSubSup>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>+</ns0:t>
+              </ns0:r>
+              <ns0:sSub>
+                <ns0:sSubPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:sSubPr>
+                <ns0:e>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>K</ns0:t>
+                  </ns0:r>
+                </ns0:e>
+                <ns0:sub>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>t</ns0:t>
+                  </ns0:r>
+                </ns0:sub>
+              </ns0:sSub>
+              <ns0:d>
+                <ns0:dPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:dPr>
+                <ns0:e>
+                  <ns0:sSub>
+                    <ns0:sSubPr>
+                      <ns0:ctrlPr>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                          <w:i/>
+                        </w:rPr>
+                      </ns0:ctrlPr>
+                    </ns0:sSubPr>
+                    <ns0:e>
+                      <ns0:r>
+                        <ns0:rPr>
+                          <ns0:sty ns0:val="b"/>
+                        </ns0:rPr>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                        </w:rPr>
+                        <ns0:t>y</ns0:t>
+                      </ns0:r>
+                    </ns0:e>
+                    <ns0:sub>
+                      <ns0:r>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                        </w:rPr>
+                        <ns0:t>t</ns0:t>
+                      </ns0:r>
+                    </ns0:sub>
+                  </ns0:sSub>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>−h(</ns0:t>
+                  </ns0:r>
+                  <ns0:sSubSup>
+                    <ns0:sSubSupPr>
+                      <ns0:ctrlPr>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                          <w:i/>
+                        </w:rPr>
+                      </ns0:ctrlPr>
+                    </ns0:sSubSupPr>
+                    <ns0:e>
+                      <ns0:acc>
+                        <ns0:accPr>
+                          <ns0:ctrlPr>
+                            <w:rPr>
+                              <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                              <w:i/>
+                            </w:rPr>
+                          </ns0:ctrlPr>
+                        </ns0:accPr>
+                        <ns0:e>
+                          <ns0:r>
+                            <ns0:rPr>
+                              <ns0:sty ns0:val="b"/>
+                            </ns0:rPr>
+                            <w:rPr>
+                              <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                            </w:rPr>
+                            <ns0:t>x</ns0:t>
+                          </ns0:r>
+                        </ns0:e>
+                      </ns0:acc>
+                    </ns0:e>
+                    <ns0:sub>
+                      <ns0:r>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                        </w:rPr>
+                        <ns0:t>t</ns0:t>
+                      </ns0:r>
+                    </ns0:sub>
+                    <ns0:sup>
+                      <ns0:r>
+                        <w:rPr>
+                          <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                        </w:rPr>
+                        <ns0:t>−</ns0:t>
+                      </ns0:r>
+                    </ns0:sup>
+                  </ns0:sSubSup>
+                  <ns0:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                    </w:rPr>
+                    <ns0:t>)</ns0:t>
+                  </ns0:r>
+                </ns0:e>
+              </ns0:d>
+              <ns0:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                </w:rPr>
+                <ns0:t>#</ns0:t>
+              </ns0:r>
+              <ns0:d>
+                <ns0:dPr>
+                  <ns0:ctrlPr>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                      <w:i/>
+                    </w:rPr>
+                  </ns0:ctrlPr>
+                </ns0:dPr>
+                <ns0:e>
+                  <w:bookmarkStart w:id="30" w:name="_Ref_eq_correction"/>
+                  <ns0:r>
+                    <ns0:rPr>
+                      <ns0:nor/>
+                    </ns0:rPr>
+                    <ns0:t>3–3</ns0:t>
+                  </ns0:r>
+                  <w:bookmarkEnd w:id="30"/>
+                </ns0:e>
+              </ns0:d>
+            </ns0:e>
+          </ns0:eqArr>
+        </ns0:oMath>
+      </ns0:oMathPara>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t xml:space="preserve">Densities cannot be negative or exceed the jam density, so the corrected state is clipped to </w:t>
+      </w:r>
+      <ns0:oMath xmlns:ns0="http://schemas.openxmlformats.org/officeDocument/2006/math">
+        <ns0:r>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>[0,</ns0:t>
+        </ns0:r>
+        <ns0:sSub>
+          <ns0:sSubPr>
+            <ns0:ctrlPr>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+                <w:i/>
+              </w:rPr>
+            </ns0:ctrlPr>
+          </ns0:sSubPr>
+          <ns0:e>
+            <ns0:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>k</ns0:t>
+            </ns0:r>
+          </ns0:e>
+          <ns0:sub>
+            <ns0:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+              </w:rPr>
+              <ns0:t>j</ns0:t>
+            </ns0:r>
+          </ns0:sub>
+        </ns0:sSub>
+        <ns0:r>
+          <w:rPr>
+            <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
+          </w:rPr>
+          <ns0:t>]</ns0:t>
+        </ns0:r>
+      </ns0:oMath>
+      <w:r>
+        <w:t xml:space="preserve"> after each step.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading2"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="31" w:name="_Toc000000013"/>
+      <w:r>
+        <w:t>Implementation</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="31"/>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t xml:space="preserve">The filter is written in Python with NumPy. </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_lst_predict \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>Listing 3–1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> shows the prediction step; the flows follow </w:t>
+      </w:r>
+      <w:r>
+        <w:t>(</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_eq_ctm_flow \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>2–4</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t>)</w:t>
+      </w:r>
+      <w:r>
+        <w:t>, with the sending and receiving functions of a triangular fundamental diagram.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Caption"/>
+        <w:keepNext/>
+      </w:pPr>
+      <w:bookmarkStart w:id="32" w:name="_Ref_lst_predict_f"/>
+      <w:bookmarkStart w:id="33" w:name="_Ref_lst_predict"/>
+      <w:r>
+        <w:t xml:space="preserve">Listing </w:t>
+      </w:r>
+      <w:bookmarkStart w:id="34" w:name="_Ref_lst_predict_n"/>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> STYLEREF "Heading 1" \s </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>3</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t>–</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> SEQ Listing \* ARABIC \s 1 </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:bookmarkEnd w:id="34"/>
+      <w:bookmarkEnd w:id="33"/>
+      <w:r>
+        <w:t xml:space="preserve">: </w:t>
+      </w:r>
+      <w:bookmarkStart w:id="35" w:name="_Ref_lst_predict_t"/>
+      <w:r>
+        <w:t>The prediction step of the cell transmission model</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="35"/>
+      <w:bookmarkEnd w:id="32"/>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="CodeBlock"/>
+        <w:ind w:hanging="398" w:left="398"/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CodeLineNumber"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> 1</w:t>
+      </w:r>
+      <w:r>
+        <w:tab/>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CodeKeyword"/>
+        </w:rPr>
+        <w:t>import</w:t>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> numpy </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CodeKeyword"/>
+        </w:rPr>
+        <w:t>as</w:t>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> np</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="CodeBlock"/>
+        <w:ind w:hanging="398" w:left="398"/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CodeLineNumber"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> 2</w:t>
+      </w:r>
+      <w:r>
+        <w:tab/>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="CodeBlock"/>
+        <w:ind w:hanging="398" w:left="398"/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CodeLineNumber"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> 3</w:t>
+      </w:r>
+      <w:r>
+        <w:tab/>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CodeKeyword"/>
+        </w:rPr>
+        <w:t>def</w:t>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> predict(k, dt, dx, vf=100.0, w=18.5, kj=150.0, qmax=2100.0):</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="CodeBlock"/>
+        <w:ind w:hanging="398" w:left="398"/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CodeLineNumber"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> 4</w:t>
+      </w:r>
+      <w:r>
+        <w:tab/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">    </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CodeString"/>
+        </w:rPr>
+        <w:t>"""One CTM step: densities k (veh/km) -&gt; densities after dt hours."""</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="CodeBlock"/>
+        <w:ind w:hanging="398" w:left="398"/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CodeLineNumber"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> 5</w:t>
+      </w:r>
+      <w:r>
+        <w:tab/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">    send = np.minimum(vf * k, qmax)               </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CodeComment"/>
+        </w:rPr>
+        <w:t># S(k): what a cell can send</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="CodeBlock"/>
+        <w:ind w:hanging="398" w:left="398"/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CodeLineNumber"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> 6</w:t>
+      </w:r>
+      <w:r>
+        <w:tab/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">    receive = np.minimum(w * (kj - k), qmax)      </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CodeComment"/>
+        </w:rPr>
+        <w:t># R(k): what a cell can receive</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="CodeBlock"/>
+        <w:ind w:hanging="398" w:left="398"/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CodeLineNumber"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> 7</w:t>
+      </w:r>
+      <w:r>
+        <w:tab/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">    q = np.minimum(send[:-1], receive[1:])        </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CodeComment"/>
+        </w:rPr>
+        <w:t># flows between cells</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="CodeBlock"/>
+        <w:ind w:hanging="398" w:left="398"/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CodeLineNumber"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> 8</w:t>
+      </w:r>
+      <w:r>
+        <w:tab/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">    k_next = k.copy()</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="CodeBlock"/>
+        <w:ind w:hanging="398" w:left="398"/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CodeLineNumber"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> 9</w:t>
+      </w:r>
+      <w:r>
+        <w:tab/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">    k_next[1:-1] += dt / dx * (q[:-1] - q[1:])</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="CodeBlock"/>
+        <w:ind w:hanging="398" w:left="398"/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CodeLineNumber"/>
+        </w:rPr>
+        <w:t>10</w:t>
+      </w:r>
+      <w:r>
+        <w:tab/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">    </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CodeKeyword"/>
+        </w:rPr>
+        <w:t>return</w:t>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> np.clip(k_next, 0.0, kj)</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t>Detector counts are aggregated to one-minute intervals; floating-car reports are matched to cells by their position (</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_lst_match \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>Listing 3–2</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t>).</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Caption"/>
+        <w:keepNext/>
+      </w:pPr>
+      <w:bookmarkStart w:id="36" w:name="_Ref_lst_match_f"/>
+      <w:bookmarkStart w:id="37" w:name="_Ref_lst_match"/>
+      <w:r>
+        <w:t xml:space="preserve">Listing </w:t>
+      </w:r>
+      <w:bookmarkStart w:id="38" w:name="_Ref_lst_match_n"/>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> STYLEREF "Heading 1" \s </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>3</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t>–</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> SEQ Listing \* ARABIC \s 1 </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>2</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:bookmarkEnd w:id="38"/>
+      <w:bookmarkEnd w:id="37"/>
+      <w:r>
+        <w:t xml:space="preserve">: </w:t>
+      </w:r>
+      <w:bookmarkStart w:id="39" w:name="_Ref_lst_match_t"/>
+      <w:r>
+        <w:t>Matching floating-car reports to cells</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="39"/>
+      <w:bookmarkEnd w:id="36"/>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="CodeBlock"/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CodeKeyword"/>
+        </w:rPr>
+        <w:t>def</w:t>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> cell_of(position_km, dx=0.5):</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="CodeBlock"/>
+      </w:pPr>
+      <w:r>
+        <w:t xml:space="preserve">    </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CodeKeyword"/>
+        </w:rPr>
+        <w:t>return</w:t>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> int(position_km // dx)</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading2"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="40" w:name="_Toc000000014"/>
+      <w:r>
+        <w:t>Study site and data</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="40"/>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t xml:space="preserve">The study site is a 12 km stretch of the Rotterdam ring road with 19 loop detectors, divided into 24 cells of 500 m. </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_tab_data \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>Table 3–1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> summarises the data, which cover four weekdays in March.</w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="FootnoteReference"/>
+        </w:rPr>
+        <w:footnoteReference w:id="2"/>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Caption"/>
+        <w:keepNext/>
+      </w:pPr>
+      <w:bookmarkStart w:id="41" w:name="_Ref_tab_data_f"/>
+      <w:bookmarkStart w:id="42" w:name="_Ref_tab_data"/>
+      <w:r>
+        <w:t xml:space="preserve">Table </w:t>
+      </w:r>
+      <w:bookmarkStart w:id="43" w:name="_Ref_tab_data_n"/>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> STYLEREF "Heading 1" \s </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>3</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t>–</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> SEQ Table \* ARABIC \s 1 </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:bookmarkEnd w:id="43"/>
+      <w:bookmarkEnd w:id="42"/>
+      <w:r>
+        <w:t xml:space="preserve">: </w:t>
+      </w:r>
+      <w:bookmarkStart w:id="44" w:name="_Ref_tab_data_t"/>
+      <w:r>
+        <w:t>The data sets</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="44"/>
+      <w:bookmarkEnd w:id="41"/>
+    </w:p>
+    <w:tbl>
+      <w:tblPr>
+        <w:tblStyle w:val="ThesisTable"/>
+        <w:tblW w:type="dxa" w:w="8958"/>
+        <w:tblLayout w:type="fixed"/>
+        <w:tblLook w:firstColumn="1" w:firstRow="1" w:lastColumn="0" w:lastRow="0" w:noHBand="0" w:noVBand="1" w:val="04A0"/>
+      </w:tblPr>
+      <w:tblGrid>
+        <w:gridCol w:w="2835"/>
+        <w:gridCol w:w="1701"/>
+        <w:gridCol w:w="4422"/>
+      </w:tblGrid>
+      <w:tr>
+        <w:trPr>
+          <w:tblHeader/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2835"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>Source</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1701"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>Interval</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="4422"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>Records</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2835"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>Loop detectors</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1701"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>1 min</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="4422"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>109 440</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2835"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>Floating cars</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1701"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>10 s</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="4422"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>2 316 004</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2835"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>Incident log</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1701"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>–</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="4422"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:t>37</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+    </w:tbl>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading1"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="45" w:name="_Toc000000015"/>
+      <w:bookmarkStart w:id="46" w:name="_Ref_ch_results"/>
+      <w:r>
+        <w:t>Results</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="46"/>
+      <w:bookmarkEnd w:id="45"/>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading2"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="47" w:name="_Toc000000016"/>
+      <w:r>
+        <w:t>Density estimates</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="47"/>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_tab_errors \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>Table 4–1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> compares the root mean square error</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "RMSE" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> of the density estimates against the reference densities of the validation detectors. Adding floating-car speeds reduces the error by 31% overall, and by almost half in congestion, where detector data alone react late to the queue tail.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Caption"/>
+        <w:keepNext/>
+      </w:pPr>
+      <w:bookmarkStart w:id="48" w:name="_Ref_tab_errors_f"/>
+      <w:bookmarkStart w:id="49" w:name="_Ref_tab_errors"/>
+      <w:r>
+        <w:t xml:space="preserve">Table </w:t>
+      </w:r>
+      <w:bookmarkStart w:id="50" w:name="_Ref_tab_errors_n"/>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> STYLEREF "Heading 1" \s </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>4</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t>–</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> SEQ Table \* ARABIC \s 1 </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:bookmarkEnd w:id="50"/>
+      <w:bookmarkEnd w:id="49"/>
+      <w:r>
+        <w:t xml:space="preserve">: </w:t>
+      </w:r>
+      <w:bookmarkStart w:id="51" w:name="_Ref_tab_errors_t"/>
+      <w:r>
+        <w:t>Density error (RMSE, veh/km) by traffic condition</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="51"/>
+      <w:bookmarkEnd w:id="48"/>
+    </w:p>
+    <w:tbl>
+      <w:tblPr>
+        <w:tblStyle w:val="ThesisTable"/>
+        <w:tblW w:type="dxa" w:w="7654"/>
+        <w:tblLayout w:type="fixed"/>
+        <w:tblLook w:firstColumn="1" w:firstRow="1" w:lastColumn="0" w:lastRow="0" w:noHBand="0" w:noVBand="1" w:val="04A0"/>
+      </w:tblPr>
+      <w:tblGrid>
+        <w:gridCol w:w="2835"/>
+        <w:gridCol w:w="1701"/>
+        <w:gridCol w:w="1701"/>
+        <w:gridCol w:w="1417"/>
+      </w:tblGrid>
+      <w:tr>
+        <w:trPr>
+          <w:tblHeader/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2835"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Condition</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1701"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="right"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Detectors</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1701"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="right"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Detectors + FCD</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1417"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="right"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Change</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2835"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Free flow</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1701"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:tabs>
+                <w:tab w:pos="1145" w:val="decimal"/>
+              </w:tabs>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>4.1</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1701"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:tabs>
+                <w:tab w:pos="1145" w:val="decimal"/>
+              </w:tabs>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>3.6</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1417"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:tabs>
+                <w:tab w:pos="861" w:val="decimal"/>
+              </w:tabs>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>-12%</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2835"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Transition</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1701"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:tabs>
+                <w:tab w:pos="1145" w:val="decimal"/>
+              </w:tabs>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>9.8</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1701"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:tabs>
+                <w:tab w:pos="1145" w:val="decimal"/>
+              </w:tabs>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>6.9</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1417"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:tabs>
+                <w:tab w:pos="861" w:val="decimal"/>
+              </w:tabs>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>-30%</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2835"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Congestion</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1701"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:tabs>
+                <w:tab w:pos="1145" w:val="decimal"/>
+              </w:tabs>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>17.2</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1701"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:tabs>
+                <w:tab w:pos="1145" w:val="decimal"/>
+              </w:tabs>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>9.1</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1417"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:tabs>
+                <w:tab w:pos="861" w:val="decimal"/>
+              </w:tabs>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>-47%</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2835"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rStyle w:val="Strong"/>
+              </w:rPr>
+              <w:t>All</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1701"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:tabs>
+                <w:tab w:pos="1145" w:val="decimal"/>
+              </w:tabs>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rStyle w:val="Strong"/>
+              </w:rPr>
+              <w:t>8.6</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1701"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:tabs>
+                <w:tab w:pos="1145" w:val="decimal"/>
+              </w:tabs>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rStyle w:val="Strong"/>
+              </w:rPr>
+              <w:t>5.9</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1417"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:tabs>
+                <w:tab w:pos="861" w:val="decimal"/>
+              </w:tabs>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rStyle w:val="Strong"/>
+              </w:rPr>
+              <w:t>-31%</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+    </w:tbl>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading2"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="52" w:name="_Toc000000017"/>
+      <w:r>
+        <w:t>Stop-and-go waves</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="52"/>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_fig_speed \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>Figure 4–1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> shows the estimated speeds on the morning of the first day. A stop-and-go wave starts near the downstream end at 7:40 and travels upstream at about 18 km/h, the wave speed of </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_tab_fd \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>Table 2–1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">, as kinematic wave theory predicts </w:t>
+      </w:r>
+      <w:hyperlink w:anchor="_Ref_bib_treiber2013" w:history="1">
+        <w:r>
+          <w:t>(Treiber &amp; Kesting, 2013, p. 89)</w:t>
+        </w:r>
+      </w:hyperlink>
+      <w:r>
+        <w:t>.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:keepNext/>
+        <w:jc w:val="center"/>
+      </w:pPr>
+      <w:r>
+        <w:drawing>
+          <wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distB="0" distL="0" distR="0" distT="0">
+            <wp:extent cx="4680000" cy="2340000"/>
+            <wp:effectExtent b="0" l="0" r="0" t="0"/>
+            <wp:docPr descr="Speed by time and position: a red band runs diagonally from the lower right to the upper left" id="2" name="speed-field.png"/>
+            <wp:cNvGraphicFramePr>
+              <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>
+            </wp:cNvGraphicFramePr>
+            <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                  <pic:nvPicPr>
+                    <pic:cNvPr descr="Speed by time and position: a red band runs diagonally from the lower right to the upper left" id="0" name="speed-field.png"/>
+                    <pic:cNvPicPr/>
+                  </pic:nvPicPr>
+                  <pic:blipFill>
+                    <a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId10"/>
+                    <a:stretch>
+                      <a:fillRect/>
+                    </a:stretch>
+                  </pic:blipFill>
+                  <pic:spPr>
+                    <a:xfrm>
+                      <a:off x="0" y="0"/>
+                      <a:ext cx="4680000" cy="2340000"/>
+                    </a:xfrm>
+                    <a:prstGeom prst="rect">
+                      <a:avLst/>
+                    </a:prstGeom>
+                  </pic:spPr>
+                </pic:pic>
+              </a:graphicData>
+            </a:graphic>
+          </wp:inline>
+        </w:drawing>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Caption"/>
+        <w:keepNext w:val="0"/>
+        <w:jc w:val="center"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="53" w:name="_Ref_fig_speed_f"/>
+      <w:bookmarkStart w:id="54" w:name="_Ref_fig_speed"/>
+      <w:r>
+        <w:t xml:space="preserve">Figure </w:t>
+      </w:r>
+      <w:bookmarkStart w:id="55" w:name="_Ref_fig_speed_n"/>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> STYLEREF "Heading 1" \s </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>4</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t>–</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> SEQ Figure \* ARABIC \s 1 </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:bookmarkEnd w:id="55"/>
+      <w:bookmarkEnd w:id="54"/>
+      <w:r>
+        <w:t xml:space="preserve">: </w:t>
+      </w:r>
+      <w:bookmarkStart w:id="56" w:name="_Ref_fig_speed_t"/>
+      <w:r>
+        <w:t>Estimated speeds, 7:00 to 9:00; red is slow, green is free flow</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="56"/>
+      <w:bookmarkEnd w:id="53"/>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t>The filter places the wave front within one cell (500 m) of the position seen in the floating-car data in 34 of the 37 logged incidents.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading1"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="57" w:name="_Toc000000018"/>
+      <w:bookmarkStart w:id="58" w:name="_Ref_ch_conclusion"/>
+      <w:r>
+        <w:t>Conclusion</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="58"/>
+      <w:bookmarkEnd w:id="57"/>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t xml:space="preserve">The answers to the research questions of Chapter </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_ch_intro \w \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> are:</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="ListParagraph"/>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="4"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:t xml:space="preserve">The cell transmission model becomes a nonlinear state-space model, </w:t>
+      </w:r>
+      <w:r>
+        <w:t>(</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_eq_state_space \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>3–1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t>)</w:t>
+      </w:r>
+      <w:r>
+        <w:t>, that an extended Kalman filter can use, provided the corrected densities are clipped.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="ListParagraph"/>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="4"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:t>Floating-car speeds reduce the density error by 31% overall and by 47% in congestion (</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_tab_errors \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>Table 4–1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t>).</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="ListParagraph"/>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="4"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:t>The filter locates stop-and-go waves within one cell in 92% of the incidents.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:sectPr>
+          <w:headerReference xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId11" w:type="default"/>
+          <w:footerReference xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId12" w:type="default"/>
+          <w:footerReference xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId13" w:type="first"/>
+          <w:pgSz w:h="16838" w:w="11906"/>
+          <w:pgMar w:bottom="1417" w:footer="709" w:gutter="0" w:header="709" w:left="1701" w:right="1247" w:top="1417"/>
+          <w:pgNumType w:fmt="decimal" w:start="1"/>
+          <w:cols w:space="708"/>
+          <w:titlePg/>
+          <w:docGrid w:linePitch="360"/>
+        </w:sectPr>
+      </w:pPr>
+      <w:r>
+        <w:t xml:space="preserve">Future work should replace the fixed fundamental diagram of </w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> REF _Ref_tab_fd \h </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>Table 2–1</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> with parameters estimated online, and test the filter on a network with junctions</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> XE "junction" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+      <w:r>
+        <w:t>.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading1"/>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="0"/>
+        </w:numPr>
+      </w:pPr>
+      <w:bookmarkStart w:id="59" w:name="_Toc000000019"/>
+      <w:r>
+        <w:t>References</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="59"/>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Bibliography"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="60" w:name="_Ref_bib_daganzo1994"/>
+      <w:r>
+        <w:t xml:space="preserve">Daganzo, C. F. (1994). The Cell Transmission Model: A Dynamic Representation of Highway Traffic Consistent with the Hydrodynamic Theory. </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:i/>
+        </w:rPr>
+        <w:t>Transportation Research Part B: Methodological</w:t>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">, </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:i/>
+        </w:rPr>
+        <w:t>28</w:t>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">(4), 269–287. </w:t>
+      </w:r>
+      <w:hyperlink xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId14" w:history="1">
+        <w:r>
+          <w:rPr>
+            <w:rStyle w:val="Hyperlink"/>
+          </w:rPr>
+          <w:t>https://doi.org/10.1016/0191-2615(94)90002-7</w:t>
+        </w:r>
+      </w:hyperlink>
+      <w:bookmarkEnd w:id="60"/>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Bibliography"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="61" w:name="_Ref_bib_daganzo1997"/>
+      <w:r>
+        <w:t xml:space="preserve">Daganzo, C. F. (1997). </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:i/>
+        </w:rPr>
+        <w:t>Fundamentals of Transportation and Traffic Operations</w:t>
+      </w:r>
+      <w:r>
+        <w:t>. Pergamon.</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="61"/>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Bibliography"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="62" w:name="_Ref_bib_greenshields1935"/>
+      <w:r>
+        <w:t xml:space="preserve">Greenshields, B. D. (1935). A Study of Traffic Capacity. </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:i/>
+        </w:rPr>
+        <w:t>Highway Research Board Proceedings</w:t>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">, </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:i/>
+        </w:rPr>
+        <w:t>14</w:t>
+      </w:r>
+      <w:r>
+        <w:t>, 448–477.</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="62"/>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Bibliography"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="63" w:name="_Ref_bib_kalman1960"/>
+      <w:r>
+        <w:t xml:space="preserve">Kalman, R. E. (1960). A New Approach to Linear Filtering and Prediction Problems. </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:i/>
+        </w:rPr>
+        <w:t>Transactions of the ASME, Journal of Basic Engineering</w:t>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">, </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:i/>
+        </w:rPr>
+        <w:t>82</w:t>
+      </w:r>
+      <w:r>
+        <w:t>, 35–45.</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="63"/>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Bibliography"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="64" w:name="_Ref_bib_lighthill1955"/>
+      <w:r>
+        <w:t xml:space="preserve">Lighthill, M. J., &amp; Whitham, G. B. (1955). On Kinematic Waves II. A Theory of Traffic Flow on Long Crowded Roads. </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:i/>
+        </w:rPr>
+        <w:t>Proceedings of the Royal Society of London. Series A</w:t>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">, </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:i/>
+        </w:rPr>
+        <w:t>229</w:t>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">(1178), 317–345. </w:t>
+      </w:r>
+      <w:hyperlink xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId15" w:history="1">
+        <w:r>
+          <w:rPr>
+            <w:rStyle w:val="Hyperlink"/>
+          </w:rPr>
+          <w:t>https://doi.org/10.1098/rspa.1955.0089</w:t>
+        </w:r>
+      </w:hyperlink>
+      <w:bookmarkEnd w:id="64"/>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Bibliography"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="65" w:name="_Ref_bib_richards1956"/>
+      <w:r>
+        <w:t xml:space="preserve">Richards, P. I. (1956). Shock Waves on the Highway. </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:i/>
+        </w:rPr>
+        <w:t>Operations Research</w:t>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">, </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:i/>
+        </w:rPr>
+        <w:t>4</w:t>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">(1), 42–51. </w:t>
+      </w:r>
+      <w:hyperlink xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId16" w:history="1">
+        <w:r>
+          <w:rPr>
+            <w:rStyle w:val="Hyperlink"/>
+          </w:rPr>
+          <w:t>https://doi.org/10.1287/opre.4.1.42</w:t>
+        </w:r>
+      </w:hyperlink>
+      <w:bookmarkEnd w:id="65"/>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Bibliography"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="66" w:name="_Ref_bib_treiber2013"/>
+      <w:r>
+        <w:t xml:space="preserve">Treiber, M., &amp; Kesting, A. (2013). </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:i/>
+        </w:rPr>
+        <w:t>Traffic Flow Dynamics: Data, Models and Simulation</w:t>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">. Springer. </w:t>
+      </w:r>
+      <w:hyperlink xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId17" w:history="1">
+        <w:r>
+          <w:rPr>
+            <w:rStyle w:val="Hyperlink"/>
+          </w:rPr>
+          <w:t>https://doi.org/10.1007/978-3-642-32460-4</w:t>
+        </w:r>
+      </w:hyperlink>
+      <w:bookmarkEnd w:id="66"/>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading1"/>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="0"/>
+        </w:numPr>
+      </w:pPr>
+      <w:bookmarkStart w:id="67" w:name="_Toc000000020"/>
+      <w:r>
+        <w:t>Index</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="67"/>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="IndexHeading"/>
+      </w:pPr>
+      <w:r>
+        <w:fldChar w:dirty="true" w:fldCharType="begin"/>
+      </w:r>
+      <w:r>
+        <w:instrText xml:space="preserve"> INDEX \h "A" \c "2" </w:instrText>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="separate"/>
+      </w:r>
+      <w:r>
+        <w:t>C</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1"/>
+      </w:pPr>
+      <w:r>
+        <w:t>capacity</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1"/>
+      </w:pPr>
+      <w:r>
+        <w:t>CFL condition</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="IndexHeading"/>
+      </w:pPr>
+      <w:r>
+        <w:t>F</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1"/>
+      </w:pPr>
+      <w:r>
+        <w:t>floating car</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1"/>
+      </w:pPr>
+      <w:r>
+        <w:t>fundamental diagram</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="IndexHeading"/>
+      </w:pPr>
+      <w:r>
+        <w:t>J</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1"/>
+      </w:pPr>
+      <w:r>
+        <w:t>jam density</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1"/>
+      </w:pPr>
+      <w:r>
+        <w:t>junction</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="IndexHeading"/>
+      </w:pPr>
+      <w:r>
+        <w:t>K</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1"/>
+      </w:pPr>
+      <w:r>
+        <w:t>Kalman filter</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index2"/>
+      </w:pPr>
+      <w:r>
+        <w:t>extended</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="IndexHeading"/>
+      </w:pPr>
+      <w:r>
+        <w:t>L</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1"/>
+      </w:pPr>
+      <w:r>
+        <w:t>loop detector</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1"/>
+      </w:pPr>
+      <w:r>
+        <w:t>LWR model</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="IndexHeading"/>
+      </w:pPr>
+      <w:r>
+        <w:t>R</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1"/>
+      </w:pPr>
+      <w:r>
+        <w:t>ramp metering</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1"/>
+      </w:pPr>
+      <w:r>
+        <w:t>RMSE</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="IndexHeading"/>
+      </w:pPr>
+      <w:r>
+        <w:t>S</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Index1"/>
+      </w:pPr>
+      <w:r>
+        <w:t>stop-and-go wave</w:t>
+      </w:r>
+      <w:r>
+        <w:fldChar w:fldCharType="end"/>
+      </w:r>
+    </w:p>
+    <w:sectPr>
+      <w:headerReference xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId18" w:type="default"/>
+      <w:footerReference xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId19" w:type="default"/>
+      <w:footerReference xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId20" w:type="first"/>
+      <w:pgSz w:h="16838" w:w="11906"/>
+      <w:pgMar w:bottom="1417" w:footer="709" w:gutter="0" w:header="709" w:left="1701" w:right="1247" w:top="1417"/>
+      <w:pgNumType w:fmt="decimal"/>
+      <w:cols w:space="708"/>
+      <w:titlePg/>
+      <w:docGrid w:linePitch="360"/>
+    </w:sectPr>
+  </w:body>
+</w:document>
