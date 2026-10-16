@@ -1,0 +1,167 @@
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading1"/>
+      </w:pPr>
+      <w:r>
+        <w:t>Introduction</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t xml:space="preserve">Traffic flow is well described by kinematic wave models </w:t>
+      </w:r>
+      <w:hyperlink w:anchor="_Ref_bib_daganzo2005" w:history="1">
+        <w:r>
+          <w:t>(Daganzo, 2005)</w:t>
+        </w:r>
+      </w:hyperlink>
+      <w:r>
+        <w:t xml:space="preserve">. Shrinkage estimators were popularised by </w:t>
+      </w:r>
+      <w:hyperlink w:anchor="_Ref_bib_tibshirani1996" w:history="1">
+        <w:r>
+          <w:t>Tibshirani (1996)</w:t>
+        </w:r>
+      </w:hyperlink>
+      <w:r>
+        <w:t xml:space="preserve">; the proof of consistency is in </w:t>
+      </w:r>
+      <w:hyperlink w:anchor="_Ref_bib_tibshirani1996" w:history="1">
+        <w:r>
+          <w:t>(see Tibshirani, 1996, p. 214, Lemma 2)</w:t>
+        </w:r>
+      </w:hyperlink>
+      <w:r>
+        <w:t>.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t xml:space="preserve">Several textbooks agree </w:t>
+      </w:r>
+      <w:hyperlink w:anchor="_Ref_bib_ortuzar2011" w:history="1">
+        <w:r>
+          <w:t>(Daganzo, 2005; Ortúzar and Willumsen, 2011)</w:t>
+        </w:r>
+      </w:hyperlink>
+      <w:r>
+        <w:t xml:space="preserve">, and the typesetting tradition goes back to </w:t>
+      </w:r>
+      <w:hyperlink w:anchor="_Ref_bib_knuth1984" w:history="1">
+        <w:r>
+          <w:t>Knuth (1984, p. 12)</w:t>
+        </w:r>
+      </w:hyperlink>
+      <w:r>
+        <w:t>.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading1"/>
+        <w:numPr>
+          <w:ilvl w:val="0"/>
+          <w:numId w:val="0"/>
+        </w:numPr>
+      </w:pPr>
+      <w:r>
+        <w:t>References</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Bibliography"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="0" w:name="_Ref_bib_daganzo2005"/>
+      <w:r>
+        <w:t xml:space="preserve">Daganzo, C.F. (2005) </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:i/>
+        </w:rPr>
+        <w:t>Fundamentals of Transportation and Traffic Operations</w:t>
+      </w:r>
+      <w:r>
+        <w:t>. Oxford: Pergamon.</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="0"/>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Bibliography"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="1" w:name="_Ref_bib_knuth1984"/>
+      <w:r>
+        <w:t xml:space="preserve">Knuth, D.E. (1984) </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:i/>
+        </w:rPr>
+        <w:t>The TeXbook</w:t>
+      </w:r>
+      <w:r>
+        <w:t>. Addison-Wesley.</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="1"/>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Bibliography"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="2" w:name="_Ref_bib_ortuzar2011"/>
+      <w:r>
+        <w:t xml:space="preserve">Ortúzar, J. de D. and Willumsen, L.G. (2011) ‘Modelling Transport’, </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:i/>
+        </w:rPr>
+        <w:t>Proceedings of Something</w:t>
+      </w:r>
+      <w:r>
+        <w:t>. Wiley.</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="2"/>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Bibliography"/>
+      </w:pPr>
+      <w:bookmarkStart w:id="3" w:name="_Ref_bib_tibshirani1996"/>
+      <w:r>
+        <w:t xml:space="preserve">Tibshirani, R. (1996) ‘Regression Shrinkage and Selection via the Lasso’, </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:i/>
+        </w:rPr>
+        <w:t>Journal of the Royal Statistical Society: Series B</w:t>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">, 58(1), pp. 267–288. Available at: </w:t>
+      </w:r>
+      <w:hyperlink xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId5" w:history="1">
+        <w:r>
+          <w:rPr>
+            <w:rStyle w:val="Hyperlink"/>
+          </w:rPr>
+          <w:t>https://doi.org/10.1111/j.2517-6161.1996.tb02080.x</w:t>
+        </w:r>
+      </w:hyperlink>
+      <w:r>
+        <w:t>.</w:t>
+      </w:r>
+      <w:bookmarkEnd w:id="3"/>
+    </w:p>
+    <w:sectPr>
+      <w:pgSz w:h="16838" w:w="11906"/>
+      <w:pgMar w:bottom="1440" w:footer="709" w:gutter="0" w:header="709" w:left="1440" w:right="1440" w:top="1440"/>
+      <w:cols w:space="708"/>
+      <w:docGrid w:linePitch="360"/>
+    </w:sectPr>
+  </w:body>
+</w:document>

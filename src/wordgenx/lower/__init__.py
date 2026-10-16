@@ -10,6 +10,7 @@ from wordgenx import ir
 from wordgenx.highlight import STYLE_NAMES as CODE_STYLES
 from wordgenx.highlight import code_style
 from wordgenx.lower.builtins import BUILTIN_STYLES, DEFAULT_NUMBERING
+from wordgenx.lower.citations import expand as expand_citations
 from wordgenx.lower.lowering import Located, Lowering, StyleUse
 from wordgenx.lower.references import report_to, resolve
 from wordgenx.ooxml.parts.numbering import complete_levels
@@ -35,6 +36,15 @@ def lower(
     if template_path is not None:
         lowering.use_template(template_path, Span(0, 0), from_command_line=True)
     body = lowering.document(result.ast)
+    # Citations and bibliographies, now that every citation is known.
+    expanded, cited_section, cite_styles = expand_citations(
+        tuple(body), lowering.section, lowering.bibliography, lowering.references
+    )
+    body = list(expanded)
+    lowering.section = cited_section
+    for name in sorted(cite_styles):
+        kind = ir.StyleKind.CHARACTER if name == "Hyperlink" else ir.StyleKind.PARAGRAPH
+        lowering.use_style(name, kind, Span(0, 0))
     compiled = lowering.stylesheets.result()
     diagnostics: list[Located] = [(result.source, d) for d in result.diagnostics]
     diagnostics += compiled.diagnostics

@@ -143,6 +143,12 @@ BUILTIN_STYLES: dict[str, Callable[[], Style]] = {
     },
     "Footnote Reference": _character("Footnote Reference", vertical_align="superscript"),
     "Endnote Reference": _character("Endnote Reference", vertical_align="superscript"),
+    "Bibliography": lambda: Style(  # entries with a hanging indent
+        StyleKind.PARAGRAPH,
+        "Bibliography",
+        based_on="Normal",
+        paragraph=para_props(indent_left="1.27cm", hanging_indent="1.27cm", space_after="6pt"),
+    ),
     "Strong": _character("Strong", bold=True),
     "Emphasis": _character("Emphasis", italic=True),
     "Code": _character("Code", font="Consolas"),

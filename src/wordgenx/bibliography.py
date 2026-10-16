@@ -1,0 +1,284 @@
+"""Citations and bibliographies rendered with CSL (design §3.19).
+
+citeproc-py does the CSL work; this module loads the data (BibTeX or CSL-JSON) and the
+style, renders every citation once all of them are known (so numbering and disambiguation
+are right), and turns citeproc's HTML-ish output into Word runs.
+"""
+
+# pyright: basic
+
+from __future__ import annotations
+
+import json
+import os
+import re
+from dataclasses import dataclass, field
+from html.parser import HTMLParser
+from pathlib import Path
+from typing import ClassVar
+
+import citeproc
+from citeproc import (
+    Citation,
+    CitationItem,
+    CitationStylesBibliography,
+    CitationStylesStyle,
+    Locator,
+    formatter,
+)
+from citeproc.source import BibliographySource
+from citeproc.source.bibtex import BibTeX
+from citeproc.source.json import CiteProcJSON
+
+from wordgenx import ir
+from wordgenx.props import EMPTY_RUN, PropertySet, Target
+
+DATA = Path(os.path.dirname(citeproc.__file__)) / "data"
+BUNDLED_STYLES = {
+    "harvard": "harvard-cite-them-right",
+    "harvard-cite-them-right": "harvard-cite-them-right",
+}
+"""Styles that ship with citeproc-py; any other is a path to a .csl file."""
+DEFAULT_STYLE = "harvard"
+
+LOCATORS = {
+    "page": "p.", "pages": "pp.", "chapter": "ch.", "section": "sec.", "figure": "fig.",
+    "table": "tab.", "paragraph": "para.", "line": "l.", "volume": "vol.", "note": "n.",
+    "equation": "eq.", "verse": "v.", "column": "col.", "part": "pt.", "book": "bk.",
+}  # fmt: skip
+"""CSL locator labels -> the abbreviation narrative citations use."""
+URL_RE = re.compile(r"https?://[^\s<>\"]+[^\s<>\".,;:)]")
+
+
+class BibliographyError(ValueError):
+    """Bibliography data or a style that cannot be used."""
+
+
+@dataclass(frozen=True)
+class Cite:
+    """One \\cite or \\textcite: the keys and how to show them."""
+
+    keys: tuple[str, ...]
+    narrative: bool = False
+    locator: tuple[str, str] | None = None
+    """(CSL label, value): ("page", "214")."""
+    prefix: str = ""
+    suffix: str = ""
+
+
+def load_sources(paths: list[Path]) -> BibliographySource:
+    """BibTeX (.bib) and CSL-JSON (.json) files, merged (later files win)."""
+    merged: BibliographySource | None = None
+    for path in paths:
+        try:
+            if path.suffix.lower() == ".json":
+                source: BibliographySource = CiteProcJSON(
+                    json.loads(path.read_text(encoding="utf-8"))
+                )
+            elif path.suffix.lower() in (".bib", ".bibtex"):
+                source = BibTeX(str(path), encoding="utf-8")
+            else:
+                raise BibliographyError(
+                    f"`{path.name}`: bibliography data is .bib (BibTeX) or .json (CSL-JSON)"
+                )
+        except OSError as e:
+            raise BibliographyError(f"cannot read `{path.name}`: {e.strerror}") from None
+        except (ValueError, KeyError, TypeError) as e:
+            raise BibliographyError(f"`{path.name}` is not valid bibliography data: {e}") from None
+        if merged is None:
+            merged = source
+        else:
+            merged.update(source)
+    if merged is None:
+        raise BibliographyError("no bibliography files given")
+    return merged
+
+
+def load_style(name: str, base_dir: Path, language: str | None) -> CitationStylesStyle:
+    if name in BUNDLED_STYLES:
+        path = DATA / "styles" / f"{BUNDLED_STYLES[name]}.csl"
+    else:
+        path = base_dir / name
+        if path.suffix != ".csl":
+            path = path.with_suffix(".csl")
+        if not path.exists():
+            bundled = ", ".join(sorted(BUNDLED_STYLES))
+            raise BibliographyError(
+                f"unknown citation style `{name}` (bundled: {bundled}; or a path to a .csl file)"
+            )
+    locale = (
+        language if language and (DATA / "locales" / f"locales-{language}.xml").exists() else None
+    )
+    try:
+        return CitationStylesStyle(str(path), locale=locale, validate=False)
+    except Exception as e:
+        raise BibliographyError(f"`{path.name}` is not a usable CSL style: {e}") from None
+
+
+def style_format(style: CitationStylesStyle) -> str:
+    """author-date, numeric, note, label or author (CSL's citation-format)."""
+    for category in style.root.iter("{http://purl.org/net/xbiblio/csl}category"):
+        value = category.get("citation-format")
+        if value:
+            return str(value)
+    return "author-date"
+
+
+@dataclass
+class Bibliography:
+    """Everything \\bibliography loaded, and the citations in document order."""
+
+    source: BibliographySource
+    style: CitationStylesStyle
+    cites: list[Cite] = field(default_factory=lambda: [])
+    _rendered: list[str] | None = None
+    _engine: CitationStylesBibliography | None = None
+
+    def missing(self, cite: Cite) -> list[str]:
+        return [key for key in cite.keys if key.lower() not in self.source]
+
+    def render(self, include_all: bool = False) -> list[str]:
+        """The text of every citation (in the order they were added), as citeproc HTML."""
+        if self._rendered is not None:
+            return self._rendered
+        engine = CitationStylesBibliography(self.style, self.source, formatter.html)
+        citations = [self._citation(cite) for cite in self.cites]
+        for citation in citations:
+            engine.register(citation)
+        if include_all:
+            for key in sorted(self.source):
+                engine.register(Citation([CitationItem(key)]))
+        engine.sort()
+        rendered: list[str] = []
+        for cite, citation in zip(self.cites, citations, strict=True):
+            text = str(engine.cite(citation, lambda item: None))
+            rendered.append(self._narrative(cite, text) if cite.narrative else text)
+        self._rendered, self._engine = rendered, engine
+        return rendered
+
+    def entries(self) -> list[tuple[str, str]]:
+        """(key, citeproc HTML) of the bibliography, in the style's order."""
+        assert self._engine is not None, "render() first"
+        keys = [str(k) for k in self._engine.keys]
+        return list(zip(keys, (str(item) for item in self._engine.bibliography()), strict=False))
+
+    def _citation(self, cite: Cite) -> Citation:
+        items = []
+        for i, key in enumerate(cite.keys):
+            options: dict[str, object] = {}
+            last = i == len(cite.keys) - 1
+            if i == 0 and cite.prefix and not cite.narrative:
+                options["prefix"] = cite.prefix.rstrip() + " "
+            if last and cite.locator is not None:
+                options["locator"] = Locator(*cite.locator)
+            if last and cite.suffix and not cite.narrative:
+                options["suffix"] = ", " + cite.suffix.lstrip(", ")
+            items.append(CitationItem(key.lower(), **options))
+        return Citation(items)
+
+    def _narrative(self, cite: Cite, text: str) -> str:
+        """ "Tibshirani (1996)": names in the text, the rest in parentheses (author-date) or
+        the citation itself after the names (numeric styles)."""
+        parts = []
+        for key in cite.keys:
+            reference = self.source[key.lower()]
+            names = reference.get("author") or reference.get("editor") or []
+            families = [str(n.get("family") or n.get("literal") or "") for n in names] or [
+                str(reference.get("title", key))
+            ]
+            who = (
+                families[0]
+                if len(families) == 1
+                else f"{families[0]} and {families[1]}"
+                if len(families) == 2
+                else f"{families[0]} et al."
+            )
+            if style_format(self.style) in ("numeric", "label"):
+                parts.append(f"{who} {text}")
+                break
+            issued = reference.get("issued")
+            year = str(getattr(issued, "year", "") or "n.d.")
+            extra = ""
+            if cite.locator is not None and key == cite.keys[-1]:
+                label, value = cite.locator
+                extra = f", {LOCATORS.get(label, label)} {value}"
+            parts.append(f"{who} ({year}{extra})")
+        return ", ".join(parts)
+
+
+# --- citeproc HTML -> runs ----------------------------------------------------------------------
+
+
+class _Runs(HTMLParser):
+    TAGS: ClassVar[dict[str, dict[str, object]]] = {
+        "i": {"italic": True},
+        "em": {"italic": True},
+        "b": {"bold": True},
+        "strong": {"bold": True},
+        "sup": {"vertical-align": "superscript"},
+        "sub": {"vertical-align": "subscript"},
+    }
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.stack: list[dict[str, object]] = []
+        self.out: list[tuple[str, dict[str, object]]] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        props = dict(self.TAGS.get(tag, {}))
+        style = dict(attrs).get("style") or ""
+        if "small-caps" in style:
+            props["small-caps"] = True
+        if "italic" in style:
+            props["italic"] = True
+        if "bold" in style:
+            props["bold"] = True
+        self.stack.append(props)
+
+    def handle_endtag(self, tag: str) -> None:
+        if self.stack:
+            self.stack.pop()
+
+    def handle_data(self, data: str) -> None:
+        merged: dict[str, object] = {}
+        for props in self.stack:
+            merged.update(props)
+        if self.out and self.out[-1][1] == merged:
+            self.out[-1] = (self.out[-1][0] + data, merged)
+        else:
+            self.out.append((data, merged))
+
+
+def html_runs(
+    html: str, props: PropertySet = EMPTY_RUN, style: str | None = None, links: bool = True
+) -> list[ir.Inline]:
+    """Runs for citeproc HTML; URLs (and DOI links) become hyperlinks."""
+    parser = _Runs()
+    parser.feed(html)
+    parser.close()
+    out: list[ir.Inline] = []
+    for text, values in parser.out:
+        run_props = props.merged(PropertySet(Target.RUN, values)) if values else props
+        position = 0
+        for match in URL_RE.finditer(text) if links else ():
+            if match.start() > position:
+                out.append(ir.Run(text[position : match.start()], run_props, style))
+            out.append(
+                ir.Hyperlink(match.group(0), (ir.Run(match.group(0), run_props, "Hyperlink"),))
+            )
+            position = match.end()
+        if position < len(text):
+            out.append(ir.Run(text[position:], run_props, style))
+    return out
+
+
+__all__ = [
+    "DEFAULT_STYLE",
+    "Bibliography",
+    "BibliographyError",
+    "Cite",
+    "html_runs",
+    "load_sources",
+    "load_style",
+    "style_format",
+]

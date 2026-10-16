@@ -177,7 +177,16 @@ def example_math() -> ir.Document:
     return result.document
 
 
+def example_citations() -> ir.Document:
+    """examples/citations: citations, a narrative citation, a CSL bibliography with links."""
+    path = Path(__file__).resolve().parents[2] / "examples" / "citations" / "citations.wgx"
+    result = compile_file(path)
+    assert result.document is not None, result.render_diagnostics()
+    return result.document
+
+
 CASES: dict[str, Callable[[], ir.Document]] = {
+    "example-citations": example_citations,
     "example-math": example_math,
     "example-design-spec": example_design_spec,
     "example-hello": example_hello,

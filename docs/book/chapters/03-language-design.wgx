@@ -531,6 +531,13 @@ The modules live in `src/wordgenx/std/` as ordinary macro files. Users can copy 
 
 Citations are rendered with CSL (citeproc-py) as text with hyperlinks to bookmarks in the bibliography. The bibliography uses a `Bibliography` paragraph style. Native Word citations (`CITATION` fields, `sources.xml`) are a later option.
 
+- *Data:* `file=` takes one file or a tuple; `.bib` is BibTeX, `.json` is CSL-JSON, and later files win on a shared key. Keys are case-insensitive. `\bibliography` belongs in the preamble.
+- *Styles:* `style=harvard` (Cite Them Right, bundled with citeproc-py) is the default; any other style is a path to a `.csl` file (the extension may be left out), relative to the document. The document's `lang` picks the CSL locale when citeproc-py has it (`en-GB` gives British quotation marks).
+- *Rendering:* all citations are rendered together once the document has been read, so numbering by first citation (numeric styles) and disambiguation are right. Multi-key citations are sorted and joined by the style.
+- *`\cite` options:* a locator (`page`, `chapter`, `section`, `figure`, `table`, `paragraph`, `line`, `volume`, `note`, `equation`, …), `prefix`, `suffix`. `\textcite` puts the names in the text: "Tibshirani (1996)" for author-date styles, "Tibshirani \[2\]" for numeric ones. One author gives the family name, two give "A and B", three or more give "A et al.".
+- *`\printbibliography`:* the cited entries (`all`: every entry in the data) under an unnumbered heading (`title="References"`, `title=none`, `level=1..9`). Each entry is bookmarked, and citations link to the entry of their first key. URLs and DOIs in entries are links. A numeric style's label (`[3]`) is followed by a tab to the hanging indent.
+- Unknown keys are errors with the nearest key as a suggestion (`WGX0312`).
+
 == Escape hatches (in order of preference)
 
 1. `\style{Name}{…}`: use any style that exists in the template.

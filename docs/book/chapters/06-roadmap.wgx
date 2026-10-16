@@ -49,7 +49,7 @@ Steps, in order:
 
 1. \[x\] *Math* (LaTeX subset to OMML, `wordgenx.math`). Inline `\m{…}`, display `$$…$$` and `\math[…]{…}`. Fractions, roots, scripts, big operators with limits, delimiters (`\left…\right`), functions and `\lim`, accents and bars, matrices and `cases`, `aligned` rows with `&` alignment, text and font styles (`\mathbf`, `\mathbb`, …), Greek letters and the common symbol set. Unsupported macros are errors at their position. OMML is written the way Word writes it (the reference survey settled Q9). A numbered display equation is an `m:eqArr` with Word's own `#` number. Labelled equations are numbered, optionally per chapter, and `@eq:x` prints "(3.2)".
 2. \[x\] *Code highlighting* (Pygments): token runs in generated, themeable character styles (`Code Keyword`, …), `line-numbers`, captions as now.
-3. *Citations and bibliography*: BibTeX or CSL-JSON data, CSL styles through citeproc-py, `\cite`/`\textcite` linked to entries, `\printbibliography` in a `Bibliography` style.
+3. \[x\] *Citations and bibliography*: BibTeX or CSL-JSON data, CSL styles through citeproc-py, `\cite`/`\textcite` linked to entries, `\printbibliography` in a `Bibliography` style.
 4. *Index*: `\ix{term!sub}` as `XE` fields, `\index[columns=2]` as an `INDEX` field with pre-rendered entries.
 5. *Images and embedding*: SVG (with a PNG fallback, as Word stores it), `\embed-docx` (altChunk).
 6. *Tooling*: `wordgenx fmt` (CST-based formatter), `--emit-ir` (JSON).

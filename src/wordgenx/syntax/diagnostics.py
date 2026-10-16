@@ -65,6 +65,7 @@ class Code(Enum):
     DUPLICATE_LABEL = "WGX0309"
     TEMPLATE = "WGX0310"
     MATH = "WGX0311"
+    CITATION = "WGX0312"
 
 
 @dataclass(frozen=True)

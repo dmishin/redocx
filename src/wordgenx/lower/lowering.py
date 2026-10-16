@@ -30,8 +30,18 @@ from PIL import Image as PILImage
 from PIL import UnidentifiedImageError
 
 from wordgenx import ir
+from wordgenx.bibliography import (
+    DEFAULT_STYLE,
+    LOCATORS,
+    Bibliography,
+    BibliographyError,
+    Cite,
+    load_sources,
+    load_style,
+)
 from wordgenx.highlight import DEFAULT_THEME, highlight, suggest_language, theme_formatting, themes
 from wordgenx.lower.builtins import BUILTIN_STYLES
+from wordgenx.lower.citations import PendingBibliography, PendingCitation
 from wordgenx.lower.fields import (
     build_time,
     field_name,
@@ -72,13 +82,14 @@ Located = tuple[Source, Diagnostic]
 BLOCK_COMMANDS = frozenset(
     (
         "p align list include use styles document meta settings section table header footer tabs "
-        "caption figure toc listof math"
+        "caption figure toc listof math bibliography printbibliography"
     ).split()
 )
 INLINE_COMMANDS = frozenset(
     (
         "b i u s sup sub hl font style lang hidden strong emph code link url br tab image "
-        "pagenum numpages sectionpages field date ref pageref seq footnote endnote raw m"
+        "pagenum numpages sectionpages field date ref pageref seq footnote endnote raw m "
+        "cite textcite"
     ).split()
 )
 FIELD_COMMANDS = {"pagenum": "PAGE", "numpages": "NUMPAGES", "sectionpages": "SECTIONPAGES"}
@@ -95,10 +106,6 @@ PLANNED: dict[str, str] = {
         [
             "index",
             "ix",
-            "cite",
-            "textcite",
-            "bibliography",
-            "printbibliography",
             "embed-docx",
         ],
         "M3",
@@ -108,7 +115,7 @@ PLANNED: dict[str, str] = {
 }
 """Commands of the language that are not implemented yet -> the milestone that adds them."""
 
-PLANNED_BLOCKS = frozenset("watermark bibliography printbibliography index".split())
+PLANNED_BLOCKS = frozenset("watermark index".split())
 CELL_ALIGN = {"top": "top", "center": "center", "middle": "center", "bottom": "bottom"}
 DEFAULT_DPI = 96
 TRANSPARENT = frozenset({"comment", "ins", "control"})
@@ -151,6 +158,7 @@ class Piece:
     note: ir.Note | None = None
     raw: ir.RawXml | None = None
     math: ir.Math | None = None
+    citation: ir.Run | None = None
 
 
 @dataclass
@@ -256,6 +264,8 @@ class Lowering:
     """Header/footer kinds defined so far ("header:first", ...): what a new section inherits."""
     _container_depth: int = 0
     _part: str | None = None
+    bibliography: Bibliography | None = None
+    """The data and style \\bibliography loaded; citations are collected in it."""
     code_theme: str = DEFAULT_THEME
     """The Pygments style that colours the Code ... token styles."""
     caption_chapters: tuple[str, str] | None = None
@@ -631,6 +641,8 @@ class Lowering:
             "toc": self.cmd_toc,
             "listof": self.cmd_toc,
             "math": self.cmd_math,
+            "bibliography": self.cmd_bibliography,
+            "printbibliography": self.cmd_printbibliography,
         }.get(name)
         if handler is not None:
             return handler(command)
@@ -2025,6 +2037,156 @@ class Lowering:
         )
         return [Piece("", fmt, "field", field=ref)]
 
+    # --- citations ---------------------------------------------------------------------------
+
+    def cmd_bibliography(self, command: ast.Command) -> list[ir.Block]:
+        r"""\bibliography[file=refs.bib, style=harvard]: the data (BibTeX, CSL-JSON) and the
+        CSL style (bundled, or a path to a .csl file)."""
+        self.no_body(command)
+        files: list[Path] = []
+        style = DEFAULT_STYLE
+        for option in command.options.items if command.options else ():
+            if option.key == "file":
+                items = (
+                    option.value.items if isinstance(option.value, ast.TupleValue) else (option,)
+                )
+                for item in items:
+                    text = self.text_value(item.value, command, "file")
+                    if text:
+                        files.append(self.base_dir / text)
+            elif option.key == "style" and (
+                text := self.text_value(option.value, command, "style")
+            ):
+                style = text
+            else:
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    "invalid \\bibliography option",
+                    option.span,
+                    help='\\bibliography[file="refs.bib", style=harvard]',
+                )
+        if self.bibliography is not None:
+            self.report(Code.CITATION, "the bibliography is already set", command.span)
+            return []
+        if not files:
+            self.report(Code.CITATION, '\\bibliography needs data: file="refs.bib"', command.span)
+            return []
+        try:
+            source = load_sources(files)
+            csl = load_style(style, self.base_dir, self.meta.language)
+        except BibliographyError as e:
+            self.report(
+                Code.CITATION, str(e), command.span, help=f"paths are relative to {self.base_dir}"
+            )
+            return []
+        self.bibliography = Bibliography(source, csl)
+        return []
+
+    def inline_cite(self, command: ast.Command, fmt: Format) -> list[Piece]:
+        r"""\cite[page=214, prefix="see", suffix="Lemma 2"]{key1, key2} and \textcite{key}."""
+        keys = tuple(
+            k.strip()
+            for k in (
+                command.body.text if isinstance(command.body, ast.VerbatimBody) else ""
+            ).split(",")
+            if k.strip()
+        )
+        if not keys:
+            self.report(
+                Code.CITATION,
+                f"`\\{command.name}` needs a key: \\{command.name}{{key}}",
+                command.span,
+            )
+            return []
+        locator: tuple[str, str] | None = None
+        prefix = suffix = ""
+        for option in command.options.items if command.options else ():
+            text = self.text_value(option.value, command, option.key or "option") or ""
+            if option.key in LOCATORS:
+                locator = (option.key, text)
+            elif option.key == "prefix":
+                prefix = text
+            elif option.key == "suffix":
+                suffix = text
+            else:
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    f"invalid \\{command.name} option",
+                    option.span,
+                    help="page=..., chapter=..., section=..., prefix=..., suffix=...",
+                )
+        if self.bibliography is None:
+            self.report(
+                Code.CITATION,
+                "citations need a bibliography",
+                command.span,
+                help='load one in the preamble: \\bibliography[file="refs.bib"]',
+            )
+            return []
+        cite = Cite(keys, command.name == "textcite", locator, prefix, suffix)
+        missing = self.bibliography.missing(cite)
+        if missing:
+            known = [str(key) for key in self.bibliography.source]  # pyright: ignore[reportUnknownVariableType, reportUnknownArgumentType]
+            close = difflib.get_close_matches(missing[0].lower(), known, n=1)
+            self.report(
+                Code.CITATION,
+                f"no bibliography entry `{missing[0]}`",
+                command.span,
+                f"did you mean `{close[0]}`?" if close else "",
+            )
+            return []
+        self.bibliography.cites.append(cite)
+        pending = PendingCitation(
+            "", fmt.props, fmt.style, len(self.bibliography.cites) - 1, keys[0].lower()
+        )
+        return [
+            Piece("", fmt, "field", field=None, raw=None, math=None, mark=None, citation=pending)
+        ]
+
+    def cmd_printbibliography(self, command: ast.Command) -> list[ir.Block]:
+        r"""\printbibliography[title="References", level=1, all]: the cited entries, or with
+        `all` every entry."""
+        self.no_body(command)
+        self.has_content = True
+        if self._container_depth or self._figure is not None:
+            self.report(
+                Code.MISPLACED, "`\\printbibliography` must be in the document body", command.span
+            )
+            return []
+        title: str | None = "References"
+        level, include_all = 1, False
+        for option in command.options.items if command.options else ():
+            text = self.text_value(option.value, command, option.key or "option")
+            if option.key == "title":
+                title = None if text == "none" else text
+            elif option.key == "level" and text and text.isdigit() and 1 <= int(text) <= 9:
+                level = int(text)
+            elif option.key is None and text == "all":
+                include_all = True
+            else:
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    "invalid \\printbibliography option",
+                    option.span,
+                    help='\\printbibliography[title="References", level=1, all]',
+                )
+        if self.bibliography is None:
+            self.report(
+                Code.CITATION,
+                "\\printbibliography needs \\bibliography in the preamble",
+                command.span,
+            )
+            return []
+        return [
+            PendingBibliography(
+                title=title,
+                level=level,
+                include_all=include_all,
+                span=command.span,
+                source=self.source,
+            )
+        ]
+
     # --- math --------------------------------------------------------------------------------
 
     def math_body(self, command: ast.Command) -> tuple[str, int]:
@@ -2620,6 +2782,8 @@ class Lowering:
         if name == "raw":
             xml = self.raw_xml(command)
             return [Piece("", fmt, "field", raw=ir.RawXml(xml))] if xml is not None else []
+        if name in ("cite", "textcite"):
+            return self.inline_cite(command, fmt)
         if name == "m":
             self.no_options(command)
             text, start = self.math_body(command)
@@ -2813,7 +2977,13 @@ class Lowering:
                 inlines.append(ir.Break(piece.kind))
                 continue
             special = (
-                piece.image or piece.field or piece.mark or piece.note or piece.raw or piece.math
+                piece.image
+                or piece.field
+                or piece.mark
+                or piece.note
+                or piece.raw
+                or piece.math
+                or piece.citation
             )
             if special is not None:  # not inside hyperlinks (yet)
                 flush_link()
@@ -2827,7 +2997,7 @@ class Lowering:
             target = link_runs if link is not None else inlines
             last = target[-1] if target else None
             if (
-                isinstance(last, ir.Run)
+                type(last) is ir.Run  # not a placeholder such as a citation
                 and last.props == piece.format.props
                 and last.style == piece.format.style
             ):
