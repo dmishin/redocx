@@ -571,6 +571,8 @@ Syntax errors use the codes `WGX01xx` (`wordgenx.syntax.diagnostics.Code`). Late
 
 An error in text a macro brought in points into the file that defines the macro, with a note for each call it came through (`= note: in \logo, called at report.wgx:12:5`). Problems with command-line options, such as a `--template` that is not a Word file, are reported as plain `error: --template: …` lines, since no source line is involved.
 
+*Formatting.* `wordgenx fmt FILE…` rewrites documents in a canonical layout, working on the lossless CST so comments, escapes and the author's line breaks stay. It removes trailing spaces and tabs, keeps at most one blank line between blocks, removes blank lines at the start, ends the file with exactly one newline and uses the file's first line ending throughout. It writes option lists that fit on one line as `[a=1, b=(x, y)]` and puts one space after a heading marker. Verbatim content (code blocks, display math, code spans, string and raw bodies) is never changed, and neither is an option list written over several lines. Paragraphs are not re-wrapped and pipe tables are not aligned. `--check` changes nothing and fails if a file would change (for CI); `--diff` prints the changes. A file with syntax errors, or with carriage returns that are not followed by a line feed, is left alone. The formatter checks its own output: the result must parse to the same document, or it reports an internal error and writes nothing. Style sheets (`.wgxs`) are not formatted yet.
+
 == Parsing rules (settled in M1)
 
 The parser (`wordgenx.syntax`) fixes these details that the sections above leave open:

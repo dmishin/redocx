@@ -1,22 +1,26 @@
-"""Command-line interface: ``wordgenx build``, ``check``, ``parse`` and ``inspect``."""
+"""Command-line interface: ``wordgenx build``, ``check``, ``fmt``, ``parse`` and ``inspect``."""
 
 from __future__ import annotations
 
 import argparse
+import codecs
+import difflib
 import sys
 import zipfile
 from collections.abc import Sequence
 from pathlib import Path
 
-from wordgenx import __version__
+from wordgenx import __version__, ir
 from wordgenx.compiler import InternalError, build
+from wordgenx.ir_json import to_json
 from wordgenx.ooxml.reader import read_docx
 from wordgenx.ooxml.template import Template, TemplateError, load_template
 from wordgenx.stylesheet import compile_stylesheets, parse_stylesheet
 from wordgenx.stylesheet.collect import STYLESHEET_SUFFIX
 from wordgenx.syntax import Source, ast, parse
 from wordgenx.syntax.cst import dump as dump_cst
-from wordgenx.syntax.diagnostics import Diagnostic, render
+from wordgenx.syntax.diagnostics import Diagnostic, render, render_all
+from wordgenx.syntax.format import FormatError, format_source
 
 
 def _load(path: str) -> Source | None:
@@ -58,7 +62,22 @@ def _load_template(path: str) -> Template | None:
     return template
 
 
-def _build(path: str, output: str | None, template: str | None) -> int:
+def _emit_ir(document: ir.Document, target: str) -> bool:
+    """Write the IR as JSON to `target` ("-": standard output)."""
+    text = to_json(document)
+    if target == "-":
+        sys.stdout.write(text)
+        return True
+    try:
+        Path(target).write_text(text, encoding="utf-8", newline="\n")
+    except OSError as e:
+        print(f"error: cannot write {target}: {e.strerror}", file=sys.stderr)
+        return False
+    print(f"wrote {target}", file=sys.stderr)
+    return True
+
+
+def _build(path: str, output: str | None, template: str | None, emit_ir: str | None) -> int:
     source = _load(path)
     if source is None:
         return 1
@@ -78,6 +97,9 @@ def _build(path: str, output: str | None, template: str | None) -> int:
     )
     if data is None:
         print(f"build failed: {summary}", file=sys.stderr)
+        return 1
+    document = result.document
+    if emit_ir is not None and document is not None and not _emit_ir(document, emit_ir):
         return 1
     target = Path(output) if output else Path(path).with_suffix(".docx")
     try:
@@ -110,6 +132,62 @@ def _check(paths: Sequence[str]) -> int:
     summary = f"{errors} error{'s' * (errors != 1)}, {warnings} warning{'s' * (warnings != 1)}"
     print(f"checked {len(paths)} file{'s' * (len(paths) != 1)}: {summary}", file=sys.stderr)
     return 1 if errors or failed else 0
+
+
+def _fmt(paths: Sequence[str], check: bool, diff: bool) -> int:
+    """Rewrite files in the canonical layout; with `check` or `diff`, only report."""
+    changed = unchanged = 0
+    failed = False
+    for path in paths:
+        if path.endswith(STYLESHEET_SUFFIX):
+            print(f"{path}: skipped: style sheets are not formatted yet", file=sys.stderr)
+            continue
+        source = _load(path)
+        if source is None:
+            failed = True
+            continue
+        try:
+            result = format_source(source)
+        except FormatError as e:
+            print(f"error: {e}\n  = help: {INTERNAL_HELP}", file=sys.stderr)
+            failed = True
+            continue
+        if result.text is None:
+            if result.diagnostics:
+                print(render_all(result.diagnostics, source), file=sys.stderr)
+            print(f"{path}: {result.problem}", file=sys.stderr)
+            failed = True
+            continue
+        if not result.changed(source.text):
+            unchanged += 1
+            continue
+        changed += 1
+        if diff:
+            lines = difflib.unified_diff(
+                source.text.splitlines(keepends=True),
+                result.text.splitlines(keepends=True),
+                f"{path} (original)",
+                f"{path} (formatted)",
+            )
+            sys.stdout.writelines(lines)
+        if check or diff:
+            print(f"would reformat {path}", file=sys.stderr)
+            continue
+        try:
+            raw = Path(path).read_bytes()
+            bom = codecs.BOM_UTF8 if raw.startswith(codecs.BOM_UTF8) else b""
+            Path(path).write_bytes(bom + result.text.encode("utf-8"))
+        except OSError as e:
+            print(f"error: cannot write {path}: {e.strerror}", file=sys.stderr)
+            failed = True
+            continue
+        print(f"reformatted {path}", file=sys.stderr)
+    verb = "would be reformatted" if check or diff else "reformatted"
+    print(
+        f"{changed} file{'s' * (changed != 1)} {verb}, {unchanged} unchanged",
+        file=sys.stderr,
+    )
+    return 1 if failed or ((check or diff) and changed) else 0
 
 
 def _parse(path: str, tree: str) -> int:
@@ -156,9 +234,23 @@ def main(argv: Sequence[str] | None = None) -> int:
         metavar="TEMPLATE",
         help="a .dotx or .docx to compile into (overrides \\document[template=...])",
     )
+    build_cmd.add_argument(
+        "--emit-ir",
+        metavar="JSON",
+        help="also write the document's IR as JSON to this file (-: standard output)",
+    )
 
     check = commands.add_parser("check", help="report diagnostics without writing output")
     check.add_argument("files", nargs="+", metavar="FILE")
+
+    fmt = commands.add_parser("fmt", help="rewrite files in the canonical layout")
+    fmt.add_argument("files", nargs="+", metavar="FILE")
+    fmt.add_argument(
+        "--check", action="store_true", help="change nothing; fail if a file would change"
+    )
+    fmt.add_argument(
+        "--diff", action="store_true", help="change nothing; print the changes as a diff"
+    )
 
     dump = commands.add_parser("parse", help="print the syntax tree of a file")
     dump.add_argument("file", metavar="FILE")
@@ -171,9 +263,11 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
     if args.command == "build":
-        return _build(args.file, args.output, args.template)
+        return _build(args.file, args.output, args.template, args.emit_ir)
     if args.command == "check":
         return _check(args.files)
+    if args.command == "fmt":
+        return _fmt(args.files, args.check, args.diff)
     if args.command == "inspect":
         return _inspect(args.file)
     return _parse(args.file, args.tree)

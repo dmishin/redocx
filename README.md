@@ -38,6 +38,8 @@ uv run ruff format         # format
 uv run pyright             # strict type check
 uv run wordgenx build examples/hello.wgx             # compile to examples/hello.docx
 uv run wordgenx check examples/syntax-tour.wgx       # compile and report diagnostics, write nothing
+uv run wordgenx fmt examples/hello.wgx               # rewrite in the canonical layout (--check, --diff)
+uv run wordgenx build examples/hello.wgx --emit-ir - # also print the IR as JSON
 uv run wordgenx parse examples/syntax-tour.wgx       # print the AST (--tree cst for the CST)
 uv run wordgenx inspect examples/hello.docx          # read a .docx back, report structure and coverage
 ```

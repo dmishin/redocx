@@ -88,7 +88,8 @@ Steps, in order:
 4. [x] **Index**: `\ix{term!sub}` as `XE` fields, `\index[columns=2]` as an `INDEX` field with pre-rendered entries.
 5. [x] **Images and embedding**: SVG (with a PNG fallback, as Word stores it: `fallback=` or a grey
    placeholder), `\embed-docx` (altChunk, merged by Word on open).
-6. **Tooling**: `wordgenx fmt` (CST-based formatter), `--emit-ir` (JSON).
+6. [x] **Tooling**: `wordgenx fmt` (CST-based formatter, `--check`, `--diff`; §3.21), `--emit-ir` (the IR as
+   JSON, one-way).
 
 - **Exit:** a thesis-style document with math, citations, code and figures.
 

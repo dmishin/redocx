@@ -103,7 +103,7 @@ Rules:
 - *Property bags are typed* (`RunProps`, `ParaProps`, `TableProps`, `CellProps`, `SectionProps`). Each field is defined once in the *property registry*. The registry also generates emitters, documentation and LSP completion. Adding a Word property should mean adding one registry entry plus tests.
 - Units are normalized at lowering: lengths in twips (or EMUs for drawings), font sizes in half-points.
 - Merged table cells are represented logically (colspan, rowspan) and converted to `gridSpan` / `vMerge` at emit.
-- IR is serializable to JSON. This enables `wordgenx build --emit-ir`, debugging and alternate frontends.
+- IR is serializable to JSON: `wordgenx build doc.wgx --emit-ir doc.json` (`-` for standard output) writes each object as `{"type": "Paragraph", …}` with the fields that differ from their defaults, lengths and colours as in the language (`12pt`, `#1F4E79`), and pictures and embedded documents as their size and SHA-256. It is one-way, for debugging and other tools; reading it back (for alternate frontends) is not done.
 
 == Resolve phase responsibilities
 
