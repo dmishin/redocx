@@ -30,4 +30,5 @@ These are the parts of finished features that were left out to keep them simple.
 | `wordgenx fmt` | Re-wrapping paragraphs; aligning pipe tables | §3.21 |
 | `--emit-ir` | Reading the JSON back (alternate frontends) | §4.3 |
 | Templates | The template's own footnote separators | §4.6 |
+| Themes | East Asian and complex-script theme fonts; effect and fill styles; loading a `.thmx` | §3.5 |
 }

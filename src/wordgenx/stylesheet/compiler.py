@@ -13,6 +13,7 @@ from dataclasses import dataclass, field, replace
 
 from wordgenx.ir import (
     NUMBER_FORMATS,
+    THEME_COLOR_NAMES,
     Document,
     Numbering,
     NumberingLevel,
@@ -20,6 +21,7 @@ from wordgenx.ir import (
     Style,
     StyleKind,
     TableCondition,
+    ThemeChoice,
 )
 from wordgenx.ooxml.style_names import style_id
 from wordgenx.props import (
@@ -40,10 +42,11 @@ from wordgenx.stylesheet.syntax import (
     NumberingRule,
     StyleRule,
     StyleSheet,
+    ThemeRule,
 )
 from wordgenx.syntax.diagnostics import Code, Diagnostic, Severity, render
 from wordgenx.syntax.source import Source, Span
-from wordgenx.values import InvalidValueError, Length, LineSpacing
+from wordgenx.values import Color, InvalidValueError, Length, LineSpacing
 
 # Bare words that stand for a value of another property: `justify;` means `align: justify;`.
 FLAG_ALIASES: dict[str, tuple[str, str]] = {
@@ -124,6 +127,7 @@ class CompiledStyles:
     default_run: PropertySet = EMPTY_RUN
     default_paragraph: PropertySet = EMPTY_PARAGRAPH
     diagnostics: tuple[tuple[Source, Diagnostic], ...] = ()
+    theme: ThemeChoice | None = None
 
     @property
     def ok(self) -> bool:
@@ -140,6 +144,7 @@ class CompiledStyles:
             numbering=self.numbering,
             default_run=self.default_run.merged(document.default_run),
             default_paragraph=self.default_paragraph.merged(document.default_paragraph),
+            theme=self.theme,
         )
 
 
@@ -167,6 +172,7 @@ class StyleSheetCompiler:
     _level_links: list[tuple[str, str, int, Span, Source]] = field(default_factory=lambda: [])
     """(style, numbering, level, span, source) for each `style:` of a list level."""
     _source: Source | None = None
+    _theme: ThemeChoice | None = None
     builtins: Mapping[str, Callable[[], Style]] = field(default_factory=lambda: {})
     """Word built-in styles by name: `modify` starts from them, and references to them are
     valid (the document gets them when it uses them)."""
@@ -197,6 +203,8 @@ class StyleSheetCompiler:
                 self._defaults(rule)
             elif isinstance(rule, NumberingRule):
                 self._numbering_rule(rule)
+            elif isinstance(rule, ThemeRule):
+                self._theme_rule(rule)
             else:
                 self._style_rule(rule)
 
@@ -209,6 +217,7 @@ class StyleSheetCompiler:
             self._run,
             self._paragraph,
             tuple(self._diagnostics),
+            self._theme,
         )
 
     def _referenced_builtins(self) -> list[Style]:
@@ -641,6 +650,57 @@ class StyleSheetCompiler:
         )
         self._styles[style_id(name)] = paragraph_style
         self._styles[style_id(char_name)] = char_style
+
+    def _theme_rule(self, rule: ThemeRule) -> None:
+        """theme [Name] { accent1: #0B7A75; major-font: "Georgia"; ... }"""
+        colors: dict[str, str] = {}
+        fonts: dict[str, str] = {}
+        for item in rule.items:
+            if isinstance(item, Block):
+                self._report(
+                    Code.UNSUPPORTED, f"unexpected block `{item.name}` in a theme", item.span
+                )
+                continue
+            span = item.value_span or item.key_span
+            if item.key in ("major-font", "minor-font"):
+                font = _unquote(item.value or "")
+                if not font or font.startswith("theme."):
+                    self._report(Code.INVALID_VALUE, f"`{item.key}` takes a font name", span)
+                    continue
+                fonts[item.key] = font
+            elif item.key in THEME_COLOR_NAMES:
+                try:
+                    color = Color.parse(_unquote(item.value or ""))
+                except InvalidValueError as e:
+                    self._report(Code.INVALID_VALUE, f"{item.key}: {e}", span)
+                    continue
+                if color.rgb is None or color.tint is not None or color.shade is not None:
+                    self._report(
+                        Code.INVALID_VALUE,
+                        f"`{item.key}` takes a colour such as #0B7A75",
+                        span,
+                        help="a theme colour cannot refer to the theme",
+                    )
+                    continue
+                colors[THEME_COLOR_NAMES[item.key]] = color.rgb
+            else:
+                names = [*THEME_COLOR_NAMES, "major-font", "minor-font"]
+                close = difflib.get_close_matches(item.key, names, n=1)
+                self._report(
+                    Code.UNKNOWN_PROPERTY,
+                    f"unknown theme entry `{item.key}`",
+                    item.key_span,
+                    f"did you mean `{close[0]}`?" if close else "",
+                    help="a theme sets dark1, light1, dark2, light2, accent1-accent6, "
+                    "hyperlink, followed-hyperlink, major-font and minor-font",
+                )
+        choice = ThemeChoice(
+            rule.name.text if rule.name else None,
+            tuple(colors.items()),
+            fonts.get("major-font"),
+            fonts.get("minor-font"),
+        )
+        self._theme = self._theme.merged(choice) if self._theme else choice
 
     def _numbering_rule(self, rule: NumberingRule) -> None:
         name = rule.name.text

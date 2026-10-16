@@ -74,7 +74,9 @@ Length-plus-rule values use tuples: `height=(1.5cm, at-least)`, `line-spacing=(1
 
 `#RRGGBB`, CSS-like named colors (`navy`), `auto`, and **theme colors** with tint and shade:
 `theme.accent1`, `theme.text1.lighter(40%)`, `theme.accent2.darker(25%)`. These emit `w:themeColor`, `w:themeTint`
-and `w:themeShade`, so they follow theme changes in Word.
+and `w:themeShade`, so they follow theme changes in Word. The theme is the template's, or wordgenx's own, with the
+colours and fonts of a `theme` rule on top (§3.5). The RGB value written alongside is the one Word shows (it scales
+the HSL luminance), so other readers show the same colour.
 
 ## 3.3 Document skeleton
 
@@ -249,6 +251,13 @@ relative to the document. Sheets apply in document order.
   (between paragraphs that share the same borders) and `border-bar` take a border. `borders: (all=…, between=…)` sets
   them together; for paragraphs, `all` is the four sides of a box. `shading` is the background. The same keys work as
   `\p[…]` options. In table styles, `borders` and `shading` mean the table's and the cells'.
+- **Themes** (M4): `theme [NAME] { accent1: #0B7A75; dark2: #1B2A41; major-font: "Georgia"; minor-font: "Segoe UI"; }`
+  sets the document's theme colours (`dark1`, `light1`, `dark2`, `light2`, `accent1`–`accent6`, `hyperlink`,
+  `followed-hyperlink`; `text1`/`background1`/`text2`/`background2` name the first four) and its heading and body
+  fonts. wordgenx writes them into the theme part: its own, or the template's, whose effects and other settings stay.
+  Entries left out keep the base theme's values, a later rule adds to an earlier one, and `NAME` names the colour and
+  font schemes in Word's Design tab. Every `theme.accent1…` and `theme.major`/`theme.minor` follows. Not done: fonts
+  for East Asian and complex scripts, and effect or fill styles.
 - **Not yet:** the `ooxml.*` escape hatch. Unlike documents, style sheets are parsed straight to an AST, not a lossless CST.
   A formatter for `.wgxs` will need one.
 - **Diagnostics:** `WGX02xx`. Unknown properties suggest the nearest name. Unresolved style and numbering references are

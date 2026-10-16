@@ -232,7 +232,7 @@
       </w:tblCellMar>
     </w:tblPr>
     <w:tcPr>
-      <w:shd w:color="auto" w:fill="D2E2F0" w:themeFill="accent1" w:themeFillTint="33" w:val="clear"/>
+      <w:shd w:color="auto" w:fill="CCE3F6" w:themeFill="accent1" w:themeFillTint="33" w:val="clear"/>
     </w:tcPr>
   </w:style>
   <w:style w:styleId="TableGrid" w:type="table">

@@ -7,8 +7,9 @@ major/minor fonts and the three-entry format scheme lists Word requires).
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
+from wordgenx.ir import ThemeChoice
 from wordgenx.ooxml.xml import E, Element, nsmap
 
 # Scheme slot order required by CT_ColorScheme.
@@ -62,6 +63,40 @@ class Theme:
 
     def theme_color_rgb(self, name: str) -> str:
         return self.colors[THEME_COLOR_SLOTS[name]]
+
+    def chosen(self, choice: ThemeChoice) -> Theme:
+        """This theme with the document's own colours and fonts."""
+        return replace(
+            self,
+            name=choice.name or self.name,
+            colors={**self.colors, **dict(choice.colors)},
+            major_font=choice.major_font or self.major_font,
+            minor_font=choice.minor_font or self.minor_font,
+        )
+
+
+def apply_choice(root: Element, choice: ThemeChoice) -> None:
+    """Put the document's colours and fonts into a template's theme part, keeping the
+    rest of it (effects, fill styles, other scripts' fonts)."""
+    elements = root.find(f"{_A}themeElements")
+    if elements is None:
+        return
+    scheme = elements.find(f"{_A}clrScheme")
+    if scheme is not None:
+        for slot, rgb in choice.colors:
+            entry = scheme.find(f"{_A}{slot}")
+            if entry is not None:
+                entry[:] = [E("a:srgbClr", {"val": rgb})]
+        if choice.name and choice.colors:
+            scheme.set("name", choice.name)
+    fonts = elements.find(f"{_A}fontScheme")
+    if fonts is not None:
+        for which, typeface in (("majorFont", choice.major_font), ("minorFont", choice.minor_font)):
+            latin = fonts.find(f"{_A}{which}/{_A}latin")
+            if typeface and latin is not None:
+                latin.set("typeface", typeface)
+        if choice.name and (choice.major_font or choice.minor_font):
+            fonts.set("name", choice.name)
 
 
 def _solid_placeholder() -> Element:

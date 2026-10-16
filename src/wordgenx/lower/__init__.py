@@ -216,6 +216,7 @@ def lower(
         default_paragraph=compiled.default_paragraph,
         section=resolved_section,
         template=template,
+        theme=compiled.theme,
     )
     return document, diagnostics
 

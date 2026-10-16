@@ -48,7 +48,7 @@ from wordgenx.ooxml.parts.fonts import font_table_xml
 from wordgenx.ooxml.parts.numbering import default_level, list_num_ids, numbering_xml
 from wordgenx.ooxml.parts.settings import settings_xml
 from wordgenx.ooxml.parts.styles import StyleError, resolve_styles, styles_xml
-from wordgenx.ooxml.parts.theme import Theme, theme_xml
+from wordgenx.ooxml.parts.theme import Theme, apply_choice, theme_xml
 from wordgenx.ooxml.style_names import style_id
 from wordgenx.ooxml.template import MANAGED_RELATIONSHIPS, Template
 from wordgenx.ooxml.xml import E, Element, serialize
@@ -237,6 +237,8 @@ def build_package(
     if template is not None and template.theme is not None:
         theme = template.theme
     theme = theme or Theme()
+    if document.theme is not None:
+        theme = theme.chosen(document.theme)
     document = _link_numbering(_with_default_fonts(document))
     _check_style_references(document)
     ids = _style_id_map(template)
@@ -272,6 +274,10 @@ def build_package(
     fonts = pkg.add_part("/word/fontTable.xml", CT.WML_FONT_TABLE, serialize(fonts_root))
     if copier is not None and template is not None and template.theme_part is not None:
         theme_part = copier.copy(template.theme_part)
+        if document.theme is not None:
+            theme_root = etree.fromstring(theme_part.data)
+            apply_choice(theme_root, document.theme)
+            theme_part.data = serialize(theme_root)
     else:
         theme_part = pkg.add_part("/word/theme/theme1.xml", CT.THEME, serialize(theme_xml(theme)))
     if copier is not None and template is not None:

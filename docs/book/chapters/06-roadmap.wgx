@@ -60,7 +60,7 @@ Steps, in order:
 Steps, in order (the small ones first; the drawing steps share one positioning model):
 
 1. \[x\] *Page decoration*: page borders on sections (`borders=`), the page colour (`\document[page-color=…]`), borders and shading on runs.
-2. *Custom themes*: theme colours and fonts set in the document or a style sheet (`theme1.xml` written by wordgenx), so `theme.accent1` and `theme.major` mean the document's own choices.
+2. \[x\] *Custom themes*: `theme [Name] { accent1: …; major-font: …; }` in a style sheet sets the theme's colours and fonts (wordgenx's theme part or the template's), so `theme.accent1` and `theme.major` mean the document's own choices. Tints and shades are computed as Word computes them (HSL luminance).
 3. *Floating images*: `\image[float, wrap=…, x=…, y=…]` as `wp:anchor` (square, tight, top-and-bottom, behind, in front), positioned against the page, margin, column or paragraph; crop, rotation and a border on any image.
 4. *Text boxes and watermarks*: `\textbox` (a `wps` shape with markup inside, inline or floating, with fill and border), `\watermark` (text or a picture behind every page of a section, in the header).
 5. *Frames and floating tables*: drop caps and text frames (`w:framePr`), floating tables (`w:tblpPr`), columns of different widths.

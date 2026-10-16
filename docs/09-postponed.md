@@ -32,3 +32,4 @@ feature is documented. They are smaller than 9.1 and can be picked up whenever a
 | `wordgenx fmt` | Re-wrapping paragraphs; aligning pipe tables | [§3.21](03-language-design.md) |
 | `--emit-ir` | Reading the JSON back (alternate frontends) | [§4.3](04-architecture.md) |
 | Templates | The template's own footnote separators | [§4.6](04-architecture.md) |
+| Themes | East Asian and complex-script theme fonts; effect and fill styles; loading a `.thmx` | [§3.5](03-language-design.md) |

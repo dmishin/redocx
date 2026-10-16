@@ -54,7 +54,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Latent styles, quick-style gallery flags, priorities | M2 (partly: priority and gallery flag; latent styles come from templates) | ● |
 | Modify/replace template styles; localized built-in style names | M2 ✓ (`replace` acts as `modify` on template styles) | ●● |
 | Theme colors/fonts references | M1 | ● |
-| Custom theme (generate theme1.xml) | M4 | ●● |
+| Custom theme (generate theme1.xml) | M4 ✓ | ●● |
 
 ## 5.4 Lists & numbering
 

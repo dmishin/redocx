@@ -6,6 +6,7 @@ to whatever unit an OOXML attribute needs (twips, half-points, ...).
 
 from __future__ import annotations
 
+import colorsys
 import re
 from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
@@ -117,13 +118,18 @@ _MODIFIER_RE = re.compile(r"([A-Za-z0-9]+)\.(lighter|darker)\((\d+)%\)")
 
 
 def apply_tint_shade(rgb: str, tint: int | None, shade: int | None) -> str:
-    """The RGB Word shows for a theme color with a tint (towards white) or shade (towards black)."""
-    channels = [int(rgb[i : i + 2], 16) for i in (0, 2, 4)]
+    """The RGB Word shows for a theme color with a tint (towards white) or shade (towards black).
+
+    Word scales the luminance in HSL, keeping hue and saturation (checked against Word's
+    rendering): a tint t gives L * t + (1 - t), a shade s gives L * s."""
+    red, green, blue = (int(rgb[i : i + 2], 16) / 255 for i in (0, 2, 4))
+    hue, lightness, saturation = colorsys.rgb_to_hls(red, green, blue)
     if tint is not None:
-        channels = [round(c * tint / 255 + 255 * (1 - tint / 255)) for c in channels]
+        lightness = lightness * tint / 255 + (1 - tint / 255)
     if shade is not None:
-        channels = [round(c * shade / 255) for c in channels]
-    return "".join(f"{c:02X}" for c in channels)
+        lightness = lightness * shade / 255
+    channels = colorsys.hls_to_rgb(hue, lightness, saturation)
+    return "".join(f"{round(c * 255):02X}" for c in channels)
 
 
 @dataclass(frozen=True)
@@ -307,9 +313,10 @@ class Border:
     def parse(cls, text: str) -> Border:
         """Parse ``none``, or a style, width, colour and ``space=…`` in any order, separated
         by commas or spaces and optionally in parentheses."""
-        words = [
-            w for w in re.split(r"[\s,]+", text.strip().removeprefix("(").removesuffix(")")) if w
-        ]
+        text = text.strip()
+        if text.startswith("(") and text.endswith(")"):  # not the ")" of lighter(40%)
+            text = text[1:-1]
+        words = [w for w in re.split(r"[\s,]+", text) if w]
         if words in (["none"], ["nil"]):
             return cls("nil")
         style, width, color, space = "single", _DEFAULT_BORDER_WIDTH, Color(), Length(0)

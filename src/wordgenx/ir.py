@@ -902,6 +902,52 @@ def map_section(section: Section, fn: Callable[[Paragraph], Paragraph]) -> Secti
     )
 
 
+THEME_COLOR_NAMES = {
+    "dark1": "dk1",
+    "light1": "lt1",
+    "dark2": "dk2",
+    "light2": "lt2",
+    "text1": "dk1",
+    "background1": "lt1",
+    "text2": "dk2",
+    "background2": "lt2",
+    **{f"accent{i}": f"accent{i}" for i in range(1, 7)},
+    "hyperlink": "hlink",
+    "followed-hyperlink": "folHlink",
+}
+"""Theme colour names in style sheets -> colour scheme slots (text1 is dark1, ...)."""
+
+
+@dataclass(frozen=True)
+class ThemeChoice:
+    """The document's own theme colours and fonts, over the template's or wordgenx's theme."""
+
+    name: str | None = None
+    colors: tuple[tuple[str, str], ...] = ()
+    """(scheme slot such as accent1, RRGGBB) pairs."""
+    major_font: str | None = None
+    minor_font: str | None = None
+
+    def __post_init__(self) -> None:
+        slots = set(THEME_COLOR_NAMES.values())
+        for slot, rgb in self.colors:
+            if slot not in slots:
+                raise ValueError(f"unknown theme colour slot {slot!r}")
+            if not re.fullmatch(r"[0-9A-F]{6}", rgb):
+                raise ValueError(f"theme colours are RRGGBB, got {rgb!r}")
+
+    def merged(self, later: ThemeChoice) -> ThemeChoice:
+        """This choice with `later`'s entries on top (a later style sheet wins)."""
+        colors = dict(self.colors)
+        colors.update(later.colors)
+        return ThemeChoice(
+            later.name or self.name,
+            tuple(colors.items()),
+            later.major_font or self.major_font,
+            later.minor_font or self.minor_font,
+        )
+
+
 @dataclass(frozen=True)
 class Document:
     body: tuple[Block, ...] = ()
@@ -917,6 +963,8 @@ class Document:
     """The last (or only) section; earlier sections end at SectionBreak blocks in the body."""
     template: Template | None = None
     """The .dotx or .docx this document is compiled into (its styles, theme, headers, ...)."""
+    theme: ThemeChoice | None = None
+    """Theme colours and fonts the document sets (`theme { ... }` in a style sheet)."""
 
     @property
     def page(self) -> PageSetup:

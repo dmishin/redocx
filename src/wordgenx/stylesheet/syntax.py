@@ -31,6 +31,7 @@ from wordgenx.syntax.source import Source, Span
 STYLE_KINDS = ("paragraph", "character", "linked", "table")
 ACTIONS = ("modify", "replace")
 WORD_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]*")
+RULES_HELP = "rules start with defaults, paragraph, character, linked, table, numbering or theme"
 
 
 @dataclass(frozen=True)
@@ -88,7 +89,16 @@ class NumberingRule:
     span: Span
 
 
-Rule = StyleRule | DefaultsRule | NumberingRule
+@dataclass(frozen=True)
+class ThemeRule:
+    """``theme [Name] { accent1: #0B7A75; major-font: "Georgia"; }``."""
+
+    name: Name | None
+    items: tuple[Declaration | Block, ...]
+    span: Span
+
+
+Rule = StyleRule | DefaultsRule | NumberingRule | ThemeRule
 
 
 @dataclass(frozen=True)
@@ -197,12 +207,19 @@ class _Parser:
         if keyword is None:
             self.fail(
                 "expected a rule",
-                help="rules start with defaults, paragraph, character, linked, table or numbering",
+                help=RULES_HELP,
             )
             return None
         if keyword.text == "defaults":
             items = self.block()
             return DefaultsRule(items, keyword.span) if items is not None else None
+        if keyword.text == "theme":
+            self.skip_spaces()
+            name = self.name() if self.char() != "{" else None
+            items = self.block()
+            if items is None:
+                return None
+            return ThemeRule(name, items, Span(start, (name or keyword).span.end))
         if keyword.text == "numbering":
             self.skip_spaces()
             name = self.name()
@@ -232,7 +249,7 @@ class _Parser:
             self.fail(
                 f"unknown rule `{kind.text}`",
                 kind.span,
-                help="rules start with defaults, paragraph, character, linked, table or numbering",
+                help=RULES_HELP,
             )
             return None
         self.skip_spaces()
