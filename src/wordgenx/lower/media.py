@@ -5,6 +5,7 @@ from __future__ import annotations
 import io
 import re
 import zipfile
+from dataclasses import replace
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -14,11 +15,11 @@ from PIL import UnidentifiedImageError
 
 from wordgenx import ir
 from wordgenx.commands.bind import Args
-from wordgenx.commands.types import Percent
+from wordgenx.commands.types import Fields, Percent
 from wordgenx.lower.common import BlockHandler, Format, InlineHandler, Piece, verbatim
 from wordgenx.syntax import ast
 from wordgenx.syntax.diagnostics import Code
-from wordgenx.values import Length
+from wordgenx.values import Border, Length
 
 if TYPE_CHECKING:
     from wordgenx.lower.lowering import Lowering
@@ -128,6 +129,21 @@ def image(lw: Lowering, command: ast.Command, args: Args, fmt: Format) -> list[P
         if found is None:
             return []
         image_format, natural = found
+    crop = _crop(lw, args.record("crop"))
+    if crop is not None:  # the picture's own size is what is left of it
+        natural = (
+            Length(natural[0].emu * (100_000 - crop.left - crop.right) // 100_000),
+            Length(natural[1].emu * (100_000 - crop.top - crop.bottom) // 100_000),
+        )
+    anchor = _anchor(args)
+    if anchor is not None and lw.figure is not None:
+        lw.report(
+            Code.INVALID_ARGUMENT,
+            "a picture in a \\figure cannot float: its caption would not move with it",
+            command.span,
+            help="float the whole figure in a text box, or leave the picture inline",
+        )
+        anchor = None
     if width is None and height is None and lw.figure is not None:
         width = lw.figure.width
     if width is None and height is None and natural[0].emu > lw.text_width().emu:
@@ -140,11 +156,68 @@ def image(lw: Lowering, command: ast.Command, args: Args, fmt: Format) -> list[P
     description = args.text("alt", "") or ""
     name_shown = args.text("name") or file_name
     try:
-        made = ir.Image(data, image_format, w, h, description, name_shown, svg=svg)
+        made = ir.Image(
+            data,
+            image_format,
+            w,
+            h,
+            description,
+            name_shown,
+            svg=svg,
+            anchor=anchor,
+            crop=crop,
+            rotation=args.number("rotate", 0) or 0,
+            border=args.get("border", Border),
+        )
     except ValueError as e:
         lw.report(Code.INVALID_ARGUMENT, str(e), command.span)
         return []
     return [Piece("", fmt, "image", made)]
+
+
+def _anchor(args: Args) -> ir.Anchor | None:
+    """A floating picture's placement, when `float`, `wrap`, `x` or `y` asks for one."""
+    if (
+        not any(key in args for key in ("float", "wrap", "x", "y"))
+        or args.values.get("float") is False
+    ):
+        return None
+    anchor = ir.Anchor(
+        wrap=args.text("wrap", "square") or "square",
+        wrap_side=args.text("wrap-side", "both") or "both",
+    )
+    for axis in ("x", "y"):
+        if (position := args.record(axis)) is not None:
+            at = position.values.get("at", getattr(anchor, axis))
+            assert isinstance(at, Length | str)
+            where = position.text("from", getattr(anchor, f"{axis}_from"))
+            anchor = replace(anchor, **{axis: at, f"{axis}_from": where})
+    if (distance := args.record("distance")) is not None:
+        top, bottom, left, right = anchor.distance
+        sides = {"top": top, "bottom": bottom, "left": left, "right": right}
+        for key, value in distance.values.items():  # all=..., then single sides
+            assert isinstance(value, Length)
+            for side in sides if key == "all" else (key,):
+                sides[side] = value
+        anchor = replace(
+            anchor, distance=(sides["top"], sides["bottom"], sides["left"], sides["right"])
+        )
+    return anchor
+
+
+def _crop(lw: Lowering, fields: Fields | None) -> ir.Crop | None:
+    if fields is None:
+        return None
+    values = {
+        side: int(value * 1000)
+        for side, value in fields.values.items()
+        if isinstance(value, Decimal)
+    }
+    try:
+        return ir.Crop(**values)
+    except ValueError as e:
+        lw.report(Code.INVALID_ARGUMENT, str(e), fields.span)
+        return None
 
 
 def _is_svg(name: str, data: bytes) -> bool:

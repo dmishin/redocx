@@ -124,8 +124,8 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 |---------|------|-------|
 | Inline images (PNG/JPEG/GIF; size, alt text) | M1 ✓ | ●● |
 | SVG images (with PNG fallback, `asvg:svgBlip`) | M3 ✓ | ●● |
-| Floating images (anchor, wrap modes, positioning) | M4 | ●●● |
-| Cropping, rotation, borders on images | M4 | ●● |
+| Floating images (anchor, wrap modes, positioning) | M4 ✓ | ●●● |
+| Cropping, rotation, borders on images | M4 ✓ | ●● |
 | Text boxes, basic shapes (wps) | M4 | ●●● |
 | Math: LaTeX subset → OMML (inline & display) | M3 ✓ | ●●● |
 | Equation numbering & references | M3 ✓ | ●● |

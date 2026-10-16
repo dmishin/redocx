@@ -8,12 +8,16 @@ from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass, field, replace
 
 from wordgenx.ir import (
+    H_ANCHORS,
     LINE_NUMBER_RESTARTS,
     NOTE_KINDS,
     PAGE_BORDER_PAGES,
     PAGE_NUMBER_FORMATS,
     SECTION_STARTS,
+    V_ANCHORS,
     VERTICAL_ALIGNMENTS,
+    WRAP_SIDES,
+    Anchor,
     Block,
     BookmarkEnd,
     BookmarkStart,
@@ -54,7 +58,7 @@ from wordgenx.ooxml.style_names import style_id
 from wordgenx.ooxml.xml import E, Element, nsmap, parse_fragment, qn
 from wordgenx.props import EMPTY_RUN, EmitContext, PropertySet, Target
 from wordgenx.props.registry import border_attrs, color_attrs
-from wordgenx.values import Border, Length
+from wordgenx.values import Border, Length, apply_tint_shade
 
 _SPLIT_RE = re.compile(r"(\t|\n)")
 PICTURE_URI = "http://schemas.openxmlformats.org/drawingml/2006/picture"
@@ -159,6 +163,11 @@ def _drawing(image: Image, ctx: BodyContext) -> Element:
     size = {"cx": str(image.width.emu), "cy": str(image.height.emu)}
     name = image.name or f"Picture {drawing_id}"
     description = {"descr": image.description} if image.description else None
+    crop = None
+    if (c := image.crop) is not None:
+        sides = {"l": c.left, "t": c.top, "r": c.right, "b": c.bottom}
+        crop = E("a:srcRect", {k: str(v) for k, v in sides.items() if v})
+    transform = {"rot": str(image.rotation * 60000)} if image.rotation else None
     picture = E(
         "pic:pic",
         E(
@@ -169,24 +178,115 @@ def _drawing(image: Image, ctx: BodyContext) -> Element:
         E(
             "pic:blipFill",
             E("a:blip", {"r:embed": rel_id}, svg),
+            crop,
             E("a:stretch", E("a:fillRect")),
         ),
         E(
             "pic:spPr",
-            E("a:xfrm", E("a:off", {"x": "0", "y": "0"}), E("a:ext", size)),
+            E("a:xfrm", transform, E("a:off", {"x": "0", "y": "0"}), E("a:ext", size)),
             E("a:prstGeom", {"prst": "rect"}, E("a:avLst")),
+            _picture_line(image.border, ctx) if image.border is not None else None,
         ),
     )
-    inline = E(
-        "wp:inline",
-        {"distT": "0", "distB": "0", "distL": "0", "distR": "0"},
+    graphic = [
         E("wp:extent", size),
         E("wp:effectExtent", {"l": "0", "t": "0", "r": "0", "b": "0"}),
+    ]
+    frame = [
         E("wp:docPr", {"id": str(drawing_id), "name": name}, description),
         E("wp:cNvGraphicFramePr", E("a:graphicFrameLocks", {"noChangeAspect": "1"})),
         E("a:graphic", E("a:graphicData", {"uri": PICTURE_URI}, picture)),
+    ]
+    if image.anchor is None:
+        distances = {"distT": "0", "distB": "0", "distL": "0", "distR": "0"}
+        return E("w:r", E("w:drawing", E("wp:inline", distances, *graphic, *frame)))
+    return E("w:r", E("w:drawing", _anchor(image.anchor, drawing_id, graphic, frame)))
+
+
+_WRAP_POLYGON = ((0, 0), (0, 21600), (21600, 21600), (21600, 0), (0, 0))
+"""A tight wrap around the picture's box, in Word's 21600ths of each side."""
+_BASE_Z_ORDER = 251658240
+"""Word numbers the z-order (wp:anchor/@relativeHeight) of shapes from about here."""
+
+
+def _anchor(
+    anchor: Anchor, drawing_id: int, graphic: list[Element], frame: list[Element]
+) -> Element:
+    """wp:anchor: the position, the wrapping and then the picture, in Word's order."""
+    top, bottom, left, right = anchor.distance
+    attrs = {
+        "distT": str(top.emu),
+        "distB": str(bottom.emu),
+        "distL": str(left.emu),
+        "distR": str(right.emu),
+        "simplePos": "0",
+        "relativeHeight": str(_BASE_Z_ORDER + drawing_id * 1024),
+        "behindDoc": "1" if anchor.wrap == "behind" else "0",
+        "locked": "0",
+        "layoutInCell": "1",
+        "allowOverlap": "1",
+    }
+
+    def position(tag: str, at: Length | str, relative: str) -> Element:
+        place = (
+            E("wp:align", text=at) if isinstance(at, str) else E("wp:posOffset", text=str(at.emu))
+        )
+        return E(tag, {"relativeFrom": relative}, place)
+
+    side = {"wrapText": WRAP_SIDES[anchor.wrap_side]}
+    wrap = {
+        "square": lambda: E("wp:wrapSquare", side),
+        "tight": lambda: E(
+            "wp:wrapTight",
+            side,
+            E(
+                "wp:wrapPolygon",
+                {"edited": "0"},
+                E("wp:start", {"x": "0", "y": "0"}),
+                *(E("wp:lineTo", {"x": str(x), "y": str(y)}) for x, y in _WRAP_POLYGON[1:]),
+            ),
+        ),
+        "top-bottom": lambda: E("wp:wrapTopAndBottom"),
+    }.get(anchor.wrap, lambda: E("wp:wrapNone"))()
+    return E(
+        "wp:anchor",
+        attrs,
+        E("wp:simplePos", {"x": "0", "y": "0"}),
+        position("wp:positionH", anchor.x, H_ANCHORS[anchor.x_from]),
+        position("wp:positionV", anchor.y, V_ANCHORS[anchor.y_from]),
+        *graphic,
+        wrap,
+        *frame,
     )
-    return E("w:r", E("w:drawing", inline))
+
+
+_LINE_DASHES = {
+    "dotted": "sysDot",
+    "dashed": "dash",
+    "dotDash": "dashDot",
+    "dotDotDash": "sysDashDotDot",
+}
+
+
+def _picture_line(border: Border, ctx: BodyContext) -> Element | None:
+    """a:ln around a picture, from a border (style, width, colour)."""
+    if border.style == "nil":
+        return None
+    color = border.color
+    if color.theme is not None:
+        rgb = apply_tint_shade(ctx.emit.theme_color_rgb(color.theme), color.tint, color.shade)
+    else:
+        rgb = color.rgb or "000000"
+    attrs = {"w": str(border.width.emu)}
+    if border.style == "double":
+        attrs["cmpd"] = "dbl"
+    dash = _LINE_DASHES.get(border.style)
+    return E(
+        "a:ln",
+        attrs,
+        E("a:solidFill", E("a:srgbClr", {"val": rgb})),
+        E("a:prstDash", {"val": dash}) if dash else None,
+    )
 
 
 def _inline(item: Inline, ctx: BodyContext) -> list[Element]:

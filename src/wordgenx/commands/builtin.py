@@ -8,6 +8,7 @@ documentation or editor support can be generated from it.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from decimal import Decimal
 from typing import Any
 
 from wordgenx import ir
@@ -25,6 +26,8 @@ from wordgenx.commands.types import (
     PageBordersValue,
     PageSize,
     PageSizeValue,
+    PercentValue,
+    PositionValue,
     PropValue,
     Record,
     RowHeightValue,
@@ -404,10 +407,25 @@ _command(
     body=STRING, body_required=True, body_doc="an address",
 )  # fmt: skip
 _command(
-    "image", INLINE, "An inline picture (PNG, JPEG, GIF, BMP or SVG).",
+    "image", INLINE, "A picture (PNG, JPEG, GIF, BMP or SVG), inline or floating.",
     _o("width", SizeValue()), _o("height", LengthValue(nonnegative=True)),
     _o("alt", TEXT, "a description"), _o("name", TEXT),
     _o("fallback", TEXT, "a PNG or JPEG that Word 2013 and older show for an SVG"),
+    _o("float", FLAG, "positioned on the page, with text around it"),
+    _o("wrap", Choice.of(*ir.WRAPS), "how text flows around it (implies float)"),
+    _o("wrap-side", Choice.of(*ir.WRAP_SIDES), "where text goes beside it"),
+    _o("x", Record({"at": PositionValue(ir.H_ALIGNS), "from": Choice.of(*ir.H_ANCHORS)},
+                   shorthand="at"), "the horizontal position (implies float)"),
+    _o("y", Record({"at": PositionValue(ir.V_ALIGNS), "from": Choice.of(*ir.V_ANCHORS)},
+                   shorthand="at"), "the vertical position (implies float)"),
+    _o("distance", Record({side: LengthValue(nonnegative=True)
+                           for side in ("all", "top", "bottom", "left", "right")},
+                          shorthand="all"), "space between it and the text"),
+    _o("crop", Record({side: PercentValue(max=Decimal(99))
+                       for side in ("left", "top", "right", "bottom")}),
+       "how much to cut off each side"),
+    _o("rotate", Int(-360, 360), "degrees clockwise"),
+    _o("border", PropValue(Target.RUN, "border"), "a line around the picture"),
     body=STRING, body_required=True, body_doc="a file name",
 )  # fmt: skip
 _command(

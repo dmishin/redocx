@@ -140,8 +140,8 @@ def assemble(pieces: list[Piece], smart_quotes: bool) -> tuple[ir.Inline, ...]:
         elif piece.kind in ("tab", "line", "page", "column"):
             _trim_trailing(collapsed)
             after_space = True
-        elif piece.kind == "mark":
-            pass  # a bookmark takes no room
+        elif _takes_no_room(piece):
+            pass  # a bookmark or a floating picture
         else:
             after_space = False
         collapsed.append(piece)
@@ -194,11 +194,16 @@ def assemble(pieces: list[Piece], smart_quotes: bool) -> tuple[ir.Inline, ...]:
     return tuple(inlines)
 
 
+def _takes_no_room(piece: Piece) -> bool:
+    """Bookmarks, and pictures that float beside the text rather than in the line."""
+    return piece.kind == "mark" or (piece.image is not None and piece.image.anchor is not None)
+
+
 def _trim_trailing(pieces: list[Piece]) -> None:
-    """Drop trailing spaces (looking through bookmarks, which take no room)."""
+    """Drop trailing spaces (looking through what takes no room in the line)."""
     i = len(pieces) - 1
-    while i >= 0 and pieces[i].kind in ("text", "mark"):
-        if pieces[i].kind == "mark":
+    while i >= 0 and (pieces[i].kind == "text" or _takes_no_room(pieces[i])):
+        if _takes_no_room(pieces[i]):
             i -= 1
             continue
         text = pieces[i].text.rstrip(" ")

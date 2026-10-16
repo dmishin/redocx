@@ -590,10 +590,32 @@ the label.
 
 ```wgx
 \image[width=8cm, alt="Logo"]{img/logo.png}                     % inline; the body is a string (path)
-\image[float, wrap=square, side=right, x=(0cm, from=margin), y=(0cm, from=paragraph), width=5cm]{img/photo.jpg}
+\image[width=5cm, wrap=square, x=(right, from=margin), y=(1cm, from=paragraph)]{img/photo.jpg}   % floating
+\image[width=21cm, height=29.7cm, wrap=behind, x=(0cm, from=page), y=(0cm, from=page)]{cover.jpg}  % full bleed
+\image[width=4cm, crop=(left=10%, right=10%), rotate=-5, border=(single, 1pt, theme.accent1)]{img/photo.jpg}
 \textbox[width=6cm, border=(single, 1pt, theme.accent1), float, wrap=tight]{Callout content…}
 \watermark[text="DRAFT", color=#D9D9D9, rotation=-45]
 ```
+
+**Floating pictures** (M4) are `wp:anchor` drawings positioned on the page with text flowing around them. `float`,
+or any of `wrap`, `x` and `y`, makes a picture float:
+
+- `wrap=square` (the default), `tight`, `top-bottom`, `behind` (behind the text) or `front` (in front of it);
+  `wrap-side=both|left|right|largest` says where text goes beside a square or tight picture.
+- `x=` and `y=` take an offset or an alignment, and what it is measured from: `x=right`, `x=(2cm, from=page)`,
+  `y=(bottom, from=margin)`. Horizontal alignments are `left`, `center`, `right`, `inside`, `outside`, measured from
+  `column` (the default), `margin`, `page`, `character`, `left-margin`, `right-margin`, `inside-margin` or
+  `outside-margin`. Vertical ones are `top`, `center`, `bottom`, `inside`, `outside`, from `paragraph` (the default),
+  `line`, `margin`, `page`, `top-margin`, `bottom-margin`, `inside-margin` or `outside-margin`.
+- `distance=(all=0.3cm, left=0.5cm)` is the space between the picture and the text (Word's default: 0.32cm left and
+  right, none above and below).
+
+A floating picture belongs to the paragraph it is written in and takes no room in its line, so it can stand on a line
+of its own before the text that flows around it. It cannot float inside a `\figure`, whose caption would stay behind.
+
+Any picture, inline or floating, can be cropped (`crop=(left=10%, top=5%, right=…, bottom=…)`; the size then comes
+from what is left), rotated (`rotate=-12`, degrees clockwise) and framed (`border=(dashed, 1.5pt, theme.accent1)`,
+a border as for paragraphs; single, dotted, dashed and double lines).
 
 `\image` takes PNG, JPEG, GIF, BMP and SVG. An SVG is stored the way Word stores one: a picture whose blip carries an
 `asvg:svgBlip` extension that points at the SVG part. Word 2016 and later show the SVG, and older readers show the

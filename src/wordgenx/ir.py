@@ -336,6 +336,93 @@ class BookmarkEnd:
 IMAGE_FORMATS = {"png": "png", "jpeg": "jpeg", "gif": "gif", "bmp": "bmp"}
 """Image formats Word embeds directly -> file extension."""
 
+WRAPS = {
+    "square": "wrapSquare",
+    "tight": "wrapTight",
+    "top-bottom": "wrapTopAndBottom",
+    "behind": "wrapNone",
+    "front": "wrapNone",
+}
+"""How text flows around a floating picture -> its wp: wrap element."""
+WRAP_SIDES = {"both": "bothSides", "left": "left", "right": "right", "largest": "largest"}
+H_ANCHORS = {
+    "margin": "margin",
+    "page": "page",
+    "column": "column",
+    "character": "character",
+    "left-margin": "leftMargin",
+    "right-margin": "rightMargin",
+    "inside-margin": "insideMargin",
+    "outside-margin": "outsideMargin",
+}
+"""What a floating picture's x is measured from (wp:positionH/@relativeFrom)."""
+V_ANCHORS = {
+    "margin": "margin",
+    "page": "page",
+    "paragraph": "paragraph",
+    "line": "line",
+    "top-margin": "topMargin",
+    "bottom-margin": "bottomMargin",
+    "inside-margin": "insideMargin",
+    "outside-margin": "outsideMargin",
+}
+H_ALIGNS = ("left", "center", "right", "inside", "outside")
+V_ALIGNS = ("top", "center", "bottom", "inside", "outside")
+_NO_OFFSET = Length(0)
+_WRAP_DISTANCE = Length(114300)
+"""Word's distance between a floating picture and the text beside it (0.32cm)."""
+
+
+@dataclass(frozen=True)
+class Anchor:
+    """Where a floating picture sits and how text flows around it (wp:anchor)."""
+
+    wrap: str = "square"
+    """A key of WRAPS."""
+    wrap_side: str = "both"
+    """A key of WRAP_SIDES: where text goes beside a square or tight picture."""
+    x: Length | str = _NO_OFFSET
+    """An offset, or an alignment of H_ALIGNS."""
+    x_from: str = "column"
+    y: Length | str = _NO_OFFSET
+    """An offset, or an alignment of V_ALIGNS."""
+    y_from: str = "paragraph"
+    distance: tuple[Length, Length, Length, Length] = (
+        Length(0),
+        Length(0),
+        _WRAP_DISTANCE,
+        _WRAP_DISTANCE,
+    )
+    """Space between the picture and the text: top, bottom, left, right."""
+
+    def __post_init__(self) -> None:
+        if self.wrap not in WRAPS:
+            raise ValueError(f"wrap must be one of {', '.join(WRAPS)}")
+        if self.wrap_side not in WRAP_SIDES:
+            raise ValueError(f"the wrap side must be one of {', '.join(WRAP_SIDES)}")
+        if self.x_from not in H_ANCHORS or self.y_from not in V_ANCHORS:
+            raise ValueError("unknown anchor for the picture's position")
+        if isinstance(self.x, str) and self.x not in H_ALIGNS:
+            raise ValueError(f"x aligns {', '.join(H_ALIGNS)}")
+        if isinstance(self.y, str) and self.y not in V_ALIGNS:
+            raise ValueError(f"y aligns {', '.join(V_ALIGNS)}")
+
+
+@dataclass(frozen=True)
+class Crop:
+    """How much is cut off each side of a picture, in thousandths of a percent (a:srcRect)."""
+
+    left: int = 0
+    top: int = 0
+    right: int = 0
+    bottom: int = 0
+
+    def __post_init__(self) -> None:
+        if min(self.left, self.top, self.right, self.bottom) < 0:
+            raise ValueError("crop values cannot be negative")
+        if self.left + self.right >= 100_000 or self.top + self.bottom >= 100_000:
+            raise ValueError("cropping would leave nothing of the picture")
+
 
 @dataclass(frozen=True)
 class Image:
@@ -353,6 +440,13 @@ class Image:
     svg: bytes | None = None
     """An SVG that Word 2016+ shows instead; `data` is then the fallback picture older
     readers show (an a:blip with an asvg:svgBlip extension)."""
+    anchor: Anchor | None = None
+    """Floating (wp:anchor) rather than inline in the text."""
+    crop: Crop | None = None
+    rotation: int = 0
+    """Degrees clockwise."""
+    border: Border | None = None
+    """A line around the picture (a:ln)."""
 
     def __post_init__(self) -> None:
         if self.format not in IMAGE_FORMATS:

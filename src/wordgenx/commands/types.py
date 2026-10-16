@@ -234,6 +234,52 @@ class Percent:
 
 
 @dataclass(frozen=True)
+class PercentValue(ValueType):
+    """A percentage such as 12.5%, from `min` to `max`."""
+
+    min: Decimal = Decimal(0)
+    max: Decimal = Decimal(100)
+
+    def parse(self, value: ast.Value) -> Decimal:
+        text = text_of(value)
+        try:
+            number = Decimal(text.removesuffix("%")) if text.endswith("%") else None
+        except InvalidOperation:
+            number = None
+        if number is None:
+            raise OptionError(f"expected a percentage such as 10%, got `{text}`", value.span)
+        if not self.min <= number <= self.max:
+            raise OptionError(f"expected {self.describe()}, got {text}", value.span)
+        return number
+
+    def describe(self) -> str:
+        return f"a percentage from {self.min}% to {self.max}%"
+
+
+@dataclass(frozen=True)
+class PositionValue(ValueType):
+    """An offset (2cm) or an alignment word (right)."""
+
+    aligns: Sequence[str]
+
+    def parse(self, value: ast.Value) -> Length | str:
+        text = text_of(value)
+        if text in self.aligns:
+            return text
+        try:
+            return Length.parse(text)
+        except InvalidValueError:
+            raise OptionError(
+                f"expected a length or one of {', '.join(self.aligns)}, got `{text}`",
+                value.span,
+                label=suggestion(text, list(self.aligns)),
+            ) from None
+
+    def describe(self) -> str:
+        return f"a length or {' | '.join(self.aligns)}"
+
+
+@dataclass(frozen=True)
 class SizeValue(ValueType):
     """A length, or a percentage of the text width (50%)."""
 

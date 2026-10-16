@@ -110,7 +110,7 @@ Steps, in order (the small ones first; the drawing steps share one positioning m
 2. [x] **Custom themes**: `theme [Name] { accent1: …; major-font: …; }` in a style sheet sets the theme's colours
    and fonts (wordgenx's theme part or the template's), so `theme.accent1` and `theme.major` mean the document's
    own choices. Tints and shades are computed as Word computes them (HSL luminance).
-3. **Floating images**: `\image[float, wrap=…, x=…, y=…]` as `wp:anchor` (square, tight, top-and-bottom, behind,
+3. [x] **Floating images**: `\image[wrap=…, x=…, y=…]` as `wp:anchor` (square, tight, top-and-bottom, behind,
    in front), positioned against the page, margin, column or paragraph; crop, rotation and a border on any image.
 4. **Text boxes and watermarks**: `\textbox` (a `wps` shape with markup inside, inline or floating, with fill and
    border), `\watermark` (text or a picture behind every page of a section, in the header).
