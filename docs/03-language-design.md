@@ -593,8 +593,8 @@ the label.
 \image[width=5cm, wrap=square, x=(right, from=margin), y=(1cm, from=paragraph)]{img/photo.jpg}   % floating
 \image[width=21cm, height=29.7cm, wrap=behind, x=(0cm, from=page), y=(0cm, from=page)]{cover.jpg}  % full bleed
 \image[width=4cm, crop=(left=10%, right=10%), rotate=-5, border=(single, 1pt, theme.accent1)]{img/photo.jpg}
-\textbox[width=6cm, border=(single, 1pt, theme.accent1), float, wrap=tight]{Callout content…}
-\watermark[text="DRAFT", color=#D9D9D9, rotation=-45]
+\textbox[width=6cm, border=(single, 1pt, theme.accent1), fill=theme.accent1.lighter(80%), x=right]{Callout…}
+\watermark[DRAFT]                                  % or [text=…, color=…, layout=horizontal], [image=logo.png]
 ```
 
 **Floating pictures** (M4) are `wp:anchor` drawings positioned on the page with text flowing around them. `float`,
@@ -612,6 +612,24 @@ or any of `wrap`, `x` and `y`, makes a picture float:
 
 A floating picture belongs to the paragraph it is written in and takes no room in its line, so it can stand on a line
 of its own before the text that flows around it. It cannot float inside a `\figure`, whose caption would stay behind.
+
+**Text boxes** (M4): `\textbox[…]{blocks}` is a frame with any blocks inside (paragraphs, lists, tables), written as
+Word 2010's text box (a `wps` shape in `mc:AlternateContent`; there is no VML fallback for Word 2007). It is inline
+unless it floats, with the same options as a picture: `float`, `wrap`, `wrap-side`, `x`, `y`, `distance`. Its own
+options: `width` (a length or a percentage of the text width; default the text width), `height` (default: as tall as
+its text, which Word works out when it lays the page out), `fill` and `border` (default neither), `padding` (the inner
+margins; default Word's 0.13cm top and bottom, 0.25cm left and right), `valign=top|center|bottom` and `rotate`. Theme
+colours stay theme colours (`a:schemeClr` with Word's `lumMod`/`lumOff` for lighter and darker). Notes cannot be in a
+text box, and a text box cannot be in a `\figure`; references, styles and index marks inside it work as anywhere.
+
+**Watermarks** (M4): `\watermark[DRAFT]` puts text behind the text of every page of the section and the sections after
+it, the way Word's Design > Watermark does: a VML shape at the start of each header the section shows (default, first
+page and even pages), centred on the margins, with Word's own shape id so that Word's *Remove Watermark* works. Text
+watermarks are diagonal (`layout=horizontal` turns them), silver (`color=`), Calibri (`font=`) and semi-transparent
+(`semitransparent=off`). `\watermark[image=logo.png]` uses a picture, washed out unless `washout=off`. `width=` sets
+the size (default: the text width for text, the picture's own size for a picture, at most the text width).
+`\watermark[none]` stops it. A section with a watermark writes its headers out (with the content it would inherit),
+so in the first section of a document compiled into a template, the template's own headers give way to them.
 
 Any picture, inline or floating, can be cropped (`crop=(left=10%, top=5%, right=…, bottom=…)`; the size then comes
 from what is left), rotated (`rotate=-12`, degrees clockwise) and framed (`border=(dashed, 1.5pt, theme.accent1)`,

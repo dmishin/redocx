@@ -16,10 +16,10 @@ from PIL import UnidentifiedImageError
 from wordgenx import ir
 from wordgenx.commands.bind import Args
 from wordgenx.commands.types import Fields, Percent
-from wordgenx.lower.common import BlockHandler, Format, InlineHandler, Piece, verbatim
+from wordgenx.lower.common import BlockHandler, Format, InlineHandler, Piece, markup, verbatim
 from wordgenx.syntax import ast
 from wordgenx.syntax.diagnostics import Code
-from wordgenx.values import Border, Length
+from wordgenx.values import Border, Color, Length
 
 if TYPE_CHECKING:
     from wordgenx.lower.lowering import Lowering
@@ -173,6 +173,46 @@ def image(lw: Lowering, command: ast.Command, args: Args, fmt: Format) -> list[P
         lw.report(Code.INVALID_ARGUMENT, str(e), command.span)
         return []
     return [Piece("", fmt, "image", made)]
+
+
+def textbox(lw: Lowering, command: ast.Command, args: Args, fmt: Format) -> list[Piece]:
+    r"""\textbox[width=6cm, fill=..., border=..., wrap=square, x=right]{blocks}"""
+    if lw.figure is not None:
+        lw.report(Code.MISPLACED, "a text box cannot be in a \\figure", command.span)
+        return []
+    with lw.contained(part="text box"):
+        blocks = tuple(lw.blocks(markup(command)))
+    size = args.values.get("width")
+    width = resolve_size(lw, size) if isinstance(size, Length | Percent) else lw.text_width()
+    top, bottom, left, right = ir.TextBox(blocks, width).padding
+    if (padding := args.record("padding")) is not None:
+        sides = {"top": top, "bottom": bottom, "left": left, "right": right}
+        for key, value in padding.values.items():  # all=..., then single sides
+            assert isinstance(value, Length)
+            for side in sides if key == "all" else (key,):
+                sides[side] = value
+        top, bottom, left, right = sides["top"], sides["bottom"], sides["left"], sides["right"]
+    fill = args.get("fill", Color)
+    if fill is not None and fill.rgb is None and fill.theme is None:
+        fill = None  # auto: no fill
+    try:
+        box = ir.TextBox(
+            blocks,
+            width,
+            args.get("height", Length),
+            fill,
+            args.get("border", Border),
+            (top, bottom, left, right),
+            args.text("valign", "top") or "top",
+            args.number("rotate", 0) or 0,
+            _anchor(args),
+            args.text("name", "") or "",
+        )
+    except ValueError as e:
+        lw.report(Code.INVALID_ARGUMENT, str(e), command.span)
+        return []
+    lw.has_content = True
+    return [Piece("", fmt, "textbox", textbox=box)]
 
 
 def _anchor(args: Args) -> ir.Anchor | None:
@@ -330,5 +370,5 @@ def _near_integer(dpi: float) -> Decimal:
     return Decimal(round(dpi)) if abs(dpi - round(dpi)) < 0.05 else Decimal(str(dpi))
 
 
-INLINES: dict[str, InlineHandler] = {"image": image}
+INLINES: dict[str, InlineHandler] = {"image": image, "textbox": textbox}
 BLOCKS: dict[str, BlockHandler] = {"embed-docx": embed_docx}

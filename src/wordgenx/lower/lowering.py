@@ -41,6 +41,7 @@ from wordgenx.lower import (
     sections,
     tables,
     text,
+    watermarks,
     xrefs,
 )
 from wordgenx.lower.builtins import BUILTIN_STYLES
@@ -89,6 +90,7 @@ BLOCK_HANDLERS: dict[str, BlockHandler] = {
     **citations.BLOCKS,
     **index.BLOCKS,
     **media.BLOCKS,
+    **watermarks.BLOCKS,
 }
 INLINE_HANDLERS: dict[str, InlineHandler] = {
     **text.INLINES,

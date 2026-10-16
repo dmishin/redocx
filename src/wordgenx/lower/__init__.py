@@ -15,6 +15,7 @@ from wordgenx.lower.index import expand as expand_index
 from wordgenx.lower.lowering import Located, Lowering, StyleUse
 from wordgenx.lower.preamble import apply_template
 from wordgenx.lower.references import report_to, resolve
+from wordgenx.lower.watermarks import apply_watermarks
 from wordgenx.ooxml.parts.numbering import complete_levels
 from wordgenx.ooxml.style_names import style_id
 from wordgenx.ooxml.template import Template
@@ -195,6 +196,13 @@ def lower(
     assert isinstance(final, ir.SectionBreak)
     resolved_body, resolved_section = resolved_all[:-1], final.section
     resolved_body, index_styles = expand_index(resolved_body)
+    resolved_body, resolved_section, header_made = apply_watermarks(
+        resolved_body,
+        resolved_section,
+        lowering.even_headers or lowering.settings.even_and_odd_headers,
+    )
+    if header_made and style_id("Header") not in styles and not in_template("Header"):
+        styles[style_id("Header")] = _builtin("Header", first_page)
     toc_styles |= index_styles
     needs_update = needs_update or bool(index_styles)
     for name in sorted(toc_styles):

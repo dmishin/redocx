@@ -6,6 +6,7 @@ from __future__ import annotations
 import re
 from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass, field, replace
+from decimal import Decimal
 
 from wordgenx.ir import (
     H_ANCHORS,
@@ -14,6 +15,7 @@ from wordgenx.ir import (
     PAGE_BORDER_PAGES,
     PAGE_NUMBER_FORMATS,
     SECTION_STARTS,
+    TEXT_BOX_ALIGNMENTS,
     V_ANCHORS,
     VERTICAL_ALIGNMENTS,
     WRAP_SIDES,
@@ -43,6 +45,9 @@ from wordgenx.ir import (
     Settings,
     Slot,
     Table,
+    TextBox,
+    Watermark,
+    iter_paragraphs,
     table_layout,
 )
 from wordgenx.math.omml import omml
@@ -58,7 +63,7 @@ from wordgenx.ooxml.style_names import style_id
 from wordgenx.ooxml.xml import E, Element, nsmap, parse_fragment, qn
 from wordgenx.props import EMPTY_RUN, EmitContext, PropertySet, Target
 from wordgenx.props.registry import border_attrs, color_attrs
-from wordgenx.values import Border, Length, apply_tint_shade
+from wordgenx.values import Border, Color, Length, apply_tint_shade
 
 _SPLIT_RE = re.compile(r"(\t|\n)")
 PICTURE_URI = "http://schemas.openxmlformats.org/drawingml/2006/picture"
@@ -185,7 +190,7 @@ def _drawing(image: Image, ctx: BodyContext) -> Element:
             "pic:spPr",
             E("a:xfrm", transform, E("a:off", {"x": "0", "y": "0"}), E("a:ext", size)),
             E("a:prstGeom", {"prst": "rect"}, E("a:avLst")),
-            _picture_line(image.border, ctx) if image.border is not None else None,
+            _picture_line(image.border, ctx),
         ),
     )
     graphic = [
@@ -268,15 +273,10 @@ _LINE_DASHES = {
 }
 
 
-def _picture_line(border: Border, ctx: BodyContext) -> Element | None:
-    """a:ln around a picture, from a border (style, width, colour)."""
-    if border.style == "nil":
+def _picture_line(border: Border | None, ctx: BodyContext) -> Element | None:
+    """a:ln around a picture or shape, from a border (style, width, colour); None without one."""
+    if border is None or border.style == "nil":
         return None
-    color = border.color
-    if color.theme is not None:
-        rgb = apply_tint_shade(ctx.emit.theme_color_rgb(color.theme), color.tint, color.shade)
-    else:
-        rgb = color.rgb or "000000"
     attrs = {"w": str(border.width.emu)}
     if border.style == "double":
         attrs["cmpd"] = "dbl"
@@ -284,9 +284,219 @@ def _picture_line(border: Border, ctx: BodyContext) -> Element | None:
     return E(
         "a:ln",
         attrs,
-        E("a:solidFill", E("a:srgbClr", {"val": rgb})),
+        E("a:solidFill", _drawing_color(border.color)),
         E("a:prstDash", {"val": dash}) if dash else None,
     )
+
+
+_SCHEME_COLORS = {
+    "text1": "tx1",
+    "background1": "bg1",
+    "text2": "tx2",
+    "background2": "bg2",
+    "dark1": "dk1",
+    "light1": "lt1",
+    "dark2": "dk2",
+    "light2": "lt2",
+    "hyperlink": "hlink",
+    "followedHyperlink": "folHlink",
+}
+"""Theme colour names -> DrawingML scheme colours (accent1-6 keep their names)."""
+
+
+def _drawing_color(color: Color) -> Element:
+    """A DrawingML colour: a theme colour stays one (lighter/darker as Word's lumMod and
+    lumOff), so shapes follow theme changes like text does; auto is black."""
+    if color.theme is None:
+        return E("a:srgbClr", {"val": color.rgb or "000000"})
+    modifiers: list[Element] = []
+    if color.tint is not None:  # keep tint/255 of the colour, the rest towards white
+        keep = round(color.tint * 100000 / 255)
+        modifiers = [E("a:lumMod", {"val": str(keep)}), E("a:lumOff", {"val": str(100000 - keep)})]
+    elif color.shade is not None:
+        modifiers = [E("a:lumMod", {"val": str(round(color.shade * 100000 / 255))})]
+    scheme = _SCHEME_COLORS.get(color.theme, color.theme)
+    return E("a:schemeClr", {"val": scheme}, *modifiers)
+
+
+WPS_URI = "http://schemas.microsoft.com/office/word/2010/wordprocessingShape"
+
+# Word's VML shape types for a watermark: WordArt text on a path, and a picture frame.
+_TEXT_PATH_FORMULAS = (
+    "sum #0 0 10800", "prod #0 2 1", "sum 21600 0 @1", "sum 0 0 @2", "sum 21600 0 @3",
+    "if @0 @3 0", "if @0 21600 @1", "if @0 0 @2", "if @0 @4 21600", "mid @5 @6", "mid @8 @5",
+    "mid @7 @8", "mid @6 @7", "sum @6 0 @5",
+)  # fmt: skip
+_PICTURE_FORMULAS = (
+    "if lineDrawn pixelLineWidth 0", "sum @0 1 0", "sum 0 0 @1", "prod @2 1 2",
+    "prod @3 21600 pixelWidth", "prod @3 21600 pixelHeight", "sum @0 0 1", "prod @6 1 2",
+    "prod @7 21600 pixelWidth", "sum @8 21600 0", "prod @7 21600 pixelHeight",
+    "sum @10 21600 0",
+)  # fmt: skip
+_WATERMARK_POSITION = (
+    "position:absolute;margin-left:0;margin-top:0;width:{width}pt;height:{height}pt;{rotation}"
+    "z-index:-251657216;mso-position-horizontal:center;mso-position-horizontal-relative:margin;"
+    "mso-position-vertical:center;mso-position-vertical-relative:margin"
+)
+
+
+def _points(length: Length) -> str:
+    return f"{Decimal(length.emu) / 12700:.2f}".rstrip("0").rstrip(".")
+
+
+def _watermark(mark: Watermark, ctx: BodyContext) -> Element:
+    """A VML watermark shape as Word's Design > Watermark writes it (behind the text,
+    centred on the margins); Word recognises its id and can remove it."""
+    number = ctx.drawing_id()
+    style = _WATERMARK_POSITION.format(
+        width=_points(mark.width),
+        height=_points(mark.height),
+        rotation="rotation:315;" if mark.text is not None and mark.diagonal else "",
+    )
+    if mark.text is not None:
+        shape_type = E(
+            "v:shapetype",
+            {
+                "id": "_x0000_t136",
+                "coordsize": "21600,21600",
+                "o:spt": "136",
+                "adj": "10800",
+                "path": "m@7,l@8,m@5,21600l@6,21600e",
+            },
+            E("v:formulas", *(E("v:f", {"eqn": f}) for f in _TEXT_PATH_FORMULAS)),
+            E(
+                "v:path",
+                {
+                    "textpathok": "t",
+                    "o:connecttype": "custom",
+                    "o:connectlocs": "@9,0;@10,10800;@11,21600;@12,10800",
+                    "o:connectangles": "270,180,90,0",
+                },
+            ),
+            E("v:textpath", {"on": "t", "fitshape": "t"}),
+            E("v:handles", E("v:h", {"position": "#0,bottomRight", "xrange": "6629,14971"})),
+            E("o:lock", {"v:ext": "edit", "text": "t", "shapetype": "t"}),
+        )
+        color = mark.color
+        if color.theme is not None:
+            rgb = apply_tint_shade(ctx.emit.theme_color_rgb(color.theme), color.tint, color.shade)
+        else:
+            rgb = color.rgb or "C0C0C0"
+        shape = E(
+            "v:shape",
+            {
+                "id": f"PowerPlusWaterMarkObject{number}",
+                "o:spid": f"_x0000_s{2048 + number}",
+                "type": "#_x0000_t136",
+                "style": style,
+                "o:allowincell": "f",
+                "fillcolor": f"#{rgb}",
+                "stroked": "f",
+            },
+            E("v:fill", {"opacity": ".5"}) if mark.semitransparent else None,
+            E(
+                "v:textpath",
+                {"style": f'font-family:"{mark.font}";font-size:1pt', "string": mark.text},
+            ),
+            E("w10:wrap", {"anchorx": "margin", "anchory": "margin"}),
+        )
+    else:
+        assert mark.image is not None
+        shape_type = E(
+            "v:shapetype",
+            {
+                "id": "_x0000_t75",
+                "coordsize": "21600,21600",
+                "o:spt": "75",
+                "o:preferrelative": "t",
+                "path": "m@4@5l@4@11@9@11@9@5xe",
+                "filled": "f",
+                "stroked": "f",
+            },
+            E("v:stroke", {"joinstyle": "miter"}),
+            E("v:formulas", *(E("v:f", {"eqn": f}) for f in _PICTURE_FORMULAS)),
+            E("v:path", {"o:extrusionok": "f", "gradientshapeok": "t", "o:connecttype": "rect"}),
+            E("o:lock", {"v:ext": "edit", "aspectratio": "t"}),
+        )
+        data = {"r:id": ctx.image(mark.image.data, mark.image.format), "o:title": ""}
+        if mark.washout:  # Word's washout: brighter and lower contrast
+            data |= {"gain": "19661f", "blacklevel": "22938f"}
+        shape = E(
+            "v:shape",
+            {
+                "id": f"WordPictureWatermark{number}",
+                "o:spid": f"_x0000_s{2048 + number}",
+                "type": "#_x0000_t75",
+                "style": style,
+                "o:allowincell": "f",
+            },
+            E("v:imagedata", data),
+            E("w10:wrap", {"anchorx": "margin", "anchory": "margin"}),
+        )
+    pict = E("w:pict", shape_type, shape, nsmap=nsmap("v", "o", "w10"))
+    return E("w:r", E("w:rPr", E("w:noProof")), pict)
+
+
+def _text_box(box: TextBox, ctx: BodyContext) -> Element:
+    """A wps text box, in mc:AlternateContent as Word writes it (Word 2010 and later; there
+    is no VML fallback)."""
+    drawing_id = ctx.drawing_id()
+    top, bottom, left, right = box.padding
+    height = box.height or _estimated_height(box)
+    size = {"cx": str(box.width.emu), "cy": str(height.emu)}
+    transform = {"rot": str(box.rotation * 60000)} if box.rotation else None
+    fill = E("a:solidFill", _drawing_color(box.fill)) if box.fill is not None else E("a:noFill")
+    line = _picture_line(box.border, ctx)
+    if line is None:
+        line = E("a:ln", E("a:noFill"))
+    body = {
+        "rot": "0",
+        "vert": "horz",
+        "wrap": "square",
+        "lIns": str(left.emu),
+        "tIns": str(top.emu),
+        "rIns": str(right.emu),
+        "bIns": str(bottom.emu),
+        "anchor": TEXT_BOX_ALIGNMENTS[box.valign],
+        "anchorCtr": "0",
+    }
+    shape = E(
+        "wps:wsp",
+        E("wps:cNvSpPr", {"txBox": "1"}),
+        E(
+            "wps:spPr",
+            E("a:xfrm", transform, E("a:off", {"x": "0", "y": "0"}), E("a:ext", size)),
+            E("a:prstGeom", {"prst": "rect"}, E("a:avLst")),
+            fill,
+            line,
+        ),
+        E("wps:txbx", E("w:txbxContent", *_blocks(box.content, ctx))),
+        E("wps:bodyPr", body, E("a:noAutofit") if box.height else E("a:spAutoFit")),
+    )
+    graphic = [
+        E("wp:extent", size),
+        E("wp:effectExtent", {"l": "0", "t": "0", "r": "0", "b": "0"}),
+    ]
+    frame = [
+        E("wp:docPr", {"id": str(drawing_id), "name": box.name or f"Text Box {drawing_id}"}),
+        E("wp:cNvGraphicFramePr"),
+        E("a:graphic", E("a:graphicData", {"uri": WPS_URI}, shape)),
+    ]
+    if box.anchor is None:
+        distances = {"distT": "0", "distB": "0", "distL": "0", "distR": "0"}
+        drawing = E("w:drawing", E("wp:inline", distances, *graphic, *frame))
+    else:
+        drawing = E("w:drawing", _anchor(box.anchor, drawing_id, graphic, frame))
+    choice = E("mc:Choice", {"Requires": "wps"}, drawing)
+    return E("w:r", E("mc:AlternateContent", choice, nsmap=nsmap("mc", "wps")))
+
+
+def _estimated_height(box: TextBox) -> Length:
+    """A first height for a box that grows to fit its text (Word sets the real one when it
+    lays the box out): a line per paragraph, plus the padding."""
+    lines = max(1, sum(1 for _ in iter_paragraphs(box.content)))
+    top, bottom, _, _ = box.padding
+    return Length(lines * Length.pt(16).emu + top.emu + bottom.emu)
 
 
 def _inline(item: Inline, ctx: BodyContext) -> list[Element]:
@@ -308,6 +518,10 @@ def _inline(item: Inline, ctx: BodyContext) -> list[Element]:
         return [E("w:r", E("w:br", {"w:type": item.kind}))]
     if isinstance(item, Image):
         return [_drawing(item, ctx)]
+    if isinstance(item, TextBox):
+        return [_text_box(item, ctx)]
+    if isinstance(item, Watermark):
+        return [_watermark(item, ctx)]
     if isinstance(item, Field):
         return _field(item, ctx)
     if isinstance(item, BookmarkStart):

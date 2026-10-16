@@ -33,3 +33,5 @@ feature is documented. They are smaller than 9.1 and can be picked up whenever a
 | `--emit-ir` | Reading the JSON back (alternate frontends) | [§4.3](04-architecture.md) |
 | Templates | The template's own footnote separators | [§4.6](04-architecture.md) |
 | Themes | East Asian and complex-script theme fonts; effect and fill styles; loading a `.thmx` | [§3.5](03-language-design.md) |
+| Text boxes | A VML fallback for Word 2007; linked text boxes (text flowing from one to the next) | [§3.16](03-language-design.md) |
+| Watermarks | Keeping a template's own headers in the first section when it has a watermark | [§3.16](03-language-design.md) |

@@ -112,7 +112,7 @@ Steps, in order (the small ones first; the drawing steps share one positioning m
    own choices. Tints and shades are computed as Word computes them (HSL luminance).
 3. [x] **Floating images**: `\image[wrap=…, x=…, y=…]` as `wp:anchor` (square, tight, top-and-bottom, behind,
    in front), positioned against the page, margin, column or paragraph; crop, rotation and a border on any image.
-4. **Text boxes and watermarks**: `\textbox` (a `wps` shape with markup inside, inline or floating, with fill and
+4. [x] **Text boxes and watermarks**: `\textbox` (a `wps` shape with markup inside, inline or floating, with fill and
    border), `\watermark` (text or a picture behind every page of a section, in the header).
 5. **Frames and floating tables**: drop caps and text frames (`w:framePr`), floating tables (`w:tblpPr`), columns
    of different widths.

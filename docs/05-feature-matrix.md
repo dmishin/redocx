@@ -80,7 +80,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Line numbering | M2 ✓ | ● |
 | Vertical alignment | M2 ✓ | ● |
 | Page borders | M4 ✓ | ● |
-| Watermark (VML/DrawingML in header) | M4 | ●● |
+| Watermark (VML/DrawingML in header) | M4 ✓ | ●● |
 | Page background color | M4 ✓ | ● |
 | Text direction / RTL section | M4 | ●● |
 
@@ -126,7 +126,8 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | SVG images (with PNG fallback, `asvg:svgBlip`) | M3 ✓ | ●● |
 | Floating images (anchor, wrap modes, positioning) | M4 ✓ | ●●● |
 | Cropping, rotation, borders on images | M4 ✓ | ●● |
-| Text boxes, basic shapes (wps) | M4 | ●●● |
+| Text boxes (wps) | M4 ✓ | ●●● |
+| Basic shapes (lines, arrows, rectangles) | Later | ●● |
 | Math: LaTeX subset → OMML (inline & display) | M3 ✓ | ●●● |
 | Equation numbering & references | M3 ✓ | ●● |
 | Code blocks with syntax highlighting | M3 ✓ | ●● |

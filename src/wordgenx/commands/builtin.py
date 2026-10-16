@@ -406,11 +406,7 @@ _command(
     "url", INLINE, "A hyperlink showing its address.",
     body=STRING, body_required=True, body_doc="an address",
 )  # fmt: skip
-_command(
-    "image", INLINE, "A picture (PNG, JPEG, GIF, BMP or SVG), inline or floating.",
-    _o("width", SizeValue()), _o("height", LengthValue(nonnegative=True)),
-    _o("alt", TEXT, "a description"), _o("name", TEXT),
-    _o("fallback", TEXT, "a PNG or JPEG that Word 2013 and older show for an SVG"),
+FLOATING = (
     _o("float", FLAG, "positioned on the page, with text around it"),
     _o("wrap", Choice.of(*ir.WRAPS), "how text flows around it (implies float)"),
     _o("wrap-side", Choice.of(*ir.WRAP_SIDES), "where text goes beside it"),
@@ -421,6 +417,14 @@ _command(
     _o("distance", Record({side: LengthValue(nonnegative=True)
                            for side in ("all", "top", "bottom", "left", "right")},
                           shorthand="all"), "space between it and the text"),
+)  # fmt: skip
+"""Options of pictures and text boxes that float (design §3.16)."""
+_command(
+    "image", INLINE, "A picture (PNG, JPEG, GIF, BMP or SVG), inline or floating.",
+    _o("width", SizeValue()), _o("height", LengthValue(nonnegative=True)),
+    _o("alt", TEXT, "a description"), _o("name", TEXT),
+    _o("fallback", TEXT, "a PNG or JPEG that Word 2013 and older show for an SVG"),
+    *FLOATING,
     _o("crop", Record({side: PercentValue(max=Decimal(99))
                        for side in ("left", "top", "right", "bottom")}),
        "how much to cut off each side"),
@@ -487,8 +491,34 @@ for _note in ("footnote", "endnote"):
 
 # --- planned -----------------------------------------------------------------------------
 
-_command("textbox", INLINE, "A text box.", planned="M4")
-_command("watermark", BLOCK, "A page watermark.", planned="M4")
+_command(
+    "textbox", INLINE, "A text box: blocks in a frame, inline or floating.",
+    _o("width", SizeValue(), "default: the text width"),
+    _o("height", LengthValue(nonnegative=True), "default: as tall as its text"),
+    _o("fill", PropValue(Target.RUN, "color"), "the background colour"),
+    _o("border", PropValue(Target.RUN, "border"), "a line around it"),
+    _o("padding", Record({side: LengthValue(nonnegative=True)
+                          for side in ("all", "top", "bottom", "left", "right")},
+                         shorthand="all"), "space between the frame and the text"),
+    _o("valign", Choice.of(*ir.TEXT_BOX_ALIGNMENTS), "where the text sits in a taller box"),
+    _o("rotate", Int(-360, 360), "degrees clockwise"),
+    _o("name", TEXT),
+    *FLOATING,
+    body_required=True,
+)  # fmt: skip
+_command(
+    "watermark", BLOCK, "Text or a picture behind the text of every page of the section.",
+    _o("text", TEXT, "the words, such as DRAFT"),
+    _o("image", TEXT, "a picture file instead of text"),
+    _o("color", PropValue(Target.RUN, "color"), "of the text (default: silver)"),
+    _o("font", TEXT, "of the text (default: Calibri)"),
+    _o("layout", Choice.of("diagonal", "horizontal")),
+    _o("semitransparent", FLAG, "text at half opacity (default: on)"),
+    _o("washout", FLAG, "a pale picture (default: on)"),
+    _o("width", SizeValue(), "the size (default: as wide as the text allows)"),
+    _o("none", FLAG, "no watermark from this section on"),
+    positional="text", body=None,
+)  # fmt: skip
 _command("comment", INLINE, "A comment.", planned="M5", keep_body=True)
 _command("ins", INLINE, "Tracked inserted text.", planned=POSTPONED, keep_body=True)
 _command("del", INLINE, "Tracked deleted text.", planned=POSTPONED)

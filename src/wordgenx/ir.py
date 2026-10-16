@@ -533,6 +533,60 @@ class Math:
     """(chapter style, separator) when equations are numbered per chapter."""
 
 
+TEXT_BOX_ALIGNMENTS = {"top": "t", "center": "ctr", "bottom": "b"}
+_TEXT_BOX_PADDING = (Length(45720), Length(45720), Length(91440), Length(91440))
+"""Word's inner margins of a text box: 0.13cm top and bottom, 0.25cm left and right."""
+
+
+@dataclass(frozen=True)
+class TextBox:
+    """A text box (a wps shape with w:txbxContent), inline or floating."""
+
+    content: tuple[Block, ...]
+    width: Length
+    height: Length | None = None
+    """None: the box grows to fit its text (a:spAutoFit)."""
+    fill: Color | None = None
+    border: Border | None = None
+    padding: tuple[Length, Length, Length, Length] = _TEXT_BOX_PADDING
+    """Top, bottom, left, right."""
+    valign: str = "top"
+    """A key of TEXT_BOX_ALIGNMENTS."""
+    rotation: int = 0
+    anchor: Anchor | None = None
+    name: str = ""
+
+    def __post_init__(self) -> None:
+        if self.width.emu <= 0 or (self.height is not None and self.height.emu <= 0):
+            raise ValueError("a text box needs a positive size")
+        if self.valign not in TEXT_BOX_ALIGNMENTS:
+            raise ValueError(f"text box alignment must be one of {', '.join(TEXT_BOX_ALIGNMENTS)}")
+
+
+_SILVER = Color(rgb="C0C0C0")
+"""The colour of Word's text watermarks."""
+
+
+@dataclass(frozen=True)
+class Watermark:
+    """Text or a picture behind the text of every page, as Word's Design > Watermark
+    writes it: a VML shape in the header, centred on the margins."""
+
+    width: Length
+    height: Length
+    text: str | None = None
+    image: Image | None = None
+    color: Color = _SILVER
+    font: str = "Calibri"
+    diagonal: bool = True
+    semitransparent: bool = True
+    washout: bool = True
+
+    def __post_init__(self) -> None:
+        if (self.text is None) == (self.image is None):
+            raise ValueError("a watermark is either text or a picture")
+
+
 Inline = (
     Run
     | Break
@@ -545,6 +599,8 @@ Inline = (
     | NoteMark
     | RawXml
     | Math
+    | TextBox
+    | Watermark
 )
 
 
@@ -731,6 +787,8 @@ class Section:
     """top | center | bottom | justify: where the text sits between the top and bottom margins."""
     borders: PageBorders | None = None
     """Lines around the pages of the section (w:pgBorders)."""
+    watermark: Watermark | None = None
+    """Written into each header the section uses (see `lower.watermarks`)."""
 
     def __post_init__(self) -> None:
         if self.vertical_align not in (None, *VERTICAL_ALIGNMENTS):
@@ -906,9 +964,10 @@ def table_layout(table: Table) -> list[list[Slot]]:
 
 
 def _with_notes(paragraph: Paragraph) -> Iterator[Paragraph]:
+    """The paragraph, then those of its notes and text boxes."""
     yield paragraph
     for item in paragraph.content:
-        if isinstance(item, Note):
+        if isinstance(item, Note | TextBox):
             yield from iter_paragraphs(item.content)
 
 
@@ -943,7 +1002,7 @@ def iter_tables(blocks: tuple[Block, ...]) -> Iterator[Table]:
                     yield from iter_tables(cell.content)
         elif isinstance(block, Paragraph):
             for item in block.content:
-                if isinstance(item, Note):
+                if isinstance(item, Note | TextBox):
                     yield from iter_tables(item.content)
 
 
@@ -976,12 +1035,14 @@ def map_paragraphs(
 
 
 def _map_paragraph(paragraph: Paragraph, fn: Callable[[Paragraph], Paragraph]) -> Paragraph:
-    """`fn` applied to the paragraph, then to the paragraphs of its notes."""
+    """`fn` applied to the paragraph, then to the paragraphs of its notes and text boxes."""
     paragraph = fn(paragraph)
-    if not any(isinstance(item, Note) for item in paragraph.content):
+    if not any(isinstance(item, Note | TextBox) for item in paragraph.content):
         return paragraph
     content = tuple(
-        replace(item, content=map_paragraphs(item.content, fn)) if isinstance(item, Note) else item
+        replace(item, content=map_paragraphs(item.content, fn))
+        if isinstance(item, Note | TextBox)
+        else item
         for item in paragraph.content
     )
     return replace(paragraph, content=content)

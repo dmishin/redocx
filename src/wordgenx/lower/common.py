@@ -47,6 +47,7 @@ class Piece:
     raw: ir.RawXml | None = None
     math: ir.Math | None = None
     citation: ir.Run | None = None
+    textbox: ir.TextBox | None = None
 
 
 BlockHandler = Callable[["Lowering", ast.Command, Args], list[ir.Block]]
@@ -170,6 +171,7 @@ def assemble(pieces: list[Piece], smart_quotes: bool) -> tuple[ir.Inline, ...]:
             or piece.raw
             or piece.math
             or piece.citation
+            or piece.textbox
         )
         if special is not None:  # not inside hyperlinks (yet)
             flush_link()
@@ -196,7 +198,8 @@ def assemble(pieces: list[Piece], smart_quotes: bool) -> tuple[ir.Inline, ...]:
 
 def _takes_no_room(piece: Piece) -> bool:
     """Bookmarks, and pictures that float beside the text rather than in the line."""
-    return piece.kind == "mark" or (piece.image is not None and piece.image.anchor is not None)
+    floating = piece.image or piece.textbox
+    return piece.kind == "mark" or (floating is not None and floating.anchor is not None)
 
 
 def _trim_trailing(pieces: list[Piece]) -> None:
