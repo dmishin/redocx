@@ -308,6 +308,7 @@ def resolve(
     """Lower-cased style name -> the number of its latest paragraph (STYLEREF ... \\s)."""
     note_numbers: dict[int, str] = {}
     """id(note) -> its number as Word shows it."""
+    equations: dict[str, object] = {"chapter": None, "count": 0}
 
     def number_pass(paragraph: ir.Paragraph) -> ir.Paragraph:
         nonlocal index
@@ -340,6 +341,18 @@ def resolve(
                 item = replace(item, result=format_number(seq_counts[seq], number_format))
             elif isinstance(item, ir.Field) and (styleref := STYLEREF_RE.match(item.code)):
                 item = replace(item, result=chapter_numbers.get(styleref.group(1).lower(), "0"))
+            elif isinstance(item, ir.Math) and item.numbered:
+                chapter = None
+                if item.chapter is not None:
+                    chapter = chapter_numbers.get(item.chapter[0].lower(), "0")
+                if chapter != equations["chapter"]:
+                    equations["chapter"], equations["count"] = chapter, 0
+                equations["count"] = int(equations["count"]) + 1  # type: ignore[call-overload]
+                count = equations["count"]
+                eq_number = (
+                    f"{chapter}{item.chapter[1]}{count}" if item.chapter and chapter else str(count)
+                )
+                item = replace(item, number=eq_number)
             elif isinstance(item, ir.Note):
                 notes = settings.notes(item.kind)
                 note_counts[item.kind] += 1
@@ -348,6 +361,9 @@ def resolve(
             content.append(item)
         paragraph = replace(paragraph, content=tuple(content))
         texts = _bookmark_texts(paragraph, note_numbers)
+        for item in paragraph.content:  # an equation's bookmark is inside the formula
+            if isinstance(item, ir.Math) and item.bookmark and item.number:
+                texts[item.bookmark] = item.number  # Word's REF shows it without the ( )
         for name in texts:
             targets[name] = _Target(index, texts, number, paragraph.text())
         entries.append((index, paragraph, number + simulator.separator if number else None))
@@ -378,7 +394,16 @@ def resolve(
             if isinstance(item, PendingRef):
                 resolved = _resolve_ref(item, references, targets, here, settings, report)
                 needs_update = needs_update or resolved.dirty
-                content.append(resolved)
+                label = references.labels.get(item.label)
+                if label is not None and label.kind == "equation" and item.form == "default":
+                    # "(3.2)": the parentheses around the field, as LaTeX's \eqref
+                    content += [
+                        ir.Run("(", item.props, item.style),
+                        resolved,
+                        ir.Run(")", item.props, item.style),
+                    ]
+                else:
+                    content.append(resolved)
             else:
                 content.append(item)
         return replace(paragraph, content=tuple(content))
@@ -435,6 +460,8 @@ def _resolve_ref(
     if label.kind == "note":  # footnote numbers restarting on each page are Word's to know
         per_page = settings.footnotes.restart == "eachPage"
         return field(f" NOTEREF {bookmark} \\h ", texts.get(bookmark, ""), dirty=per_page)
+    if label.kind == "equation":  # the number; "(3.2)" has parentheses around the field
+        return field(f" REF {bookmark} \\h ", texts.get(bookmark, ""))
     if label.kind == "caption":
         name = label.parts.get(form, bookmark)
         return field(f" REF {name} \\h ", texts.get(name, ""))

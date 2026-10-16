@@ -41,6 +41,8 @@ from wordgenx.lower.fields import (
 from wordgenx.lower.macros import Binding, Macro, Substitution, define_macro, let_macro
 from wordgenx.lower.references import REF_FORMS, Label, PendingRef, PendingToc, References
 from wordgenx.lower.typography import smarten
+from wordgenx.math.nodes import Row as MathRow
+from wordgenx.math.parser import MathError, parse_math
 from wordgenx.ooxml.constants import NS
 from wordgenx.ooxml.style_names import style_id
 from wordgenx.ooxml.template import Template, TemplateError, load_template
@@ -69,13 +71,13 @@ Located = tuple[Source, Diagnostic]
 BLOCK_COMMANDS = frozenset(
     (
         "p align list include use styles document meta settings section table header footer tabs "
-        "caption figure toc listof"
+        "caption figure toc listof math"
     ).split()
 )
 INLINE_COMMANDS = frozenset(
     (
         "b i u s sup sub hl font style lang hidden strong emph code link url br tab image "
-        "pagenum numpages sectionpages field date ref pageref seq footnote endnote raw"
+        "pagenum numpages sectionpages field date ref pageref seq footnote endnote raw m"
     ).split()
 )
 FIELD_COMMANDS = {"pagenum": "PAGE", "numpages": "NUMPAGES", "sectionpages": "SECTIONPAGES"}
@@ -90,8 +92,6 @@ TABLE_PARTS = frozenset({"row", "cell"})
 PLANNED: dict[str, str] = {
     **dict.fromkeys(
         [
-            "m",
-            "math",
             "index",
             "ix",
             "cite",
@@ -149,6 +149,7 @@ class Piece:
     mark: ir.BookmarkStart | ir.BookmarkEnd | None = None
     note: ir.Note | None = None
     raw: ir.RawXml | None = None
+    math: ir.Math | None = None
 
 
 @dataclass
@@ -343,13 +344,9 @@ class Lowering:
         if isinstance(block, ast.CodeBlock):
             return self.code_block(block)
         if isinstance(block, ast.DisplayMath):
-            self.warn(
-                Code.NOT_SUPPORTED_YET,
-                "display math is not supported yet; the source is shown as code",
-                block.span,
-                help="planned for milestone M3",
-            )
-            return [self.code_paragraph(line) for line in block.source.split("\n")]
+            start = self.source.text.find(block.source, block.span.start)
+            label = (block.label.name, block.label.span) if block.label is not None else None
+            return self.display_math(block.source, start, block.span, label, None)
         assert isinstance(block, ast.PipeTable)
         table = self.make_table(TableSpec(), self.pipe_rows(block), block.span)
         return [table] if table is not None else []
@@ -562,6 +559,7 @@ class Lowering:
             "figure": self.cmd_figure,
             "toc": self.cmd_toc,
             "listof": self.cmd_toc,
+            "math": self.cmd_math,
         }.get(name)
         if handler is not None:
             return handler(command)
@@ -1942,6 +1940,72 @@ class Lowering:
         )
         return [Piece("", fmt, "field", field=ref)]
 
+    # --- math --------------------------------------------------------------------------------
+
+    def math_body(self, command: ast.Command) -> tuple[str, int]:
+        """The formula text of \\m{...} or \\math{...} and where it starts in the source."""
+        if not isinstance(command.body, ast.VerbatimBody) or not command.body.text.strip():
+            self.report(
+                Code.MATH,
+                f"`\\{command.name}` needs a formula: \\{command.name}{{x^2}}",
+                command.span,
+            )
+            return "", -1
+        text = command.body.text
+        return text, self.source.text.find(text, command.body.span.start)
+
+    def parse_formula(self, text: str, start: int, span: Span) -> MathRow | None:
+        if not text.strip():
+            return None
+        try:
+            return parse_math(text)
+        except MathError as e:
+            where = Span(start + e.start, start + e.end) if start >= 0 else span
+            self.report(Code.MATH, e.message, where, e.hint)
+            return None
+
+    def display_math(
+        self,
+        text: str,
+        start: int,
+        span: Span,
+        label: tuple[str, Span] | None,
+        numbered: bool | None,
+    ) -> list[ir.Block]:
+        """A display equation in a paragraph of its own; labelled ones are numbered."""
+        self.has_content = True
+        expr = self.parse_formula(text, start, span)
+        if expr is None:
+            return []
+        numbered = label is not None if numbered is None else numbered
+        bookmark = None
+        if label is not None:
+            if not numbered:
+                self.report(Code.MATH, "a labelled equation must be numbered", label[1])
+            bookmark = self.register_label(label[0], label[1], "equation").bookmark
+        math = ir.Math(expr, True, numbered, None, bookmark, self.caption_chapters)
+        return [ir.Paragraph((math,))]
+
+    def cmd_math(self, command: ast.Command) -> list[ir.Block]:
+        r"""\math[id=eq:x, numbered|nonumber]{formula}: a display equation."""
+        label: tuple[str, Span] | None = None
+        numbered: bool | None = None
+        for option in command.options.items if command.options else ():
+            text = self.text_value(option.value, command, option.key or "option")
+            if option.key == "id" and text:
+                label = (text, option.value.span)
+            elif option.key is None and text in ("numbered", "nonumber"):
+                numbered = text == "numbered"
+            else:
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    "invalid \\math option",
+                    option.span,
+                    help="\\math[id=eq:x, numbered|nonumber]{...}",
+                )
+        text, start = self.math_body(command)
+        return self.display_math(text, start, command.span, label, numbered)
+
     def raw_xml(self, command: ast.Command) -> str | None:
         """The body of \\raw[ooxml]{...}, checked: well-formed w: elements, all run-level or
         all block-level (w:p, w:tbl)."""
@@ -2471,6 +2535,11 @@ class Lowering:
         if name == "raw":
             xml = self.raw_xml(command)
             return [Piece("", fmt, "field", raw=ir.RawXml(xml))] if xml is not None else []
+        if name == "m":
+            self.no_options(command)
+            text, start = self.math_body(command)
+            expr = self.parse_formula(text, start, command.span)
+            return [Piece("", fmt, "field", math=ir.Math(expr))] if expr is not None else []
         if name == "seq":
             return self.inline_seq(command, fmt)
         if name in ("footnote", "endnote"):
@@ -2658,7 +2727,9 @@ class Lowering:
                 flush_link()
                 inlines.append(ir.Break(piece.kind))
                 continue
-            special = piece.image or piece.field or piece.mark or piece.note or piece.raw
+            special = (
+                piece.image or piece.field or piece.mark or piece.note or piece.raw or piece.math
+            )
             if special is not None:  # not inside hyperlinks (yet)
                 flush_link()
                 inlines.append(special)

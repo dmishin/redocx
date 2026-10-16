@@ -170,7 +170,15 @@ def example_design_spec() -> ir.Document:
     return result.document
 
 
+def example_math() -> ir.Document:
+    """examples/math.wgx: inline and display math, numbered equations and references."""
+    result = compile_file(Path(__file__).resolve().parents[2] / "examples" / "math.wgx")
+    assert result.document is not None, result.render_diagnostics()
+    return result.document
+
+
 CASES: dict[str, Callable[[], ir.Document]] = {
+    "example-math": example_math,
     "example-design-spec": example_design_spec,
     "example-hello": example_hello,
     "example-tables": example_tables,

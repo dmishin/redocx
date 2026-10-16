@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from wordgenx.ir import NOTE_KINDS, PROTECTION_MODES, Document, NoteSettings
+from wordgenx.ir import NOTE_KINDS, PROTECTION_MODES, Document, Math, NoteSettings
+from wordgenx.math.omml import math_properties
 from wordgenx.ooxml.schema_order import SETTINGS, ordered
 from wordgenx.ooxml.xml import E, Element, nsmap
 
@@ -66,6 +67,8 @@ def settings_xml(document: Document) -> Element:
         children["updateFields"] = E("w:updateFields", {"w:val": "true"})
     if settings.mirror_margins:
         children["mirrorMargins"] = E("w:mirrorMargins")
+    if any(isinstance(i, Math) for p in document.all_paragraphs() for i in p.content):
+        children["mathPr"] = math_properties()
     if settings.protection is not None:
         children["documentProtection"] = E(
             "w:documentProtection",

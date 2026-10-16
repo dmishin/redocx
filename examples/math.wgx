@@ -1,0 +1,33 @@
+% Math: LaTeX-style formulas compiled to Office Math (design 3.14).
+%   wordgenx build examples/math.wgx
+
+\styles{
+  paragraph "Heading 1" { size: 14pt; outline-level: 1; }
+  numbering Headings { level 1 { style: "Heading 1"; text: "%1"; } }
+}
+\settings[captions=(chapter-numbers, chapter-style="Heading 1", separator=".")]
+
+= Basics
+
+Inline \m{e^{i\pi} + 1 = 0}, a fraction \m{\frac{a}{b}} and a root \m{\sqrt[3]{x^2+1}} in text.
+
+$$ \int_0^\infty e^{-x^2}\,dx = \frac{\sqrt{\pi}}{2} $$ {#eq:gauss}
+
+$$ \sum_{i=1}^{n} i = \frac{n(n+1)}{2}, \qquad \prod_{k=1}^{n} k = n! $$
+
+$$ \lim_{x \to 0} \frac{\sin x}{x} = 1 $$ {#eq:limit}
+
+= More
+
+$$ f(x) = \begin{cases} x & x \geq 0 \\ -x & x < 0 \end{cases} $$
+
+$$ A = \begin{pmatrix} a_{11} & a_{12} \\ a_{21} & a_{22} \end{pmatrix}, \quad \det A = a_{11}a_{22} - a_{12}a_{21} $$ {#eq:det}
+
+$$\begin{aligned}
+  (a+b)^2 &= a^2 + 2ab + b^2 \\
+          &\geq 4ab
+\end{aligned}$$ {#eq:square}
+
+\math[id=eq:euler]{\hat{x} + \bar{y} + \vec{v} + \overline{AB} + \mathbb{R}^n + \mathcal{L} + \text{if } x \in \mathbf{X}}
+
+See @eq:gauss, @eq:limit, @eq:det, @eq:square and @eq:euler.

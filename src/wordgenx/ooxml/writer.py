@@ -218,6 +218,7 @@ def _settings_taken(document: Document) -> frozenset[str]:
         taken.add("defaultTabStop")
     if document.meta.language:
         taken.add("themeFontLang")
+    taken.add("mathPr")  # only present when the document has math
     return frozenset(taken)
 
 

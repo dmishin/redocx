@@ -504,10 +504,32 @@ $$\begin{aligned}
 \end{aligned}$$ {#eq:chain}
 ```
 
-- Display math may also be written `\math[id=eq:gauss]{…}`.
-- Labelled display equations are numbered with `SEQ Equation`. The layout (Q9) is decided after the reference-XML survey.
-- Custom operators: `\mathop{argmin}` in the math body, or declared once with `\settings[math-operators=(argmin, argmax)]`.
-- The supported LaTeX subset is documented. Unsupported macros are errors with a location.
+- Display math may also be written `\math[id=eq:gauss, numbered|nonumber]{…}`. A display equation is a paragraph of
+  its own (`m:oMathPara`); inline math (`m:oMath`) sits in the text.
+- **Numbering** (Q9, settled by surveying what Word writes): labelled display equations are numbered the way Word numbers
+  them when you type `#(1)`: an `m:eqArr` whose row ends with `#` and the number in parentheses, which Word aligns to
+  the right margin. The compiler computes the numbers (per chapter, "(3.2)", when
+  `\settings[captions=(chapter-numbers, …)]` is set). In an `aligned` block the number goes on the last row.
+  `@eq:gauss` prints "(1.1)": a `REF` to a bookmark around the number, with the parentheses outside the field, so
+  Word's own update gives the same text. `\ref[form=number]{eq:gauss}` prints "1.1".
+- Custom operators: `\operatorname{argmin}` (`\operatorname*` for limits underneath) or `\mathop{argmin}`.
+- Unsupported commands are errors at their position in the document (`WGX0311`), with the nearest known command as a
+  suggestion.
+
+**The supported subset** (`wordgenx.math`):
+
+| Kind | Commands |
+|------|----------|
+| Scripts | `x^2`, `x_i`, `x_i^2`, `x'`, `x''`; `{…}` groups |
+| Fractions, roots | `\frac` (`\dfrac`, `\tfrac`, `\cfrac`), `\binom`, `\sqrt`, `\sqrt[n]` |
+| Big operators | `\sum \prod \coprod \int \iint \iiint \oint \bigcup \bigcap \bigvee \bigwedge \bigoplus \bigotimes \bigodot`, with `\limits` / `\nolimits` |
+| Functions | `\sin \cos \tan \log \ln \exp \lim \max \min \sup \inf \det \gcd …`, `\operatorname`, `\mathop` |
+| Delimiters | `\left … \right` with `( ) [ ] \{ \} \| \langle \rangle \lfloor \rfloor \lceil \rceil .`; `\big(` and friends |
+| Environments | `matrix pmatrix bmatrix Bmatrix vmatrix Vmatrix array cases aligned align split gathered`; `&` and `\\` |
+| Accents, bars | `\hat \bar \tilde \vec \dot \ddot \check \breve \acute \grave`, `\overline \underline \overbrace \underbrace`, `\overset \underset \stackrel` |
+| Fonts, text | `\mathrm \mathbf \mathit \boldsymbol \mathbb \mathcal \mathfrak \mathsf \mathtt`, `\text` |
+| Symbols | Greek letters (upper-case upright), relations, arrows, operators, `\infty \partial \nabla \forall \exists …`, `\not` |
+| Spacing | `\, \: \; \quad \qquad \ ~`; `\!` is ignored |
 
 ## 3.15 Code blocks
 

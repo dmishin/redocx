@@ -23,6 +23,7 @@ from wordgenx.ir import (
     FieldBlock,
     Image,
     Inline,
+    Math,
     Note,
     NoteMark,
     Paragraph,
@@ -37,6 +38,7 @@ from wordgenx.ir import (
     Table,
     table_layout,
 )
+from wordgenx.math.omml import omml
 from wordgenx.ooxml.parts.properties import (
     cell_properties,
     paragraph_properties,
@@ -178,6 +180,16 @@ def _inline(item: Inline, ctx: BodyContext) -> list[Element]:
         return [_run(item, ctx)]
     if isinstance(item, RawXml):
         return parse_fragment(item.xml)
+    if isinstance(item, Math):
+        return [
+            omml(
+                item.expr,
+                display=item.display,
+                number=item.number if item.numbered else None,
+                bookmark=item.bookmark,
+                bookmark_id=ctx.bookmark_id,
+            )
+        ]
     if isinstance(item, Break):
         return [E("w:r", E("w:br", {"w:type": item.kind}))]
     if isinstance(item, Image):

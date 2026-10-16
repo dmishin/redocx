@@ -45,4 +45,4 @@ All recommendations in the [spike findings](../examples/spike/FINDINGS.md) were 
 
 | # | Question | Options | Plan |
 |---|----------|---------|------|
-| Q9 | Equation numbering layout | 3-column borderless table / OMML `#` alignment / tab stops | Decide after the M0 reference-XML survey, preferring whatever Word itself produces (idiomatic-output principle) |
+| Q9 | Equation numbering layout | 3-column borderless table / OMML `#` alignment / tab stops | **Decided (M3):** OMML `#` alignment, which is what Word itself writes for `#(1)` (an `m:eqArr` row ending in `#` and the number); see design §3.14 |

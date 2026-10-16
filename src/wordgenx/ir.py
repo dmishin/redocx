@@ -15,6 +15,8 @@ from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING
 
+from wordgenx.math.nodes import Row as MathRow
+from wordgenx.math.nodes import linear_text
 from wordgenx.props import (
     EMPTY_CELL,
     EMPTY_PARAGRAPH,
@@ -415,8 +417,33 @@ class RawXml:
     xml: str
 
 
+@dataclass(frozen=True)
+class Math:
+    """A formula (Office Math). Inline, or a display equation alone in its paragraph."""
+
+    expr: MathRow
+    display: bool = False
+    numbered: bool = False
+    number: str | None = None
+    """The equation number, as resolved ("3.2"); Word shows it as (3.2)."""
+    bookmark: str | None = None
+    """Around the number, for references to the equation."""
+    chapter: tuple[str, str] | None = None
+    """(chapter style, separator) when equations are numbered per chapter."""
+
+
 Inline = (
-    Run | Break | Hyperlink | Image | Field | BookmarkStart | BookmarkEnd | Note | NoteMark | RawXml
+    Run
+    | Break
+    | Hyperlink
+    | Image
+    | Field
+    | BookmarkStart
+    | BookmarkEnd
+    | Note
+    | NoteMark
+    | RawXml
+    | Math
 )
 
 
@@ -463,6 +490,8 @@ class Paragraph:
                 parts.append(item.text)
             elif isinstance(item, Field):
                 parts.append(item.result)
+            elif isinstance(item, Math):
+                parts.append(linear_text(item.expr))
             elif isinstance(item, Hyperlink):
                 parts.extend(r.text if isinstance(r, Run) else r.result for r in item.content)
         return "".join(parts)

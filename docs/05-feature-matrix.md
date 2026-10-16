@@ -127,8 +127,8 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Floating images (anchor, wrap modes, positioning) | M4 | ●●● |
 | Cropping, rotation, borders on images | M4 | ●● |
 | Text boxes, basic shapes (wps) | M4 | ●●● |
-| Math: LaTeX subset → OMML (inline & display) | M3 | ●●● |
-| Equation numbering & references | M3 | ●● |
+| Math: LaTeX subset → OMML (inline & display) | M3 ✓ | ●●● |
+| Equation numbering & references | M3 ✓ | ●● |
 | Code blocks with syntax highlighting | M3 | ●● |
 | Native charts (chart parts + embedded xlsx) | Later | ●●● |
 | Charts as images (matplotlib, via API) | M3 | ● |

@@ -22,6 +22,7 @@ PREFIXES: dict[str, str] = {
     "a": "http://schemas.openxmlformats.org/drawingml/2006/main",
     "wp": "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing",
     "pic": "http://schemas.openxmlformats.org/drawingml/2006/picture",
+    "m": "http://schemas.openxmlformats.org/officeDocument/2006/math",
     "cp": NS.CP,
     "dc": NS.DC,
     "dcterms": NS.DCTERMS,
