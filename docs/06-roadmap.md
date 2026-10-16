@@ -83,7 +83,8 @@ Steps, in order:
 2. [x] **Code highlighting** (Pygments): token runs in generated, themeable character styles (`Code Keyword`, …),
    `line-numbers`, captions as now.
 3. [x] **Citations and bibliography**: BibTeX or CSL-JSON data, CSL styles through citeproc-py, `\cite`/`\textcite`
-   linked to entries, `\printbibliography` in a `Bibliography` style.
+   linked to entries, `\printbibliography` in a `Bibliography` style. Bundled styles: Harvard, APA, IEEE,
+   Chicago author-date.
 4. **Index**: `\ix{term!sub}` as `XE` fields, `\index[columns=2]` as an `INDEX` field with pre-rendered entries.
 5. **Images and embedding**: SVG (with a PNG fallback, as Word stores it), `\embed-docx` (altChunk).
 6. **Tooling**: `wordgenx fmt` (CST-based formatter), `--emit-ir` (JSON).

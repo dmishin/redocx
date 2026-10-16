@@ -3,6 +3,12 @@
 citeproc-py does the CSL work; this module loads the data (BibTeX or CSL-JSON) and the
 style, renders every citation once all of them are known (so numbering and disambiguation
 are right), and turns citeproc's HTML-ish output into Word runs.
+
+citeproc-py gets four things wrong that the bundled styles rely on; they are worked around
+here, for any style: the bibliography comes from its own engine (otherwise a citation's
+locator replaces the entry's page range), year suffixes are added (Smith 2020a, 2020b),
+punctuation moves inside closing quotes where the locale says so, and `initialize="false"`
+on a name is honoured.
 """
 
 # pyright: basic
@@ -15,7 +21,7 @@ import re
 from dataclasses import dataclass, field
 from html.parser import HTMLParser
 from pathlib import Path
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import citeproc
 from citeproc import (
@@ -26,6 +32,7 @@ from citeproc import (
     Locator,
     formatter,
 )
+from citeproc.model import Name
 from citeproc.source import BibliographySource
 from citeproc.source.bibtex import BibTeX
 from citeproc.source.json import CiteProcJSON
@@ -34,11 +41,16 @@ from wordgenx import ir
 from wordgenx.props import EMPTY_RUN, PropertySet, Target
 
 DATA = Path(os.path.dirname(citeproc.__file__)) / "data"
+STYLES = Path(__file__).parent / "data" / "csl"
 BUNDLED_STYLES = {
-    "harvard": "harvard-cite-them-right",
-    "harvard-cite-them-right": "harvard-cite-them-right",
+    "harvard": DATA / "styles" / "harvard-cite-them-right.csl",
+    "harvard-cite-them-right": DATA / "styles" / "harvard-cite-them-right.csl",
+    "apa": STYLES / "apa.csl",
+    "ieee": STYLES / "ieee.csl",
+    "chicago": STYLES / "chicago-author-date.csl",
+    "chicago-author-date": STYLES / "chicago-author-date.csl",
 }
-"""Styles that ship with citeproc-py; any other is a path to a .csl file."""
+"""Styles wordgenx ships (data/csl/README.md); any other is a path to a .csl file."""
 DEFAULT_STYLE = "harvard"
 
 LOCATORS = {
@@ -48,6 +60,25 @@ LOCATORS = {
 }  # fmt: skip
 """CSL locator labels -> the abbreviation narrative citations use."""
 URL_RE = re.compile(r"https?://[^\s<>\"]+[^\s<>\".,;:)]")
+QUOTED_RE = re.compile(r"((?:</[a-z]+>)*[\u201d\u2019])([.,])")
+"""A closing quote (after any closing tags) followed by a period or comma."""
+
+
+def _suffix(i: int) -> str:
+    """a, b, ..., z, aa, ab, ..."""
+    return _suffix(i // 26 - 1) + chr(ord("a") + i % 26) if i >= 26 else chr(ord("a") + i)
+
+
+def _get_option(self: Name, name: str, context: object = None, sort_options: object = None):
+    """Name.get_option, with `initialize="false"` meaning: do not initialize. citeproc-py
+    ignores the attribute and initializes as soon as an `initialize-with` is inherited."""
+    if name == "initialize-with" and self.get("initialize", "true").lower() == "false":
+        return None
+    return _name_option(self, name, context, sort_options)
+
+
+_name_option = Name.get_option
+Name.get_option = _get_option
 
 
 class BibliographyError(ValueError):
@@ -96,7 +127,7 @@ def load_sources(paths: list[Path]) -> BibliographySource:
 
 def load_style(name: str, base_dir: Path, language: str | None) -> CitationStylesStyle:
     if name in BUNDLED_STYLES:
-        path = DATA / "styles" / f"{BUNDLED_STYLES[name]}.csl"
+        path = BUNDLED_STYLES[name]
     else:
         path = base_dir / name
         if path.suffix != ".csl":
@@ -141,26 +172,65 @@ class Bibliography:
         """The text of every citation (in the order they were added), as citeproc HTML."""
         if self._rendered is not None:
             return self._rendered
-        engine = CitationStylesBibliography(self.style, self.source, formatter.html)
+        keys = list(dict.fromkeys(key.lower() for cite in self.cites for key in cite.keys))
+        if include_all:
+            keys += sorted(key for key in self.source if key not in keys)
+        self._add_year_suffixes(keys)
         citations = [self._citation(cite) for cite in self.cites]
+        rendered: list[str] = []
+        engine = CitationStylesBibliography(self.style, self.source, formatter.html)
         for citation in citations:
             engine.register(citation)
-        if include_all:
-            for key in sorted(self.source):
-                engine.register(Citation([CitationItem(key)]))
+        for key in keys:  # the uncited ones too: a sorted numeric style numbers them all
+            engine.register(Citation([CitationItem(key)]))
         engine.sort()
-        rendered: list[str] = []
         for cite, citation in zip(self.cites, citations, strict=True):
-            text = str(engine.cite(citation, lambda item: None))
+            text = self._quotes(str(engine.cite(citation, lambda item: None)))
             rendered.append(self._narrative(cite, text) if cite.narrative else text)
-        self._rendered, self._engine = rendered, engine
+        # The entries come from an engine that saw no locators: citeproc-py renders a
+        # citation's locator in place of the entry's own page range.
+        entries = CitationStylesBibliography(self.style, self.source, formatter.html)
+        for key in keys:
+            entries.register(Citation([CitationItem(key)]))
+        entries.sort()
+        self._rendered, self._engine = rendered, entries
         return rendered
 
     def entries(self) -> list[tuple[str, str]]:
         """(key, citeproc HTML) of the bibliography, in the style's order."""
         assert self._engine is not None, "render() first"
         keys = [str(k) for k in self._engine.keys]
-        return list(zip(keys, (str(item) for item in self._engine.bibliography()), strict=False))
+        items = (self._quotes(str(item)) for item in self._engine.bibliography())
+        return list(zip(keys, items, strict=False))
+
+    def _add_year_suffixes(self, keys: list[str]) -> None:
+        """Smith 2020a, 2020b: entries whose citations would read the same get a suffix,
+        in title order, when the style asks for that (citeproc-py does not do it)."""
+        root: Any = self.style.root  # citeproc's element classes, untyped
+        option = root.citation.get("disambiguate-add-year-suffix", "false")
+        if option.lower() != "true":
+            return
+        engine = CitationStylesBibliography(self.style, self.source, formatter.html)
+        citations = {key: Citation([CitationItem(key)]) for key in keys}
+        for citation in citations.values():
+            engine.register(citation)
+        same: dict[str, list[str]] = {}
+        for key, citation in citations.items():
+            same.setdefault(str(engine.cite(citation, lambda item: None)), []).append(key)
+        for group in same.values():
+            if len(group) < 2:
+                continue
+            group.sort(key=lambda key: str(self.source[key].get("title", key)).lower())
+            for i, key in enumerate(group):
+                self.source[key]["year_suffix"] = _suffix(i)
+
+    def _quotes(self, html: str) -> str:
+        """American punctuation: a period or comma after a closing quote moves inside it, as
+        the locale's punctuation-in-quote says (citeproc-py leaves it outside)."""
+        root: Any = self.style.root
+        if root.get_locale_option("punctuation-in-quote").lower() != "true":
+            return html
+        return QUOTED_RE.sub(r"\2\1", html)
 
     def _citation(self, cite: Cite) -> Citation:
         items = []
@@ -197,7 +267,9 @@ class Bibliography:
                 parts.append(f"{who} {text}")
                 break
             issued = reference.get("issued")
-            year = str(getattr(issued, "year", "") or "n.d.")
+            year = str(getattr(issued, "year", "") or "n.d.") + str(
+                reference.get("year_suffix", "")
+            )
             extra = ""
             if cite.locator is not None and key == cite.keys[-1]:
                 label, value = cite.locator
