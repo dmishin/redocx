@@ -11,6 +11,7 @@ CASES = [
     ("\\x[a=1", Code.UNCLOSED_OPTIONS, "["),
     ("\\x[a b]", Code.INVALID_OPTION, "b"),
     ("\\x[=1]", Code.INVALID_OPTION, "="),
+    ("\\x[{k}=1]", Code.INVALID_OPTION, "{k}"),
     ('\\x[s="open]', Code.UNCLOSED_STRING, '"'),
     ("a `tick", Code.UNCLOSED_CODE_SPAN, "`"),
     ("```\ncode", Code.UNCLOSED_CODE_FENCE, "```"),

@@ -3,7 +3,7 @@
 import time
 
 import pytest
-from hypothesis import given, settings
+from hypothesis import example, given, settings
 from hypothesis import strategies as st
 
 from wordgenx.syntax import ast, parse
@@ -59,6 +59,7 @@ def _check_spans(node: ast.AstNode, length: int) -> None:
 
 @settings(max_examples=600, deadline=None)
 @given(markup)
+@example("\\p[\\define{x}=")  # a command before `=`, where an option name belongs
 def test_parser_is_lossless_and_total(text: str) -> None:
     result = parse(text)
     assert result.cst.text == text

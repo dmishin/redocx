@@ -467,7 +467,8 @@ def _option_items(node: CstNode) -> tuple[Option, ...]:
             continue
         has_key = len(parts) >= 2 and isinstance(parts[1], Token) and parts[1].kind is K.EQUALS
         if has_key:
-            assert isinstance(first, Token)
+            if not (isinstance(first, Token) and first.kind is K.BARE):
+                continue  # a quoted or braced name, such as {x}=1; already reported
             if len(parts) < 3:
                 continue  # "key=" without a value; already reported
             items.append(Option(first.text, _value(parts[2]), span=child.span))
