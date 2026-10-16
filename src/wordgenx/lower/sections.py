@@ -77,12 +77,31 @@ def section(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
             page_number_start=numbers.number("start", s.page_number_start),
         )
     if (columns := args.record("columns")) is not None:
+        widths = columns.items("widths", Length)
+        count = columns.number("count", len(widths) or s.columns) or s.columns
+        if widths and count != len(widths):
+            lw.report(
+                Code.INVALID_ARGUMENT,
+                f"{count} columns but {len(widths)} widths",
+                columns.span_of("widths"),
+                help="give one width per column, or leave out count",
+            )
+            widths = ()
         s = replace(
             s,
-            columns=columns.number("count", s.columns) or s.columns,
+            columns=count,
             column_gap=columns.get("gap", Length, s.column_gap) or s.column_gap,
             column_separator=s.column_separator or columns.flag("separator"),
+            column_widths=widths,
         )
+        total = sum(w.emu for w in widths) + s.column_gap.emu * (len(widths) - 1)
+        if widths and total > (page.width.emu - page.margin_left.emu - page.margin_right.emu):
+            lw.warn(
+                Code.INVALID_ARGUMENT,
+                "the columns and gaps are wider than the text",
+                columns.span_of("widths"),
+                help="Word narrows them to fit",
+            )
     if (valign := args.text("valign")) is not None:
         s = replace(s, vertical_align=valign)
     if (borders := args.get("borders", PageBorderSpec)) is not None:

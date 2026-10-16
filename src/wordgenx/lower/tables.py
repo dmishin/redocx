@@ -11,6 +11,7 @@ from wordgenx.commands.bind import Args
 from wordgenx.commands.builtin import COMMANDS
 from wordgenx.commands.types import ColumnWidth, Fields, RowHeight
 from wordgenx.lower.common import BlockHandler, Format, is_blank, markup
+from wordgenx.lower.media import floating
 from wordgenx.props import EMPTY_CELL, EMPTY_TABLE, PropertySet, Target
 from wordgenx.syntax import ast
 from wordgenx.syntax.diagnostics import Code
@@ -39,6 +40,8 @@ class TableSpec:
     """Paragraph alignment per column (left, center, right, justify, decimal)."""
     props: PropertySet = EMPTY_TABLE
     look: frozenset[str] | None = None
+    anchor: ir.Anchor | None = None
+    anchor_span: Span | None = None
     decimal_tabs: dict[int, Length] = field(default_factory=lambda: {})
     """Column -> decimal tab position given as (decimal, tab=...)."""
 
@@ -87,6 +90,27 @@ def table(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
     return [made] if made is not None else []
 
 
+def _table_anchor(lw: Lowering, anchor: ir.Anchor, span: Span) -> ir.Anchor | None:
+    """A floating table's position; what Word cannot do with a table is reported."""
+    if anchor.wrap != "square" or anchor.wrap_side != "both":
+        lw.report(
+            Code.INVALID_ARGUMENT,
+            "a floating table always has text around it",
+            span,
+            help="leave out wrap and wrap-side; use a text box for other wrapping",
+        )
+        return None
+    if anchor.x_from not in ir.TABLE_H_ANCHORS or anchor.y_from not in ir.TABLE_V_ANCHORS:
+        lw.report(
+            Code.INVALID_ARGUMENT,
+            "a floating table is placed against the text, the margin or the page",
+            span,
+            help="x=(..., from=column|margin|page), y=(..., from=paragraph|margin|page)",
+        )
+        return None
+    return anchor
+
+
 def _misplaced(lw: Lowering, span: Span) -> None:
     lw.report(
         Code.MISPLACED,
@@ -105,6 +129,8 @@ def _table_spec(lw: Lowering, args: Args) -> TableSpec:
     spec.header_rows = args.number("header-rows", 0) or 0
     spec.widths = args.items("widths", ColumnWidth)
     spec.align = args.text("align")
+    spec.anchor = floating(args)
+    spec.anchor_span = args.span
     for index, column in enumerate(args.items("columns", Fields)):
         alignment = column.text("align") or "left"
         if (tab := column.get("tab", Length)) is not None:
@@ -253,7 +279,11 @@ def _make_table(lw: Lowering, spec: TableSpec, rows: list[RowSpec], span: Span) 
         ir_rows.append(ir.Row(tuple(cells), header, height, exact, row.cant_split))
     try:
         look = ir.DEFAULT_TABLE_LOOK if spec.look is None else spec.look
-        return ir.Table(tuple(ir_rows), widths, spec.style, spec.align, spec.props, look)
+        if spec.anchor is not None:
+            spec.anchor = _table_anchor(lw, spec.anchor, spec.anchor_span or span)
+        return ir.Table(
+            tuple(ir_rows), widths, spec.style, spec.align, spec.props, look, spec.anchor
+        )
     except ValueError as e:
         lw.report(Code.INVALID_ARGUMENT, str(e), span, help="check colspan and rowspan")
         return None

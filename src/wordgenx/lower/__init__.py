@@ -15,6 +15,7 @@ from wordgenx.lower.index import expand as expand_index
 from wordgenx.lower.lowering import Located, Lowering, StyleUse
 from wordgenx.lower.preamble import apply_template
 from wordgenx.lower.references import report_to, resolve
+from wordgenx.lower.text import size_drop_caps
 from wordgenx.lower.watermarks import apply_watermarks
 from wordgenx.ooxml.parts.numbering import complete_levels
 from wordgenx.ooxml.style_names import style_id
@@ -196,6 +197,9 @@ def lower(
     assert isinstance(final, ir.SectionBreak)
     resolved_body, resolved_section = resolved_all[:-1], final.section
     resolved_body, index_styles = expand_index(resolved_body)
+    resolved_body = size_drop_caps(
+        resolved_body, styles, compiled.default_run, compiled.default_paragraph
+    )
     resolved_body, resolved_section, header_made = apply_watermarks(
         resolved_body,
         resolved_section,

@@ -135,7 +135,7 @@ def image(lw: Lowering, command: ast.Command, args: Args, fmt: Format) -> list[P
             Length(natural[0].emu * (100_000 - crop.left - crop.right) // 100_000),
             Length(natural[1].emu * (100_000 - crop.top - crop.bottom) // 100_000),
         )
-    anchor = _anchor(args)
+    anchor = floating(args)
     if anchor is not None and lw.figure is not None:
         lw.report(
             Code.INVALID_ARGUMENT,
@@ -205,7 +205,7 @@ def textbox(lw: Lowering, command: ast.Command, args: Args, fmt: Format) -> list
             (top, bottom, left, right),
             args.text("valign", "top") or "top",
             args.number("rotate", 0) or 0,
-            _anchor(args),
+            floating(args),
             args.text("name", "") or "",
         )
     except ValueError as e:
@@ -215,7 +215,7 @@ def textbox(lw: Lowering, command: ast.Command, args: Args, fmt: Format) -> list
     return [Piece("", fmt, "textbox", textbox=box)]
 
 
-def _anchor(args: Args) -> ir.Anchor | None:
+def floating(args: Args) -> ir.Anchor | None:
     """A floating picture's placement, when `float`, `wrap`, `x` or `y` asks for one."""
     if (
         not any(key in args for key in ("float", "wrap", "x", "y"))

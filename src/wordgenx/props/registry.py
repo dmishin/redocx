@@ -446,6 +446,14 @@ _SPECS: tuple[PropSpec, ...] = (
         "size", R, _font_size, _emit_size, "Font size (whole or half points).", "length, e.g. 11pt"
     ),
     PropSpec(
+        "position",
+        R,
+        _length,
+        lambda value, ctx: [("position", {"val": str(value.in_half_points)})],  # type: ignore[attr-defined]
+        "Raise (positive) or lower (negative) the text from the baseline.",
+        _LEN,
+    ),
+    PropSpec(
         "highlight",
         R,
         _choice(_HIGHLIGHTS),

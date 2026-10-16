@@ -189,6 +189,8 @@ _command(
 _command(
     "p", BLOCK, "A paragraph with a style or direct paragraph formatting.",
     _o("style", TEXT, "a paragraph style"), ID,
+    _o("drop-cap", Toggle(Record({"lines": Int(2, 10), "in-margin": FLAG}, shorthand="lines")),
+       "a large first letter over the first lines"),
     props=Target.PARAGRAPH, body_required=True,
 )  # fmt: skip
 _command(
@@ -236,7 +238,12 @@ _command(
     _o(
         "columns",
         Record(
-            {"count": Int(1, 45), "gap": LengthValue(nonnegative=True), "separator": FLAG},
+            {
+                "count": Int(1, 45),
+                "gap": LengthValue(nonnegative=True),
+                "separator": FLAG,
+                "widths": ListOf(LengthValue(nonnegative=True)),
+            },
             shorthand="count",
         ),
     ),
@@ -270,6 +277,19 @@ for _family in ("header", "footer"):
 
 # --- tables (design §3.8) ----------------------------------------------------------------
 
+FLOATING = (
+    _o("float", FLAG, "positioned on the page, with text around it"),
+    _o("wrap", Choice.of(*ir.WRAPS), "how text flows around it (implies float)"),
+    _o("wrap-side", Choice.of(*ir.WRAP_SIDES), "where text goes beside it"),
+    _o("x", Record({"at": PositionValue(ir.H_ALIGNS), "from": Choice.of(*ir.H_ANCHORS)},
+                   shorthand="at"), "the horizontal position (implies float)"),
+    _o("y", Record({"at": PositionValue(ir.V_ALIGNS), "from": Choice.of(*ir.V_ANCHORS)},
+                   shorthand="at"), "the vertical position (implies float)"),
+    _o("distance", Record({side: LengthValue(nonnegative=True)
+                           for side in ("all", "top", "bottom", "left", "right")},
+                          shorthand="all"), "space between it and the text"),
+)  # fmt: skip
+"""Options of pictures, text boxes and tables that float (design §3.16)."""
 _command(
     "table", BLOCK, "A table of pipe rows and/or \\row commands.",
     _o("style", TEXT, "a table style, or none"),
@@ -287,6 +307,7 @@ _command(
         "paragraph alignment per column",
     ),
     _o("look", FlagSet(ir.TABLE_LOOK, {"first-row": "header-row"}), "table-style parts to apply"),
+    *FLOATING,
     props=Target.TABLE, body_required=True,
 )  # fmt: skip
 _command(
@@ -406,19 +427,6 @@ _command(
     "url", INLINE, "A hyperlink showing its address.",
     body=STRING, body_required=True, body_doc="an address",
 )  # fmt: skip
-FLOATING = (
-    _o("float", FLAG, "positioned on the page, with text around it"),
-    _o("wrap", Choice.of(*ir.WRAPS), "how text flows around it (implies float)"),
-    _o("wrap-side", Choice.of(*ir.WRAP_SIDES), "where text goes beside it"),
-    _o("x", Record({"at": PositionValue(ir.H_ALIGNS), "from": Choice.of(*ir.H_ANCHORS)},
-                   shorthand="at"), "the horizontal position (implies float)"),
-    _o("y", Record({"at": PositionValue(ir.V_ALIGNS), "from": Choice.of(*ir.V_ANCHORS)},
-                   shorthand="at"), "the vertical position (implies float)"),
-    _o("distance", Record({side: LengthValue(nonnegative=True)
-                           for side in ("all", "top", "bottom", "left", "right")},
-                          shorthand="all"), "space between it and the text"),
-)  # fmt: skip
-"""Options of pictures and text boxes that float (design §3.16)."""
 _command(
     "image", INLINE, "A picture (PNG, JPEG, GIF, BMP or SVG), inline or floating.",
     _o("width", SizeValue()), _o("height", LengthValue(nonnegative=True)),

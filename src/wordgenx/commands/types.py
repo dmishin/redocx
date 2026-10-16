@@ -404,6 +404,8 @@ class Toggle(ValueType):
     def parse(self, value: ast.Value) -> Fields | None:
         if isinstance(value, ast.TupleValue):
             return self.record.parse(value)
+        if self.record.shorthand is not None and text_of(value) not in BOOL_WORDS:
+            return self.record.parse(value)  # drop-cap=4: the shorthand field
         on = Bool().parse(value)
         return Fields({}, {}, value.span) if on else None
 

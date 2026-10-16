@@ -211,6 +211,8 @@ Style sheets come from `.wgxs` files loaded with `\use{file.wgxs}`, or from `\st
 
 Paragraph options and style-sheet properties use the *same vocabulary*.
 
+*Drop caps* (M4): `\p[drop-cap]{…}` sets the first letter large over the first three lines; `drop-cap=4` over four (2–10), and `drop-cap=(lines=3, in-margin)` puts it in the margin. As in Word, the letter becomes a framed paragraph of its own (`w:framePr w:dropCap`) before the rest. Its size, lowering and exact line height follow the body text of the paragraph's style the way Word computes them (they match what Word writes for an 11pt body). The paragraph must start with text. General text frames are not supported; text boxes (§3.16) do their job.
+
 == Headings, lists and numbered paragraphs
 
 ```wgx
@@ -303,6 +305,8 @@ Cells can hold any block content (paragraphs, lists, nested tables) using the bl
 
 Supported: column widths (absolute, \%, fr, auto), horizontal and vertical merge, per-cell borders and shading, cell margins, vertical alignment, text direction, row height, repeat header rows, "can't split row", table alignment and indent, floating tables, nested tables, and table-style conditional formatting flags (`look=(first-row, last-row, banded-rows)`).
 
+*Floating tables* (M4) take the options of floating pictures (§3.16): `\table[x=(right, from=margin), y=1cm, distance=(left=0.5cm)]{…}` (or `float`) writes `w:tblpPr`, and text flows around the table. Word places a table against the text (`from=column` or `paragraph`, the defaults), the margin or the page, and only with text on both sides, so `wrap`, `wrap-side` and the other anchors are errors for tables.
+
 == Captions (F-5)
 
 As in Word, *a caption is a paragraph*: style `Caption`, containing a label and a `SEQ` field (`Figure {SEQ Figure \* ARABIC}`). *The caption owns the label.* A cross-reference to a figure or table points at a bookmark around the caption, as Word's Insert Cross-reference does.
@@ -337,7 +341,9 @@ As in Word, *a caption is a paragraph*: style `Caption`, containing a label and 
 
 Options: size (`A4`, `Letter`, or `(w, h)`), orientation, margins (including gutter; `inside=`/`outside=` or the flag `mirror` turn on Word's mirror margins, a document-wide setting), columns (equal widths, gap, separator), break type (next-page, continuous, even, odd), vertical alignment (`valign=top|center|bottom|justify`), page numbers (`page-numbers=(format=lower-roman, start=1)`), line numbering (`line-numbers=on` or `(count-by=5, start=1, distance=0.5cm, restart=each-page|each-section|continuous)`), title page (different first page), and whether headers and footers link to the previous section (`link-headers=false`).
 
-Page borders: `borders=(single, 1.5pt, theme.accent1)` puts the same line on all four sides; `borders=(all=…, top=…, left=none, from=page|text, pages=all|first|not-first)` sets sides, what their distance is measured from (the page edge, the default, or the text) and which pages of the section have them. A side's `space=` is its distance, at most 31pt; without it Word's defaults apply (24pt from the page edge, 4pt from the text). A section without `borders=` keeps the previous section's; `borders=` replaces them, and `borders=none` removes them. Columns of different widths and text direction come later (M4).
+Page borders: `borders=(single, 1.5pt, theme.accent1)` puts the same line on all four sides; `borders=(all=…, top=…, left=none, from=page|text, pages=all|first|not-first)` sets sides, what their distance is measured from (the page edge, the default, or the text) and which pages of the section have them. A side's `space=` is its distance, at most 31pt; without it Word's defaults apply (24pt from the page edge, 4pt from the text). A section without `borders=` keeps the previous section's; `borders=` replaces them, and `borders=none` removes them. Text direction comes later (M4).
+
+Columns of different widths (M4): `columns=(widths=(10cm, 4.5cm), gap=1cm, separator)` gives one width per column (the count follows from them) with the gap between each pair. Widths and gaps wider than the text are a warning; Word narrows them.
 
 == References, labels, notes
 

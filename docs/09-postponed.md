@@ -35,3 +35,4 @@ feature is documented. They are smaller than 9.1 and can be picked up whenever a
 | Themes | East Asian and complex-script theme fonts; effect and fill styles; loading a `.thmx` | [§3.5](03-language-design.md) |
 | Text boxes | A VML fallback for Word 2007; linked text boxes (text flowing from one to the next) | [§3.16](03-language-design.md) |
 | Watermarks | Keeping a template's own headers in the first section when it has a watermark | [§3.16](03-language-design.md) |
+| Frames | General text frames (`w:framePr` other than drop caps): text boxes do their job | [§3.6](03-language-design.md) |

@@ -4,6 +4,7 @@ and raw XML (design §3.4, §3.6-3.7, §3.20)."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from wordgenx import ir
@@ -23,7 +24,7 @@ from wordgenx.ooxml.xml import Element, parse_fragment
 from wordgenx.props import EMPTY_PARAGRAPH, PropertySet, Target
 from wordgenx.syntax import ast
 from wordgenx.syntax.diagnostics import Code
-from wordgenx.values import InvalidValueError, TabStop
+from wordgenx.values import InvalidValueError, Length, LineSpacing, TabStop
 
 if TYPE_CHECKING:
     from wordgenx.lower.lowering import Lowering
@@ -132,7 +133,107 @@ def p(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
         content = marked(
             lw.register_label(label, args.span_of("id"), "paragraph").bookmark, content
         )
-    return [ir.Paragraph(content, style, args.props or EMPTY_PARAGRAPH)]
+    paragraph = ir.Paragraph(content, style, args.props or EMPTY_PARAGRAPH)
+    if (drop := args.record("drop-cap")) is not None:
+        split = drop_cap(paragraph, drop.number("lines", 3) or 3, drop.flag("in-margin"))
+        if split is None:
+            lw.report(
+                Code.INVALID_ARGUMENT,
+                "a drop cap needs the paragraph to start with a letter",
+                args.span_of("drop-cap"),
+            )
+            return [paragraph]
+        return list(split)
+    return [paragraph]
+
+
+# Word's drop caps, measured from what Word writes for an 11pt single-spaced body: the
+# frame's exact line height is 311 twips per line, the letter is 2.227 x lines - 1.09
+# times the body size, lowered by 6 half-points per line less 10 (all scaled by size).
+_TWIPS_PER_LINE_AT_11PT = Decimal(311)
+_DEFAULT_BODY_SIZE = Length.pt(11)
+
+
+def size_drop_caps(
+    blocks: tuple[ir.Block, ...],
+    styles: dict[str, ir.Style],
+    default_run: PropertySet,
+    default_paragraph: PropertySet,
+) -> tuple[ir.Block, ...]:
+    """Size each drop cap from the body text it stands beside, as Word does."""
+    by_name = {s.name: s for s in styles.values()}
+
+    def lookup(style: str | None, target: str, key: str) -> object:
+        seen: set[str] = set()
+        while style is not None and style not in seen and style in by_name:
+            seen.add(style)
+            entry = by_name[style]
+            props = entry.run if target == "run" else entry.paragraph
+            if key in props:
+                return props[key]
+            style = entry.based_on
+        defaults = default_run if target == "run" else default_paragraph
+        return defaults.get(key)
+
+    def size(paragraph: ir.Paragraph) -> ir.Paragraph:
+        drop = paragraph.drop_cap
+        if drop is None:
+            return paragraph
+        body = lookup(paragraph.style, "run", "size")
+        body_size = body if isinstance(body, Length) else _DEFAULT_BODY_SIZE
+        points = Decimal(body_size.emu) / 12700
+        spacing = paragraph.props.get("line-spacing") or lookup(
+            paragraph.style, "paragraph", "line-spacing"
+        )
+        line = _TWIPS_PER_LINE_AT_11PT * points / 11
+        if isinstance(spacing, LineSpacing):
+            if spacing.multiple is not None:
+                line *= spacing.multiple
+            elif spacing.height is not None:
+                line = Decimal(spacing.height.in_twips)
+        frame_line = Length.twips(round(line * drop.lines))
+        letter = Length.pt(
+            (points * (Decimal("2.227") * drop.lines - Decimal("1.09")) * 2).to_integral() / 2
+        )
+        lowered = Length.pt(points / 11 * (10 - 6 * drop.lines) / 2)
+        run_props = {"size": letter, "position": lowered}
+        content = tuple(
+            replace(item, props=item.props.merged(PropertySet(Target.RUN, run_props)))
+            if isinstance(item, ir.Run)
+            else item
+            for item in paragraph.content
+        )
+        exact = PropertySet(Target.PARAGRAPH, {"line-spacing": LineSpacing.exact(frame_line)})
+        return replace(paragraph, content=content, props=paragraph.props.merged(exact))
+
+    return ir.map_paragraphs(blocks, size)
+
+
+def drop_cap(
+    paragraph: ir.Paragraph, lines: int, in_margin: bool
+) -> tuple[ir.Paragraph, ir.Paragraph] | None:
+    """The paragraph's first letter as a drop-cap paragraph, and the rest. The letter is
+    sized when the styles are known (`size_drop_caps`)."""
+    content = list(paragraph.content)
+    for i, item in enumerate(content):
+        if isinstance(item, ir.BookmarkStart | ir.BookmarkEnd):
+            continue
+        if not isinstance(item, ir.Run) or not item.text.strip():
+            return None
+        text = item.text.lstrip()
+        letter, rest = text[0], text[1:]
+        content[i] = replace(item, text=rest)
+        if not rest:
+            del content[i]
+        props = PropertySet(Target.PARAGRAPH, {"keep-with-next": True, "space-after": Length(0)})
+        frame = ir.Paragraph(
+            (ir.Run(letter, item.props, item.style),),
+            paragraph.style,
+            paragraph.props.merged(props),
+            drop_cap=ir.DropCap(lines, in_margin),
+        )
+        return frame, replace(paragraph, content=tuple(content))
+    return None
 
 
 def align(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:

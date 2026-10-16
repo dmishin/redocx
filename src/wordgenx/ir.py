@@ -621,6 +621,16 @@ class ListItemRef:
 
 
 @dataclass(frozen=True)
+class DropCap:
+    """A paragraph that is a drop cap: Word's frame (w:framePr) beside the next paragraph."""
+
+    lines: int = 3
+    """How many lines of the next paragraph it spans."""
+    in_margin: bool = False
+    """In the margin rather than in the text."""
+
+
+@dataclass(frozen=True)
 class Paragraph:
     content: tuple[Inline, ...] = ()
     style: str | None = None
@@ -628,6 +638,7 @@ class Paragraph:
     list_item: ListItemRef | None = None
     unnumbered: bool = False
     """Suppress numbering that the paragraph style would apply (``=*`` headings)."""
+    drop_cap: DropCap | None = None
 
     def runs(self) -> tuple[Run, ...]:
         """All runs, including those inside hyperlinks."""
@@ -696,6 +707,11 @@ class Row:
     cant_split: bool = False
 
 
+TABLE_H_ANCHORS = {"column": "text", "margin": "margin", "page": "page"}
+"""What a floating table's x can be measured from -> w:tblpPr/@w:horzAnchor."""
+TABLE_V_ANCHORS = {"paragraph": "text", "margin": "margin", "page": "page"}
+
+
 @dataclass(frozen=True)
 class Table:
     rows: tuple[Row, ...]
@@ -708,8 +724,19 @@ class Table:
     """Borders and cell margins that override the table style (registry target TABLE)."""
     look: frozenset[str] = DEFAULT_TABLE_LOOK
     """Which parts of the table style apply (values of TABLE_LOOK)."""
+    anchor: Anchor | None = None
+    """A floating table (w:tblpPr): text flows around it, so `wrap` is always square, and
+    it is placed against the text (column, paragraph), the margin or the page."""
 
     def __post_init__(self) -> None:
+        if self.anchor is not None and (
+            self.anchor.wrap != "square"
+            or self.anchor.x_from not in TABLE_H_ANCHORS
+            or self.anchor.y_from not in TABLE_V_ANCHORS
+        ):
+            raise ValueError(
+                "a table floats with text around it, placed against the text, margin or page"
+            )
         if not self.widths or any(w.emu <= 0 for w in self.widths):
             raise ValueError("a table needs positive column widths")
         if self.align not in (None, "left", "center", "right"):
@@ -782,6 +809,9 @@ class Section:
     columns: int = 1
     column_gap: Length = _DEFAULT_COLUMN_GAP
     column_separator: bool = False
+    column_widths: tuple[Length, ...] = ()
+    """Columns of different widths (one per column, `column_gap` between them); empty for
+    equal columns."""
     line_numbers: LineNumbers | None = None
     vertical_align: str | None = None
     """top | center | bottom | justify: where the text sits between the top and bottom margins."""
@@ -802,6 +832,8 @@ class Section:
                 raise ValueError(f"header/footer kind must be one of {', '.join(HEADER_KINDS)}")
         if not 1 <= self.columns <= 45:
             raise ValueError("columns must be 1-45")
+        if self.column_widths and len(self.column_widths) != self.columns:
+            raise ValueError("give one width per column")
 
 
 VERTICAL_ALIGNMENTS = {"top": "top", "center": "center", "bottom": "bottom", "justify": "both"}

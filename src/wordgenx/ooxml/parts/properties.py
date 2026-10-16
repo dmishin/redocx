@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from wordgenx.ooxml.schema_order import NUM_PR, PPR, RPR, TBL_PR, TC_PR, ordered
 from wordgenx.ooxml.xml import E, Element, parse_fragment
 from wordgenx.props import EmitContext, PropertySet, Target
@@ -44,13 +46,16 @@ def paragraph_properties(
     *,
     style_id: str | None = None,
     numbering: tuple[int, int] | None = None,
+    extra: Mapping[str, Element] | None = None,
 ) -> Element | None:
     """A w:pPr element, or None when there is nothing to say.
 
-    `numbering` is (numId, 0-based level) for numbered paragraphs and styles.
+    `numbering` is (numId, 0-based level) for numbered paragraphs and styles; `extra` adds
+    elements by name (a drop cap's w:framePr).
     """
     assert props.target is Target.PARAGRAPH
     children = _children(props, ctx)
+    children.update(extra or {})
     if style_id is not None:
         children["pStyle"] = E("w:pStyle", {"w:val": style_id})
     if numbering is not None:

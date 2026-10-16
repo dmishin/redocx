@@ -114,7 +114,8 @@ Steps, in order (the small ones first; the drawing steps share one positioning m
    in front), positioned against the page, margin, column or paragraph; crop, rotation and a border on any image.
 4. [x] **Text boxes and watermarks**: `\textbox` (a `wps` shape with markup inside, inline or floating, with fill and
    border), `\watermark` (text or a picture behind every page of a section, in the header).
-5. **Frames and floating tables**: drop caps and text frames (`w:framePr`), floating tables (`w:tblpPr`), columns
+5. [x] **Frames and floating tables**: drop caps (`w:framePr`; other text frames are postponed), floating tables
+   (`w:tblpPr`), columns
    of different widths.
 6. **Right-to-left and complex scripts**: right-to-left paragraphs, runs and sections, complex-script fonts and
    sizes, the text direction of sections and cells.

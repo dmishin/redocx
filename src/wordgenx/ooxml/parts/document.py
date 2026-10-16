@@ -15,6 +15,8 @@ from wordgenx.ir import (
     PAGE_BORDER_PAGES,
     PAGE_NUMBER_FORMATS,
     SECTION_STARTS,
+    TABLE_H_ANCHORS,
+    TABLE_V_ANCHORS,
     TEXT_BOX_ALIGNMENTS,
     V_ANCHORS,
     VERTICAL_ALIGNMENTS,
@@ -558,9 +560,25 @@ def _paragraph(paragraph: Paragraph, ctx: BodyContext) -> Element:
         numbering = (ctx.list_num_ids[(ref.numbering, ref.instance)], ref.level - 1)
     elif paragraph.unnumbered:
         numbering = (0, 0)  # numId 0 removes numbering inherited from the style
+    extra: dict[str, Element] = {}
+    if (drop := paragraph.drop_cap) is not None:  # as Word writes a drop cap
+        extra["framePr"] = E(
+            "w:framePr",
+            {
+                "w:dropCap": "margin" if drop.in_margin else "drop",
+                "w:lines": str(drop.lines),
+                "w:wrap": "around",
+                "w:vAnchor": "text",
+                "w:hAnchor": "page" if drop.in_margin else "text",
+            },
+        )
+        extra["textAlignment"] = E("w:textAlignment", {"w:val": "baseline"})
+    properties = paragraph_properties(
+        paragraph.props, ctx.emit, style_id=style, numbering=numbering, extra=extra
+    )
     return E(
         "w:p",
-        paragraph_properties(paragraph.props, ctx.emit, style_id=style, numbering=numbering),
+        properties,
         *(element for item in paragraph.content for element in _inline(item, ctx)),
     )
 
@@ -692,11 +710,20 @@ def _section_properties(section: Section, ctx: BodyContext) -> Element:
             numbering["w:start"] = str(section.page_number_start)
         children["pgNumType"] = E("w:pgNumType", numbering)
     columns = {"w:space": str(section.column_gap.in_twips) if section.columns > 1 else "708"}
+    widths: list[Element] = []
     if section.columns > 1:
         columns["w:num"] = str(section.columns)
         if section.column_separator:
             columns["w:sep"] = "1"
-    children["cols"] = E("w:cols", columns)
+    if section.column_widths:  # each column's width, and the gap after it (not the last)
+        columns["w:equalWidth"] = "0"
+        last = len(section.column_widths) - 1
+        for i, width in enumerate(section.column_widths):
+            column = {"w:w": str(width.in_twips)}
+            if i < last:
+                column["w:space"] = str(section.column_gap.in_twips)
+            widths.append(E("w:col", column))
+    children["cols"] = E("w:cols", columns, *widths)
     if section.title_page:
         children["titlePg"] = E("w:titlePg")
     if section.vertical_align is not None:
@@ -739,10 +766,34 @@ def _table(table: Table, ctx: BodyContext) -> Element:
         props = _NO_BORDERS.merged(props)
     if table.align:
         structure["jc"] = E("w:jc", {"w:val": table.align})
+    if table.anchor is not None:
+        structure["tblpPr"] = _table_position(table.anchor)
     grid = E("w:tblGrid", *(E("w:gridCol", {"w:w": str(w)}) for w in widths))
     layout = table_layout(table)
     rows = [_row(row, slots, widths, ctx) for row, slots in zip(table.rows, layout, strict=True)]
     return E("w:tbl", table_properties(props, ctx.emit, structure), grid, *rows)
+
+
+def _table_position(anchor: Anchor) -> Element:
+    """w:tblpPr: a floating table's distance from the text, anchors and position."""
+    top, bottom, left, right = anchor.distance
+    attrs = {
+        "w:leftFromText": str(left.in_twips),
+        "w:rightFromText": str(right.in_twips),
+        "w:topFromText": str(top.in_twips),
+        "w:bottomFromText": str(bottom.in_twips),
+        "w:vertAnchor": TABLE_V_ANCHORS[anchor.y_from],
+        "w:horzAnchor": TABLE_H_ANCHORS[anchor.x_from],
+    }
+    if isinstance(anchor.x, str):
+        attrs["w:tblpXSpec"] = anchor.x
+    else:
+        attrs["w:tblpX"] = str(anchor.x.in_twips)
+    if isinstance(anchor.y, str):
+        attrs["w:tblpYSpec"] = anchor.y
+    else:
+        attrs["w:tblpY"] = str(anchor.y.in_twips)
+    return E("w:tblpPr", attrs)
 
 
 _NO_BORDERS = PropertySet(

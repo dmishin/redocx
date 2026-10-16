@@ -14,7 +14,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Underline (17 styles + color) | `w:u` | M1 | ● |
 | Strike, double strike | `w:strike`, `w:dstrike` | M1 | ● |
 | Caps, small caps | `w:caps`, `w:smallCaps` | M1 | ● |
-| Super/subscript, raised/lowered position | `w:vertAlign`, `w:position` | M1 | ● |
+| Super/subscript, raised/lowered position | `w:vertAlign`, `w:position` | M1 ✓ (`position`: M4) | ● |
 | Color (rgb, theme + tint/shade) | `w:color` | M1 | ● |
 | Highlight, shading | `w:highlight`, `w:shd` | M1 | ● |
 | Character spacing, scale, kerning | `w:spacing`, `w:w`, `w:kern` | M2 ✓ | ● |
@@ -38,7 +38,8 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Tab stops (alignment, leaders, clear) | M2 ✓ | ● |
 | Paragraph borders (incl. between, bar), shading | M2 ✓ | ● |
 | Suppress line numbers, suppress auto-hyphens | M2 ✓ | ● |
-| Drop caps, text frames | M4 | ●● |
+| Drop caps | M4 ✓ | ●● |
+| Text frames (`w:framePr` other than drop caps) | Postponed (text boxes instead) | ●● |
 | Bidi paragraph, text direction | M4 | ●● |
 | East Asian typography (kinsoku, snap to grid, …) | Later / Esc | ● |
 
@@ -74,7 +75,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Page size, orientation, margins | M1 | ● |
 | Multiple sections, break types | M2 ✓ | ●● |
 | Gutter, mirror margins | M2 ✓ | ● |
-| Columns (equal / custom, separator) | M2 (equal widths, separator) ✓; custom widths M4 | ● |
+| Columns (equal / custom, separator) | M2 (equal widths, separator) ✓; custom widths M4 ✓ | ● |
 | Headers/footers: default, first, even; link-to-previous | M2 ✓ | ●● |
 | Page numbering format & restart per section | M2 ✓ | ● |
 | Line numbering | M2 ✓ | ● |
@@ -97,7 +98,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Row height, can't-split, repeat header rows | M2 ✓ | ● |
 | Table alignment, indent, look flags | M2 ✓ | ● |
 | Nested tables | M2 ✓ | ● |
-| Floating tables (tblpPr) | M4 | ●● |
+| Floating tables (tblpPr) | M4 ✓ | ●● |
 | Diagonal cell borders | Later | ● |
 
 ## 5.7 References, fields & generated content
