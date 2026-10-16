@@ -22,3 +22,4 @@ Thumbs.db
 /out/
 ~$*.docx
 examples/**/*.docx
+!examples/media/chapter.docx
