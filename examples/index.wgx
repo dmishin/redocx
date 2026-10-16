@@ -1,0 +1,19 @@
+% Index: \ix marks terms (XE fields), \index collects them (an INDEX field, design 3.12).
+%   wordgenx build examples/index.wgx
+% Word fills in the page numbers when the document opens.
+
+\document[lang=en-GB]
+
+= Traffic flow
+
+Traffic flow\ix{traffic!flow} relates speed\ix{speed}, density\ix{traffic!density} and
+flow\ix[bold]{flow} through the fundamental diagram\ix{fundamental diagram}.
+At high densities a jam\ix{traffic!density!jam} forms.
+
+= Queues
+
+A queue\ix{queueing}\ix[see="queueing"]{waiting lines} grows when arrivals exceed
+the service rate\ix{queueing!service rate}. Ortúzar\ix{Ortúzar, Juan de Dios} and
+Willumsen\ix{Willumsen, Luis G.} discuss both\ix[see-also="queueing"]{traffic}.
+
+\index[headings, title="Index"]

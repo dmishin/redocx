@@ -11,6 +11,7 @@ from wordgenx.highlight import STYLE_NAMES as CODE_STYLES
 from wordgenx.highlight import code_style
 from wordgenx.lower.builtins import BUILTIN_STYLES, DEFAULT_NUMBERING
 from wordgenx.lower.citations import expand as expand_citations
+from wordgenx.lower.index import expand as expand_index
 from wordgenx.lower.lowering import Located, Lowering, StyleUse
 from wordgenx.lower.references import report_to, resolve
 from wordgenx.ooxml.parts.numbering import complete_levels
@@ -184,6 +185,9 @@ def lower(
     final = resolved_all[-1]
     assert isinstance(final, ir.SectionBreak)
     resolved_body, resolved_section = resolved_all[:-1], final.section
+    resolved_body, index_styles = expand_index(resolved_body)
+    toc_styles |= index_styles
+    needs_update = needs_update or bool(index_styles)
     for name in sorted(toc_styles):
         if style_id(name) not in styles and not in_template(name):
             styles[style_id(name)] = _builtin(name, first_page)

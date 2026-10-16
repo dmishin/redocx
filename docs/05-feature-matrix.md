@@ -112,7 +112,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Simple fields (PAGE, NUMPAGES, SECTIONPAGES, DATE, TITLE, AUTHOR, STYLEREF…) | M2 ✓ | ● |
 | Arbitrary / nested fields | M2 ✓ | ●● |
 | Footnotes, endnotes (numbering format, restart, position) | M2 ✓ | ●● |
-| Index (XE + INDEX) | M3 | ●● |
+| Index (XE + INDEX) | M3 ✓ | ●● |
 | Citations & bibliography (`\cite`, CSL rendering via citeproc) | M3 ✓ | ●● |
 | Custom counters (`\seq`, SEQ fields) | M2 ✓ | ● |
 | Native Word citations (sources.xml + CITATION field) | Later | ●●● |

@@ -52,6 +52,22 @@ def _toc(level: int) -> Style:
     )
 
 
+def _index(level: int) -> Style:
+    """Word's index n: a hanging indent of 12pt, each level 12pt further in."""
+    return Style(
+        StyleKind.PARAGRAPH,
+        f"index {level}",
+        based_on="Normal",
+        next="Normal",
+        paragraph=para_props(
+            space_after="0pt",
+            line_spacing=1,
+            indent_left=f"{12 * level}pt",
+            hanging_indent="12pt",
+        ),
+    )
+
+
 def _character(name: str, **props: object) -> Callable[[], Style]:
     return lambda: Style(StyleKind.CHARACTER, name, run=run_props(**props))
 
@@ -122,6 +138,15 @@ BUILTIN_STYLES: dict[str, Callable[[], Style]] = {
         run=run_props(font="theme.major", size="16pt", color="theme.accent1"),
     ),
     **{f"TOC {i}": (lambda i=i: _toc(i)) for i in range(1, 10)},
+    **{f"index {i}": (lambda i=i: _index(i)) for i in range(1, 10)},
+    "index heading": lambda: Style(
+        StyleKind.PARAGRAPH,
+        "index heading",
+        based_on="Normal",
+        next="index 1",
+        paragraph=para_props(keep_with_next=True, space_before="6pt", space_after="0pt"),
+        run=run_props(font="theme.major", bold=True),
+    ),
     "table of figures": lambda: Style(
         StyleKind.PARAGRAPH,
         "table of figures",

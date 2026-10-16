@@ -49,6 +49,14 @@ from wordgenx.lower.fields import (
     merge_text,
     parse_instruction,
 )
+from wordgenx.lower.index import COLUMN_GAP as INDEX_COLUMN_GAP
+from wordgenx.lower.index import MAX_LEVELS as MAX_INDEX_LEVELS
+from wordgenx.lower.index import (
+    IndexMark,
+    PendingIndex,
+    index_instruction,
+    xe_instruction,
+)
 from wordgenx.lower.macros import Binding, Macro, Substitution, define_macro, let_macro
 from wordgenx.lower.references import REF_FORMS, Label, PendingRef, PendingToc, References
 from wordgenx.lower.typography import smarten
@@ -82,14 +90,14 @@ Located = tuple[Source, Diagnostic]
 BLOCK_COMMANDS = frozenset(
     (
         "p align list include use styles document meta settings section table header footer tabs "
-        "caption figure toc listof math bibliography printbibliography"
+        "caption figure toc listof math bibliography printbibliography index"
     ).split()
 )
 INLINE_COMMANDS = frozenset(
     (
         "b i u s sup sub hl font style lang hidden strong emph code link url br tab image "
         "pagenum numpages sectionpages field date ref pageref seq footnote endnote raw m "
-        "cite textcite"
+        "cite textcite ix"
     ).split()
 )
 FIELD_COMMANDS = {"pagenum": "PAGE", "numpages": "NUMPAGES", "sectionpages": "SECTIONPAGES"}
@@ -104,8 +112,6 @@ TABLE_PARTS = frozenset({"row", "cell"})
 PLANNED: dict[str, str] = {
     **dict.fromkeys(
         [
-            "index",
-            "ix",
             "embed-docx",
         ],
         "M3",
@@ -115,7 +121,7 @@ PLANNED: dict[str, str] = {
 }
 """Commands of the language that are not implemented yet -> the milestone that adds them."""
 
-PLANNED_BLOCKS = frozenset("watermark index".split())
+PLANNED_BLOCKS = frozenset({"watermark"})
 CELL_ALIGN = {"top": "top", "center": "center", "middle": "center", "bottom": "bottom"}
 DEFAULT_DPI = 96
 TRANSPARENT = frozenset({"comment", "ins", "control"})
@@ -643,6 +649,7 @@ class Lowering:
             "math": self.cmd_math,
             "bibliography": self.cmd_bibliography,
             "printbibliography": self.cmd_printbibliography,
+            "index": self.cmd_index,
         }.get(name)
         if handler is not None:
             return handler(command)
@@ -2187,6 +2194,97 @@ class Lowering:
             )
         ]
 
+    # --- index -------------------------------------------------------------------------------
+
+    def inline_ix(self, command: ast.Command) -> list[Piece]:
+        r"""\ix[see="queueing", bold]{traffic!flow}: an index entry (XE field) at this point;
+        `!` separates subentries."""
+        body = command.body.text if isinstance(command.body, ast.VerbatimBody) else ""
+        terms = tuple(t.strip() for t in body.split("!"))
+        if not body.strip() or not all(terms):
+            self.report(
+                Code.INVALID_ARGUMENT,
+                "\\ix needs a term, with `!` before each subentry: \\ix{traffic!flow}",
+                command.span,
+            )
+            return []
+        if len(terms) > MAX_INDEX_LEVELS:
+            self.report(
+                Code.INVALID_ARGUMENT,
+                f"index entries nest at most {MAX_INDEX_LEVELS} levels deep",
+                command.span,
+            )
+            terms = terms[:MAX_INDEX_LEVELS]
+        see: str | None = None
+        bold = italic = False
+        for option in command.options.items if command.options else ():
+            text = self.text_value(option.value, command, option.key or "option")
+            if option.key in ("see", "see-also") and text:
+                see = ("See also " if option.key == "see-also" else "See ") + text
+            elif option.key == "xref" and text:
+                see = text
+            elif option.key is None and text == "bold":
+                bold = True
+            elif option.key is None and text == "italic":
+                italic = True
+            else:
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    "invalid \\ix option",
+                    option.span,
+                    help='\\ix[see="term", see-also="term", xref="text", bold, italic]{term}',
+                )
+        mark = IndexMark(
+            xe_instruction(terms, see, bold, italic), has_result=False, terms=terms, see=see
+        )
+        return [Piece("", Format(), "field", field=mark)]
+
+    def cmd_index(self, command: ast.Command) -> list[ir.Block]:
+        r"""\index[columns=2, headings, right-align, title="Index", level=1]: the index of
+        the \ix entries."""
+        self.no_body(command)
+        if self._container_depth or self._figure is not None:
+            self.report(Code.MISPLACED, "`\\index` must be in the document body", command.span)
+            return []
+        columns, headings, right_align = 2, False, False
+        title: str | None = None
+        level = 1
+        for option in command.options.items if command.options else ():
+            text = self.text_value(option.value, command, option.key or "option")
+            if option.key == "columns" and text and text.isdigit() and 1 <= int(text) <= 4:
+                columns = int(text)
+            elif option.key == "title":
+                title = text or None
+            elif option.key == "level" and text and text.isdigit() and 1 <= int(text) <= 9:
+                level = int(text)
+            elif option.key is None and text == "headings":
+                headings = True
+            elif option.key is None and text == "right-align":
+                right_align = True
+            else:
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    "invalid \\index option",
+                    option.span,
+                    help='\\index[columns=1-4, headings, right-align, title="Index", level=1]',
+                )
+        out: list[ir.Block] = []
+        if title:
+            heading = f"Heading {level}"
+            self.use_style(heading, ir.StyleKind.PARAGRAPH, command.span)
+            out.append(ir.Paragraph((ir.Run(title),), heading, unnumbered=True))
+        self.has_content = True
+        # Word puts a multi-column index into continuous section breaks of its own when it
+        # updates the field (on open), so the entries are written in the current section.
+        width = self.section.page.text_width.emu
+        if columns > 1:
+            width = (width - INDEX_COLUMN_GAP.emu * (columns - 1)) // columns
+        field = ir.Field(index_instruction(columns, headings, right_align), dirty=True)
+        pending = PendingIndex(
+            field, (), headings=headings, right_align=right_align, column_width=Length(width)
+        )
+        return [*out, pending]
+
     # --- math --------------------------------------------------------------------------------
 
     def math_body(self, command: ast.Command) -> tuple[str, int]:
@@ -2791,6 +2889,8 @@ class Lowering:
             return [Piece("", fmt, "field", math=ir.Math(expr))] if expr is not None else []
         if name == "seq":
             return self.inline_seq(command, fmt)
+        if name == "ix":
+            return self.inline_ix(command)
         if name in ("footnote", "endnote"):
             return self.inline_note(command, fmt)
         if name == "url":

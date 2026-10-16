@@ -370,6 +370,8 @@ class Field:
     style: str | None = None
     dirty: bool = False
     """Ask Word to update the field when the document opens (result not known in advance)."""
+    has_result: bool = True
+    """False for fields that never show a result (XE, TC): no separate mark is written."""
 
     @property
     def code(self) -> str:

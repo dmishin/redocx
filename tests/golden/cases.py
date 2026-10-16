@@ -185,8 +185,16 @@ def example_citations() -> ir.Document:
     return result.document
 
 
+def example_index() -> ir.Document:
+    """examples/index.wgx: XE marks with subentries, bold and cross-references; an index."""
+    result = compile_file(Path(__file__).resolve().parents[2] / "examples" / "index.wgx")
+    assert result.document is not None, result.render_diagnostics()
+    return result.document
+
+
 CASES: dict[str, Callable[[], ir.Document]] = {
     "example-citations": example_citations,
+    "example-index": example_index,
     "example-math": example_math,
     "example-design-spec": example_design_spec,
     "example-hello": example_hello,

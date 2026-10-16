@@ -124,7 +124,8 @@ def _field_runs(field: Field, ctx: BodyContext) -> tuple[list[Element], list[Ele
             opening.append(run(E("w:instrText", {"xml:space": "preserve"}, text=part)))
         else:
             opening.extend(_field(part, ctx))
-    opening.append(run(E("w:fldChar", {"w:fldCharType": "separate"})))
+    if field.has_result:
+        opening.append(run(E("w:fldChar", {"w:fldCharType": "separate"})))
     return opening, [run(E("w:fldChar", {"w:fldCharType": "end"}))]
 
 

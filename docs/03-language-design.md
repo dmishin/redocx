@@ -477,6 +477,17 @@ the paragraph's own number), and the "Table Table 3" lint.
 number. Page numbers are left for Word, which updates them when the document opens. `title=` adds a `TOC Heading`
 paragraph, which is not itself listed.
 
+`\ix{term}` marks a place for the index with an `XE` field and prints nothing. `!` separates subentries
+(`\ix{traffic!flow!jam}`, up to 9 levels); colons and quotes in terms are escaped for Word. Options: `bold` and
+`italic` for the page number, `see="queueing"` ("See queueing" instead of a page number), `see-also="queueing"`, and
+`xref="Siehe Warteschlange"` for cross-reference text in another language. `\index[columns=2, headings,
+right-align, title="Index", level=1]` writes the `INDEX` field (`\c` columns, `\h "A"` letter headings, `\e` with
+a dotted tab for right-aligned page numbers) with its entries filled in: sorted ignoring case and accents, nested in
+the `index 1`–`index 9` styles, letter headings in `index heading`, cross-references as Word writes them ("waiting
+lines. See queueing"). Page numbers are left for Word, which updates the field when the document opens and then puts
+a multi-column index in continuous section breaks of its own. Marks in notes and table cells count. Not yet: page
+ranges (`XE \r`) and sort keys that differ from the term.
+
 `\field` is the general escape hatch. It takes the raw field instruction and an optional cached result. It emits
 `w:fldChar` begin/separate/end. `{ … }` inside the instruction are nested fields, in Word's display notation.
 
