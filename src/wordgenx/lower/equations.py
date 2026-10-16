@@ -2,6 +2,7 @@ r"""Equations: \m, \math and $$ display math (design §3.14)."""
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from wordgenx import ir
@@ -36,7 +37,7 @@ def display_command(lw: Lowering, command: ast.Command, args: Args) -> list[ir.B
 
 def display_block(lw: Lowering, block: ast.DisplayMath) -> list[ir.Block]:
     """$$ ... $$, labelled ones with {#eq:x}."""
-    start = lw.source.text.find(block.source, block.span.start)
+    start = lw.source_of(block.span).text.find(block.source, block.span.start)
     label = (block.label.name, block.label.span) if block.label is not None else None
     return _display(lw, block.source, start, block.span, label, None)
 
@@ -69,7 +70,7 @@ def _formula(lw: Lowering, command: ast.Command) -> tuple[str, int]:
     if not isinstance(command.body, ast.VerbatimBody) or not command.body.text.strip():
         return "", -1
     text = command.body.text
-    return text, lw.source.text.find(text, command.body.span.start)
+    return text, lw.source_of(command.body.span).text.find(text, command.body.span.start)
 
 
 def _parse(lw: Lowering, text: str, start: int, span: Span) -> MathRow | None:
@@ -78,7 +79,7 @@ def _parse(lw: Lowering, text: str, start: int, span: Span) -> MathRow | None:
     try:
         return parse_math(text)
     except MathError as e:
-        where = Span(start + e.start, start + e.end) if start >= 0 else span
+        where = replace(span, start=start + e.start, end=start + e.end) if start >= 0 else span
         lw.report(Code.MATH, e.message, where, e.hint)
         return None
 

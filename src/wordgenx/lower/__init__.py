@@ -13,30 +13,33 @@ from wordgenx.lower.builtins import BUILTIN_STYLES, DEFAULT_NUMBERING
 from wordgenx.lower.citations import expand as expand_citations
 from wordgenx.lower.index import expand as expand_index
 from wordgenx.lower.lowering import Located, Lowering, StyleUse
-from wordgenx.lower.preamble import use_template
+from wordgenx.lower.preamble import apply_template
 from wordgenx.lower.references import report_to, resolve
 from wordgenx.ooxml.parts.numbering import complete_levels
 from wordgenx.ooxml.style_names import style_id
+from wordgenx.ooxml.template import Template
 from wordgenx.props import PropertySet, Target
 from wordgenx.syntax import ParseResult
-from wordgenx.syntax.diagnostics import Code, Diagnostic, Severity
+from wordgenx.syntax.diagnostics import Code, Diagnostic, Severity, expansion_notes
 from wordgenx.syntax.source import Source, Span
 from wordgenx.values import Length, TabStop
 
 _BUILTIN_BY_ID = {style_id(name): name for name in BUILTIN_STYLES}
+NOWHERE = Span(0, 0)
+"""The span of implicit style uses, which are never reported."""
 
 
 def lower(
-    result: ParseResult, base_dir: Path | None = None, template_path: Path | None = None
+    result: ParseResult, base_dir: Path | None = None, template: Template | None = None
 ) -> tuple[ir.Document, list[Located]]:
     """Lower a parsed document. Diagnostics include the parse diagnostics; the document is
-    only meaningful when none of them is an error. `template_path` (a .dotx or .docx) takes
-    precedence over a \\document[template=...] option."""
+    only meaningful when none of them is an error. `template` (a loaded .dotx or .docx)
+    takes precedence over a \\document[template=...] option."""
     if base_dir is None:
         base_dir = Path(result.source.name).resolve().parent
     lowering = Lowering(result.source, base_dir)
-    if template_path is not None:
-        use_template(lowering, template_path, Span(0, 0), from_command_line=True)
+    if template is not None:
+        apply_template(lowering, template, fixed=True)
     body = lowering.document(result.ast)
     # Citations and bibliographies, now that every citation is known.
     expanded, cited_section, cite_styles = expand_citations(
@@ -46,7 +49,7 @@ def lower(
     lowering.section = cited_section
     for name in sorted(cite_styles):
         kind = ir.StyleKind.CHARACTER if name == "Hyperlink" else ir.StyleKind.PARAGRAPH
-        lowering.use_style(name, kind, Span(0, 0))
+        lowering.style_uses.append(StyleUse(name, kind, NOWHERE, result.source, implicit=True))
     compiled = lowering.stylesheets.result()
     diagnostics: list[Located] = [(result.source, d) for d in result.diagnostics]
     diagnostics += compiled.diagnostics
@@ -56,12 +59,16 @@ def lower(
         source_use: StyleUse | tuple[str, Span, Source], message: str, label: str = ""
     ) -> None:
         if isinstance(source_use, StyleUse):
+            if source_use.implicit:
+                return
             source, span = source_use.source, source_use.span
         else:
             _, span, source = source_use
-        diagnostics.append(
-            (source, Diagnostic(Severity.ERROR, Code.UNDEFINED_STYLE, message, span, label))
-        )  # type: ignore[arg-type]
+        notes = expansion_notes(span)
+        diagnostic = Diagnostic(
+            Severity.ERROR, Code.UNDEFINED_STYLE, message, span, label, None, notes
+        )
+        diagnostics.append((source, diagnostic))
 
     # Lists: default definitions for "-" and "1." lists, then styles and continuation indents.
     # A list definition only the template has is used as it is (the writer adds instances).
@@ -95,7 +102,8 @@ def lower(
             return replace(paragraph, list_item=None)
         level = complete_levels(definition)[ref.level - 1]
         style = paragraph.style or level.style or "List Paragraph"
-        style_uses.append(StyleUse(style, ir.StyleKind.PARAGRAPH, Span(0, 0), result.source))
+        # A paragraph's own style was checked where it is named, a level's in its style sheet.
+        style_uses.append(StyleUse(style, ir.StyleKind.PARAGRAPH, NOWHERE, result.source, True))
         if not ref.continuation:
             return replace(paragraph, style=style)
         indent = level.paragraph.get("indent-left")

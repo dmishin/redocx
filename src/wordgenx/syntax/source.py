@@ -14,6 +14,9 @@ class Span:
 
     start: int
     end: int
+    expansion: Expansion | None = field(default=None, compare=False, repr=False)
+    """Set for text that came into the document through a macro call: the offsets are
+    then into the macro's file (`expansion.source`), not the file being lowered."""
 
     def __post_init__(self) -> None:
         if not 0 <= self.start <= self.end:
@@ -23,7 +26,18 @@ class Span:
         return self.end - self.start
 
     def cover(self, other: Span) -> Span:
-        return Span(min(self.start, other.start), max(self.end, other.end))
+        return Span(min(self.start, other.start), max(self.end, other.end), self.expansion)
+
+
+@dataclass(frozen=True)
+class Expansion:
+    """A macro call: the text of `macro`, defined in `source`, used at `call`."""
+
+    macro: str
+    source: Source
+    call: Span
+    call_source: Source
+    """The file `call` is in (when the call is itself inside an expansion, its own)."""
 
 
 @dataclass(frozen=True)
@@ -48,11 +62,12 @@ class Source:
         object.__setattr__(self, "_line_starts", tuple(starts))
 
     @classmethod
-    def from_path(cls, path: str | PathLike[str]) -> Source:
+    def from_path(cls, path: str | PathLike[str], name: str | None = None) -> Source:
+        """The file at `path`; `name` (default: the path) is how messages refer to it."""
         path = Path(path)
         # newline="" keeps "\r\n" so offsets match the file; the parser treats "\r" as whitespace.
         with path.open(encoding="utf-8-sig", newline="") as f:
-            return cls(str(path), f.read())
+            return cls(name or str(path), f.read())
 
     @property
     def line_count(self) -> int:

@@ -720,6 +720,10 @@ never used, or a capitalised term used but never defined.
 
 Syntax errors use the codes `WGX01xx` (`wordgenx.syntax.diagnostics.Code`). Later stages use other ranges.
 
+An error in text a macro brought in points into the file that defines the macro, with a note for each call it came
+through (`= note: in \logo, called at report.wgx:12:5`). Problems with command-line options, such as a `--template`
+that is not a Word file, are reported as plain `error: --template: …` lines, since no source line is involved.
+
 ## 3.22 Parsing rules (settled in M1)
 
 The parser (`wordgenx.syntax`) fixes these details that the sections above leave open:

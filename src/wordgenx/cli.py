@@ -9,8 +9,9 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from wordgenx import __version__
-from wordgenx.compiler import build, compile_source
+from wordgenx.compiler import InternalError, build
 from wordgenx.ooxml.reader import read_docx
+from wordgenx.ooxml.template import Template, TemplateError, load_template
 from wordgenx.stylesheet import compile_stylesheets, parse_stylesheet
 from wordgenx.stylesheet.collect import STYLESHEET_SUFFIX
 from wordgenx.syntax import Source, ast, parse
@@ -30,10 +31,31 @@ def _load(path: str) -> Source | None:
 
 
 def _diagnostics(source: Source) -> list[tuple[Source, Diagnostic]]:
-    """Syntax and style-sheet diagnostics of a document (.wgx) or style sheet (.wgxs)."""
+    """The diagnostics of a document (.wgx: the whole build, without writing it) or of a
+    style sheet (.wgxs)."""
     if source.name.endswith(STYLESHEET_SUFFIX):
         return list(compile_stylesheets([parse_stylesheet(source)]).diagnostics)
-    return list(compile_source(source).diagnostics)
+    return list(build(source)[1].diagnostics)
+
+
+INTERNAL_HELP = "this is a bug in wordgenx; please report it with the document"
+
+
+def _load_template(path: str) -> Template | None:
+    """The --template file; problems are reported here, as there is no source line for them."""
+    try:
+        template = load_template(Path(path))
+    except TemplateError as e:
+        print(f"error: --template: {e}", file=sys.stderr)
+        return None
+    if template.body_issue is not None:
+        print(
+            f"warning: --template: the body content of `{template.name}` is not carried over: "
+            f"{template.body_issue}; only its styles, theme, page setup, headers and footers "
+            "are used",
+            file=sys.stderr,
+        )
+    return template
 
 
 def _build(path: str, output: str | None, template: str | None) -> int:
@@ -41,8 +63,14 @@ def _build(path: str, output: str | None, template: str | None) -> int:
     if source is None:
         return 1
     as_template = output is not None and output.lower().endswith(".dotx")
-    template_path = Path(template).resolve() if template else None
-    data, result = build(source, template=template_path, as_template=as_template)
+    loaded = _load_template(template) if template else None
+    if template and loaded is None:
+        return 1
+    try:
+        data, result = build(source, template=loaded, as_template=as_template)
+    except InternalError as e:
+        print(f"error: {path}: {e}\n  = help: {INTERNAL_HELP}", file=sys.stderr)
+        return 1
     if result.diagnostics:
         print(result.render_diagnostics(), file=sys.stderr)
     summary = f"{result.error_count} error{'s' * (result.error_count != 1)}, " + (
@@ -69,7 +97,12 @@ def _check(paths: Sequence[str]) -> int:
         if source is None:
             failed = True
             continue
-        diagnostics = _diagnostics(source)
+        try:
+            diagnostics = _diagnostics(source)
+        except InternalError as e:
+            print(f"error: {path}: {e}\n  = help: {INTERNAL_HELP}", file=sys.stderr)
+            failed = True
+            continue
         if diagnostics:
             print("\n".join(render(d, src) for src, d in diagnostics), file=sys.stderr)
         errors += sum(d.is_error for _, d in diagnostics)

@@ -130,6 +130,8 @@ class MarkupBody(AstNode):
 class VerbatimBody(AstNode):
     kind: ArgKind
     text: str
+    unclosed: bool = False
+    """The closing `}` is missing (reported): the text runs to the end of the file."""
 
 
 Body = MarkupBody | VerbatimBody
@@ -441,7 +443,8 @@ def _body(node: CstNode, command: str) -> Body:
     text = verbatim.text if verbatim else ""
     if kind is ArgKind.STRING:
         text = _unescape(text, "}\\")
-    return VerbatimBody(kind, text, span=node.span)
+    unclosed = node.first_token(K.R_BRACE) is None
+    return VerbatimBody(kind, text, unclosed, span=node.span)
 
 
 def _body_blocks(node: CstNode) -> tuple[Block, ...]:

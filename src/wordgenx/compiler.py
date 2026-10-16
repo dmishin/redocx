@@ -9,6 +9,7 @@ from pathlib import Path
 from wordgenx import ir
 from wordgenx.lower import Located, lower
 from wordgenx.ooxml.parts.styles import StyleError
+from wordgenx.ooxml.template import Template, load_template
 from wordgenx.ooxml.writer import to_docx_bytes
 from wordgenx.syntax import parse
 from wordgenx.syntax.diagnostics import Severity, render
@@ -37,33 +38,44 @@ class CompileResult:
         return "\n".join(render(d, source) for source, d in self.diagnostics)
 
 
+TemplateArg = Template | str | PathLike[str] | None
+"""A template: loaded, or the path of a .dotx or .docx."""
+
+
+class InternalError(RuntimeError):
+    """A problem the compiler should have reported as a diagnostic: a bug in wordgenx."""
+
+
 def compile_source(
-    source: Source | str, base_dir: Path | None = None, template: Path | None = None
+    source: Source | str, base_dir: Path | None = None, template: TemplateArg = None
 ) -> CompileResult:
     """Parse and lower a document; the IR is returned only when there are no errors.
-    `template` (.dotx or .docx) overrides the document's own \\document[template=...]."""
+    `template` (a .dotx or .docx, or one `load_template` read) overrides the document's
+    \\document[template=...]; a file that is not one raises `TemplateError`."""
+    if template is not None and not isinstance(template, Template):
+        template = load_template(template)
     if isinstance(source, str):
         source = Source("<input>", source)
         base_dir = base_dir or Path.cwd()
     document, diagnostics = lower(parse(source), base_dir, template)
-    ordered = tuple(
-        sorted(
-            diagnostics,
-            key=lambda item: (item[0].name != source.name, item[0].name, item[1].span.start),
-        )
-    )
+    # By file (the document first, then the others in the order they were reported), then
+    # by position.
+    files = {source.name: 0}
+    for file, _ in diagnostics:
+        files.setdefault(file.name, len(files))
+    ordered = tuple(sorted(diagnostics, key=lambda item: (files[item[0].name], item[1].span.start)))
     has_errors = any(d.severity is Severity.ERROR for _, d in ordered)
     return CompileResult(None if has_errors else document, ordered)
 
 
-def compile_file(path: str | PathLike[str], template: Path | None = None) -> CompileResult:
+def compile_file(path: str | PathLike[str], template: TemplateArg = None) -> CompileResult:
     return compile_source(Source.from_path(path), template=template)
 
 
 def build(
     source: Source | str,
     base_dir: Path | None = None,
-    template: Path | None = None,
+    template: TemplateArg = None,
     *,
     as_template: bool = False,
 ) -> tuple[bytes | None, CompileResult]:
@@ -74,4 +86,4 @@ def build(
     try:
         return to_docx_bytes(result.document, as_template=as_template), result
     except StyleError as e:  # a consistency problem the lowering did not catch
-        raise RuntimeError(f"internal error while writing the document: {e}") from e
+        raise InternalError(f"internal error while writing the document: {e}") from e

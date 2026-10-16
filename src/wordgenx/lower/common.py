@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import os
 import re
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, replace
+from pathlib import Path
 from typing import TYPE_CHECKING, get_args
 
 from wordgenx import ir
@@ -65,6 +67,15 @@ def verbatim(command: ast.Command) -> str:
 
 
 # --- small helpers -------------------------------------------------------------------------
+
+
+def shown_path(path: Path) -> str:
+    """`path` as messages show it: relative to the current folder when it is inside it."""
+    try:
+        relative = os.path.relpath(path)
+    except ValueError:  # another drive (Windows)
+        return str(path)
+    return str(path) if relative.startswith("..") else relative
 
 
 def is_blank(item: ast.Inline | ast.Block) -> bool:

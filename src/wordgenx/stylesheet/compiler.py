@@ -162,6 +162,8 @@ class StyleSheetCompiler:
     _paragraph: PropertySet = EMPTY_PARAGRAPH
     _diagnostics: list[tuple[Source, Diagnostic]] = field(default_factory=lambda: [])
     _references: list[_Reference] = field(default_factory=lambda: [])
+    _level_links: list[tuple[str, str, int, Span, Source]] = field(default_factory=lambda: [])
+    """(style, numbering, level, span, source) for each `style:` of a list level."""
     _source: Source | None = None
     builtins: Mapping[str, Callable[[], Style]] = field(default_factory=lambda: {})
     """Word built-in styles by name: `modify` starts from them, and references to them are
@@ -198,6 +200,7 @@ class StyleSheetCompiler:
 
     def result(self) -> CompiledStyles:
         self._check_references()
+        self._check_level_links()
         return CompiledStyles(
             (*self._styles.values(), *self._referenced_builtins()),
             tuple(self._numbering.values()),
@@ -702,6 +705,10 @@ class StyleSheetCompiler:
                 fields[attr] = _unquote(decl.value)
         if (decl := meta.get("style")) is not None and decl.value is not None:
             fields["style"] = _unquote(decl.value)
+            span = decl.value_span or decl.key_span
+            self._level_links.append(
+                (fields["style"], numbering, number, span, self._require_source())  # type: ignore[arg-type]
+            )
             self._references.append(
                 _Reference(
                     "paragraph-style",
@@ -749,6 +756,27 @@ class StyleSheetCompiler:
         return None
 
     # --- cross-references ----------------------------------------------------------------
+
+    def _check_level_links(self) -> None:
+        """Word numbers a paragraph style through one list level: a style linked to two
+        levels (by two `style:` declarations, or by its own `numbering:`) is an error."""
+        linked: dict[str, str] = {}
+        for name, numbering, number, span, source in self._level_links:
+            sid = style_id(name)
+            here = f"{numbering} level {number}"
+            style = self._styles.get(sid)
+            first = linked.get(sid)
+            if style is not None and style.numbering is not None:
+                first = f"{style.numbering.name} level {style.numbering.level}"
+            if first is not None and first != here:
+                self._source = source
+                self._report(
+                    Code.STYLE_DEFINITION,
+                    f"style `{name}` is linked to two list levels: {first} and {here}",
+                    span,
+                    help="a paragraph style can number only one list level",
+                )
+            linked.setdefault(sid, here)
 
     def _check_references(self) -> None:
         for ref in self._references:

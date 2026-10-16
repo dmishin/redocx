@@ -262,7 +262,7 @@ def test_include_and_macro_files(tmp_path: Path) -> None:
     [
         (r"\nosuch{x}", Code.UNKNOWN_COMMAND, "unknown command `\\nosuch`"),
         (r"\bb{x}", Code.UNKNOWN_COMMAND, "unknown command `\\bb`"),
-        (r"Text \p{inside}", Code.MISPLACED, "a block cannot appear inside a paragraph"),
+        (r"Text \p{inside}", Code.MISPLACED, "`\\p` is a block command and cannot appear"),
         (r"\b{\p{x}}", Code.MISPLACED, "`\\p` is a block command and cannot appear inside text"),
         (
             r"\p[spacebefore=1pt]{x}",

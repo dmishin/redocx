@@ -3,16 +3,21 @@
 Parameters are named options; ``#name`` refers to one inside the body and ``#body``
 to the call's body. A parameter without a default is optional and expands to
 nothing when not given; an option whose value is an unset parameter is dropped.
+
+The macro's own text gets spans that record the expansion (`Span.expansion`), so
+messages about it point into the macro's file and name the call; the text of the
+arguments keeps the spans of the call.
 """
 
 from __future__ import annotations
 
+import difflib
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, fields, replace
 from typing import Any
 
 from wordgenx.syntax import ast
-from wordgenx.syntax.source import Source, Span
+from wordgenx.syntax.source import Expansion, Source, Span
 
 Binding = ast.Value | None
 """What a parameter is bound to: an option value, the call's body, or nothing."""
@@ -49,22 +54,30 @@ def let_macro(node: ast.Let, source: Source) -> Macro:
 
 
 class Substitution:
-    """Replace #params in a macro body with their bindings."""
+    """Replace #params in a macro body with their bindings, and give the body's own
+    nodes spans that record the `expansion`."""
 
     def __init__(
         self,
         bindings: Mapping[str, Binding],
-        report: Callable[[str, Span], None],
+        report: Callable[[str, Span, str], None],
+        expansion: Expansion | None = None,
     ) -> None:
         self.bindings = bindings
         self.report = report
+        self.expansion = expansion
+
+    def _span(self, span: Span) -> Span:
+        return Span(span.start, span.end, self.expansion) if self.expansion else span
 
     def blocks(self, blocks: tuple[ast.Block, ...]) -> tuple[ast.Block, ...]:
         return tuple(self._node(block) for block in blocks)  # type: ignore[misc]
 
     def _bound(self, param: ast.Param | ast.ParamValue) -> tuple[bool, Binding]:
         if param.name not in self.bindings:
-            self.report(f"unknown parameter `#{param.name}`", param.span)
+            close = difflib.get_close_matches(param.name, list(self.bindings), n=1)
+            label = f"did you mean `#{close[0]}`?" if close else ""
+            self.report(f"unknown parameter `#{param.name}`", self._span(param.span), label)
             return False, None
         return True, self.bindings[param.name]
 
@@ -73,13 +86,15 @@ class Substitution:
         if not known or value is None:
             return []
         if isinstance(value, ast.BareValue | ast.StringValue):
-            return [ast.Text(value.text, span=param.span)]
+            return [ast.Text(value.text, span=value.span)]
         if isinstance(value, ast.MarkupBody):
             if len(value.blocks) == 1 and isinstance(value.blocks[0], ast.Paragraph):
                 return list(value.blocks[0].content)
-            return [ast.Group(value.blocks, span=param.span)]
+            return [ast.Group(value.blocks, span=value.span)]
         self.report(
-            f"`#{param.name}` is a {type(value).__name__}, which cannot be used as text", param.span
+            f"`#{param.name}` is a tuple, which cannot be used as text",
+            self._span(param.span),
+            "",
         )
         return []
 
@@ -99,10 +114,10 @@ class Substitution:
                     elif isinstance(item, ast.Option) and isinstance(item.value, ast.ParamValue):
                         known, bound = self._bound(item.value)
                         if known and bound is not None:  # an unset parameter drops the option
-                            new.append(replace(item, value=bound))
+                            new.append(replace(item, value=bound, span=self._span(item.span)))
                     else:
                         new.append(self._node(item))
                 changes[f.name] = tuple(new)
             elif isinstance(value, ast.AstNode):
                 changes[f.name] = self._node(value)
-        return replace(node, **changes)
+        return replace(node, span=self._span(node.span), **changes)

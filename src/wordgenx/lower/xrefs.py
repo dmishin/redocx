@@ -41,7 +41,7 @@ SEQ_NAME_RE = re.compile(r"[A-Za-z][A-Za-z0-9_]*")
 def make_ref(lw: Lowering, label: str, form: str, span: Span, fmt: Format) -> list[Piece]:
     """A placeholder REF field, resolved once every label is known."""
     ref_id = len(lw.references.refs) + 1
-    lw.references.refs[ref_id] = (span, lw.source)
+    lw.references.refs[ref_id] = (span, lw.source_of(span))
     ref = PendingRef(
         (f" REF {label} ",), "", fmt.props, fmt.style, label=label, form=form, ref_id=ref_id
     )

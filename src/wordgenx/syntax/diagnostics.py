@@ -77,6 +77,8 @@ class Diagnostic:
     label: str = ""
     """Short text shown under the primary span."""
     help: str | None = None
+    notes: tuple[str, ...] = ()
+    """Context shown after the help: the macro calls the text came through."""
 
     @property
     def is_error(self) -> bool:
@@ -124,9 +126,25 @@ def render(diagnostic: Diagnostic, source: Source) -> str:
         f"{line_no} | {_expand_tabs(line)}".rstrip(),
         f"{gutter} | {carets}",
     ]
+    if diagnostic.help or diagnostic.notes:
+        out.append(f"{gutter} |")
     if diagnostic.help:
-        out += [f"{gutter} |", f"{gutter} = help: {diagnostic.help}"]
+        out.append(f"{gutter} = help: {diagnostic.help}")
+    out += [f"{gutter} = note: {note}" for note in diagnostic.notes]
     return "\n".join(out) + "\n"
+
+
+def expansion_notes(span: Span) -> tuple[str, ...]:
+    """A note ``in `\\name`, called at file:line:column`` for each macro call `span` came
+    through, innermost first."""
+    notes: list[str] = []
+    expansion = span.expansion
+    while expansion is not None:
+        at = expansion.call_source.position(expansion.call.start)
+        where = f"{expansion.call_source.name}:{at.line}:{at.column}"
+        notes.append(f"in `\\{expansion.macro}`, called at {where}")
+        expansion = expansion.call.expansion
+    return tuple(notes)
 
 
 def render_all(diagnostics: Iterable[Diagnostic], source: Source) -> str:

@@ -192,7 +192,7 @@ def test_block_command_on_its_own_line_ends_the_paragraph() -> None:
         "Text after",
     ]
     assert errors("Text \\caption{inline} more") == [
-        "WGX0303 a block cannot appear inside a paragraph"
+        "WGX0303 `\\caption` is a block command and cannot appear inside a paragraph"
     ]
 
 

@@ -53,6 +53,7 @@ from wordgenx.lower.common import (
     Piece,
     assemble,
     is_blank,
+    shown_path,
 )
 from wordgenx.lower.macros import Binding, Macro, Substitution, define_macro, let_macro
 from wordgenx.lower.references import Label, References
@@ -61,13 +62,22 @@ from wordgenx.ooxml.template import Template
 from wordgenx.props import EMPTY_RUN, PropertySet
 from wordgenx.stylesheet.compiler import StyleSheetCompiler
 from wordgenx.syntax import ParseResult, ast, parse
-from wordgenx.syntax.diagnostics import Code, Diagnostic, Severity
-from wordgenx.syntax.source import Source, Span
+from wordgenx.syntax.diagnostics import Code, Diagnostic, Severity, expansion_notes
+from wordgenx.syntax.source import Expansion, Source, Span
 from wordgenx.values import Length
 
 MAX_MACRO_DEPTH = 32
 MAX_INCLUDE_DEPTH = 16
 PART_OF = {"row": "\\table", "cell": "\\row"}
+BLOCK_NAMES: dict[type, str] = {
+    ast.Paragraph: "a paragraph",
+    ast.Heading: "a heading",
+    ast.ListBlock: "a list",
+    ast.CodeBlock: "a code block",
+    ast.DisplayMath: "display math",
+    ast.PipeTable: "a table",
+}
+"""How messages name blocks that are not commands."""
 
 BLOCK_HANDLERS: dict[str, BlockHandler] = {
     **text.BLOCKS,
@@ -96,6 +106,9 @@ class StyleUse:
     kind: ir.StyleKind
     span: Span
     source: Source
+    implicit: bool = False
+    """Added by the compiler, not written in the document (a list level's style): it only
+    brings in a built-in style; a style that is missing was reported where it is named."""
 
 
 @dataclass
@@ -156,9 +169,13 @@ class Lowering:
         help: str | None = None,
         severity: Severity = Severity.ERROR,
     ) -> None:
-        self.diagnostics.append(
-            (self.source, Diagnostic(severity, code, message, span, label, help))
-        )
+        notes = expansion_notes(span)
+        diagnostic = Diagnostic(severity, code, message, span, label, help, notes)
+        self.diagnostics.append((self.source_of(span), diagnostic))
+
+    def source_of(self, span: Span) -> Source:
+        """The file `span` is in: the macro's for text a macro brought in."""
+        return span.expansion.source if span.expansion is not None else self.source
 
     def warn(self, code: Code, message: str, span: Span, help: str | None = None) -> None:
         self.report(code, message, span, help=help, severity=Severity.WARNING)
@@ -248,12 +265,7 @@ class Lowering:
         inside = [i for i in blocks if not _on_own_line(items, i)]
         if inside and has_text:
             for i in inside:
-                self.report(
-                    Code.MISPLACED,
-                    "a block cannot appear inside a paragraph",
-                    items[i].span,  # type: ignore[union-attr]
-                    help="put it on its own line",
-                )
+                self.misplaced_block(items[i])
             items = [item for item in items if not self.is_block_item(item)]
             blocks = []
         if not blocks:
@@ -350,12 +362,12 @@ class Lowering:
         if not self.check_macro_name(node.name, node.span):
             return
         self.macros[node.name] = define_macro(
-            node, self.source, lambda msg, span: self.report(Code.MACRO, msg, span)
+            node, self.source_of(node.span), lambda msg, span: self.report(Code.MACRO, msg, span)
         )
 
     def register_let(self, node: ast.Let) -> None:
         if self.check_macro_name(node.name, node.span):
-            self.macros[node.name] = let_macro(node, self.source)
+            self.macros[node.name] = let_macro(node, self.source_of(node.span))
 
     def check_macro_name(self, name: str, span: Span) -> bool:
         if name in COMMANDS or name in ("define", "let"):
@@ -398,12 +410,12 @@ class Lowering:
             bindings["body"] = call.body
         else:
             bindings.setdefault("body", None)
-        source = self.source
-        self.source = macro.source
+        expansion = Expansion(macro.name, macro.source, call.span, self.source_of(call.span))
         expanded = Substitution(
-            bindings, lambda msg, span: self.report(Code.MACRO, msg, span)
+            bindings,
+            lambda msg, span, label: self.report(Code.MACRO, msg, span, label),
+            expansion,
         ).blocks(macro.body)
-        self.source = source
         self.macro_depth += 1
         try:
             return self.splice(expanded)
@@ -417,6 +429,8 @@ class Lowering:
         if spec.planned is not None:
             self.not_yet(command, spec)
             return []
+        if isinstance(command.body, ast.VerbatimBody) and command.body.unclosed:
+            return []  # reported by the parser; its text is the rest of the file
         return BLOCK_HANDLERS[command.name](self, command, self.bind(command, spec))
 
     def inline_command(self, command: ast.Command, fmt: Format) -> list[Piece]:
@@ -447,6 +461,8 @@ class Lowering:
             if spec.keep_body and isinstance(command.body, ast.MarkupBody):
                 return self.body_inlines(command, fmt)
             return []
+        if isinstance(command.body, ast.VerbatimBody) and command.body.unclosed:
+            return []  # reported by the parser; its text is the rest of the file
         return INLINE_HANDLERS[name](self, command, self.bind(command, spec), fmt)
 
     # --- inline content ---------------------------------------------------------------------------
@@ -497,14 +513,42 @@ class Lowering:
         self, items: list[ast.Inline | ast.Block], fmt: Format, span: Span
     ) -> list[Piece]:
         out: list[Piece] = []
+        reported = False
         for item in items:
             if isinstance(item, BLOCK_TYPES):  # commands report their own, more specific error
-                self.report(
-                    Code.MISPLACED, "a block cannot appear inside a paragraph", item.span or span
-                )
+                if not reported:
+                    self.misplaced_block(item)
+                    reported = True
                 continue
             out.extend(self.inline(item, fmt))  # type: ignore[arg-type]
         return out
+
+    def misplaced_block(self, item: ast.Inline | ast.Block) -> None:
+        """Report a block inside text, naming it. A block a macro brought in is reported at
+        the call written in the document."""
+        if isinstance(item, ast.Command):
+            what = f"`\\{item.name}`"
+        else:
+            what = BLOCK_NAMES.get(type(item), "a block")
+        call = item.span.expansion
+        while call is not None and call.call.expansion is not None:
+            call = call.call.expansion
+        if call is not None:
+            self.report(
+                Code.MISPLACED,
+                f"`\\{call.macro}` brings in {what}, which cannot appear inside a paragraph",
+                call.call,
+                help="call it on a line of its own",
+            )
+        elif isinstance(item, ast.Command):
+            self.report(
+                Code.MISPLACED,
+                f"{what} is a block command and cannot appear inside a paragraph",
+                item.span,
+                help="put it on its own line",
+            )
+        else:
+            self.report(Code.MISPLACED, f"{what} cannot appear inside a paragraph", item.span)
 
     def body_inlines(self, command: ast.Command, fmt: Format) -> list[Piece]:
         """The body of an inline command (a missing body has been reported by binding)."""
@@ -556,13 +600,13 @@ class Lowering:
     # --- shared services ---------------------------------------------------------------------
 
     def use_style(self, name: str, kind: ir.StyleKind, span: Span) -> None:
-        self.style_uses.append(StyleUse(name, kind, span, self.source))
+        self.style_uses.append(StyleUse(name, kind, span, self.source_of(span)))
 
     def register_label(self, name: str, span: Span, kind: str) -> Label:
         """A new label and its bookmark; a duplicate is reported (and gets a bookmark of its own,
         which nothing refers to)."""
         refs = self.references
-        label = Label(name, refs.bookmark(name), kind, span, self.source)
+        label = Label(name, refs.bookmark(name), kind, span, self.source_of(span))
         existing = refs.labels.get(name)
         if existing is None:
             refs.labels[name] = label
@@ -576,6 +620,14 @@ class Lowering:
             )
         return label
 
+    def paths_help(self) -> str:
+        folder = shown_path(self.base_dir)
+        return (
+            "paths are relative to the current folder"
+            if folder == "."
+            else (f"paths are relative to {folder}")
+        )
+
     def text_width(self) -> Length:
         return self.section.page.text_width
 
@@ -588,14 +640,14 @@ class Lowering:
             )
             return None
         try:
-            source = Source.from_path(path)
+            source = Source.from_path(path, shown_path(path))
         except (OSError, UnicodeDecodeError) as e:
             reason = e.strerror if isinstance(e, OSError) else "not valid UTF-8"
             self.report(
                 Code.INCLUDE,
                 f"cannot read `{path.name}`: {reason}",
                 command.span,
-                help=f"paths are relative to {self.base_dir}",
+                help=self.paths_help(),
             )
             return None
         result = parse(source)

@@ -45,7 +45,7 @@ def image(lw: Lowering, command: ast.Command, args: Args, fmt: Format) -> list[P
             Code.INVALID_ARGUMENT,
             f"cannot read image `{path.name}`: {e.strerror}",
             command.span,
-            help=f"paths are relative to {lw.base_dir}",
+            help=lw.paths_help(),
         )
         return []
     try:

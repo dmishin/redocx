@@ -71,7 +71,7 @@ def list_block(lw: Lowering, block: ast.ListBlock, parent: ListContext | None) -
         context = replace(parent, level=parent.level + 1, ordered=block.ordered)
     else:
         name = "Numbers" if block.ordered else "Bullets"
-        lw.list_uses.append((name, block.span, lw.source))
+        lw.list_uses.append((name, block.span, lw.source_of(block.span)))
         level = parent.level + 1 if parent else 1
         instance = lw.lists.new_instance(name, None)
         context = ListContext(name, instance, level, block.ordered, False, None)
@@ -148,7 +148,7 @@ def numbered_list(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Blo
     name = args.text("numbering")
     if name is None:
         return lw.blocks(markup(command))
-    lw.list_uses.append((name, command.span, lw.source))
+    lw.list_uses.append((name, command.span, lw.source_of(command.span)))
     start = args.number("restart")
     if args.flag("continue") and start is None and name in lw.lists.last:
         instance, start = lw.lists.last[name]

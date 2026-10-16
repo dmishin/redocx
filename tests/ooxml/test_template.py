@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import io
 import subprocess
 import zipfile
@@ -266,9 +267,21 @@ def test_template_body_content_comes_first(tmp_path: Path) -> None:
 
 def test_template_body_with_notes_is_dropped_with_a_warning(tmp_path: Path) -> None:
     template = make_template(tmp_path, "Boilerplate.\\footnote{A note.}")
+    assert load_template(template).body_issue == "it contains footnotes"
     result = compile_source("Ours.", tmp_path, template)
     assert result.document is not None
-    assert [d.message for _, d in result.diagnostics] == [
+    assert result.diagnostics == ()  # there is no source line for it: the CLI reports it
+    doc = tmp_path / "doc.wgx"
+    doc.write_text("Ours.", encoding="utf-8")
+    capture = io.StringIO()
+    with contextlib.redirect_stderr(capture):
+        assert main(["build", str(doc), "--template", str(template)]) == 0
+    assert (
+        "warning: --template: the body content of `t.dotx` is not carried over: "
+        "it contains footnotes" in capture.getvalue()
+    )
+    via_document = compile_source('\\document[template="t.dotx"]\n\nOurs.', tmp_path)
+    assert [d.message for _, d in via_document.diagnostics] == [
         "the body content of `t.dotx` is not carried over: it contains footnotes"
     ]
 

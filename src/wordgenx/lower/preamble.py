@@ -12,8 +12,8 @@ from typing import TYPE_CHECKING
 from wordgenx import ir
 from wordgenx.commands.bind import Args
 from wordgenx.commands.types import Fields
-from wordgenx.lower.common import BlockHandler, is_blank, verbatim
-from wordgenx.ooxml.template import TemplateError, load_template
+from wordgenx.lower.common import BlockHandler, is_blank, shown_path, verbatim
+from wordgenx.ooxml.template import Template, TemplateError, load_template
 from wordgenx.stylesheet.collect import STYLESHEET_SUFFIX
 from wordgenx.stylesheet.syntax import parse_stylesheet
 from wordgenx.syntax import ParseResult, ast, parse
@@ -52,16 +52,14 @@ def document(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
     return []
 
 
-def use_template(lw: Lowering, path: Path, span: Span, *, from_command_line: bool = False) -> None:
-    """Compile into a .dotx or .docx: its page setup is the first section's starting point."""
+def use_template(lw: Lowering, path: Path, span: Span) -> None:
+    """\\document[template=...]: compile into a .dotx or .docx."""
     try:
         template = load_template(path)
     except TemplateError as e:
-        lw.report(Code.TEMPLATE, str(e), span, help=f"paths are relative to {lw.base_dir}")
+        lw.report(Code.TEMPLATE, str(e), span, help=lw.paths_help())
         return
-    lw.template = template
-    lw.template_fixed = from_command_line
-    lw.section = replace(template.section, headers=(), footers=())
+    apply_template(lw, template)
     if template.body_issue is not None:
         lw.warn(
             Code.TEMPLATE,
@@ -69,6 +67,14 @@ def use_template(lw: Lowering, path: Path, span: Span, *, from_command_line: boo
             span,
             help="only its styles, theme, page setup, headers and footers are used",
         )
+
+
+def apply_template(lw: Lowering, template: Template, *, fixed: bool = False) -> None:
+    """Compile into `template`: its page setup is the first section's starting point.
+    A `fixed` one (from the command line) wins over \\document[template=...]."""
+    lw.template = template
+    lw.template_fixed = fixed
+    lw.section = replace(template.section, headers=(), footers=())
 
 
 def meta(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
@@ -131,14 +137,14 @@ def use(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
     path = lw.base_dir / target
     if target.endswith(STYLESHEET_SUFFIX):
         try:
-            lw.stylesheets.add(parse_stylesheet(Source.from_path(path)))
+            lw.stylesheets.add(parse_stylesheet(Source.from_path(path, shown_path(path))))
         except (OSError, UnicodeDecodeError) as e:
             reason = e.strerror if isinstance(e, OSError) else "not valid UTF-8"
             lw.report(
                 Code.STYLESHEET_NOT_FOUND,
                 f"cannot read style sheet `{target}`: {reason}",
                 command.span,
-                help=f"paths are relative to {lw.base_dir}",
+                help=lw.paths_help(),
             )
         return []
     result = lw.load(path, command)
@@ -228,10 +234,10 @@ def styles(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
     body = command.body
     if not isinstance(body, ast.VerbatimBody):
         return []
-    text = lw.source.text
-    closed = text[body.span.end - 1 : body.span.end] == "}" and len(body.span) > 1
+    source = lw.source_of(body.span)
+    closed = source.text[body.span.end - 1 : body.span.end] == "}" and len(body.span) > 1
     end = body.span.end - 1 if closed else body.span.end
-    lw.stylesheets.add(parse_stylesheet(lw.source, body.span.start + 1, end))
+    lw.stylesheets.add(parse_stylesheet(source, body.span.start + 1, end))
     return []
 
 

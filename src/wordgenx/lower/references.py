@@ -19,7 +19,7 @@ from wordgenx import ir
 from wordgenx.ooxml.parts.numbering import complete_levels
 from wordgenx.ooxml.style_names import style_id
 from wordgenx.props import EMPTY_PARAGRAPH, PropertySet, Target
-from wordgenx.syntax.diagnostics import Code, Diagnostic, Severity
+from wordgenx.syntax.diagnostics import Code, Diagnostic, Severity, expansion_notes
 from wordgenx.syntax.source import Source, Span
 from wordgenx.values import Length, TabStop
 
@@ -542,7 +542,17 @@ def _is_caption_of(paragraph: ir.Paragraph, kind: str) -> bool:
 def report_to(diagnostics: list[Located]) -> Callable[[Source, Span, str, str], None]:
     def report(source: Source, span: Span, message: str, label: str) -> None:
         diagnostics.append(
-            (source, Diagnostic(Severity.ERROR, Code.UNDEFINED_LABEL, message, span, label))
+            (
+                source,
+                Diagnostic(
+                    Severity.ERROR,
+                    Code.UNDEFINED_LABEL,
+                    message,
+                    span,
+                    label,
+                    notes=expansion_notes(span),
+                ),
+            )
         )
 
     return report

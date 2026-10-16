@@ -149,7 +149,7 @@ def bibliography(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Bloc
             args.text("style", DEFAULT_STYLE) or DEFAULT_STYLE, lw.base_dir, lw.meta.language
         )
     except BibliographyError as e:
-        lw.report(Code.CITATION, str(e), command.span, help=f"paths are relative to {lw.base_dir}")
+        lw.report(Code.CITATION, str(e), command.span, help=lw.paths_help())
         return []
     lw.bibliography = Bibliography(source, style)
     return []
@@ -211,7 +211,7 @@ def print_bibliography(lw: Lowering, command: ast.Command, args: Args) -> list[i
             level=args.number("level", 1) or 1,
             include_all=args.flag("all"),
             span=command.span,
-            source=lw.source,
+            source=lw.source_of(command.span),
         )
     ]
 
