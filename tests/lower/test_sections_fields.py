@@ -101,12 +101,12 @@ def test_headers_and_footers() -> None:
 @pytest.mark.parametrize(
     ("text", "message"),
     [
-        ("\\header[odd]{x}", "unknown header kind `odd`"),
+        ("\\header[odd]{x}", "`kind`: unknown value `odd`"),
         ("\\table{\\row{\\cell{\\section[size=A4]}}}", "\\section cannot appear inside"),
         ("\\header{\\section[size=A4]}", "\\section cannot appear inside"),
-        ("\\section[break=sometimes]", "unknown section break"),
-        ("\\section[page-numbers=klingon]", "invalid page-numbers"),
-        ("\\section[columns=(count=99)]", "invalid columns"),
+        ("\\section[break=sometimes]", "`break`: unknown value `sometimes`"),
+        ("\\section[page-numbers=klingon]", "`page-numbers`: unknown value `klingon`"),
+        ("\\section[columns=(count=99)]", "`columns`: expected a whole number from 1 to 45"),
     ],
 )
 def test_section_errors(text: str, message: str) -> None:
@@ -218,8 +218,8 @@ def test_parse_instruction_nesting() -> None:
 def test_field_errors() -> None:
     result = compile_source("\\field{} and \\field[bogus=1]{PAGE}")
     messages = [d.message for _, d in result.diagnostics]
-    assert "\\field needs a field code: \\field{PAGE}" in messages
-    assert any("unknown \\field option" in m for m in messages)
+    assert "`\\field` needs a field code" in messages
+    assert "unknown option `bogus` for `\\field`" in messages
 
 
 # --- tab stops -----------------------------------------------------------------------------------

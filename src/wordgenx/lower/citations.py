@@ -1,14 +1,35 @@
-"""Citations in the document: placeholders while lowering, rendered once all are known."""
+r"""Citations: \bibliography, \cite, \textcite and \printbibliography (design §3.19).
+
+Citations are placeholders while lowering; they are rendered once all are known.
+"""
 
 from __future__ import annotations
 
+import difflib
 import re
 from dataclasses import dataclass, replace
+from typing import TYPE_CHECKING
 
 from wordgenx import ir
-from wordgenx.bibliography import Bibliography, html_runs
+from wordgenx.bibliography import (
+    DEFAULT_STYLE,
+    Bibliography,
+    BibliographyError,
+    Cite,
+    html_runs,
+    load_sources,
+    load_style,
+)
+from wordgenx.commands.bind import Args
+from wordgenx.commands.builtin import CITE_LOCATORS
+from wordgenx.lower.common import BlockHandler, Format, InlineHandler, Piece, verbatim
 from wordgenx.lower.references import References
+from wordgenx.syntax import ast
+from wordgenx.syntax.diagnostics import Code
 from wordgenx.syntax.source import Source, Span
+
+if TYPE_CHECKING:
+    from wordgenx.lower.lowering import Lowering
 
 NO_SPAN = Span(0, 0)
 LABEL_RE = re.compile(r"^(\[\d+\]|\d+\.)\s*")
@@ -108,3 +129,95 @@ def expand(
 
 
 __all__ = ["PendingBibliography", "PendingCitation", "expand"]
+
+
+# --- commands ------------------------------------------------------------------------------
+
+
+def bibliography(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
+    r"""\bibliography[file=refs.bib, style=harvard]: the data (BibTeX, CSL-JSON) and the
+    CSL style (bundled, or a path to a .csl file)."""
+    if lw.bibliography is not None:
+        lw.report(Code.CITATION, "the bibliography is already set", command.span)
+        return []
+    files = [lw.base_dir / name for name in args.items("file", str)]
+    if not files:
+        return []
+    try:
+        source = load_sources(files)
+        style = load_style(
+            args.text("style", DEFAULT_STYLE) or DEFAULT_STYLE, lw.base_dir, lw.meta.language
+        )
+    except BibliographyError as e:
+        lw.report(Code.CITATION, str(e), command.span, help=f"paths are relative to {lw.base_dir}")
+        return []
+    lw.bibliography = Bibliography(source, style)
+    return []
+
+
+def cite(lw: Lowering, command: ast.Command, args: Args, fmt: Format) -> list[Piece]:
+    r"""\cite[page=214, prefix="see", suffix="Lemma 2"]{key1, key2} and \textcite{key}."""
+    keys = tuple(k.strip() for k in verbatim(command).split(",") if k.strip())
+    if not keys:
+        return []
+    locator = next(((name, text) for name in CITE_LOCATORS if (text := args.text(name))), None)
+    if lw.bibliography is None:
+        lw.report(
+            Code.CITATION,
+            "citations need a bibliography",
+            command.span,
+            help='load one in the preamble: \\bibliography[file="refs.bib"]',
+        )
+        return []
+    citation = Cite(
+        keys,
+        command.name == "textcite",
+        locator,
+        args.text("prefix", "") or "",
+        args.text("suffix", "") or "",
+    )
+    missing = lw.bibliography.missing(citation)
+    if missing:
+        known = [str(key) for key in lw.bibliography.source]  # pyright: ignore[reportUnknownVariableType, reportUnknownArgumentType]
+        close = difflib.get_close_matches(missing[0].lower(), known, n=1)
+        lw.report(
+            Code.CITATION,
+            f"no bibliography entry `{missing[0]}`",
+            command.span,
+            f"did you mean `{close[0]}`?" if close else "",
+        )
+        return []
+    lw.bibliography.cites.append(citation)
+    index = len(lw.bibliography.cites) - 1
+    pending = PendingCitation("", fmt.props, fmt.style, index, keys[0].lower())
+    return [Piece("", fmt, "field", citation=pending)]
+
+
+def print_bibliography(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
+    r"""\printbibliography[title="References", level=1, all]: the cited entries, or with
+    `all` every entry."""
+    lw.has_content = True
+    if not lw.in_body(command):
+        return []
+    if lw.bibliography is None:
+        lw.report(
+            Code.CITATION, "\\printbibliography needs \\bibliography in the preamble", command.span
+        )
+        return []
+    title = args.text("title", "References")
+    return [
+        PendingBibliography(
+            title=None if title == "none" else title,
+            level=args.number("level", 1) or 1,
+            include_all=args.flag("all"),
+            span=command.span,
+            source=lw.source,
+        )
+    ]
+
+
+BLOCKS: dict[str, BlockHandler] = {
+    "bibliography": bibliography,
+    "printbibliography": print_bibliography,
+}
+INLINES: dict[str, InlineHandler] = {"cite": cite, "textcite": cite}

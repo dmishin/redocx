@@ -96,7 +96,9 @@ def test_undefined_and_duplicate_labels_are_errors() -> None:
 
 
 def test_invalid_ref_form() -> None:
-    assert errors("= A {#a}\n\n\\ref[form=sideways]{a}") == ["WGX0302 invalid \\ref option"]
+    assert errors("= A {#a}\n\n\\ref[form=sideways]{a}") == [
+        "WGX0302 `form`: unknown value `sideways`"
+    ]
 
 
 # --- captions and figures ------------------------------------------------------------------------
@@ -216,9 +218,7 @@ def test_seq_counters_with_labels_formats_and_restarts() -> None:
 
 
 def test_seq_needs_a_name() -> None:
-    assert errors("\\seq") == [
-        "WGX0302 \\seq needs a counter name (letters, digits, _): \\seq[Req]"
-    ]
+    assert errors("\\seq") == ["WGX0302 `\\seq` needs `name`"]
 
 
 # --- tables of contents --------------------------------------------------------------------------

@@ -13,6 +13,7 @@ from wordgenx.lower.builtins import BUILTIN_STYLES, DEFAULT_NUMBERING
 from wordgenx.lower.citations import expand as expand_citations
 from wordgenx.lower.index import expand as expand_index
 from wordgenx.lower.lowering import Located, Lowering, StyleUse
+from wordgenx.lower.preamble import use_template
 from wordgenx.lower.references import report_to, resolve
 from wordgenx.ooxml.parts.numbering import complete_levels
 from wordgenx.ooxml.style_names import style_id
@@ -35,7 +36,7 @@ def lower(
         base_dir = Path(result.source.name).resolve().parent
     lowering = Lowering(result.source, base_dir)
     if template_path is not None:
-        lowering.use_template(template_path, Span(0, 0), from_command_line=True)
+        use_template(lowering, template_path, Span(0, 0), from_command_line=True)
     body = lowering.document(result.ast)
     # Citations and bibliographies, now that every citation is known.
     expanded, cited_section, cite_styles = expand_citations(

@@ -35,13 +35,20 @@
 
 Each stage is a pure function from input to output plus diagnostics. Stages communicate only through data structures. Each can be tested on its own and is accessible from the Python API.
 
-== Package layout (proposed)
+== Package layout (partly proposed)
+
+`syntax/`, `commands/`, `lower/`, `props/`, `std/`, `stylesheet/`, `ooxml/` and `math/` exist; the others are the plan.
+
+*Commands.* Each command is declared once, in `commands/builtin.py`: where it may appear (block, inline, either, or only inside another command), its options with their value types, and how its body is read. The parser takes body kinds from it. Lowering binds each command against its spec before it gives the command meaning (`bind`), so every command reads options the same way and reports the same errors. A handler receives typed, checked arguments and does only the semantic part. The schema does not depend on lowering, so documents can later be checked without compiling them, and documentation and editor completion can be generated from it.
 
 ```
 src/wordgenx/
   syntax/        lexer, parser, CST, AST, source map, pretty-printer (formatter)
-  expand/        includes, macros, desugaring
-  commands/      command registry (option schema + argument kinds); one module per family (text, para, table, section, refs, math, …)
+  commands/      COMMAND SCHEMA: every command's placement, options (typed) and body kind (builtin.py);
+                 value types (types.py); binding a parsed command to typed arguments (bind.py)
+  lower/         AST → IR: the core pass (lowering.py: blocks, macros, dispatch, run assembly) and one
+                 module per command family (text, code, preamble, sections, tables, fields, xrefs,
+                 media, equations, citations, index); resolve passes (references, citations, index)
   std/           standard macro library (.wgx files: theorem, callout, subfigure, signature)
   props/         PROPERTY REGISTRY: name, type, units, OOXML target, docs — single source of truth
   ir/            IR node dataclasses, JSON (de)serialization

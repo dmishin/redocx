@@ -1,6 +1,6 @@
 from wordgenx import ir
 from wordgenx.compiler import compile_source
-from wordgenx.lower.lowering import std_modules
+from wordgenx.lower.preamble import std_modules
 from wordgenx.syntax import ast, parse
 from wordgenx.syntax.diagnostics import Code
 from wordgenx.values import Color

@@ -54,10 +54,9 @@ def test_protection() -> None:
     protection = part(package, "word/settings.xml").find(f"{W}documentProtection")
     assert protection is not None
     assert (protection.get(f"{W}edit"), protection.get(f"{W}enforcement")) == ("readOnly", "0")
-    assert set(errors("\\settings[protection=(mode=locked)]")) == {
-        "invalid protection",
-        "protection needs a mode",
-    }
+    assert errors("\\settings[protection=(mode=locked)]") == [
+        "`protection`: unknown value `locked`"
+    ]
 
 
 def test_mirrored_margins() -> None:
@@ -159,7 +158,7 @@ def test_raw_runs_and_blocks() -> None:
         ("\\raw[ooxml]{<w:r><w:t>x</w:r>}", "not well-formed XML"),
         ("\\raw[ooxml]{<p>x</p>}", "must be WordprocessingML"),
         ("\\raw[ooxml]{<w:r/><w:p/>}", "either run-level"),
-        ("\\raw[html]{<w:r/>}", "\\raw takes the format ooxml"),
+        ("\\raw[html]{<w:r/>}", "`format`: unknown value `html`"),
     ],
 )
 def test_raw_errors(text: str, message: str) -> None:

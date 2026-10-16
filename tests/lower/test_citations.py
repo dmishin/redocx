@@ -146,7 +146,7 @@ def test_custom_style_files(folder: Path) -> None:
         ("\\bibliography[file=missing.bib]", "cannot read `missing.bib`"),
         ("\\bibliography[file=refs.txt]", "bibliography data is .bib (BibTeX) or .json (CSL-JSON)"),
         ("\\bibliography[file=refs.bib, style=apa9]", "unknown citation style `apa9`"),
-        ("\\bibliography", "\\bibliography needs data"),
+        ("\\bibliography", "`\\bibliography` needs `file`"),
     ],
 )
 def test_errors(text: str, message: str, folder: Path) -> None:

@@ -10,10 +10,18 @@ from __future__ import annotations
 
 import unicodedata
 from dataclasses import dataclass, field, replace
+from typing import TYPE_CHECKING
 
 from wordgenx import ir
+from wordgenx.commands.bind import Args
+from wordgenx.lower.common import BlockHandler, Format, InlineHandler, Piece, verbatim
 from wordgenx.props import EMPTY_PARAGRAPH, PropertySet, Target
+from wordgenx.syntax import ast
+from wordgenx.syntax.diagnostics import Code
 from wordgenx.values import Length, TabStop
+
+if TYPE_CHECKING:
+    from wordgenx.lower.lowering import Lowering
 
 MAX_LEVELS = 9
 """Word's index styles go to index 9."""
@@ -153,3 +161,68 @@ def expand(blocks: tuple[ir.Block, ...]) -> tuple[tuple[ir.Block, ...], set[str]
 
 
 __all__ = ["IndexMark", "PendingIndex", "expand", "index_instruction", "xe_instruction"]
+
+
+# --- commands ------------------------------------------------------------------------------
+
+
+def ix(lw: Lowering, command: ast.Command, args: Args, fmt: Format) -> list[Piece]:
+    r"""\ix[see="queueing", bold]{traffic!flow}: an index entry (XE field) at this point;
+    `!` separates subentries."""
+    body = verbatim(command)
+    if not body:
+        return []
+    terms = tuple(t.strip() for t in body.split("!"))
+    if not all(terms):
+        lw.report(
+            Code.INVALID_ARGUMENT,
+            "\\ix needs a term, with `!` before each subentry: \\ix{traffic!flow}",
+            command.span,
+        )
+        return []
+    if len(terms) > MAX_LEVELS:
+        lw.report(
+            Code.INVALID_ARGUMENT,
+            f"index entries nest at most {MAX_LEVELS} levels deep",
+            command.span,
+        )
+        terms = terms[:MAX_LEVELS]
+    see: str | None = None
+    if (text := args.text("see")) is not None:
+        see = f"See {text}"
+    if (text := args.text("see-also")) is not None:
+        see = f"See also {text}"
+    if (text := args.text("xref")) is not None:
+        see = text
+    instruction = xe_instruction(terms, see, args.flag("bold"), args.flag("italic"))
+    mark = IndexMark(instruction, has_result=False, terms=terms, see=see)
+    return [Piece("", Format(), "field", field=mark)]
+
+
+def index(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
+    r"""\index[columns=2, headings, right-align, title="Index", level=1]: the index of
+    the \ix entries."""
+    if not lw.in_body(command):
+        return []
+    columns = args.number("columns", 2) or 2
+    headings, right_align = args.flag("headings"), args.flag("right-align")
+    out: list[ir.Block] = []
+    if title := args.text("title"):
+        heading = f"Heading {args.number('level', 1)}"
+        lw.use_style(heading, ir.StyleKind.PARAGRAPH, command.span)
+        out.append(ir.Paragraph((ir.Run(title),), heading, unnumbered=True))
+    lw.has_content = True
+    # Word puts a multi-column index into continuous section breaks of its own when it
+    # updates the field (on open), so the entries are written in the current section.
+    width = lw.section.page.text_width.emu
+    if columns > 1:
+        width = (width - COLUMN_GAP.emu * (columns - 1)) // columns
+    field = ir.Field(index_instruction(columns, headings, right_align), dirty=True)
+    pending = PendingIndex(
+        field, (), headings=headings, right_align=right_align, column_width=Length(width)
+    )
+    return [*out, pending]
+
+
+BLOCKS: dict[str, BlockHandler] = {"index": index}
+INLINES: dict[str, InlineHandler] = {"ix": ix}

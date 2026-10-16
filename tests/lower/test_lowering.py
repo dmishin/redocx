@@ -274,7 +274,7 @@ def test_include_and_macro_files(tmp_path: Path) -> None:
         (r'\style["Heading 1"]{x}', Code.UNDEFINED_STYLE, "`Heading 1` is a paragraph style"),
         (r"\list[Nope]{1. x}", Code.UNDEFINED_STYLE, "numbering `Nope` is not defined"),
         (r"\br{x}", Code.INVALID_ARGUMENT, "`\\br` takes no body"),
-        (r"\section[size=B7]", Code.INVALID_ARGUMENT, "unknown page size"),
+        (r"\section[size=B7]", Code.INVALID_ARGUMENT, "`size`: unknown value `B7`"),
     ],
 )
 def test_errors(text: str, code: Code, message: str) -> None:

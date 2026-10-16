@@ -111,7 +111,7 @@ def test_note_settings() -> None:
 
 def test_invalid_note_settings() -> None:
     assert errors("\\settings[endnotes=(restart=each-page)]") == [
-        "WGX0302 invalid endnotes setting"
+        "WGX0302 `endnotes`: unknown value `each-page`"
     ]
 
 

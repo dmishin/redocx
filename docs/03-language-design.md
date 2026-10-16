@@ -819,6 +819,12 @@ Lowering (`wordgenx.lower`) turns the AST into the document IR. It fixes these b
 - **Text options** (`title`, `alt`, `style`, …) take a word, a `"string"` (which ends on its line), or plain text in
   braces, which may span lines: `alt={a long description …}`. In option values, `#` plus six hex digits is always a
   colour, even inside `\define`.
+- **Options** are checked against each command's declaration (`wordgenx.commands`), the same way for every command.
+  A bare word is a switch (`\section[mirror]`), else the command's positional value (`\list[Legal]` is
+  `numbering=Legal`). Every switch also takes `on|off|true|false|yes|no` (`\section[mirror=off]`,
+  `\settings[update-fields-on-open]`). An unknown option, a misspelt value or a repeated option is an error
+  (`WGX0302`) with a suggestion where one is close. Options the language plans but does not implement yet are a
+  warning (`WGX0304`).
 - **Commands not implemented yet** (figures, fields, notes, references, math, …) produce a warning
   (`WGX0304`) naming the milestone, and the document still builds. For `\comment`, `\ins` and `\control` the body text is
   kept; for the others the command is dropped.

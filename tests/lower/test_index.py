@@ -139,15 +139,13 @@ def test_empty_index_says_so() -> None:
 
 
 def test_index_errors() -> None:
-    assert errors("\\ix{}") == [
-        "\\ix needs a term, with `!` before each subentry: \\ix{traffic!flow}"
-    ]
+    assert errors("\\ix{}") == ["`\\ix` needs a term"]
     assert errors("\\ix{a!!b}") == [
         "\\ix needs a term, with `!` before each subentry: \\ix{traffic!flow}"
     ]
     assert errors("\\ix{a!b!c!d!e!f!g!h!i!j}") == ["index entries nest at most 9 levels deep"]
-    assert errors("\\ix[colour=red]{a}") == ["invalid \\ix option"]
-    assert errors("\\index[columns=7]") == ["invalid \\index option"]
+    assert errors("\\ix[colour=red]{a}") == ["unknown option `colour` for `\\ix`"]
+    assert errors("\\index[columns=7]") == ["`columns`: expected a whole number from 1 to 4, got 7"]
     assert errors("| \\index |\n|---|") != []
 
 

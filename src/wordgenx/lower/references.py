@@ -25,7 +25,6 @@ from wordgenx.values import Length, TabStop
 
 Located = tuple[Source, Diagnostic]
 
-REF_FORMS = ("default", "number", "text", "full", "page", "above-below", "relative")
 SEQ_SWITCHES = {
     "ARABIC": "decimal",
     "alphabetic": "lowerLetter",

@@ -1,12 +1,26 @@
-"""Fields: parsing field codes with nested fields, and Word date pictures."""
+"""Fields: \\field, \\date, \\pagenum, \\numpages and \\sectionpages; parsing field
+codes with nested fields, and Word date pictures (design §3.12)."""
 
 from __future__ import annotations
 
 import os
 import re
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from wordgenx import ir
+from wordgenx.commands.bind import Args
+from wordgenx.commands.builtin import DATE_FIELDS
+from wordgenx.lower.common import Format, InlineHandler, Piece, verbatim
+from wordgenx.syntax import ast
+from wordgenx.syntax.diagnostics import Code
+
+if TYPE_CHECKING:
+    from wordgenx.lower.lowering import Lowering
+
+PAGE_FIELDS = {"pagenum": "PAGE", "numpages": "NUMPAGES", "sectionpages": "SECTIONPAGES"}
+META_FIELDS = {"TITLE": "title", "SUBJECT": "subject", "AUTHOR": "author", "KEYWORDS": "keywords"}
+DOCPROPERTY_RE = re.compile(r'\s*DOCPROPERTY\s+(?:"([^"]+)"|(\S+))', re.IGNORECASE)
 
 _MONTHS = (
     "January February March April May June July August September October November December".split()
@@ -104,3 +118,68 @@ def format_date(moment: datetime, picture: str) -> str:
         return t[1:-1] if t.startswith("'") else table[t]
 
     return _DATE_TOKEN.sub(token, picture)
+
+
+# --- commands ------------------------------------------------------------------------------
+
+
+def page_field(lw: Lowering, command: ast.Command, args: Args, fmt: Format) -> list[Piece]:
+    r"""\pagenum, \numpages, \sectionpages."""
+    field = ir.Field((f" {PAGE_FIELDS[command.name]} ",), "1", fmt.props, fmt.style)
+    return [Piece("", fmt, "field", field=field)]
+
+
+def any_field(lw: Lowering, command: ast.Command, args: Args, fmt: Format) -> list[Piece]:
+    r"""\field[result="..."]{CODE}: any Word field; nested fields in { } as in Word."""
+    code = verbatim(command)
+    if not code:
+        return []
+    try:
+        instruction = parse_instruction(code)
+    except ValueError as e:
+        lw.report(Code.INVALID_ARGUMENT, str(e), command.span)
+        return []
+    result = args.text("result")
+    dirty = False
+    if result is None:
+        known = _known_result(lw, field_name(code), code)
+        dirty = known is None  # Word computes it when the document opens
+        result = known or ""
+    field = ir.Field(merge_text((" ", *instruction, " ")), result, fmt.props, fmt.style, dirty)
+    return [Piece("", fmt, "field", field=field)]
+
+
+def _known_result(lw: Lowering, name: str, code: str) -> str | None:
+    if name in ("PAGE", "SECTIONPAGES", "NUMPAGES"):
+        return "1"
+    if name == "DOCPROPERTY" and (match := DOCPROPERTY_RE.match(code)):
+        value = lw.meta.custom_value(match.group(1) or match.group(2))
+        if isinstance(value, bool):
+            return "Y" if value else "N"
+        return None if value is None else str(value)
+    if name in META_FIELDS:
+        value: object = getattr(lw.meta, META_FIELDS[name])
+        if isinstance(value, tuple):
+            return ", ".join(str(v) for v in value)  # pyright: ignore[reportUnknownVariableType, reportUnknownArgumentType]
+        return value if isinstance(value, str) else None
+    return None
+
+
+def date(lw: Lowering, command: ast.Command, args: Args, fmt: Format) -> list[Piece]:
+    r"""\date[kind=fixed|today|saved|created, format="d MMMM yyyy"]."""
+    kind = args.text("kind", "fixed")
+    picture = args.text("format", "d MMMM yyyy")
+    assert kind is not None
+    assert picture is not None
+    text = format_date(build_time(), picture)
+    if kind == "fixed":
+        return [Piece(text, fmt, "code")]
+    code = f' {DATE_FIELDS[kind]} \\@ "{picture}" '
+    return [Piece("", fmt, "field", field=ir.Field((code,), text, fmt.props, fmt.style))]
+
+
+INLINES: dict[str, InlineHandler] = {
+    **dict.fromkeys(PAGE_FIELDS, page_field),
+    "field": any_field,
+    "date": date,
+}

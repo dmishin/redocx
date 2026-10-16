@@ -136,7 +136,7 @@ def test_short_pipe_rows_are_padded() -> None:
         ("\\table[widths=(1cm)]{| a | b |}", "the table has 2 columns but widths lists 1"),
         ("\\table[widths=(30cm, 1fr)]{| a | b |}", "leave no room"),
         ("\\table[widths=(huge)]{| a |}", "invalid column width"),
-        ("\\table[bogus=1]{| a |}", "unknown \\table option"),
+        ("\\table[bogus=1]{| a |}", "unknown option `bogus` for `\\table`"),
         ("\\table{Some text}", "a \\table contains pipe rows"),
         ("| \\cell[colspan=2]{a} | not empty |", "covered by a colspan"),
         ("\\table{\\row{\\cell[rowspan=3]{a}}}", "past the last row"),
@@ -144,7 +144,7 @@ def test_short_pipe_rows_are_padded() -> None:
         ("\\table{\\row{text}}", "a \\row contains \\cell commands"),
         ("\\table{| \\cell[shade=blue]{a} |}", "not a color"),
         ("\\table{| \\cell[borders=(top=wiggly)]{a} |}", "not a border part"),
-        ("\\table[look=(header-row, zebra)]{| a |}", "invalid look"),
+        ("\\table[look=(header-row, zebra)]{| a |}", "`look`: unknown value `zebra`"),
         ("\\table[cell-margins=(middle=1cm)]{| a |}", "cell-margins parts"),
         ("\\table[style=Fancy]{| a |}", "table style `Fancy` is not defined"),
     ],
@@ -249,7 +249,7 @@ def test_image_sizes(images: Path) -> None:
         ("\\image{missing.png}", "cannot read image"),
         ("\\image{notes.txt}", "not an image"),
         ("\\image{scan.tif}", "unsupported image format TIFF"),
-        ("\\image[size=1cm]{wide.png}", "unknown \\image option"),
+        ("\\image[size=1cm]{wide.png}", "unknown option `size` for `\\image`"),
     ],
 )
 def test_image_errors(images: Path, text: str, message: str) -> None:

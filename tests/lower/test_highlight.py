@@ -85,7 +85,7 @@ def test_code_theme_setting() -> None:
     keyword = next(s for s in doc.styles if s.name == "Code Keyword")
     assert keyword.run.get("bold") is True
     result = compile_source("\\settings[code-theme=nope]")
-    assert any("unknown code theme" in d.message for _, d in result.diagnostics)
+    assert any("`code-theme`: unknown value `nope`" in d.message for _, d in result.diagnostics)
 
 
 def test_line_numbers() -> None:

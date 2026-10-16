@@ -38,6 +38,7 @@ from citeproc.source.bibtex import BibTeX
 from citeproc.source.json import CiteProcJSON
 
 from wordgenx import ir
+from wordgenx.commands.builtin import CITE_LOCATORS as LOCATORS
 from wordgenx.props import EMPTY_RUN, PropertySet, Target
 
 DATA = Path(os.path.dirname(citeproc.__file__)) / "data"
@@ -53,12 +54,6 @@ BUNDLED_STYLES = {
 """Styles wordgenx ships (data/csl/README.md); any other is a path to a .csl file."""
 DEFAULT_STYLE = "harvard"
 
-LOCATORS = {
-    "page": "p.", "pages": "pp.", "chapter": "ch.", "section": "sec.", "figure": "fig.",
-    "table": "tab.", "paragraph": "para.", "line": "l.", "volume": "vol.", "note": "n.",
-    "equation": "eq.", "verse": "v.", "column": "col.", "part": "pt.", "book": "bk.",
-}  # fmt: skip
-"""CSL locator labels -> the abbreviation narrative citations use."""
 URL_RE = re.compile(r"https?://[^\s<>\"]+[^\s<>\".,;:)]")
 QUOTED_RE = re.compile(r"((?:</[a-z]+>)*[\u201d\u2019])([.,])")
 """A closing quote (after any closing tags) followed by a period or comma."""

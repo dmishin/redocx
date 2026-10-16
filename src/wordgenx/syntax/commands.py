@@ -21,24 +21,6 @@ class ArgKind(Enum):
     """Style-sheet syntax (design §3.5): balanced braces, parsed by wordgenx.stylesheet."""
 
 
-BODY_KINDS: dict[str, ArgKind] = {
-    "include": ArgKind.STRING,
-    "use": ArgKind.STRING,
-    "image": ArgKind.STRING,
-    "url": ArgKind.STRING,
-    "ref": ArgKind.STRING,
-    "cite": ArgKind.STRING,
-    "textcite": ArgKind.STRING,
-    "ix": ArgKind.STRING,
-    "pageref": ArgKind.STRING,
-    "embed-docx": ArgKind.STRING,
-    "field": ArgKind.RAW,
-    "raw": ArgKind.RAW,
-    "m": ArgKind.MATH,
-    "math": ArgKind.MATH,
-    "styles": ArgKind.STYLESHEET,
-}
-
 SPECIAL_FORMS = frozenset({"define", "let"})
 """Declarations with a name group before the body.
 
@@ -51,4 +33,7 @@ BREAK_COMMANDS = frozenset({"br", "tab", "pagebreak", "columnbreak"})
 
 
 def body_kind(name: str) -> ArgKind:
-    return BODY_KINDS.get(name, ArgKind.MARKUP)
+    """How the body of `name` is read, as the command table declares it."""
+    from wordgenx.commands.builtin import body_kind  # the table imports this module
+
+    return body_kind(name)
