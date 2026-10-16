@@ -348,6 +348,9 @@ class Image:
     """Alternative text."""
     name: str = ""
     """Original file name (shown in Word's selection pane)."""
+    svg: bytes | None = None
+    """An SVG that Word 2016+ shows instead; `data` is then the fallback picture older
+    readers show (an a:blip with an asvg:svgBlip extension)."""
 
     def __post_init__(self) -> None:
         if self.format not in IMAGE_FORMATS:
@@ -700,7 +703,16 @@ class RawBlock:
     """Word needs a paragraph between it and a following table."""
 
 
-Block = Paragraph | Table | SectionBreak | FieldBlock | RawBlock
+@dataclass(frozen=True)
+class EmbeddedDocx:
+    """Another .docx that Word merges into the body when it opens the file (w:altChunk)."""
+
+    data: bytes
+    name: str = ""
+    """The file name, for messages."""
+
+
+Block = Paragraph | Table | SectionBreak | FieldBlock | RawBlock | EmbeddedDocx
 
 
 @dataclass(frozen=True)
@@ -812,7 +824,7 @@ def map_paragraphs(
             out.append(SectionBreak(map_section(block.section, fn)))
         elif isinstance(block, FieldBlock):
             out.append(replace(block, content=tuple(_map_paragraph(p, fn) for p in block.content)))
-        elif isinstance(block, RawBlock):
+        elif isinstance(block, RawBlock | EmbeddedDocx):
             out.append(block)
         else:
             rows = tuple(

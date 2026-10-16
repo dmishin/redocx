@@ -35,6 +35,7 @@ from wordgenx.values import TAB_ALIGNMENTS, TAB_LEADERS, Color, Length, LineSpac
 
 _A = "http://schemas.openxmlformats.org/drawingml/2006/main"
 _WP = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+_ASVG = "http://schemas.microsoft.com/office/drawing/2016/SVG/main"
 _PIC = "http://schemas.openxmlformats.org/drawingml/2006/picture"
 
 _PREFIX_BY_URI = {NS.W: "w", NS.R: "r", _A: "a", _WP: "wp", _PIC: "pic"}
@@ -66,6 +67,16 @@ def _a(tag: str) -> str:
 
 def _wp(tag: str) -> str:
     return f"{{{_WP}}}{tag}"
+
+
+def _svg_blip(blip: Element, ctx: _Ctx) -> bytes | None:
+    """The SVG Word 2016+ shows in place of a picture (a:blip/a:extLst asvg:svgBlip)."""
+    found = blip.find(f".//{{{_ASVG}}}svgBlip")
+    rel_id = found.get(_r("embed")) if found is not None else None
+    if rel_id is None:
+        return None
+    part, external = ctx.opc.target(ctx.part, rel_id)
+    return ctx.opc.read(part) if part is not None and not external else None
 
 
 def _qname(tag: object) -> str:
@@ -515,7 +526,8 @@ def _read_drawing(drawing: Element, ctx: _Ctx) -> ir.Image | None:
         description = doc_pr.get("descr") or ""
         name = doc_pr.get("name") or ""
     ctx.stats.count("image")
-    return ir.Image(data, image_format, width, height, description, name)
+    svg = _svg_blip(blip, ctx)
+    return ir.Image(data, image_format, width, height, description, name, svg=svg)
 
 
 def _read_run(run: Element, ctx: _Ctx) -> list[ir.Inline]:

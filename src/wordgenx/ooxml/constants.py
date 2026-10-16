@@ -74,4 +74,5 @@ class RT:
     HEADER: Final = f"{_OD}/header"
     FOOTER: Final = f"{_OD}/footer"
     IMAGE: Final = f"{_OD}/image"
+    ALT_CHUNK: Final = f"{_OD}/aFChunk"
     HYPERLINK: Final = f"{_OD}/hyperlink"

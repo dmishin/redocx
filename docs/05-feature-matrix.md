@@ -123,7 +123,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Feature | Tier | Diff. |
 |---------|------|-------|
 | Inline images (PNG/JPEG/GIF; size, alt text) | M1 ✓ | ●● |
-| SVG images (with PNG fallback, `asvg:svgBlip`) | M3 | ●● |
+| SVG images (with PNG fallback, `asvg:svgBlip`) | M3 ✓ | ●● |
 | Floating images (anchor, wrap modes, positioning) | M4 | ●●● |
 | Cropping, rotation, borders on images | M4 | ●● |
 | Text boxes, basic shapes (wps) | M4 | ●●● |
@@ -155,7 +155,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Compatibility mode settings | M1 | ● |
 | updateFields on open | M2 ✓ | ● |
 | Embedded fonts | Later | ●● |
-| altChunk (embed docx/html) | M3 | ● |
+| altChunk (embed docx) | M3 ✓ | ● |
 | Glossary / building blocks | Later | ●● |
 | Finalize (update fields via Word / LibreOffice), PDF export | M6 | ●● |
 

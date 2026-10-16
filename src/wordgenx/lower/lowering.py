@@ -88,6 +88,7 @@ BLOCK_HANDLERS: dict[str, BlockHandler] = {
     **equations.BLOCKS,
     **citations.BLOCKS,
     **index.BLOCKS,
+    **media.BLOCKS,
 }
 INLINE_HANDLERS: dict[str, InlineHandler] = {
     **text.INLINES,

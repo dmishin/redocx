@@ -401,9 +401,14 @@ _command(
     body=STRING, body_required=True, body_doc="an address",
 )  # fmt: skip
 _command(
-    "image", INLINE, "An inline picture (PNG, JPEG, GIF, BMP).",
+    "image", INLINE, "An inline picture (PNG, JPEG, GIF, BMP or SVG).",
     _o("width", SizeValue()), _o("height", LengthValue(nonnegative=True)),
     _o("alt", TEXT, "a description"), _o("name", TEXT),
+    _o("fallback", TEXT, "a PNG or JPEG that Word 2013 and older show for an SVG"),
+    body=STRING, body_required=True, body_doc="a file name",
+)  # fmt: skip
+_command(
+    "embed-docx", BLOCK, "Another .docx, which Word merges in when it opens the document.",
     body=STRING, body_required=True, body_doc="a file name",
 )  # fmt: skip
 _command(
@@ -461,7 +466,6 @@ for _note in ("footnote", "endnote"):
 
 # --- planned -----------------------------------------------------------------------------
 
-_command("embed-docx", INLINE, "Embeds another .docx.", body=STRING, planned="M3")
 _command("textbox", INLINE, "A text box.", planned="M4")
 _command("watermark", BLOCK, "A page watermark.", planned="M4")
 _command("comment", INLINE, "A comment.", planned="M5", keep_body=True)

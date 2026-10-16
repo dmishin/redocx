@@ -192,9 +192,18 @@ def example_index() -> ir.Document:
     return result.document
 
 
+def example_media() -> ir.Document:
+    """examples/media: an SVG with its placeholder fallback; an embedded .docx (altChunk)."""
+    path = Path(__file__).resolve().parents[2] / "examples" / "media" / "media.wgx"
+    result = compile_file(path)
+    assert result.document is not None, result.render_diagnostics()
+    return result.document
+
+
 CASES: dict[str, Callable[[], ir.Document]] = {
     "example-citations": example_citations,
     "example-index": example_index,
+    "example-media": example_media,
     "example-math": example_math,
     "example-design-spec": example_design_spec,
     "example-hello": example_hello,

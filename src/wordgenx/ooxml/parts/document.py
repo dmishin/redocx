@@ -19,6 +19,7 @@ from wordgenx.ir import (
     Break,
     Cell,
     Document,
+    EmbeddedDocx,
     Field,
     FieldBlock,
     Image,
@@ -54,6 +55,7 @@ from wordgenx.values import Border
 
 _SPLIT_RE = re.compile(r"(\t|\n)")
 PICTURE_URI = "http://schemas.openxmlformats.org/drawingml/2006/picture"
+SVG_BLIP_URI = "{96DAC541-7B7A-43D3-8B79-37D633B846F1}"
 PART_NAMESPACES = ("w", "r", "wp", "a", "pic")
 
 
@@ -70,8 +72,9 @@ class BodyContext:
     """Returns the relationship id for an external hyperlink target."""
     list_num_ids: Mapping[tuple[str, int], int]
     """(numbering name, list instance) -> w:numId."""
-    image: Callable[[Image], str] = lambda image: ""
-    """Stores the image as a media part; returns its relationship id."""
+    image: Callable[[bytes, str], str] = lambda data, format: ""
+    """Stores picture data of a format (a key of IMAGE_FORMATS, or "svg") as a media
+    part; returns its relationship id."""
     drawing_id: Callable[[], int] = lambda: 1
     """A new document-wide unique id for wp:docPr."""
     header_footer: Callable[[str, tuple[Block, ...]], str] = lambda family, blocks: ""
@@ -87,6 +90,9 @@ class BodyContext:
     the kinds it does not define)."""
     template_body: Callable[[], list[Element]] = lambda: []
     """The template's body content, rewritten for this package; it precedes the document's."""
+    chunk: Callable[[EmbeddedDocx], str] = lambda chunk: ""
+    """Stores an embedded .docx as an alternative format import part (of the main
+    document); returns its relationship id."""
 
 
 # --- runs and inline content --------------------------------------------------------------
@@ -141,7 +147,11 @@ def _field(field: Field, ctx: BodyContext) -> list[Element]:
 
 
 def _drawing(image: Image, ctx: BodyContext) -> Element:
-    rel_id = ctx.image(image)
+    rel_id = ctx.image(image.data, image.format)
+    svg = None
+    if image.svg is not None:
+        svg_blip = E("asvg:svgBlip", {"r:embed": ctx.image(image.svg, "svg")}, nsmap=nsmap("asvg"))
+        svg = E("a:extLst", E("a:ext", {"uri": SVG_BLIP_URI}, svg_blip))
     drawing_id = ctx.drawing_id()
     size = {"cx": str(image.width.emu), "cy": str(image.height.emu)}
     name = image.name or f"Picture {drawing_id}"
@@ -155,7 +165,7 @@ def _drawing(image: Image, ctx: BodyContext) -> Element:
         ),
         E(
             "pic:blipFill",
-            E("a:blip", {"r:embed": rel_id}),
+            E("a:blip", {"r:embed": rel_id}, svg),
             E("a:stretch", E("a:fillRect")),
         ),
         E(
@@ -276,6 +286,9 @@ def _blocks(blocks: tuple[Block, ...], ctx: BodyContext, *, final: bool = False)
             paragraphs = _field_block(block, ctx)
             elements.extend(paragraphs)
             last_paragraph = paragraphs[-1]
+        elif isinstance(block, EmbeddedDocx):
+            elements.append(E("w:altChunk", {"r:id": ctx.chunk(block)}))
+            last_paragraph = None
         else:
             last_paragraph = _paragraph(block, ctx)
             elements.append(last_paragraph)

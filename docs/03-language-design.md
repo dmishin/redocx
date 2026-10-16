@@ -576,6 +576,21 @@ the label.
 \watermark[text="DRAFT", color=#D9D9D9, rotation=-45]
 ```
 
+`\image` takes PNG, JPEG, GIF, BMP and SVG. An SVG is stored the way Word stores one: a picture whose blip carries an
+`asvg:svgBlip` extension that points at the SVG part. Word 2016 and later show the SVG, and older readers show the
+fallback picture. `fallback=chart.png` names that picture; without it, wordgenx writes a plain grey PNG with the SVG's
+proportions, because it does not rasterise SVG itself. The size comes from the SVG's `width` and `height` (CSS units,
+96 px to the inch), else from its `viewBox`, else a browser's 300 × 150 px; `width=` and `height=` override it as for
+other images.
+
+`\embed-docx{part.docx}` is a block that inserts another document as a `w:altChunk`: the file is stored in the package
+unchanged and Word merges its body in when it opens the document. Its paragraphs, lists, tables and pictures come
+along; where its styles have the same names as the document's, the document's styles win; its headers, footers and
+page setup are dropped. Only Word does this merge: other readers show nothing there until the file has been saved in
+Word. wordgenx does not look inside the embedded file, so the table of contents lists its headings only after Word
+updates the field, and `@label` references cannot point into it. It is a body block (not in tables, notes, headers or
+figures) and takes a .docx only, not a macro-enabled document or a template.
+
 ## 3.17 Collaboration and forms
 
 ```wgx
@@ -696,7 +711,7 @@ uses a `Bibliography` paragraph style. Native Word citations (`CITATION` fields,
 3. `\raw[ooxml]{<w:r>…</w:r>}`: raw run- or block-level WordprocessingML. The body is raw. A body of `w:p`, `w:tbl`
    (or a `w:sdt` holding them) is a block of its own; anything else goes inline. Run-level and block-level elements
    cannot be mixed.
-4. `\embed-docx{part.docx}`: insert another document as `altChunk`. Word merges it on open (M3).
+4. `\embed-docx{part.docx}`: insert another document as `altChunk`. Word merges it on open (§3.16).
 
 Raw XML is checked when the document compiles: it must be well-formed WordprocessingML (`w:` elements; the usual
 prefixes `w:`, `r:`, `a:`, `wp:`, `pic:`, `w14:`, `mc:`, `v:`, `o:`, `m:` need no declaration). A bad escape hatch is a

@@ -1,0 +1,76 @@
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:docDefaults>
+    <w:rPrDefault>
+      <w:rPr>
+        <w:rFonts w:asciiTheme="minorHAnsi" w:cstheme="minorBidi" w:eastAsiaTheme="minorEastAsia" w:hAnsiTheme="minorHAnsi"/>
+        <w:sz w:val="22"/>
+        <w:szCs w:val="22"/>
+        <w:lang w:val="en-GB"/>
+      </w:rPr>
+    </w:rPrDefault>
+  </w:docDefaults>
+  <w:style w:default="1" w:styleId="Normal" w:type="paragraph">
+    <w:name w:val="Normal"/>
+    <w:qFormat/>
+  </w:style>
+  <w:style w:default="1" w:styleId="DefaultParagraphFont" w:type="character">
+    <w:name w:val="Default Paragraph Font"/>
+    <w:uiPriority w:val="1"/>
+    <w:semiHidden/>
+    <w:unhideWhenUsed/>
+  </w:style>
+  <w:style w:default="1" w:styleId="TableNormal" w:type="table">
+    <w:name w:val="Normal Table"/>
+    <w:uiPriority w:val="99"/>
+    <w:semiHidden/>
+    <w:unhideWhenUsed/>
+    <w:tblPr>
+      <w:tblInd w:type="dxa" w:w="0"/>
+      <w:tblCellMar>
+        <w:top w:type="dxa" w:w="0"/>
+        <w:left w:type="dxa" w:w="108"/>
+        <w:bottom w:type="dxa" w:w="0"/>
+        <w:right w:type="dxa" w:w="108"/>
+      </w:tblCellMar>
+    </w:tblPr>
+  </w:style>
+  <w:style w:default="1" w:styleId="NoList" w:type="numbering">
+    <w:name w:val="No List"/>
+    <w:uiPriority w:val="99"/>
+    <w:semiHidden/>
+    <w:unhideWhenUsed/>
+  </w:style>
+  <w:style w:styleId="Heading1" w:type="paragraph">
+    <w:name w:val="heading 1"/>
+    <w:basedOn w:val="Normal"/>
+    <w:next w:val="Normal"/>
+    <w:uiPriority w:val="9"/>
+    <w:qFormat/>
+    <w:pPr>
+      <w:keepNext/>
+      <w:keepLines/>
+      <w:spacing w:after="60" w:before="240"/>
+      <w:outlineLvl w:val="0"/>
+    </w:pPr>
+    <w:rPr>
+      <w:rFonts w:asciiTheme="majorHAnsi" w:cstheme="majorBidi" w:eastAsiaTheme="majorEastAsia" w:hAnsiTheme="majorHAnsi"/>
+      <w:color w:themeColor="accent1" w:val="1F6FB2"/>
+      <w:sz w:val="32"/>
+      <w:szCs w:val="32"/>
+    </w:rPr>
+  </w:style>
+  <w:style w:styleId="TOC1" w:type="paragraph">
+    <w:name w:val="toc 1"/>
+    <w:basedOn w:val="Normal"/>
+    <w:next w:val="Normal"/>
+    <w:uiPriority w:val="39"/>
+    <w:qFormat/>
+    <w:pPr>
+      <w:tabs>
+        <w:tab w:leader="dot" w:pos="9026" w:val="right"/>
+      </w:tabs>
+      <w:spacing w:after="100"/>
+      <w:ind w:left="0"/>
+    </w:pPr>
+  </w:style>
+</w:styles>

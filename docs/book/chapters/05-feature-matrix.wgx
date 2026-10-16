@@ -130,7 +130,7 @@ The tier is the milestone where a feature first ships (see roadmap). *Esc* means
 \table[style="Book Table", header-rows=1, widths=(48fr, 7fr, 7fr)]{
 | Feature | Tier | Diff. |
 | Inline images (PNG/JPEG/GIF; size, alt text) | M1 ✓ | ●● |
-| SVG images (with PNG fallback, `asvg:svgBlip`) | M3 | ●● |
+| SVG images (with PNG fallback, `asvg:svgBlip`) | M3 ✓ | ●● |
 | Floating images (anchor, wrap modes, positioning) | M4 | ●●● |
 | Cropping, rotation, borders on images | M4 | ●● |
 | Text boxes, basic shapes (wps) | M4 | ●●● |
@@ -164,7 +164,7 @@ The tier is the milestone where a feature first ships (see roadmap). *Esc* means
 | Compatibility mode settings | M1 | ● |
 | updateFields on open | M2 ✓ | ● |
 | Embedded fonts | Later | ●● |
-| altChunk (embed docx/html) | M3 | ● |
+| altChunk (embed docx) | M3 ✓ | ● |
 | Glossary / building blocks | Later | ●● |
 | Finalize (update fields via Word / LibreOffice), PDF export | M6 | ●● |
 }

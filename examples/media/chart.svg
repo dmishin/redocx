@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="8cm" viewBox="0 0 400 200">
+  <rect x="0" y="0" width="400" height="200" fill="#eef"/>
+  <rect x="40" y="120" width="60" height="60" fill="#36c"/>
+  <rect x="140" y="70" width="60" height="110" fill="#36c"/>
+  <rect x="240" y="30" width="60" height="150" fill="#c63"/>
+  <text x="200" y="20" font-size="16" text-anchor="middle">Flow by hour</text>
+</svg>

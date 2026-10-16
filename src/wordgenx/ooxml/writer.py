@@ -15,7 +15,7 @@ from wordgenx.ir import (
     NOTE_KINDS,
     Block,
     Document,
-    Image,
+    EmbeddedDocx,
     Note,
     Numbering,
     NumberingRef,
@@ -140,7 +140,13 @@ def _link_numbering(document: Document) -> Document:
     return replace(document, styles=ordered_styles, numbering=tuple(definitions.values()))
 
 
-IMAGE_CONTENT_TYPES = {"png": CT.PNG, "jpeg": CT.JPEG, "gif": CT.GIF, "bmp": CT.BMP}
+IMAGE_CONTENT_TYPES = {
+    "png": CT.PNG,
+    "jpeg": CT.JPEG,
+    "gif": CT.GIF,
+    "bmp": CT.BMP,
+    "svg": CT.SVG,
+}
 
 
 def _check_style_references(document: Document) -> None:
@@ -336,13 +342,14 @@ def build_package(
                 links[url] = part.relate_external(url, RT.HYPERLINK)
             return links[url]
 
-        def image(picture: Image) -> str:
-            digest = hashlib.sha256(picture.data).digest()
+        def image(data: bytes, image_format: str) -> str:
+            digest = hashlib.sha256(data).digest()
             if digest not in media:
+                extension = IMAGE_FORMATS.get(image_format, image_format)
                 media[digest] = pkg.add_part(
-                    f"/word/media/image{len(media) + 1}.{IMAGE_FORMATS[picture.format]}",
-                    IMAGE_CONTENT_TYPES[picture.format],
-                    picture.data,
+                    f"/word/media/image{len(media) + 1}.{extension}",
+                    IMAGE_CONTENT_TYPES[image_format],
+                    data,
                 )
             if digest not in images:
                 images[digest] = part.relate(media[digest], RT.IMAGE)
@@ -360,7 +367,15 @@ def build_package(
             document.settings,
             inherited,
             template_body,
+            chunk,
         )
+
+    chunk_numbers = itertools.count(1)
+
+    def chunk(embedded: EmbeddedDocx) -> str:
+        """Word imports each alternative format part where its w:altChunk stands."""
+        name = f"/word/afchunk{next(chunk_numbers)}.docx"
+        return main.relate(pkg.add_part(name, CT.WML_DOCUMENT_MAIN, embedded.data), RT.ALT_CHUNK)
 
     def header_footer(family: str, blocks: tuple[Block, ...]) -> str:
         part_counts[family] += 1
