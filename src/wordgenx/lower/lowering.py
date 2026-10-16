@@ -30,6 +30,7 @@ from PIL import Image as PILImage
 from PIL import UnidentifiedImageError
 
 from wordgenx import ir
+from wordgenx.highlight import DEFAULT_THEME, highlight, suggest_language, theme_formatting, themes
 from wordgenx.lower.builtins import BUILTIN_STYLES
 from wordgenx.lower.fields import (
     build_time,
@@ -255,6 +256,8 @@ class Lowering:
     """Header/footer kinds defined so far ("header:first", ...): what a new section inherits."""
     _container_depth: int = 0
     _part: str | None = None
+    code_theme: str = DEFAULT_THEME
+    """The Pygments style that colours the Code ... token styles."""
     caption_chapters: tuple[str, str] | None = None
     """(chapter style, separator) when captions are numbered per chapter ("Figure 2.1")."""
     template: Template | None = None
@@ -361,27 +364,95 @@ class Lowering:
         return ir.Paragraph(content, name, unnumbered=not heading.numbered)
 
     def code_block(self, block: ast.CodeBlock) -> list[ir.Block]:
-        """A fenced code block; ```` ```python {#lst:x, caption="..."} ```` adds a Listing
-        caption above it."""
+        """A fenced code block, highlighted for its language. Attributes:
+        ```` ```python {#lst:x, caption="...", line-numbers, first-line=10, highlight=off} ````;
+        a caption (or id) adds a Listing caption above it."""
         out: list[ir.Block] = []
         caption: str | None = None
         label: tuple[str, Span] | None = None
+        numbers = highlight_on = None
+        first_line = 1
         command = ast.Command("code block", None, None, span=block.span)
         for option in block.options.items if block.options else ():
+            text = self.text_value(option.value, command, option.key or "option")
             if option.key == "caption":
-                caption = self.text_value(option.value, command, "caption")
+                caption = text
             elif option.key == "id":
-                text = self.text_value(option.value, command, "id")
                 if text:
                     label = (text, option.value.span)
+            elif option.key is None and text == "line-numbers":
+                numbers = True
+            elif option.key == "first-line" and text and text.isdigit():
+                numbers, first_line = True, int(text)
+            elif option.key == "highlight" and text in ("on", "off"):
+                highlight_on = text == "on"
+            else:
+                self.report(
+                    Code.INVALID_ARGUMENT,
+                    "invalid code block attribute",
+                    option.span,
+                    help='{#lst:x, caption="...", line-numbers, first-line=N, highlight=off}',
+                )
         if label is not None and caption is None:
             caption = ""
         if caption is not None:
             text = self.assemble([Piece(caption, Format())])
             name, span = label if label is not None else (None, block.span)
             out.append(self.make_caption("Listing", name, span, text, keep_with_next=True))
-        out += [self.code_paragraph(line) for line in block.code.split("\n")]
+        lines: list[list[tuple[str, str | None]]] | None = None
+        if block.language and highlight_on is not False:
+            lines = highlight(block.code, block.language)
+            if lines is None:
+                close = suggest_language(block.language)
+                self.warn(
+                    Code.INVALID_ARGUMENT,
+                    f"no highlighting for the language `{block.language}`; the code is shown plain",
+                    block.span,
+                    help=f"did you mean `{close}`?" if close else None,
+                )
+        if lines is None:
+            lines = [[(line, None)] if line else [] for line in block.code.split("\n")]
+        self.use_style("Code Block", ir.StyleKind.PARAGRAPH, block.span)
+        last = first_line + len(lines) - 1
+        hang = self.line_number_indent(len(str(last))) if numbers else None
+        for n, line in enumerate(lines, start=first_line):
+            runs: list[ir.Run] = []
+            for text, name in line:  # tokens left plain by the theme merge with their neighbours
+                style = self.code_style(name, block.span)
+                if runs and runs[-1].style == style:
+                    runs[-1] = replace(runs[-1], text=runs[-1].text + text)
+                else:
+                    runs.append(ir.Run(text, style=style))
+            props = EMPTY_PARAGRAPH
+            if hang is not None:
+                self.use_style("Code Line Number", ir.StyleKind.CHARACTER, block.span)
+                number = f"{n:>{len(str(last))}}"
+                runs = [ir.Run(number, style="Code Line Number"), ir.Run("\t"), *runs]
+                props = PropertySet(Target.PARAGRAPH, {"indent-left": hang, "hanging-indent": hang})
+            out.append(ir.Paragraph(tuple(runs), "Code Block", props))
         return out
+
+    def code_style(self, name: str | None, span: Span) -> str | None:
+        """The style for a token: only one that formats something (in the theme, a style
+        sheet or the template), so plain tokens stay plain runs."""
+        if name is None:
+            return None
+        defined = style_id(name) in {style_id(s) for s in self.stylesheets._styles} or (  # pyright: ignore[reportPrivateUsage]
+            self.template is not None and self.template.style(name) is not None
+        )
+        if not defined and not theme_formatting(self.code_theme, name):
+            return None
+        self.use_style(name, ir.StyleKind.CHARACTER, span)
+        return name
+
+    def line_number_indent(self, digits: int) -> Length:
+        """Where code starts after line numbers: room for the digits and a gap, in the
+        code font (monospaced, about 0.6em per character)."""
+        size = 9.5
+        style = self.compiled_style("Code Block")
+        if style is not None and isinstance(value := style.run.get("size"), Length):
+            size = value.emu / 12700
+        return Length.pt(round((digits + 1.5) * 0.6 * size, 1))
 
     def code_paragraph(self, line: str) -> ir.Paragraph:
         self.use_style("Code Block", ir.StyleKind.PARAGRAPH, Span(0, 0))
@@ -919,6 +990,20 @@ class Lowering:
                 continue
             if option.key == "protection":
                 self.protection(option.value, command)
+                continue
+            if option.key == "code-theme":
+                theme = self.text_value(option.value, command, "code-theme")
+                if theme in themes():
+                    self.code_theme = theme
+                else:
+                    close = difflib.get_close_matches(theme or "", themes(), n=1)
+                    self.report(
+                        Code.INVALID_ARGUMENT,
+                        f"unknown code theme `{theme}`",
+                        option.value.span,
+                        f"did you mean `{close[0]}`?" if close else "",
+                        help="any Pygments style: " + ", ".join(themes()[:8]) + ", ...",
+                    )
                 continue
             if option.key == "captions":
                 self.captions(option.value, command)

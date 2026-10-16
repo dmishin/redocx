@@ -293,6 +293,12 @@
       <w:u w:val="single"/>
     </w:rPr>
   </w:style>
+  <w:style w:customStyle="1" w:styleId="CodeString" w:type="character">
+    <w:name w:val="Code String"/>
+    <w:rPr>
+      <w:color w:val="A31515"/>
+    </w:rPr>
+  </w:style>
   <w:style w:styleId="ListParagraph" w:type="paragraph">
     <w:name w:val="List Paragraph"/>
     <w:basedOn w:val="Normal"/>

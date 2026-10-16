@@ -129,7 +129,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Text boxes, basic shapes (wps) | M4 | ●●● |
 | Math: LaTeX subset → OMML (inline & display) | M3 ✓ | ●●● |
 | Equation numbering & references | M3 ✓ | ●● |
-| Code blocks with syntax highlighting | M3 | ●● |
+| Code blocks with syntax highlighting | M3 ✓ | ●● |
 | Native charts (chart parts + embedded xlsx) | Later | ●●● |
 | Charts as images (matplotlib, via API) | M3 | ● |
 

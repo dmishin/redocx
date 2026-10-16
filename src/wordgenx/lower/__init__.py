@@ -7,6 +7,8 @@ from dataclasses import replace
 from pathlib import Path
 
 from wordgenx import ir
+from wordgenx.highlight import STYLE_NAMES as CODE_STYLES
+from wordgenx.highlight import code_style
 from wordgenx.lower.builtins import BUILTIN_STYLES, DEFAULT_NUMBERING
 from wordgenx.lower.lowering import Located, Lowering, StyleUse
 from wordgenx.lower.references import report_to, resolve
@@ -115,6 +117,8 @@ def lower(
                 error(use, f"`{use.name}` is a {found.kind} style in the template, not a "
                       f"{use.kind.value} style")  # fmt: skip
             continue
+        if style is None and use.name in CODE_STYLES:  # coloured by the code theme
+            style = styles[sid] = code_style(use.name, lowering.code_theme)
         if style is None and sid in _BUILTIN_BY_ID:
             style = styles[sid] = _builtin(_BUILTIN_BY_ID[sid], first_page)
             for related in (style.based_on, style.next):

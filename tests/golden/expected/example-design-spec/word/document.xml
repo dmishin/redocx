@@ -1545,7 +1545,13 @@
         <w:pStyle w:val="CodeBlock"/>
       </w:pPr>
       <w:r>
-        <w:t>def verify(payload: bytes, header: str, secret: bytes) -&gt; bool:</w:t>
+        <w:rPr>
+          <w:rStyle w:val="CodeKeyword"/>
+        </w:rPr>
+        <w:t>def</w:t>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> verify(payload: bytes, header: str, secret: bytes) -&gt; bool:</w:t>
       </w:r>
     </w:p>
     <w:p>
@@ -1561,7 +1567,16 @@
         <w:pStyle w:val="CodeBlock"/>
       </w:pPr>
       <w:r>
-        <w:t xml:space="preserve">    return hmac.compare_digest(expected, header)</w:t>
+        <w:t xml:space="preserve">    </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CodeKeyword"/>
+        </w:rPr>
+        <w:t>return</w:t>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> hmac.compare_digest(expected, header)</w:t>
       </w:r>
     </w:p>
     <w:p>

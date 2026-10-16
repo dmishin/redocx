@@ -146,6 +146,9 @@ BUILTIN_STYLES: dict[str, Callable[[], Style]] = {
     "Strong": _character("Strong", bold=True),
     "Emphasis": _character("Emphasis", italic=True),
     "Code": _character("Code", font="Consolas"),
+    "Code Line Number": lambda: Style(
+        StyleKind.CHARACTER, "Code Line Number", run=run_props(color="#8A8F98"), quick_format=False
+    ),
     "Hyperlink": _character("Hyperlink", color="theme.hyperlink", underline="single"),
 }
 """Style name -> factory. Names are Word's built-in names (Code and Code Block are custom)."""

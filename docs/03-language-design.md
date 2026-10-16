@@ -544,6 +544,18 @@ Highlighted with Pygments into runs with character styles (`Code Keyword`, `Code
 style sheet and themeable. The block uses a `Code Block` paragraph style. A `caption` creates a `Listing` caption that owns
 the label.
 
+- **Languages:** any Pygments lexer name or alias (`python`, `json`, `cpp`, `sql`, `yaml`, …), plus `wgx` and `wgxs`
+  for wordgenx itself. An unknown language is a warning with the nearest name; the code is shown plain. No language, or
+  `highlight=off`, means plain code.
+- **Styles:** each token kind has a character style: `Code Keyword`, `Code Type`, `Code Constant`, `Code Builtin`,
+  `Code Function`, `Code Decorator`, `Code Attribute`, `Code Label`, `Code Variable`, `Code String`, `Code Escape`,
+  `Code Number`, `Code Comment`, `Code Preprocessor`, `Code Operator`, `Code Heading`, `Code Inserted`, `Code Deleted`.
+  Their default look comes from a Pygments theme, `vs` unless `\settings[code-theme=friendly]` (any Pygments style)
+  says otherwise. A style sheet or template restyles any of them (`character "Code Keyword" { bold; color: #7F0055; }`).
+  Only styles that format something are applied, so tokens the theme leaves plain stay plain text.
+- **Line numbers:** `line-numbers` numbers the lines from 1, `first-line=N` from N. The numbers are runs in the
+  `Code Line Number` style, followed by a tab to a hanging indent, so wrapped lines stay aligned with the code.
+
 ## 3.16 Images, drawings, boxes
 
 ```wgx

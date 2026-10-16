@@ -283,7 +283,16 @@
         <w:pStyle w:val="CodeBlock"/>
       </w:pPr>
       <w:r>
-        <w:t xml:space="preserve">print("code blocks keep    their spacing")</w:t>
+        <w:t>print(</w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CodeString"/>
+        </w:rPr>
+        <w:t xml:space="preserve">"code blocks keep    their spacing"</w:t>
+      </w:r>
+      <w:r>
+        <w:t>)</w:t>
       </w:r>
     </w:p>
     <w:sectPr>

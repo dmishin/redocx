@@ -472,6 +472,7 @@ source = { editable = "." }
 dependencies = [
     { name = "lxml" },
     { name = "pillow" },
+    { name = "pygments" },
 ]
 
 [package.dev-dependencies]
@@ -488,6 +489,7 @@ dev = [
 requires-dist = [
     { name = "lxml", specifier = ">=5.3" },
     { name = "pillow", specifier = ">=10.4" },
+    { name = "pygments", specifier = ">=2.18" },
 ]
 
 [package.metadata.requires-dev]

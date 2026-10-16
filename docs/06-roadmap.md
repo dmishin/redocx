@@ -80,7 +80,7 @@ Steps, in order:
    letters and the common symbol set. Unsupported macros are errors at their position. OMML is written the way Word
    writes it (the reference survey settled Q9). A numbered display equation is an `m:eqArr` with Word's own `#`
    number. Labelled equations are numbered, optionally per chapter, and `@eq:x` prints "(3.2)".
-2. **Code highlighting** (Pygments): token runs in generated, themeable character styles (`Code Keyword`, …),
+2. [x] **Code highlighting** (Pygments): token runs in generated, themeable character styles (`Code Keyword`, …),
    `line-numbers`, captions as now.
 3. **Citations and bibliography**: BibTeX or CSL-JSON data, CSL styles through citeproc-py, `\cite`/`\textcite`
    linked to entries, `\printbibliography` in a `Bibliography` style.

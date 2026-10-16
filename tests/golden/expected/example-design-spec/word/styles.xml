@@ -345,6 +345,12 @@
       <w:b/>
     </w:rPr>
   </w:style>
+  <w:style w:customStyle="1" w:styleId="CodeKeyword" w:type="character">
+    <w:name w:val="Code Keyword"/>
+    <w:rPr>
+      <w:color w:val="0000FF"/>
+    </w:rPr>
+  </w:style>
   <w:style w:customStyle="1" w:styleId="Code" w:type="character">
     <w:name w:val="Code"/>
     <w:qFormat/>
