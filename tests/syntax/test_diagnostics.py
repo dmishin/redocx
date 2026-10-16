@@ -1,6 +1,6 @@
 import pytest
 
-from wordgenx.syntax import Source, parse
+from wordgenx.syntax import Source, ast, parse
 from wordgenx.syntax.diagnostics import Code, Diagnostic, Severity, error, render
 from wordgenx.syntax.source import Span
 
@@ -82,3 +82,23 @@ def test_diagnostics_are_sorted_by_position() -> None:
     result = parse("} a\n\\x[=1]\n#{")
     starts = [d.span.start for d in result.diagnostics]
     assert starts == sorted(starts)
+
+
+@pytest.mark.parametrize(
+    ("text", "values"),
+    [
+        (r"\cell[border-left=single 4pt theme.accent1]{x}", ["single", "4pt", "theme.accent1"]),
+        (r'\x[a=1 "two" (3, 4)]', ["1", '"two"', "(3, 4)"]),
+        (r"\x[a=1 =2]", ["1", "2"]),
+    ],
+)
+def test_a_missing_comma_loses_no_text(text: str, values: list[str]) -> None:
+    """Recovery after `expected , or ]` starts the next option where the text continues."""
+    result = parse(text)
+    assert {d.code for d in result.diagnostics} == {Code.INVALID_OPTION}
+    (paragraph,) = result.ast.blocks
+    assert isinstance(paragraph, ast.Paragraph)
+    command = paragraph.content[0]
+    assert isinstance(command, ast.Command)
+    assert command.options is not None
+    assert [result.source.slice(o.value.span) for o in command.options.items] == values

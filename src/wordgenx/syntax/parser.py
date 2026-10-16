@@ -865,6 +865,9 @@ class Parser:
                             help="separate options with commas; quote values containing spaces",
                         )
                     )
+                    if c in '"({' or c not in BARE_STOP:
+                        continue  # a missing comma: the next option starts here
+                # Nothing could be read here: skip a character so the loop moves on.
                 node.children.append(self.token(K.ERROR_TOKEN, self.pos + 1))
 
     def option(self, fence_attributes: bool) -> Node | None:
