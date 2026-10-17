@@ -132,4 +132,5 @@ error[WGX0302]: unknown option `space-befor` for `\p`
 ```
 
 Errors stop the build; warnings do not. `wordgenx check` reports both without writing anything, and `wordgenx fmt`
-rewrites files in the canonical layout.
+rewrites files in the canonical layout. `wordgenx explain NAME` says what a command, property or macro takes, and
+with `--in FILE.wgx` it finds the macros a document defines or loads, with the `%` comment above each definition.

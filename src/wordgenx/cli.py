@@ -1,4 +1,5 @@
-"""Command-line interface: ``build``, ``check``, ``fmt``, ``parse``, ``inspect`` and ``import``."""
+"""Command-line interface: ``build``, ``check``, ``fmt``, ``parse``, ``inspect``, ``import``
+and ``explain``."""
 
 from __future__ import annotations
 
@@ -260,6 +261,25 @@ def _import(path: str, output: str | None, keep_styles: bool, sugar: bool, check
     return 1 if check and not (imported.comparison and imported.comparison.same) else 0
 
 
+def _explain(name: str | None, document: str | None, properties: str | None) -> int:
+    from wordgenx import explain
+    from wordgenx.props.registry import Target
+
+    if properties is not None:
+        print(explain.explain_properties(Target[properties.upper()]), end="")
+        return 0
+    if name is None:
+        print(explain.overview(), end="")
+        return 0
+    path = Path(document) if document else None
+    if path is not None and not path.is_file():
+        print(f"error: cannot read {document}", file=sys.stderr)
+        return 1
+    text, found = explain.explain(name, path)
+    print(text, end="", file=sys.stdout if found else sys.stderr)
+    return 0 if found else 1
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="wordgenx", description=__doc__)
     parser.add_argument("--version", action="version", version=f"wordgenx {__version__}")
@@ -333,7 +353,24 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="keep the original's styles, theme and lists exactly: compile into it as a template",
     )
 
+    explainer = commands.add_parser(
+        "explain", help="explain a command, formatting property, macro or std: module"
+    )
+    explainer.add_argument(
+        "name", nargs="?", metavar="NAME", help="table, space-before, note, std:callout, ..."
+    )
+    explainer.add_argument(
+        "--in", dest="document", metavar="FILE.wgx", help="also the macros this document defines"
+    )
+    explainer.add_argument(
+        "--properties",
+        choices=("run", "paragraph", "table", "cell"),
+        help="list the formatting properties of one kind",
+    )
+
     args = parser.parse_args(argv)
+    if args.command == "explain":
+        return _explain(args.name, args.document, args.properties)
     if args.command == "import":
         return _import(args.file, args.output, args.keep_styles, not args.commands_only, args.check)
     if args.command == "build":

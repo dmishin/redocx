@@ -16,96 +16,12 @@ import sys
 from pathlib import Path
 
 from wordgenx.commands.builtin import CODE_BLOCK, COMMANDS
-from wordgenx.commands.spec import POSTPONED, CommandSpec, Placement
-from wordgenx.props.registry import REGISTRY, Target
-from wordgenx.syntax.commands import ArgKind
+from wordgenx.commands.spec import CommandSpec
+from wordgenx.explain import CATEGORIES, TARGETS, body, planned, sentence, value, where
+from wordgenx.props.registry import REGISTRY
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "docs" / "reference.md"
-
-CATEGORIES: dict[str, tuple[str, ...]] = {
-    "Preamble: the document as a whole": (
-        "document",
-        "meta",
-        "settings",
-        "use",
-        "include",
-        "styles",
-        "bibliography",
-    ),
-    "Paragraphs, lists and tab stops": ("p", "align", "list", "tabs"),
-    "Sections, headers and footers": ("section", "header", "footer", "watermark"),
-    "Tables": ("table", "row", "cell"),
-    "Captions, contents and the index": (
-        "caption",
-        "figure",
-        "toc",
-        "listof",
-        "index",
-        "ix",
-        "printbibliography",
-    ),
-    "Text formatting": (
-        "b",
-        "i",
-        "u",
-        "s",
-        "sup",
-        "sub",
-        "hidden",
-        "hl",
-        "strong",
-        "emph",
-        "code",
-        "font",
-        "style",
-        "lang",
-    ),
-    "Links, references and notes": (
-        "link",
-        "url",
-        "ref",
-        "pageref",
-        "footnote",
-        "endnote",
-        "cite",
-        "textcite",
-        "comment",
-    ),
-    "Fields and counters": ("pagenum", "numpages", "sectionpages", "date", "field", "seq"),
-    "Breaks": ("br", "tab", "pagebreak", "columnbreak"),
-    "Pictures, text boxes and forms": ("image", "textbox", "control", "embed-docx"),
-    "Math": ("math", "m"),
-    "Escape hatches": ("raw",),
-    "Not implemented": ("ins", "del"),
-}
-"""Every command, once: tests/test_reference.py checks that none is missing."""
-
-_PARTS = {"row": "`\\table`", "cell": "`\\row`"}
-
-_WHERE = {
-    Placement.BLOCK: "a block of its own",
-    Placement.INLINE: "inside text",
-    Placement.BOTH: "inside text, or alone as a block",
-}
-
-_BODIES = {
-    ArgKind.MARKUP: "text and commands",
-    ArgKind.STRING: "{doc}, read as is (only `\\}}` and `\\\\` are escapes)",
-    ArgKind.RAW: "{doc}, read as is (braces must balance)",
-    ArgKind.MATH: "a formula in LaTeX notation",
-    ArgKind.STYLESHEET: "style-sheet rules (see the style-sheet guide)",
-}
-
-_TARGETS = {
-    Target.RUN: (
-        "Character properties",
-        "`\\font[...]`, character styles, `\\p` and paragraph styles",
-    ),
-    Target.PARAGRAPH: ("Paragraph properties", "`\\p[...]`, `\\figure[...]`, paragraph styles"),
-    Target.TABLE: ("Table properties", "`\\table[...]`, table styles"),
-    Target.CELL: ("Cell properties", "`\\cell[...]`, table styles"),
-}
 
 INTRO = """\
 # Command reference
@@ -114,7 +30,8 @@ INTRO = """\
 
 Every command of wordgenx, with where it may appear, what its body holds and every option,
 followed by every formatting property. To learn the language, start with the
-[guide](guide/README.md); this page is for looking things up.
+[guide](guide/README.md); this page is for looking things up. The same facts are a command away:
+`wordgenx explain table`, `wordgenx explain space-before`.
 
 **Reading the entries.** A command is written `\\name[options]{body}`. Options are `name=value`,
 separated by commas; an option that is on or off may be written alone (`[keep-with-next]` is
@@ -134,20 +51,9 @@ are described in the [syntax guide](guide/syntax.md) and the [macro guide](guide
 """
 
 
-TEXT_VALUE = 'text: a word, a "string" or {plain text}'
-
-
 def _cell(text: str) -> str:
     """Text for a Markdown table cell ("text" for the usual text value: see the intro)."""
-    return text.replace(TEXT_VALUE, "text").replace("|", "\\|").replace("\n", " ")
-
-
-def _sentence(text: str) -> str:
-    text = text.strip()
-    if not text:
-        return ""
-    text = text[0].upper() + text[1:]
-    return text if text.endswith((".", "?", "!", ")")) else text + "."
+    return value(text).replace("|", "\\|").replace("\n", " ")
 
 
 def _anchor(name: str) -> str:
@@ -156,27 +62,16 @@ def _anchor(name: str) -> str:
 
 def _command(spec: CommandSpec) -> list[str]:
     title = spec.title.capitalize() if spec.title else f"`\\{spec.name}`"
-    lines = [f'<a id="{_anchor(spec.name)}"></a>', f"### {title}", "", _sentence(spec.doc), ""]
-    if spec.planned is not None:
-        when = "postponed" if spec.planned == POSTPONED else f"planned for {spec.planned}"
+    lines = [f'<a id="{_anchor(spec.name)}"></a>', f"### {title}", "", sentence(spec.doc), ""]
+    if (when := planned(spec)) is not None:
         lines += [f"*Not implemented ({when}): ignored with a warning.*", ""]
         return lines
-    where = (
-        f"directly inside {_PARTS[spec.name]}"
-        if spec.placement is Placement.PART
-        else _WHERE[spec.placement]
-    )
-    facts = [f"- **Where:** {where}."]
-    if spec.body is None:
-        facts.append("- **Body:** none.")
-    else:
-        body = _BODIES[spec.body].format(doc=spec.body_doc)
-        facts.append(f"- **Body:** {body}{'' if spec.body_required else ' (optional)'}.")
+    facts = [f"- **Where:** {where(spec)}.", f"- **Body:** {body(spec)}."]
     if spec.positional:
         many = " (several values: each one)" if spec.variadic else ""
         facts.append(f"- **Positional option:** `{spec.positional}`{many}.")
     if spec.props is not None:
-        label, _ = _TARGETS[spec.props]
+        label, _ = TARGETS[spec.props]
         link = label.lower().replace(" ", "-")
         facts.append(f"- **Also takes** every one of the [{label.lower()}](#{link}) as an option.")
     if spec.patterns:
@@ -187,8 +82,8 @@ def _command(spec: CommandSpec) -> list[str]:
         lines += ["| Option | Value | Meaning |", "|--------|-------|---------|"]
         for option in spec.options:
             name = f"`{option.name}`" + (" (required)" if option.required else "")
-            planned = spec.planned_options.get(option.name)
-            meaning = option.doc + (f" *(planned for {planned})*" if planned else "")
+            later = spec.planned_options.get(option.name)
+            meaning = option.doc + (f" *(planned for {later})*" if later else "")
             lines.append(f"| {name} | {_cell(option.type.describe())} | {_cell(meaning)} |")
         lines.append("")
     return lines
@@ -203,7 +98,7 @@ def _properties() -> list[str]:
         "hatches: raw WordprocessingML, checked against the schemas.",
         "",
     ]
-    for target, (label, used) in _TARGETS.items():
+    for target, (label, used) in TARGETS.items():
         lines += [f"### {label}", "", f"Used in {used}.", "", "| Property | Values | Meaning |"]
         lines.append("|----------|--------|---------|")
         for name, spec in REGISTRY[target].items():

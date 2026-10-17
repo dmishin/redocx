@@ -4,7 +4,8 @@
 
 Every command of wordgenx, with where it may appear, what its body holds and every option,
 followed by every formatting property. To learn the language, start with the
-[guide](guide/README.md); this page is for looking things up.
+[guide](guide/README.md); this page is for looking things up. The same facts are a command away:
+`wordgenx explain table`, `wordgenx explain space-before`.
 
 **Reading the entries.** A command is written `\name[options]{body}`. Options are `name=value`,
 separated by commas; an option that is on or off may be written alone (`[keep-with-next]` is

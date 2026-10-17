@@ -5,7 +5,10 @@ commands; `wordgenx build` turns it into a `.docx` with real Word styles, number
 which anyone can keep editing in Word.
 
 This page covers what most documents need. The [topic guides](#topic-guides) go further, and the
-[command reference](../reference.md) lists every command and option.
+[command reference](../reference.md) lists every command and option. From the command line,
+`wordgenx explain NAME` says what a command, formatting property or macro is and takes:
+`wordgenx explain table`, `wordgenx explain space-before`, `wordgenx explain std:callout`, or
+`wordgenx explain mymacro --in report.wgx` for the macros a document defines.
 
 ## A first document
 

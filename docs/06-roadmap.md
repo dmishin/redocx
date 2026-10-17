@@ -276,6 +276,11 @@ from its documentation.*
    import; and a guide for TeX users. Every `wgx` example in them compiles without a warning (tested). Writing them
    corrected two option names in the design document (`\font[font=…]`, `character-spacing`).
 
+7. [x] **`wordgenx explain NAME`:** a command, formatting property, macro or `std:` module from the same tables
+   as the reference (the catalogue is shared with `tools/make_reference.py`); `--in FILE.wgx` adds the macros a
+   document defines or loads, found by parsing and following `\use` and `\include`, with the `%` comment above each
+   definition; `--properties KIND` lists one kind of property.
+
 - **Exit:** a document that compiles without errors opens in Word without complaint, or is reported; and the
   language can be learned from its guides and looked up in its reference.
   *Status: met.*

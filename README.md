@@ -50,6 +50,8 @@ uv run wordgenx fmt examples/hello.wgx               # rewrite in the canonical 
 uv run wordgenx build examples/hello.wgx --emit-ir - # also print the IR as JSON
 uv run wordgenx build examples/hello.wgx --validate  # also check every part against the schemas
 uv run wordgenx parse examples/syntax-tour.wgx       # print the AST (--tree cst for the CST)
+uv run wordgenx explain table                        # a command, property, macro or std: module
+uv run wordgenx explain note --in examples/hello.wgx # ... including the document's own macros
 uv run wordgenx inspect examples/hello.docx          # read a .docx back, report structure and coverage
 uv run wordgenx import examples/hello.docx -o hello  # turn a .docx into source: .wgx, .wgxs, pictures, report
 uv run wordgenx import report.docx --keep-styles    # ... compiling into the original's styles as a template
