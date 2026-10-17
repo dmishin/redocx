@@ -127,6 +127,9 @@ class Settings:
     protection_enforced: bool = False
     page_color: Color | None = None
     """The colour of every page (w:background; Design > Page Color in Word)."""
+    track_changes: bool = False
+    """Word records edits made in it as tracked changes (w:trackRevisions)."""
+    auto_hyphenation: bool = False
 
     def notes(self, kind: str) -> NoteSettings:
         return self.footnotes if kind == "footnote" else self.endnotes

@@ -79,6 +79,10 @@ def settings_xml(document: Document) -> Element:
         children["updateFields"] = E("w:updateFields", {"w:val": "true"})
     if settings.mirror_margins:
         children["mirrorMargins"] = E("w:mirrorMargins")
+    if settings.track_changes:
+        children["trackRevisions"] = E("w:trackRevisions")
+    if settings.auto_hyphenation:
+        children["autoHyphenation"] = E("w:autoHyphenation")
     if settings.page_color is not None:  # Word shows w:background only with this
         children["displayBackgroundShape"] = E("w:displayBackgroundShape")
     if any(isinstance(i, Math) for p in document.all_paragraphs() for i in p.content):

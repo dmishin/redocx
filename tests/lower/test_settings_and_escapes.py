@@ -47,6 +47,19 @@ def part(package: zipfile.ZipFile, name: str) -> etree._Element:  # pyright: ign
 # --- settings ---------------------------------------------------------------------------------------
 
 
+def test_track_changes_and_hyphenation() -> None:
+    doc = compiled("\\settings[track-changes, hyphenation=auto]\n\nText.")
+    assert (doc.settings.track_changes, doc.settings.auto_hyphenation) == (True, True)
+    settings = part(
+        built("\\settings[track-changes, hyphenation=auto]\n\nText."), "word/settings.xml"
+    )
+    assert settings.find(f"{W}trackRevisions") is not None
+    assert settings.find(f"{W}autoHyphenation") is not None
+    off = part(built("\\settings[hyphenation=off]\n\nText."), "word/settings.xml")
+    assert off.find(f"{W}autoHyphenation") is None
+    assert off.find(f"{W}trackRevisions") is None
+
+
 def test_protection() -> None:
     doc = compiled("\\settings[protection=(mode=forms, enforce)]")
     assert (doc.settings.protection, doc.settings.protection_enforced) == ("forms", True)

@@ -63,7 +63,8 @@ def test_unknown_options_are_errors_with_a_suggestion() -> None:
 
 
 def test_planned_options_are_warnings() -> None:
-    (problem,) = bound(r"\settings[track-changes]")[1]
+    spec = CommandSpec("x", Placement.BLOCK, "", body=None, planned_options={"later": "M9"})
+    (problem,) = bind(command(r"\x[later]"), spec)[1]
     assert problem.code is Code.NOT_SUPPORTED_YET
     assert problem.severity is Severity.WARNING
 

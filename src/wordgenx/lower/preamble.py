@@ -101,9 +101,12 @@ def settings(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
         ("even-odd-headers", "even_and_odd_headers"),
         ("mirror-margins", "mirror_margins"),
         ("update-fields-on-open", "update_fields_on_open"),
+        ("track-changes", "track_changes"),
     ):
         if key in args:
             s = replace(s, **{attribute: args.flag(key)})
+    if (hyphenation := args.text("hyphenation")) is not None:
+        s = replace(s, auto_hyphenation=hyphenation == "auto")
     if (tab_stop := args.get("default-tab-stop", Length)) is not None:
         s = replace(s, default_tab_stop=tab_stop)
     for kind in ir.NOTE_KINDS:

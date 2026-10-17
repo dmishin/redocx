@@ -127,7 +127,8 @@ screen and in PDF export, but prints it only when *Print background colors and i
 `\settings[…]` maps to `settings.xml`. Implemented: `protection=(mode=forms|read-only|comments|tracked-changes,
 enforce)` (without a password), `update-fields-on-open=on|off`, `even-odd-headers`, `mirror-margins`,
 `default-tab-stop=1.27cm`, `footnotes=(…)` and `endnotes=(…)` (§3.11), `captions=(chapter-numbers, …)` (§3.9).
-Planned: `track-changes` (M5), `hyphenation=auto`.
+`track-changes` (M5) turns on Word's Track Changes, so edits made later in Word are tracked; `hyphenation=auto` turns
+on automatic hyphenation (`suppress-hyphenation` keeps a paragraph out of it).
 
 ## 3.4 Inline markup
 

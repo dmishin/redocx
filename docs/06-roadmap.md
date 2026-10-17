@@ -133,9 +133,22 @@ Basic shapes (lines, arrows, rectangles) come only if they stay small; see [Post
 
 ## M5: Collaboration & forms
 
-- Comments; `\settings[track-changes]` (Word's Track Changes on for later edits). Tracked revisions in the source
-  and `wordgenx diff` redlines are [postponed](09-postponed.md).
-- Content controls; document protection.
+Steps, in order. Each stays simple: a part that turns out intrusive (new parts, Word-version extensions, changes all
+over the writer) goes to [Postponed features](09-postponed.md) instead.
+
+1. [x] **Settings**: `\settings[track-changes]` (Word's Track Changes on for edits made later in Word) and
+   `hyphenation=auto` (left over from M4).
+2. **Comments**: `\comment[author=…, initials=…, date=…, text={…}]{commented text}`: the range, the reference mark
+   and `comments.xml`; markup in the comment; a point comment without a body. Replies and the resolved state are
+   left out.
+3. **Content controls**: `\control[type=…, tag=…, title=…, lock=…]`, inline or around blocks: plain and rich text,
+   dropdown and combo box, date, checkbox; placeholder text; with the existing form protection.
+4. **Picture and repeating controls**, if they stay small.
+
+- **Exit:** a fillable onboarding form: every field type, form protection, a reviewer's comments, Track Changes on.
+
+Tracked revisions in the source and `wordgenx diff` redlines are [postponed](09-postponed.md); data binding stays
+"Later".
 
 ## M6: Ecosystem
 

@@ -164,7 +164,8 @@ _command(
             }
         ),
     ),
-    planned_options={"track-changes": "M5", "hyphenation": "M4"},
+    _o("track-changes", FLAG, "Word's Track Changes on for edits made in Word"),
+    _o("hyphenation", Choice.of("auto", "off"), "hyphenate the document automatically"),
     body=None,
 )
 _command(
