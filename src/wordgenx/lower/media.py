@@ -67,7 +67,8 @@ def read_file(lw: Lowering, command: ast.Command, name: str, what: str) -> bytes
 def raster(
     lw: Lowering, command: ast.Command, name: str, data: bytes
 ) -> tuple[str, tuple[Length, Length]] | None:
-    """The format and natural size of a PNG, JPEG, GIF or BMP."""
+    """The format and natural size of a PNG, JPEG, GIF or BMP (or an EMF or WMF metafile,
+    as an imported document's embedded objects show)."""
     try:
         with PILImage.open(io.BytesIO(data)) as picture:
             image_format = (picture.format or "").lower()
@@ -76,6 +77,8 @@ def raster(
     except (UnidentifiedImageError, OSError):
         lw.report(Code.INVALID_ARGUMENT, f"`{name}` is not an image Word can show", command.span)
         return None
+    if image_format == "wmf" and data[40:44] == b" EMF":
+        image_format = "emf"  # Pillow reads both metafile kinds as WMF
     if image_format not in ir.IMAGE_FORMATS:
         lw.report(
             Code.INVALID_ARGUMENT,

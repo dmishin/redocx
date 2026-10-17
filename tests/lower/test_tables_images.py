@@ -1,4 +1,5 @@
 import io
+import struct
 from pathlib import Path
 
 import pytest
@@ -279,4 +280,25 @@ def test_tables_and_images_build_valid_documents(images: Path) -> None:
         images,
     )
     assert data is not None, result.render_diagnostics()
+    assert validate_package(data) == {}
+
+
+def _emf() -> bytes:
+    """A minimal Enhanced Metafile: the header record and the end record."""
+    header = struct.pack(
+        "<II4i4i4sIIIHHIIIiiii",
+        1, 88, 0, 0, 99, 49, 0, 0, 2645, 1322, b" EMF", 0x10000, 108, 2, 1, 0, 0, 0, 0,
+        1024, 768, 320, 240,
+    )  # fmt: skip
+    return header + struct.pack("<IIIII", 14, 20, 0, 16, 20)
+
+
+def test_metafile_pictures(tmp_path: Path) -> None:
+    """EMF previews of embedded objects come back from an import as \\image files."""
+    (tmp_path / "chart.emf").write_bytes(_emf())
+    data, result = build("\\image[width=2cm, height=1cm]{chart.emf}", tmp_path)
+    assert data is not None, result.render_diagnostics()
+    assert result.document is not None
+    (picture,) = _images(result.document)
+    assert (picture.format, picture.width, picture.height) == ("emf", Length.cm(2), Length.cm(1))
     assert validate_package(data) == {}

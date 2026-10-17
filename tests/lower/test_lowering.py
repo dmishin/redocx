@@ -7,7 +7,7 @@ from wordgenx.cli import main
 from wordgenx.compiler import CompileResult, build, compile_source
 from wordgenx.props import para_props, run_props
 from wordgenx.syntax.diagnostics import Code, Severity
-from wordgenx.values import Length
+from wordgenx.values import Length, LineSpacing
 
 
 def compiled(text: str, base_dir: Path | None = None) -> ir.Document:
@@ -102,6 +102,15 @@ def test_links() -> None:
     assert links[0].content[0].style == "Hyperlink"
     assert links[2].content[0].style == "Strong"  # inner style; Hyperlink look as direct formatting
     assert "Hyperlink" in style_names(doc)
+
+
+def test_links_to_bookmarks_and_exact_line_spacing() -> None:
+    doc = compiled('\\p[line-spacing=(14pt, exact)]{\\link[to="#_Ref123"]{see above}}')
+    (paragraph,) = paragraphs(doc)
+    (link,) = paragraph.content
+    assert isinstance(link, ir.Hyperlink)
+    assert (link.url, link.anchor) == ("", "_Ref123")
+    assert paragraph.props["line-spacing"] == LineSpacing.exact(Length.pt(14))
 
 
 # --- blocks ------------------------------------------------------------------------------

@@ -108,14 +108,14 @@ Everything before the first content is the _preamble_. `\document`, `\meta`, `\s
 
 == Inline markup
 
-\table[style="Book Table", header-rows=1, widths=(13fr, 45fr, 28fr)]{
+\table[style="Book Table", header-rows=1, widths=(13fr, 45fr, 48fr)]{
 | Sugar | Meaning | Command form |
 | `*text*` | strong (character style `Strong`) | `\strong{text}` |
 | `_text_` | emphasis (character style `Emphasis`) | `\emph{text}` |
 | `` `code` `` | inline code (character style `Code`) | `\code{code}` |
 | `\m{x^2}` | inline math (there is no sugar; `$` is literal) | `\m{x^2}` |
 | `<https://…>` | autolink | `\url{https://…}` (string body) |
-| `[text](url)` | hyperlink | `\link[to="url"]{text}` |
+| `[text](url)` | hyperlink | `\link[to="url"]{text}`; `to="#name"` links to a bookmark in the document |
 | `@label` | cross-reference (§3.11) | `\ref{label}` |
 }
 
@@ -215,7 +215,7 @@ Style sheets come from `.wgxs` files loaded with `\use{file.wgxs}`, or from `\st
 \tabs[(8cm, center), (16cm, right, leader=dot)]{Left\tab Centered\tab Right}
 ```
 
-Paragraph options and style-sheet properties use the *same vocabulary*.
+Paragraph options and style-sheet properties use the *same vocabulary*, including `line-spacing=(14pt, exact)`.
 
 *Drop caps* (M4): `\p[drop-cap]{…}` sets the first letter large over the first three lines; `drop-cap=4` over four (2–10), and `drop-cap=(lines=3, in-margin)` puts it in the margin. As in Word, the letter becomes a framed paragraph of its own (`w:framePr w:dropCap`) before the rest. Its size, lowering and exact line height follow the body text of the paragraph's style the way Word computes them (they match what Word writes for an 11pt body). The paragraph must start with text. General text frames are not supported; text boxes (§3.16) do their job.
 
@@ -644,7 +644,7 @@ Lowering (`wordgenx.lower`) turns the AST into the document IR. It fixes these b
 - *Headings.* `=`…`=========` use `Heading 1`–`9`. `=*` adds an explicit "no numbering" so a style-numbered heading stays unnumbered.
 - *Macros* expand at the AST level when called. A body that is a single paragraph splices into the surrounding text. Anything else must stand alone as blocks. Built-in command names cannot be redefined, and expansion deeper than 32 levels is an error.
 - *Tables.* A pipe table on its own is a table with the defaults. `\table[...]{...}` takes pipe rows and/or `\row{\cell{...} ...}`, and a pipe row may start right after the `{` (`\table{| a | b |}`). Defaults: Word's `Table Grid` style (`style=none` for no borders, `style="Data Grid"` for a style-sheet table style), equal column widths filling the text width, fixed layout. `widths=(4cm, 25%, 1fr, auto)` mixes lengths, percentages of the text width, and fractions of what remains. A cell with `colspan=N` in a pipe row covers the next N-1 cells, which must be empty (`| \cell[colspan=3]{x} |||`). `rowspan` cells take the position in the rows below. Short rows are padded with empty cells. `header-rows=N` or `\row[header]` repeat rows on each page. `columns=(left, right, …)` sets the default paragraph alignment per column. `decimal` lines numbers up on a decimal tab stop near the right of the cell (or `(decimal, tab=1.8cm)` from its left); header rows and merged cells are right-aligned instead. Tables also take `borders`, `border-*`, `cell-margins`, `table-indent` (overriding the style) and `look=(header-row, last-row, first-column, last-column, banded-rows, banded-columns)` or `look=none`. Cells take `colspan`, `rowspan`, `shade` (RGB or theme colour), `valign`, `align`, `borders`/`border-*`, and any block content, including lists and nested tables. Adjacent tables get a paragraph between them, as Word requires.
-- *Images.* `\image[width=…, height=…, alt="…"]{file}` embeds PNG, JPEG, GIF or BMP as an inline picture. The size comes from the pixel size and resolution (96 dpi if unknown). Giving one dimension keeps the aspect ratio, and `width=50%` is relative to the text width. Pictures wider than the text are shrunk to fit. Identical files are stored once.
+- *Images.* `\image[width=…, height=…, alt="…"]{file}` embeds PNG, JPEG, GIF or BMP (and EMF or WMF, the pictures of embedded objects an import brings) as an inline picture. The size comes from the pixel size and resolution (96 dpi if unknown). Giving one dimension keeps the aspect ratio, and `width=50%` is relative to the text width. Pictures wider than the text are shrunk to fit. Identical files are stored once.
 - *Sections.* `\section[...]` before any content sets up the first section. After content it ends the current section, and the new one starts with the same page setup. Headers and footers continue (Word's "link to previous") unless redefined or `link-headers=false`. Page numbering continues unless restarted. `title-page` applies only to the section that asks for it. Options: `size`, `orientation`, `margins`, `gutter`, `header-distance`, `footer-distance`, `break=next-page|continuous|even-page|odd-page|next-column`, `page-numbers=lower-roman` or `(format=…, start=1)`, `columns=2` or `(count=2, gap=1cm, separator)`, `title-page`, `link-headers=false`. `\section` cannot appear inside tables, headers or footers.
 - *Headers and footers.* `\header[default|first|even]{…}` and `\footer[…]{…}` belong to the current section. Their paragraphs use Word's `Header`/`Footer` styles, which come with centre and right tab stops matching the text width, so `Left \tab Centre \tab Right` lines up. A `first` part implies a different first page. An `even` part turns on odd/even headers for the document.
 - *Fields.* `\pagenum`, `\numpages` and `\sectionpages` are PAGE, NUMPAGES and SECTIONPAGES. `\field[result=…]{CODE}` is any Word field, with nested fields in `{ }` as in Word's field-code view. Results known in advance (document properties such as TITLE) are filled in; the others are marked for Word to update when the document opens. `\date[kind=fixed|today|saved|created, format="d MMMM yyyy"]` takes Word date pictures. `fixed` is plain text at build time and honours `SOURCE_DATE_EPOCH`.

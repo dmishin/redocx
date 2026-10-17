@@ -358,11 +358,21 @@ def _decode_border(element: Element) -> Border:
         return Border("nil")
     eighths = max(2, min(96, _int(element.get(_w("sz")), 4)))
     color = element.get(_w("color"))
+    if element.get(_w("themeColor")):
+        shade = element.get(_w("themeShade"))
+        tint = element.get(_w("themeTint"))
+        border_color = Color(
+            theme=element.get(_w("themeColor")),
+            tint=int(tint, 16) if tint else None,
+            shade=int(shade, 16) if shade else None,
+        )
+    else:
+        border_color = Color(rgb=color.upper()) if color and color != "auto" else Color()
     try:
         return Border(
             style if style in BORDER_STYLES else "single",
             Length(eighths * 12700 // 8),
-            Color(rgb=color.upper()) if color and color != "auto" else Color(),
+            border_color,
             Length.pt(_int(element.get(_w("space")))),
         )
     except InvalidValueError:
@@ -1015,10 +1025,14 @@ def _read_simple_field(field: Element, ctx: _Ctx) -> ir.Field:
     return ir.Field((instruction.strip(),) if instruction.strip() else (), result, props, style)
 
 
-def _read_field(children: Sequence[Element], start: int, ctx: _Ctx) -> tuple[ir.Field, int]:
-    """A complex field between begin and end; returns it and the next index."""
+def _read_field(
+    children: Sequence[Element], start: int, ctx: _Ctx
+) -> tuple[ir.Field, int, list[ir.Image]]:
+    """A complex field between begin and end; returns it, the next index, and the pictures
+    its result shows (an EMBED or INCLUDEPICTURE field's result is a picture)."""
     instruction: list[str] = []
     result: list[str] = []
+    pictures: list[ir.Image] = []
     props, style, dirty = EMPTY_RUN, None, False
     state = "before"
     depth = 0
@@ -1045,7 +1059,8 @@ def _read_field(children: Sequence[Element], start: int, ctx: _Ctx) -> tuple[ir.
                     depth -= 1
                     if depth == 0:
                         ctx.stats.count("field")
-                        return _make_field(instruction, result, props, style, dirty), index
+                        field = _make_field(instruction, result, props, style, dirty)
+                        return field, index, pictures
             elif child.tag == _w("instrText") and state == "instruction":
                 instruction.append(child.text or "")
             elif child.tag == _w("t") and state == "result":
@@ -1054,9 +1069,15 @@ def _read_field(children: Sequence[Element], start: int, ctx: _Ctx) -> tuple[ir.
                 result.append("\t")
             elif child.tag == _w("br") and state == "result":
                 result.append("\n")
+            elif child.tag in (_w("object"), _w("pict")) and state == "result":
+                if (picture := _read_vml_picture(child, ctx)) is not None:
+                    pictures.append(picture)
+            elif child.tag == _w("drawing") and state == "result":
+                if (picture := _read_drawing(child, ctx)) is not None:
+                    pictures.append(picture)
     ctx.stats.note("w:fldChar without an end")
     ctx.stats.count("field")
-    return _make_field(instruction, result, props, style, dirty), index
+    return _make_field(instruction, result, props, style, dirty), index, pictures
 
 
 def _make_field(
@@ -1080,8 +1101,13 @@ def _read_inline(container: Element, ctx: _Ctx) -> tuple[ir.Inline, ...]:
         # here; its runs are read as plain text.
         begin = element.find(_w("fldChar")) if element.tag == _w("r") else None
         if begin is not None and begin.get(_w("fldCharType")) == "begin":
-            field, index = _read_field(children, index, ctx)
-            items.append(field)
+            field, index, pictures = _read_field(children, index, ctx)
+            if pictures:  # the picture is what the reader sees; the field cannot be kept
+                words = field.code.split()
+                ctx.stats.note(f"{words[0] if words else 'field'} field (kept as its picture)")
+                items.extend(pictures)
+            else:
+                items.append(field)
             continue
         items.extend(_read_inline_element(element, ctx))
         index += 1
@@ -1722,6 +1748,11 @@ def _read_numbering(
         )
         if not levels:
             continue
+        taken = set(abstract_names.values())
+        if name in taken:  # two definitions of one name: the IR names each once
+            name = next(
+                f"{name} {n}" for n in range(2, len(taken) + 3) if f"{name} {n}" not in taken
+            )
         abstract_names[abstract_id] = name
         definitions.append(ir.Numbering(name, levels))
 

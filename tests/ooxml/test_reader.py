@@ -12,7 +12,8 @@ from wordgenx.cli import main
 from wordgenx.ooxml import Package
 from wordgenx.ooxml.reader import ImportReport, NotADocxError, read_docx
 from wordgenx.ooxml.writer import to_docx_bytes
-from wordgenx.values import Length
+from wordgenx.props import para_props
+from wordgenx.values import Border, Color, Length
 
 
 def _read(document: ir.Document) -> tuple[ir.Document, ImportReport]:
@@ -201,3 +202,68 @@ def test_inspect_command_reports_bad_input(
     path.write_bytes(b"nope")
     assert main(["inspect", str(path)]) == 1
     assert "error:" in capsys.readouterr().err
+
+
+def _repackaged(data: bytes, part: str, old: bytes, new: bytes) -> bytes:
+    with ZipFile(BytesIO(data)) as archive:
+        parts = {name: archive.read(name) for name in archive.namelist()}
+    assert old in parts[part]
+    parts[part] = parts[part].replace(old, new)
+    buffer = BytesIO()
+    with ZipFile(buffer, "w") as archive:
+        for name, content in parts.items():
+            archive.writestr(name, content)
+    return buffer.getvalue()
+
+
+def _png() -> bytes:
+    from PIL import Image as PILImage
+
+    buffer = BytesIO()
+    PILImage.new("RGB", (4, 4), "red").save(buffer, "PNG")
+    return buffer.getvalue()
+
+
+def test_a_picture_in_a_field_result_is_kept_as_the_picture() -> None:
+    """A linked object (LINK field) or INCLUDEPICTURE shows its picture as the result."""
+    picture = ir.Image(_png(), "png", Length.cm(1), Length.cm(1))
+    data = _repackaged(
+        to_docx_bytes(ir.Document(body=(ir.Paragraph((picture,)),))),
+        "word/document.xml",
+        b"<w:r><w:drawing>",
+        b'<w:r><w:fldChar w:fldCharType="begin"/></w:r>'
+        b'<w:r><w:instrText> LINK Excel.Sheet.12 "book.xlsx" "" \\a </w:instrText></w:r>'
+        b'<w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:drawing>',
+    )
+    data = _repackaged(
+        data,
+        "word/document.xml",
+        b"</w:drawing></w:r>",
+        b'</w:drawing></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>',
+    )
+    result = read_docx(data)
+    (paragraph,) = result.document.body
+    assert isinstance(paragraph, ir.Paragraph)
+    assert [type(item) for item in paragraph.content] == [ir.Image]
+    assert ("LINK field (kept as its picture)", 1) in result.report.unsupported
+
+
+def test_two_list_definitions_of_one_name_get_their_own_names() -> None:
+    lists = (ir.Numbering("A", (ir.NumberingLevel(1),)), ir.Numbering("B", (ir.NumberingLevel(1),)))
+    data = _repackaged(
+        to_docx_bytes(ir.Document(numbering=lists)),
+        "word/numbering.xml",
+        b'<w:name w:val="B"/>',
+        b'<w:name w:val="A"/>',
+    )
+    assert [n.name for n in read_docx(data).document.numbering] == ["A", "A 2"]
+
+
+def test_borders_keep_their_theme_colours() -> None:
+    border = Border("single", Length.pt(1), Color(theme="accent1", shade=0xBF))
+    document = ir.Document(
+        body=(ir.Paragraph((ir.Run("x"),), props=para_props(border_top=border)),)
+    )
+    (paragraph,) = read_docx(to_docx_bytes(document)).document.body
+    assert isinstance(paragraph, ir.Paragraph)
+    assert paragraph.props["border-top"] == border

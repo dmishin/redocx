@@ -180,15 +180,28 @@ Steps, in order. Each stays simple; what turns out intrusive is reported as lost
    EMF/WMF previews of embedded objects, page borders and section columns. On the private test document the
    fallbacks went from 557 to 48 (text effects, orphan bookmark ends, emphasis marks, one embedded object), and what
    is read writes a package both validators accept.
-2. **Print canonical source (L1).** IR → `.wgx` with commands only: `\p[style=…]`, direct formatting as
+2. [x] **Print canonical source (L1).** IR → `.wgx` with commands only: `\p[style=…]`, direct formatting as
    `\font[…]`, `\table`/`\row`/`\cell`, `\section`, `\header`/`\footer`, `\footnote`, `\image` (pictures extracted),
    fields as their commands or `\field`. Escaping, and units snapped to what a person writes (1cm, 12pt). Anything
-   not printable becomes a `% import:` comment and a line in the report. The check: the printed source compiles
-   without errors and has the original's text.
-3. **Styles.** A style sheet with the styles the document uses (and their bases), printing only what differs from
-   wordgenx's built-ins; numbering definitions; the theme's colours and fonts; document defaults. Alternative mode:
-   keep the original's styles, theme, numbering and headers exactly by writing them as a body-less template the
-   source compiles into (`\document[template=…]`).
+   not printable becomes a line in the report. The check: the printed source compiles without errors and has the
+   original's text.
+   *Status:* `wordgenx import doc.docx [-o DIR]` (`wordgenx.importer`) writes `doc.wgx`, `doc.wgxs`, `media/` and
+   `doc.import.txt`, then compiles the printed source and compares its text with the original's (every run, notes,
+   comments, text boxes, headers and footers; whitespace, field results and the TOC's entries left out). Lists
+   become `\list[Name]{1. …}` with `continue` and `restart=`, comments `\comment[text={…}]{…}`, drop caps
+   `\p[drop-cap=N]`, TOC fields `\toc`/`\listof`, other block fields a `\field` Word fills in, bookmarks raw XML
+   (the hidden `_Toc` and `_GoBack` ones are dropped). Text is escaped only where it would read as markup, with
+   smart quotes off so it stays as typed. The style sheet declares the styles the document uses, their bases and
+   next styles, its lists and its defaults, as read. Language additions it needed: `\link[to="#bookmark"]`,
+   `line-spacing=(14pt, exact)` as a `\p` option, EMF and WMF pictures in `\image`. Reader fixes it found: pictures
+   in field results (`LINK`, `INCLUDEPICTURE`), theme colours of borders, two lists of one name. The six corpus
+   documents and 13 examples (built, then imported) compile with the same text; so does the private test document
+   (locally: no errors, the same text, the same tables, pictures and sections in Word; 19 pages instead of 17, since
+   it now has wordgenx's theme and settings rather than its own).
+3. **Styles.** The style sheet from step 2, made readable: printing only what differs from wordgenx's built-ins,
+   linked styles as `linked`, the theme's colours and fonts. Alternative mode: keep the original's styles, theme,
+   numbering and headers exactly by writing them as a body-less template the source compiles into
+   (`\document[template=…]`).
 4. **Clean up and sugar (L2).** Merge Word's run soup into runs that differ in effective formatting, drop proofing
    and revision-id noise, and use the language's own forms where the result compiles to the same thing: `=`
    headings, `-` and `1.` lists, `*strong*`/`_emph_`, pipe tables, `{#label}` and `@label` from bookmarks and REF

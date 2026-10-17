@@ -19,7 +19,7 @@ The commands `\ins` and `\del` still parse. They warn that they are postponed an
 
 These are the parts of finished features that were left out to keep them simple. Each is described where the feature is documented. They are smaller than 9.1 and can be picked up whenever a document needs one.
 
-\table[style="Book Table", header-rows=1, widths=(18fr, 48fr, 11fr)]{
+\table[style="Book Table", header-rows=1, widths=(23fr, 48fr, 11fr)]{
 | Feature | Not done | Where |
 | Citations | Collapsing ("Smith, 2020a, b"; "\[4\]–\[6\]") and name-based disambiguation | §3.19 |
 | Index | Page ranges (`XE \r`) and sort keys that differ from the term | §3.12 |
@@ -36,6 +36,7 @@ These are the parts of finished features that were left out to keep them simple.
 | Frames | General text frames (`w:framePr` other than drop caps): text boxes do their job | §3.6 |
 | Comments | Replies and the resolved state (Word 2013's `commentsExtended.xml`); comments in headers, notes and text boxes | §3.17 |
 | Content controls | Repeating sections (Word 2013's `w15:repeatingSection`); rich-text controls around whole paragraphs (block-level `w:sdt`); placeholders from building blocks | §3.17 |
-| Import (reader) | Equations (OMML) are dropped; shapes without text; tracked changes are read as accepted (deletions dropped); emphasis marks; Word 2010 text effects (glow, shadow, 3-D, ligatures); embedded objects keep only their picture | M6 |
+| Import (reader) | Equations (OMML) are dropped; shapes without text; tracked changes are read as accepted (deletions dropped); emphasis marks; Word 2010 text effects (glow, shadow, 3-D, ligatures); embedded and linked objects keep only their picture; content controls are read as their text | M6 |
+| Import (printed source) | Repeated spaces collapse to one; a comment on text across paragraphs becomes a point comment; first-page and even-page headers that Word does not show; a list that skips a level, or resumes an earlier list; turning a column separator off in a later section; formatting a style sheet cannot route back (run shading in a paragraph style, cell borders at the top level of a table style) | M6 |
 | Right to left | Separate complex-script values for bold, italic and size (they follow the Latin ones); `start`/`end` alignment | §3.4 |
 }

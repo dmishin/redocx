@@ -157,7 +157,11 @@ def assemble(pieces: list[Piece], smart_quotes: bool) -> tuple[ir.Inline, ...]:
     def flush_link() -> None:
         nonlocal link, link_runs
         if link is not None and link_runs:
-            inlines.append(ir.Hyperlink(link[1], tuple(link_runs)))
+            url = link[1]
+            if url.startswith("#"):  # to a bookmark in the document
+                inlines.append(ir.Hyperlink("", tuple(link_runs), anchor=url[1:]))
+            else:
+                inlines.append(ir.Hyperlink(url, tuple(link_runs)))
         link, link_runs = None, []
 
     for piece in collapsed:

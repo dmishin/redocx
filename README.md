@@ -42,6 +42,7 @@ uv run wordgenx fmt examples/hello.wgx               # rewrite in the canonical 
 uv run wordgenx build examples/hello.wgx --emit-ir - # also print the IR as JSON
 uv run wordgenx parse examples/syntax-tour.wgx       # print the AST (--tree cst for the CST)
 uv run wordgenx inspect examples/hello.docx          # read a .docx back, report structure and coverage
+uv run wordgenx import examples/hello.docx -o hello  # turn a .docx into source: .wgx, .wgxs, pictures, report
 ```
 
 Golden snapshots (`tests/golden/expected/`) record the exact XML of each test document. After an intended output

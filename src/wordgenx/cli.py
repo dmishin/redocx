@@ -1,4 +1,4 @@
-"""Command-line interface: ``wordgenx build``, ``check``, ``fmt``, ``parse`` and ``inspect``."""
+"""Command-line interface: ``build``, ``check``, ``fmt``, ``parse``, ``inspect`` and ``import``."""
 
 from __future__ import annotations
 
@@ -218,6 +218,23 @@ def _inspect(path: str) -> int:
     return 0
 
 
+def _import(path: str, output: str | None) -> int:
+    from wordgenx.importer import import_docx  # the importer compiles; load it only here
+
+    folder = Path(output) if output else Path(path).with_suffix("")
+    try:
+        imported = import_docx(path, folder)
+    except OSError as e:
+        print(f"error: cannot read {path}: {e.strerror}", file=sys.stderr)
+        return 1
+    except (ValueError, zipfile.BadZipFile) as e:
+        print(f"error: {path}: {e}", file=sys.stderr)
+        return 1
+    print(imported.report(), end="")
+    print(f"wrote {imported.source} and its style sheet, pictures and report", file=sys.stderr)
+    return 1 if imported.errors else 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="wordgenx", description=__doc__)
     parser.add_argument("--version", action="version", version=f"wordgenx {__version__}")
@@ -261,7 +278,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     inspect.add_argument("file", metavar="FILE.docx")
 
+    importer = commands.add_parser(
+        "import",
+        help="turn a .docx into wordgenx source: a folder with the source, styles and pictures",
+    )
+    importer.add_argument("file", metavar="FILE.docx")
+    importer.add_argument(
+        "-o", "--output", metavar="DIR", help="the folder (default: FILE without .docx)"
+    )
+
     args = parser.parse_args(argv)
+    if args.command == "import":
+        return _import(args.file, args.output)
     if args.command == "build":
         return _build(args.file, args.output, args.template, args.emit_ir)
     if args.command == "check":

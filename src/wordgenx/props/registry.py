@@ -168,6 +168,12 @@ def _line_spacing(value: object) -> LineSpacing:
     if isinstance(value, int | float) and not isinstance(value, bool):
         return LineSpacing.lines(value)
     if isinstance(value, str):
+        parts = [p.strip() for p in value.strip().strip("()").split(",")]
+        if len(parts) == 2 and parts[1] in ("exact", "at-least"):  # (12pt, exact)
+            height = Length.parse(parts[0])
+            return (
+                LineSpacing.exact(height) if parts[1] == "exact" else LineSpacing.at_least(height)
+            )
         try:
             return LineSpacing.lines(value)
         except ArithmeticError:

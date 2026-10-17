@@ -139,7 +139,7 @@ on automatic hyphenation (`suppress-hyphenation` keeps a paragraph out of it).
 | `` `code` `` | inline code (character style `Code`) | `\code{code}` |
 | `\m{x^2}` | inline math (there is no sugar; `$` is literal) | `\m{x^2}` |
 | `<https://…>` | autolink | `\url{https://…}` (string body) |
-| `[text](url)` | hyperlink | `\link[to="url"]{text}` |
+| `[text](url)` | hyperlink | `\link[to="url"]{text}`; `to="#name"` links to a bookmark in the document |
 | `@label` | cross-reference (§3.11) | `\ref{label}` |
 
 **Flanking rules.** `*` and `_` open emphasis only at a word start and close only at a word end, so `5 * 3`,
@@ -288,7 +288,7 @@ relative to the document. Sheets apply in document order.
 \tabs[(8cm, center), (16cm, right, leader=dot)]{Left\tab Centered\tab Right}
 ```
 
-Paragraph options and style-sheet properties use the **same vocabulary**.
+Paragraph options and style-sheet properties use the **same vocabulary**, including `line-spacing=(14pt, exact)`.
 
 **Drop caps** (M4): `\p[drop-cap]{…}` sets the first letter large over the first three lines; `drop-cap=4` over four
 (2–10), and `drop-cap=(lines=3, in-margin)` puts it in the margin. As in Word, the letter becomes a framed paragraph
@@ -935,7 +935,8 @@ Lowering (`wordgenx.lower`) turns the AST into the document IR. It fixes these b
   `look=(header-row, last-row, first-column, last-column, banded-rows, banded-columns)` or `look=none`.
   Cells take `colspan`, `rowspan`, `shade` (RGB or theme colour), `valign`, `align`, `borders`/`border-*`, and any
   block content, including lists and nested tables. Adjacent tables get a paragraph between them, as Word requires.
-- **Images.** `\image[width=…, height=…, alt="…"]{file}` embeds PNG, JPEG, GIF or BMP as an inline picture. The size
+- **Images.** `\image[width=…, height=…, alt="…"]{file}` embeds PNG, JPEG, GIF or BMP (and EMF or WMF, the
+  pictures of embedded objects an import brings) as an inline picture. The size
   comes from the pixel size and resolution (96 dpi if unknown). Giving one dimension keeps the aspect ratio, and
   `width=50%` is relative to the text width. Pictures wider than the text are shrunk to fit. Identical files are
   stored once.
