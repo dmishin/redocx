@@ -67,6 +67,9 @@ class Code(Enum):
     MATH = "WGX0311"
     CITATION = "WGX0312"
 
+    # Output: the written package (WGX04xx)
+    INCONSISTENT_OUTPUT = "WGX0401"
+
 
 @dataclass(frozen=True)
 class Diagnostic:
@@ -79,6 +82,8 @@ class Diagnostic:
     help: str | None = None
     notes: tuple[str, ...] = ()
     """Context shown after the help: the macro calls the text came through."""
+    located: bool = True
+    """False for a problem of the whole file, shown without a source line."""
 
     @property
     def is_error(self) -> bool:
@@ -103,6 +108,15 @@ def _expand_tabs(text: str) -> str:
 
 def render(diagnostic: Diagnostic, source: Source) -> str:
     """Render one diagnostic in the compiler's terminal format (no colors)."""
+    if not diagnostic.located:
+        out = [
+            f"{diagnostic.severity.value}[{diagnostic.code.value}]: {diagnostic.message}",
+            f" --> {source.name}",
+        ]
+        out += [f"  = note: {note}" for note in diagnostic.notes]
+        if diagnostic.help:
+            out.append(f"  = help: {diagnostic.help}")
+        return "\n".join(out) + "\n"
     start = source.position(diagnostic.span.start)
     end = source.position(diagnostic.span.end)
     line_no = start.line

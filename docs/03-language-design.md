@@ -827,8 +827,12 @@ uses a `Bibliography` paragraph style. Native Word citations (`CITATION` fields,
 
 Raw XML is checked when the document compiles: it must be well-formed WordprocessingML (`w:` elements; the usual
 prefixes `w:`, `r:`, `a:`, `wp:`, `pic:`, `w14:`, `mc:`, `v:`, `o:`, `m:` need no declaration). A bad escape hatch is a
-compile error, not a corrupt file. Relationship ids (`r:id`) are not rewritten, so raw XML cannot refer to images or
-links of its own yet.
+compile error, not a corrupt file. It is also checked against the ECMA-376 schemas where it goes (block or run
+content, or the property container of an `ooxml.*` option), so an unknown element, a misplaced one or a bad value
+is a compile error too (``raw XML that Word would reject: `w:bogus` is not allowed here``). Elements and attributes of
+namespaces the schemas do not define (`w14:`, `w15:`, ...) are not checked. Relationship ids (`r:id`) are not
+rewritten, so raw XML cannot refer to images or links of its own yet. Ids and references inside raw XML (bookmarks,
+notes, drawings) are checked with the written document (§3.21).
 
 ## 3.21 Diagnostics and lints
 
@@ -846,6 +850,14 @@ Planned lints: a repeated label word before `@label` (§3.11); an unused label; 
 never used, or a capitalised term used but never defined.
 
 Syntax errors use the codes `WGX01xx` (`wordgenx.syntax.diagnostics.Code`). Later stages use other ranges.
+
+**The written document is checked.** After writing, `build` (and `check`) reads the finished parts back and checks
+what the schemas cannot see: every relationship id names a relationship of its part; each bookmark id is opened
+once and closed once; bookmark names and drawing ids are unique; note, comment, style and list references name
+something that exists. Problems are one warning, `WGX0401`, with a note each. The writer is meant to get all of
+this right, so the warning points at raw XML and template content first, and otherwise asks for a bug report.
+`wordgenx build --validate` also checks every part against the ECMA-376 schemas (about half a second more) and fails
+without writing when one does not match. The schemas ship with the package (`wordgenx/data/schemas`).
 
 An error in text a macro brought in points into the file that defines the macro, with a note for each call it came
 through (`= note: in \logo, called at report.wgx:12:5`). Problems with command-line options, such as a `--template`

@@ -77,7 +77,9 @@ def _emit_ir(document: ir.Document, target: str) -> bool:
     return True
 
 
-def _build(path: str, output: str | None, template: str | None, emit_ir: str | None) -> int:
+def _build(
+    path: str, output: str | None, template: str | None, emit_ir: str | None, validate: bool
+) -> int:
     source = _load(path)
     if source is None:
         return 1
@@ -98,6 +100,8 @@ def _build(path: str, output: str | None, template: str | None, emit_ir: str | N
     if data is None:
         print(f"build failed: {summary}", file=sys.stderr)
         return 1
+    if validate and not _schema_valid(data):
+        return 1
     document = result.document
     if emit_ir is not None and document is not None and not _emit_ir(document, emit_ir):
         return 1
@@ -109,6 +113,24 @@ def _build(path: str, output: str | None, template: str | None, emit_ir: str | N
         return 1
     print(f"wrote {target} ({summary})", file=sys.stderr)
     return 0
+
+
+def _schema_valid(data: bytes) -> bool:
+    """--validate: every part of the written document against the ECMA-376 schemas."""
+    from wordgenx.ooxml.validate import validate_package  # loads the schemas
+
+    errors = validate_package(data)
+    for part, messages in errors.items():
+        for message in messages:
+            print(f"error: {part}:{message}", file=sys.stderr)
+    if errors:
+        count = sum(len(m) for m in errors.values())
+        print(
+            f"build failed: the written document does not match the schemas ({count} "
+            f"error{'s' * (count != 1)}; nothing was written)\n  = help: {INTERNAL_HELP}",
+            file=sys.stderr,
+        )
+    return not errors
 
 
 def _check(paths: Sequence[str]) -> int:
@@ -260,6 +282,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="also write the document's IR as JSON to this file (-: standard output)",
     )
 
+    build_cmd.add_argument(
+        "--validate",
+        action="store_true",
+        help="also check the written document against the ECMA-376 schemas (slower)",
+    )
+
     check = commands.add_parser("check", help="report diagnostics without writing output")
     check.add_argument("files", nargs="+", metavar="FILE")
 
@@ -309,7 +337,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "import":
         return _import(args.file, args.output, args.keep_styles, not args.commands_only, args.check)
     if args.command == "build":
-        return _build(args.file, args.output, args.template, args.emit_ir)
+        return _build(args.file, args.output, args.template, args.emit_ir, args.validate)
     if args.command == "check":
         return _check(args.files)
     if args.command == "fmt":

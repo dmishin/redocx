@@ -1,6 +1,7 @@
 # Schemas
 
-XML Schemas used by the test suite to validate every generated part. They are not needed at runtime.
+XML Schemas used to validate generated parts: by the test suite for every part, and at build time for
+escape-hatch XML (`\raw`, `ooxml.*`) and `wordgenx build --validate` (`wordgenx.ooxml.validate`).
 
 | Folder | Source |
 |--------|--------|

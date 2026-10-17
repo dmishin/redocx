@@ -128,10 +128,10 @@ def test_a_bad_template_option_is_a_command_line_error(tmp_path: Path) -> None:
 def test_internal_errors_are_reported_without_a_traceback(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    def fail(*args: object, **kwargs: object) -> bytes:
+    def fail(*args: object, **kwargs: object) -> object:
         raise StyleError("something the lowering missed")
 
-    monkeypatch.setattr(compiler, "to_docx_bytes", fail)
+    monkeypatch.setattr(compiler, "build_package", fail)
     doc = tmp_path / "doc.wgx"
     doc.write_text("Hello", encoding="utf-8")
     for command in ("build", "check"):

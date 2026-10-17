@@ -10,7 +10,7 @@ with no repair prompt, pass both validators, and match their golden snapshots.
 - [x] OPC package writer: content types, relationships, deterministic zip.
 - [x] Minimal part writers: document, styles (docDefaults, the four default styles, user styles), settings, core and app
   props, fontTable, theme (own default theme).
-- [x] Validation pipeline: lxml + ECMA-376 Transitional XSDs (`schemas/`); `tools/ooxml-validate` (.NET OpenXmlValidator).
+- [x] Validation pipeline: lxml + ECMA-376 Transitional XSDs (now `src/wordgenx/data/schemas/`); `tools/ooxml-validate` (.NET OpenXmlValidator).
 - [x] Golden-test harness (canonical XML snapshots in `tests/golden/expected/`).
 - [x] First version of the property registry: 15 run and 14 paragraph properties, with schema-order tables checked against `wml.xsd`.
 - [x] **Spike:** 5 representative documents in the proposed syntax. See the [findings](../examples/spike/FINDINGS.md).
@@ -252,6 +252,24 @@ Steps, in order. Each stays simple; what turns out intrusive is reported as lost
   body paragraphs match, and Word lays out 17 pages, as for the original, with no field errors. The report lists
   what was lost (repeated spaces, two even-page parts Word does not show, text effects, emphasis marks, objects kept
   as pictures).
+
+## M7: Reliability and documentation
+
+*Goal: a document that compiles without errors opens in Word without complaint, and the language can be learned
+from its documentation.*
+
+1. [x] **Every example validated.** The examples and the book are built and validated by the schemas and by the
+   Open XML SDK in the tests. This found one bug: math in a document compiled into a template wrote `m:mathPr` out of
+   schema order.
+2. [x] **Escape hatches checked against the schemas.** `\raw` and `ooxml.*` XML must fit where it goes; the schemas
+   ship with the package and load only when raw XML is used.
+3. [x] **The written document checked.** Relationship ids, bookmark pairs, unique bookmark names and drawing ids,
+   and note, comment, style and list references, as one warning (`WGX0401`); `build --validate` for the full
+   schema check.
+4. [ ] **Unknown field names** in `\field` are a warning.
+5. [ ] **Command reference** generated from the command table, with a test that it is up to date.
+6. [ ] **Guides:** a short guide, topic guides (tables, images and drawings, styles and templates, references and
+   captions, sections, math, macros and the standard library, import) and a guide for TeX users.
 
 Tooling (language server, editor support, `watch`, PDF export and `finalize`, a website) waits until the language has
 settled: see [tooling ideas](ideas/tooling.md).

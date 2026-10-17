@@ -381,6 +381,19 @@ def raw_xml(lw: Lowering, command: ast.Command) -> str | None:
             command.body.span,
         )
         return None
+    from wordgenx.ooxml.validate import fragment_problems  # loads the schemas: only when used
+
+    problems = fragment_problems(command.body.text, "block" if "block" in kinds else "inline")
+    if problems:
+        more = f" (and {len(problems) - 1} more)" if len(problems) > 1 else ""
+        lw.report(
+            Code.INVALID_ARGUMENT,
+            f"raw XML that Word would reject: {problems[0]}{more}",
+            command.body.span,
+            help="\\raw XML is checked against the ECMA-376 schemas; "
+            "elements of other namespaces (w14:, ...) are not checked",
+        )
+        return None
     return command.body.text.strip()
 
 

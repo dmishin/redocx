@@ -67,7 +67,7 @@ tests/
 tools/
   ooxml-validate/   tiny .NET console app wrapping OpenXmlValidator (CI only)
   word-probe/       scripts to create a feature in Word and diff its XML (reverse-engineering aid)
-schemas/         ECMA-376 Transitional XSDs (for lxml validation)
+src/wordgenx/data/schemas/  ECMA-376 Transitional XSDs (lxml validation: tests, raw XML, build --validate)
 docs/            design docs → later: user manual written in wordgenx
 ```
 

@@ -40,6 +40,7 @@ uv run wordgenx build examples/hello.wgx             # compile to examples/hello
 uv run wordgenx check examples/syntax-tour.wgx       # compile and report diagnostics, write nothing
 uv run wordgenx fmt examples/hello.wgx               # rewrite in the canonical layout (--check, --diff)
 uv run wordgenx build examples/hello.wgx --emit-ir - # also print the IR as JSON
+uv run wordgenx build examples/hello.wgx --validate  # also check every part against the schemas
 uv run wordgenx parse examples/syntax-tour.wgx       # print the AST (--tree cst for the CST)
 uv run wordgenx inspect examples/hello.docx          # read a .docx back, report structure and coverage
 uv run wordgenx import examples/hello.docx -o hello  # turn a .docx into source: .wgx, .wgxs, pictures, report
@@ -55,9 +56,9 @@ change, regenerate them and review the diff before committing:
 WORDGENX_UPDATE_GOLDEN=1 uv run pytest tests/golden
 ```
 
-Every golden document is also validated against the ECMA-376 schemas (`schemas/`) and by Microsoft's Open XML SDK.
+Every golden document is also validated against the ECMA-376 schemas (`src/wordgenx/data/schemas/`) and by Microsoft's Open XML SDK.
 
-Layout: `src/wordgenx/` (package), `tests/`, `schemas/` (XSDs for tests), `tools/ooxml-validate/` (.NET validator,
+Layout: `src/wordgenx/` (package), `tests/`, `src/wordgenx/data/schemas/` (XSDs), `tools/ooxml-validate/` (.NET validator,
 CI and dev only), `docs/` (design), `examples/` (sample sources).
 
 ### Python API (early)

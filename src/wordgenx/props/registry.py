@@ -13,7 +13,7 @@ import re
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from enum import Enum
-from typing import Protocol
+from typing import Protocol, cast
 
 from wordgenx.values import (
     TAB_LEADERS,
@@ -829,6 +829,11 @@ def _raw(target: Target) -> Callable[[object], object]:
             local = str(element.tag).rsplit("}", 1)[-1]
             if local not in order:
                 raise InvalidValueError(f"w:{local} is not a w:{_RAW_CONTAINERS[target]} property")
+        from wordgenx.ooxml.validate import Context, fragment_problems  # loads the schemas
+
+        problems = fragment_problems(value, cast("Context", _RAW_CONTAINERS[target]))
+        if problems:
+            raise InvalidValueError(f"raw XML that Word would reject: {problems[0]}")
         return value.strip()
 
     return coerce

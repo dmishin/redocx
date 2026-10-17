@@ -2,18 +2,19 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from os import PathLike
 from pathlib import Path
 
 from wordgenx import ir
 from wordgenx.lower import Located, lower
+from wordgenx.ooxml.integrity import package_problems
 from wordgenx.ooxml.parts.styles import StyleError
 from wordgenx.ooxml.template import Template, load_template
-from wordgenx.ooxml.writer import to_docx_bytes
+from wordgenx.ooxml.writer import build_package
 from wordgenx.syntax import parse
-from wordgenx.syntax.diagnostics import Severity, render
-from wordgenx.syntax.source import Source
+from wordgenx.syntax.diagnostics import Code, Diagnostic, Severity, render
+from wordgenx.syntax.source import Source, Span
 
 
 @dataclass(frozen=True)
@@ -79,11 +80,45 @@ def build(
     *,
     as_template: bool = False,
 ) -> tuple[bytes | None, CompileResult]:
-    """Compile to .docx bytes, or .dotx with `as_template` (None when there are errors)."""
+    """Compile to .docx bytes, or .dotx with `as_template` (None when there are errors).
+    The written package is checked for consistency (`package_problems`); what is wrong is
+    reported as warnings."""
+    if isinstance(source, str):
+        source = Source("<input>", source)
+        base_dir = base_dir or Path.cwd()
     result = compile_source(source, base_dir, template)
     if result.document is None:
         return None, result
     try:
-        return to_docx_bytes(result.document, as_template=as_template), result
+        package = build_package(result.document, as_template=as_template)
     except StyleError as e:  # a consistency problem the lowering did not catch
         raise InternalError(f"internal error while writing the document: {e}") from e
+    problems = package_problems(package)
+    if problems:
+        result = replace(
+            result, diagnostics=(*result.diagnostics, *_output_warnings(source, problems))
+        )
+    return package.to_bytes(), result
+
+
+OUTPUT_HELP = (
+    "Word may report the document as damaged. Raw XML (\\raw, ooxml.*) and template content "
+    "are written as they are, so check them; otherwise this is a bug in wordgenx: please "
+    "report it with the document"
+)
+
+
+def _output_warnings(source: Source, problems: list[str]) -> list[Located]:
+    """The problems of the written package, as one warning for the whole document (they
+    have no place in the source)."""
+    count = f"{len(problems)} problem{'s' * (len(problems) != 1)}"
+    warning = Diagnostic(
+        Severity.WARNING,
+        Code.INCONSISTENT_OUTPUT,
+        f"the written document is inconsistent ({count})",
+        Span(0, 0),
+        help=OUTPUT_HELP,
+        notes=tuple(problems),
+        located=False,
+    )
+    return [(source, warning)]

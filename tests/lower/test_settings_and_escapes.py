@@ -172,6 +172,9 @@ def test_raw_runs_and_blocks() -> None:
         ("\\raw[ooxml]{<p>x</p>}", "must be WordprocessingML"),
         ("\\raw[ooxml]{<w:r/><w:p/>}", "either run-level"),
         ("\\raw[html]{<w:r/>}", "`format`: unknown value `html`"),
+        ("\\raw[ooxml]{<w:r><w:bogus/></w:r>}", "Word would reject: `w:bogus` is not allowed here"),
+        ("Text \\raw[ooxml]{<w:r><w:p/></w:r>}", "`w:p` is not allowed here"),
+        ("\\raw[ooxml]{<w:p><w:pPr><w:jc w:val='up'/></w:pPr></w:p>}", "`up` is not a valid value"),
     ],
 )
 def test_raw_errors(text: str, message: str) -> None:
@@ -190,6 +193,16 @@ def test_ooxml_property_options() -> None:
     assert paragraph is not None
     assert paragraph.find(f"{W}pPr/{W}suppressAutoHyphens") is not None
     assert any("is not a w:pPr property" in e for e in errors('\\p[ooxml.pPr="<w:b/>"]{x}'))
+    bad = errors("\\p[ooxml.pPr=\"<w:ind w:left='wide'/>\"]{x}")
+    assert any("`w:left` of `w:ind`: `wide` is not a valid value" in e for e in bad), bad
+
+
+def test_raw_xml_of_other_namespaces_is_not_checked() -> None:
+    text = (
+        "\\raw[ooxml]{<w:r><w14:anything xmlns:w14="
+        "'http://schemas.microsoft.com/office/word/2010/wordml'/><w:t>x</w:t></w:r>}"
+    )
+    assert errors(text) == []
 
 
 # --- smaller properties ------------------------------------------------------------------------------
