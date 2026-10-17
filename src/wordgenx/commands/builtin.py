@@ -131,21 +131,25 @@ _command(
 )  # fmt: skip
 _command(
     "meta", BLOCK, "Document properties (File > Info).",
-    *(_o(name, TEXT) for name in ("title", "subject", "author", "description", "last-modified-by")),
-    _o("keywords", ListOf(TEXT, split_text=True)),
-    patterns={"custom.": CustomPropertyValue()},
+    _o("title", TEXT, "the document title"),
+    _o("subject", TEXT, "its subject"),
+    _o("author", TEXT, "its author (also the default author of comments)"),
+    _o("description", TEXT, "a summary (Comments in File > Info)"),
+    _o("last-modified-by", TEXT, "who saved it last"),
+    _o("keywords", ListOf(TEXT, split_text=True), "tags: (a, b) or \"a, b\""),
+    patterns={"custom.": CustomPropertyValue()},  # custom.name=value: a custom property
     body=None,
 )  # fmt: skip
 _command(
     "settings",
     BLOCK,
     "Document settings (settings.xml).",
-    _o("even-odd-headers", FLAG),
-    _o("mirror-margins", FLAG),
-    _o("update-fields-on-open", FLAG),
-    _o("default-tab-stop", LengthValue(nonnegative=True)),
-    _o("footnotes", _note_settings("footnote")),
-    _o("endnotes", _note_settings("endnote")),
+    _o("even-odd-headers", FLAG, "different headers and footers on even pages"),
+    _o("mirror-margins", FLAG, "facing pages: inside and outside margins"),
+    _o("update-fields-on-open", FLAG, "Word updates all fields when it opens the document"),
+    _o("default-tab-stop", LengthValue(nonnegative=True), "the distance between default tab stops"),
+    _o("footnotes", _note_settings("footnote"), "footnote numbering and position"),
+    _o("endnotes", _note_settings("endnote"), "endnote numbering and position"),
     _o(
         "protection",
         Record(
@@ -153,6 +157,7 @@ _command(
             shorthand="mode",
             required=("mode",),
         ),
+        "restrict editing in Word: forms, read-only, comments or tracked-changes",
     ),
     _o("code-theme", Choice(_themes), "the Pygments style for code blocks"),
     _o(
@@ -164,6 +169,7 @@ _command(
                 "separator": Choice.of(*CAPTION_SEPARATORS),
             }
         ),
+        "caption numbers with the chapter number: 2-1, 2.1, ...",
     ),
     _o("track-changes", FLAG, "Word's Track Changes on for edits made in Word"),
     _o("hyphenation", Choice.of("auto", "off"), "hyphenate the document automatically"),
@@ -197,7 +203,7 @@ _command(
 )  # fmt: skip
 _command(
     "align", BLOCK, "Aligns the paragraphs inside.",
-    _o("align", Choice.of(*ALIGNMENTS), required=True),
+    _o("align", Choice.of(*ALIGNMENTS), "the alignment", required=True),
     positional="align", body_required=True,
 )  # fmt: skip
 _command(
@@ -209,7 +215,7 @@ _command(
 )  # fmt: skip
 _command(
     "tabs", BLOCK, "Tab stops for the paragraphs inside.",
-    _o("stops", TabStopValue()),
+    _o("stops", TabStopValue(), "the tab stops, one value each"),
     positional="stops", variadic=True, body_required=True,
 )  # fmt: skip
 
@@ -217,18 +223,19 @@ _command(
 
 _command(
     "section", BLOCK, "Page setup; after content it also starts a new section.",
-    _o("size", PageSizeValue(PAGE_SIZES)),
-    _o("orientation", Choice.of("portrait", "landscape")),
+    _o("size", PageSizeValue(PAGE_SIZES), "the paper size"),
+    _o("orientation", Choice.of("portrait", "landscape"), "the page orientation"),
     _o(
         "margins",
         Record(
             {side: LengthValue() for side in ("all", *MARGIN_SIDES)},
             shorthand="all",
         ),
+        "the page margins: one length, or by side",
     ),
-    _o("gutter", LengthValue(nonnegative=True)),
-    _o("header-distance", LengthValue(nonnegative=True)),
-    _o("footer-distance", LengthValue(nonnegative=True)),
+    _o("gutter", LengthValue(nonnegative=True), "extra margin for binding"),
+    _o("header-distance", LengthValue(nonnegative=True), "from the top edge to the header"),
+    _o("footer-distance", LengthValue(nonnegative=True), "from the bottom edge to the footer"),
     _o("break", Choice.of(*ir.SECTION_STARTS), "how the section starts"),
     _o(
         "page-numbers",
@@ -236,6 +243,7 @@ _command(
             {"format": Choice.of(*ir.PAGE_NUMBER_FORMATS), "start": Int(min=0)},
             shorthand="format",
         ),
+        "the page number format (decimal, lower-roman, ...) and first number",
     ),
     _o(
         "columns",
@@ -248,6 +256,7 @@ _command(
             },
             shorthand="count",
         ),
+        "text columns: a count, or (count, gap, separator, widths)",
     ),
     _o("valign", Choice.of(*ir.VERTICAL_ALIGNMENTS), "where the text sits on the page"),
     _o("borders", PageBordersValue(), "lines around the pages"),
@@ -265,6 +274,7 @@ _command(
                 }
             )
         ),
+        "line numbers in the margin",
     ),
     _o("link-headers", FLAG, "headers and footers continue from the previous section"),
     _o("title-page", FLAG, "a different first page"),
@@ -275,7 +285,7 @@ _command(
 for _family in ("header", "footer"):
     _command(
         _family, BLOCK, f"The {_family} of the current section.",
-        _o("kind", Choice.of(*ir.HEADER_KINDS)),
+        _o("kind", Choice.of(*ir.HEADER_KINDS), "every page, the first page, or even pages"),
         positional="kind",
     )  # fmt: skip
 
@@ -298,8 +308,8 @@ _command(
     "table", BLOCK, "A table of pipe rows and/or \\row commands.",
     _o("style", TEXT, "a table style, or none"),
     _o("header-rows", Int(min=0), "rows repeated on each page"),
-    _o("widths", ListOf(ColumnWidthValue())),
-    _o("align", Choice.of("left", "center", "right")),
+    _o("widths", ListOf(ColumnWidthValue()), "the column widths"),
+    _o("align", Choice.of("left", "center", "right"), "the table between the margins"),
     _o(
         "columns",
         ListOf(
@@ -318,15 +328,15 @@ _command(
     "row", Placement.PART, "A table row of \\cell commands.",
     _o("header", FLAG, "repeat on each page"),
     _o("cant-split", FLAG, "keep the row on one page"),
-    _o("height", RowHeightValue()),
+    _o("height", RowHeightValue(), "the row height: at least, or exactly"),
     body_required=True,
 )  # fmt: skip
 _command(
     "cell", Placement.PART, "A table cell: any blocks.",
-    _o("colspan", Int(min=1)),
-    _o("rowspan", Int(min=1)),
+    _o("colspan", Int(min=1), "the number of columns it spans"),
+    _o("rowspan", Int(min=1), "the number of rows it spans"),
     _o("shade", PropValue(Target.CELL, "shading"), "the cell's background"),
-    _o("valign", CELL_VALIGN),
+    _o("valign", CELL_VALIGN, "where the content sits in a taller cell"),
     _o("align", Choice.of(*ALIGNMENTS), "paragraph alignment"),
     props=Target.CELL,
 )  # fmt: skip
@@ -345,12 +355,13 @@ _command(
 )  # fmt: skip
 _command(
     "toc", BLOCK, "A table of contents.",
-    _o("levels", LevelRange()), _o("title", TEXT), _o("hyperlinks", FLAG, "always on"),
+    _o("levels", LevelRange(), "the heading levels listed (default 1-3)"),
+    _o("title", TEXT, "a heading above it"), _o("hyperlinks", FLAG, "always on"),
     body=None,
 )  # fmt: skip
 _command(
     "listof", BLOCK, "A list of figures, tables, ...",
-    _o("kind", TEXT, "the caption kind"), _o("title", TEXT),
+    _o("kind", TEXT, "the caption kind"), _o("title", TEXT, "a heading above it"),
     positional="kind", body=None,
 )  # fmt: skip
 
@@ -358,7 +369,8 @@ _command(
 
 _command(
     "math", BLOCK, "A display equation.",
-    ID, _o("numbered", FLAG), _o("nonumber", FLAG),
+    ID, _o("numbered", FLAG, "numbered even without an id (off: not even with one)"),
+    _o("nonumber", FLAG, "not numbered, even with an id"),
     body=MATH, body_required=True, body_doc="a formula",
 )  # fmt: skip
 _command("m", INLINE, "An inline formula.", body=MATH, body_required=True, body_doc="a formula")
@@ -373,25 +385,30 @@ _command(
 )  # fmt: skip
 _command(
     "printbibliography", BLOCK, "The cited entries (or all of them).",
-    _o("title", TEXT, "a heading, or none"), _o("level", Int(1, 9)), _o("all", FLAG),
+    _o("title", TEXT, "a heading, or none"), _o("level", Int(1, 9), "the heading level"),
+    _o("all", FLAG, "every entry in the data, cited or not"),
     body=None,
 )  # fmt: skip
 for _cite in ("cite", "textcite"):
     _command(
         _cite, INLINE, "A citation of bibliography keys.",
-        *(_o(locator, TEXT) for locator in CITE_LOCATORS),
-        _o("prefix", TEXT), _o("suffix", TEXT),
+        *(_o(locator, TEXT, f"a {locator} locator: page=12") for locator in CITE_LOCATORS),
+        _o("prefix", TEXT, "text before: see"), _o("suffix", TEXT, "text after: Lemma 2"),
         body=STRING, body_required=True, body_doc="bibliography keys",
     )  # fmt: skip
 _command(
     "ix", INLINE, "An index entry; ! separates subentries.",
-    _o("see", TEXT), _o("see-also", TEXT), _o("xref", TEXT), _o("bold", FLAG), _o("italic", FLAG),
+    _o("see", TEXT, "\"See ...\" instead of a page number"),
+    _o("see-also", TEXT, "\"See also ...\" after the page numbers"),
+    _o("xref", TEXT, "the whole cross-reference text, in any language"),
+    _o("bold", FLAG, "a bold page number"), _o("italic", FLAG, "an italic page number"),
     body=STRING, body_required=True, body_doc="a term",
 )  # fmt: skip
 _command(
     "index", BLOCK, "The index of the \\ix entries.",
-    _o("columns", Int(1, 4)), _o("headings", FLAG), _o("right-align", FLAG),
-    _o("title", TEXT), _o("level", Int(1, 9)),
+    _o("columns", Int(1, 4), "the number of columns"), _o("headings", FLAG, "letter headings"),
+    _o("right-align", FLAG, "page numbers at the right, after dots"),
+    _o("title", TEXT, "a heading above it"), _o("level", Int(1, 9), "the heading level"),
     body=None,
 )  # fmt: skip
 
@@ -415,13 +432,13 @@ _command(
 )  # fmt: skip
 _command(
     "lang", INLINE, "Text in another language.",
-    _o("lang", PropValue(Target.RUN, "lang"), required=True),
+    _o("lang", PropValue(Target.RUN, "lang"), "a language tag: de-DE", required=True),
     positional="lang", body_required=True,
 )  # fmt: skip
 _command("font", INLINE, "Text with direct run formatting.", props=Target.RUN, body_required=True)
 _command(
     "style", INLINE, "Text in a character style.",
-    _o("style", TEXT, required=True), positional="style", body_required=True,
+    _o("style", TEXT, "a character style", required=True), positional="style", body_required=True,
 )  # fmt: skip
 _command(
     "link", INLINE, "A hyperlink.",
@@ -435,8 +452,9 @@ _command(
 )  # fmt: skip
 _command(
     "image", INLINE, "A picture (PNG, JPEG, GIF, BMP or SVG), inline or floating.",
-    _o("width", SizeValue()), _o("height", LengthValue(nonnegative=True)),
-    _o("alt", TEXT, "a description"), _o("name", TEXT),
+    _o("width", SizeValue(), "the width (the height follows)"),
+    _o("height", LengthValue(nonnegative=True), "the height (the width follows)"),
+    _o("alt", TEXT, "a description"), _o("name", TEXT, "its name in Word (Selection pane)"),
     _o("fallback", TEXT, "a PNG or JPEG that Word 2013 and older show for an SVG"),
     *FLOATING,
     _o("crop", Record({side: PercentValue(max=Decimal(99))
@@ -452,7 +470,7 @@ _command(
 )  # fmt: skip
 _command(
     "raw", BOTH, "Raw WordprocessingML (block or inline, by its elements).",
-    _o("format", Choice.of("ooxml")), positional="format",
+    _o("format", Choice.of("ooxml"), "the markup: ooxml"), positional="format",
     body=RAW, body_required=True, body_doc="XML",
 )  # fmt: skip
 
@@ -475,13 +493,14 @@ _command(
 )  # fmt: skip
 _command(
     "date", INLINE, "A date: fixed at build time, or a DATE / SAVEDATE / CREATEDATE field.",
-    _o("kind", Choice.of("fixed", *DATE_FIELDS)),
+    _o("kind", Choice.of("fixed", *DATE_FIELDS), "fixed text, or a field Word updates"),
     _o("format", TEXT, 'a Word date picture: "d MMMM yyyy"'),
     body=None,
 )  # fmt: skip
 _command(
     "ref", INLINE, "A cross-reference to a label.",
-    _o("form", Choice.of(*REF_FORMS)), positional="form",
+    _o("form", Choice.of(*REF_FORMS), "what is printed: Figure 3, 3, the text, ..."),
+    positional="form",
     body=STRING, body_required=True, body_doc="a label",
 )  # fmt: skip
 _command(
@@ -491,7 +510,8 @@ _command(
 _command(
     "seq", INLINE, "A counter (SEQ field).",
     _o("name", TEXT, "the counter (letters, digits, _)", required=True), ID,
-    _o("restart", SeqRestart()), _o("format", Choice(SEQ_FORMATS)),
+    _o("restart", SeqRestart(), "after each heading of a level, or at a number"),
+    _o("format", Choice(SEQ_FORMATS), "decimal, lower-letter, upper-roman, ..."),
     positional="name", body=None,
 )  # fmt: skip
 for _note in ("footnote", "endnote"):
@@ -516,7 +536,7 @@ _command(
                          shorthand="all"), "space between the frame and the text"),
     _o("valign", Choice.of(*ir.TEXT_BOX_ALIGNMENTS), "where the text sits in a taller box"),
     _o("rotate", Int(-360, 360), "degrees clockwise"),
-    _o("name", TEXT),
+    _o("name", TEXT, "its name in Word (Selection pane)"),
     *FLOATING,
     body_required=True,
 )  # fmt: skip
@@ -526,7 +546,7 @@ _command(
     _o("image", TEXT, "a picture file instead of text"),
     _o("color", PropValue(Target.RUN, "color"), "of the text (default: silver)"),
     _o("font", TEXT, "of the text (default: Calibri)"),
-    _o("layout", Choice.of("diagonal", "horizontal")),
+    _o("layout", Choice.of("diagonal", "horizontal"), "the direction of the text"),
     _o("semitransparent", FLAG, "text at half opacity (default: on)"),
     _o("washout", FLAG, "a pale picture (default: on)"),
     _o("width", SizeValue(), "the size (default: as wide as the text allows)"),
@@ -564,8 +584,11 @@ _command(
 CODE_BLOCK = CommandSpec(
     "code block", BLOCK, "A fenced code block: ```python {#lst:x, caption=..., line-numbers}.",
     (
-        _o("id", TEXT), _o("caption", Text(allow_empty=True)),
-        _o("line-numbers", FLAG), _o("first-line", Int(min=0)), _o("highlight", FLAG),
+        _o("id", TEXT, "a label to refer to this with @label"),
+        _o("caption", Text(allow_empty=True), "a Listing caption"),
+        _o("line-numbers", FLAG, "number the lines"),
+        _o("first-line", Int(min=0), "the number of the first line"),
+        _o("highlight", FLAG, "syntax colours (default: on when a language is given)"),
     ),
     body=None, title="code blocks",
 )  # fmt: skip

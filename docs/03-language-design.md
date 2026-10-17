@@ -140,7 +140,7 @@ on automatic hyphenation (`suppress-hyphenation` keeps a paragraph out of it).
 | `` `code` `` | inline code (character style `Code`) | `\code{code}` |
 | `\m{x^2}` | inline math (there is no sugar; `$` is literal) | `\m{x^2}` |
 | `<https://…>` | autolink | `\url{https://…}` (string body) |
-| `[text](url)` | hyperlink | `\link[to="url"]{text}`; `to="#name"` links to a bookmark in the document; `style=none` keeps the text's own look (no Hyperlink style) |
+| `[text](url)` | hyperlink | `\link[to="url"]{text}`; `to="#label"` links to a label's bookmark, `to="#name"` to any other bookmark in the document; `style=none` keeps the text's own look (no Hyperlink style) |
 | `@label` | cross-reference (§3.11) | `\ref{label}` |
 
 **Flanking rules.** `*` and `_` open emphasis only at a word start and close only at a word end, so `5 * 3`,
@@ -151,7 +151,7 @@ Sugar maps to **semantic character styles**, which are created if the template l
 Direct formatting is always available:
 
 ```wgx
-\font[family="Consolas", size=10pt, color=theme.accent1, caps, spacing=0.5pt]{text}
+\font[font="Consolas", size=10pt, color=theme.accent1, caps, character-spacing=0.5pt]{text}
 \font[border=(single, 0.5pt, #C00000, space=1pt), shading=#FFF2CC]{boxed}   % a character border and shading
 \b{bold} \i{italic} \u[double]{underlined} \s{struck} \sup{2} \sub{i} \hl[yellow]{highlight}
 \style[Term]{defined term}        % apply a named character style
@@ -855,7 +855,8 @@ Syntax errors use the codes `WGX01xx` (`wordgenx.syntax.diagnostics.Code`). Late
 
 **The written document is checked.** After writing, `build` (and `check`) reads the finished parts back and checks
 what the schemas cannot see: every relationship id names a relationship of its part; each bookmark id is opened
-once and closed once; bookmark names and drawing ids are unique; note, comment, style and list references name
+once and closed once; bookmark names and drawing ids are unique; links within the document go to a bookmark that
+exists; note, comment, style and list references name
 something that exists. Problems are one warning, `WGX0401`, with a note each. The writer is meant to get all of
 this right, so the warning points at raw XML and template content first, and otherwise asks for a bug report.
 `wordgenx build --validate` also checks every part against the ECMA-376 schemas (about half a second more) and fails

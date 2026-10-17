@@ -385,6 +385,7 @@ def resolve(
     def resolve_refs(paragraph: ir.Paragraph) -> ir.Paragraph:
         nonlocal ref_index, needs_update
         ref_index += 1
+        paragraph = _label_anchors(paragraph, references)
         if not any(isinstance(item, PendingRef) for item in paragraph.content):
             return paragraph
         here = order.get(id(paragraph), ref_index)
@@ -419,6 +420,19 @@ def resolve(
         else:
             filled.append(block)
     return tuple(filled), used_styles, needs_update
+
+
+def _label_anchors(paragraph: ir.Paragraph, references: References) -> ir.Paragraph:
+    """Links to `#label` go to the label's bookmark (`#name` of any other bookmark stays)."""
+
+    def target(item: ir.Inline) -> ir.Inline:
+        if isinstance(item, ir.Hyperlink) and item.anchor in references.labels:
+            return replace(item, anchor=references.labels[item.anchor].bookmark)
+        return item
+
+    if not any(isinstance(i, ir.Hyperlink) and i.anchor for i in paragraph.content):
+        return paragraph
+    return replace(paragraph, content=tuple(target(item) for item in paragraph.content))
 
 
 def _resolve_ref(

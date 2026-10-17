@@ -116,7 +116,7 @@ Everything before the first content is the _preamble_. `\document`, `\meta`, `\s
 | `` `code` `` | inline code (character style `Code`) | `\code{code}` |
 | `\m{x^2}` | inline math (there is no sugar; `$` is literal) | `\m{x^2}` |
 | `<https://…>` | autolink | `\url{https://…}` (string body) |
-| `[text](url)` | hyperlink | `\link[to="url"]{text}`; `to="#name"` links to a bookmark in the document; `style=none` keeps the text's own look (no Hyperlink style) |
+| `[text](url)` | hyperlink | `\link[to="url"]{text}`; `to="#label"` links to a label's bookmark, `to="#name"` to any other bookmark in the document; `style=none` keeps the text's own look (no Hyperlink style) |
 | `@label` | cross-reference (§3.11) | `\ref{label}` |
 }
 
@@ -125,7 +125,7 @@ Everything before the first content is the _preamble_. `\document`, `\meta`, `\s
 Sugar maps to *semantic character styles*, which are created if the template lacks them, giving idiomatic Word output. Direct formatting is always available:
 
 ```wgx
-\font[family="Consolas", size=10pt, color=theme.accent1, caps, spacing=0.5pt]{text}
+\font[font="Consolas", size=10pt, color=theme.accent1, caps, character-spacing=0.5pt]{text}
 \font[border=(single, 0.5pt, #C00000, space=1pt), shading=#FFF2CC]{boxed}   % a character border and shading
 \b{bold} \i{italic} \u[double]{underlined} \s{struck} \sup{2} \sub{i} \hl[yellow]{highlight}
 \style[Term]{defined term}        % apply a named character style
@@ -609,7 +609,7 @@ Planned lints: a repeated label word before `@label` (§3.11); an unused label; 
 
 Syntax errors use the codes `WGX01xx` (`wordgenx.syntax.diagnostics.Code`). Later stages use other ranges.
 
-*The written document is checked.* After writing, `build` (and `check`) reads the finished parts back and checks what the schemas cannot see: every relationship id names a relationship of its part; each bookmark id is opened once and closed once; bookmark names and drawing ids are unique; note, comment, style and list references name something that exists. Problems are one warning, `WGX0401`, with a note each. The writer is meant to get all of this right, so the warning points at raw XML and template content first, and otherwise asks for a bug report. `wordgenx build --validate` also checks every part against the ECMA-376 schemas (about half a second more) and fails without writing when one does not match. The schemas ship with the package (`wordgenx/data/schemas`).
+*The written document is checked.* After writing, `build` (and `check`) reads the finished parts back and checks what the schemas cannot see: every relationship id names a relationship of its part; each bookmark id is opened once and closed once; bookmark names and drawing ids are unique; links within the document go to a bookmark that exists; note, comment, style and list references name something that exists. Problems are one warning, `WGX0401`, with a note each. The writer is meant to get all of this right, so the warning points at raw XML and template content first, and otherwise asks for a bug report. `wordgenx build --validate` also checks every part against the ECMA-376 schemas (about half a second more) and fails without writing when one does not match. The schemas ship with the package (`wordgenx/data/schemas`).
 
 An error in text a macro brought in points into the file that defines the macro, with a note for each call it came through (`= note: in \logo, called at report.wgx:12:5`). Problems with command-line options, such as a `--template` that is not a Word file, are reported as plain `error: --template: …` lines, since no source line is involved.
 

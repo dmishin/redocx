@@ -1,5 +1,7 @@
 """The consistency check of written packages (wordgenx.ooxml.integrity), build --validate."""
 
+import io
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -48,6 +50,23 @@ def test_references_name_what_exists() -> None:
         "paragraph style `Nowhere` is used but not defined",
         "list (numbering) 5 is used but not defined",
     ]
+
+
+def test_links_go_to_bookmarks_that_exist() -> None:
+    problems = _problems(
+        '<w:p><w:bookmarkStart w:id="1" w:name="Here"/><w:bookmarkEnd w:id="1"/>'
+        '<w:hyperlink w:anchor="here"/><w:hyperlink w:anchor="_top"/>'
+        '<w:hyperlink w:anchor="gone"/></w:p>'
+    )
+    assert problems == ["a link goes to bookmark `gone`, which does not exist"]
+
+
+def test_links_to_labels_go_to_their_bookmarks() -> None:
+    data, result = build("= A {#sec:a}\n\n[back](#sec:a), [also](#_Ref_sec_a)")
+    assert data is not None
+    assert result.diagnostics == ()
+    with zipfile.ZipFile(io.BytesIO(data)) as package:
+        assert package.read("word/document.xml").count(b'w:anchor="_Ref_sec_a"') == 2
 
 
 def test_drawing_ids_are_unique() -> None:

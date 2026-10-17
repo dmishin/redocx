@@ -45,6 +45,7 @@ def package_problems(pkg: Package) -> list[str]:
     for name, root in stories.items():
         problems += _bookmarks(name, root)
     problems += _bookmark_names(stories)
+    problems += _link_anchors(stories)
     problems += _drawing_ids(stories)
     problems += _notes_and_comments(stories, roots)
     problems += _styles_and_lists(stories, roots)
@@ -110,6 +111,25 @@ def _bookmark_names(stories: dict[str, Element]) -> Iterator[str]:
     for bookmark, count in sorted(names.items()):
         if count > 1:
             yield f"bookmark `{bookmark}` is defined {count} times"
+
+
+def _link_anchors(stories: dict[str, Element]) -> Iterator[str]:
+    """Links within the document go to a bookmark that exists (or `_top`, the start)."""
+    names = {
+        str(e.get(f"{W}name")).lower()
+        for root in stories.values()
+        for e in root.iter(f"{W}bookmarkStart")
+    }
+    missing = {
+        str(anchor)
+        for root in stories.values()
+        for link in root.iter(f"{W}hyperlink")
+        if (anchor := link.get(f"{W}anchor")) is not None
+        and anchor.lower() not in names
+        and anchor != "_top"
+    }
+    for anchor in sorted(missing):
+        yield f"a link goes to bookmark `{anchor}`, which does not exist"
 
 
 def _drawing_ids(stories: dict[str, Element]) -> Iterator[str]:

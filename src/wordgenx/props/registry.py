@@ -430,7 +430,7 @@ def _alignment(value: object) -> object:
 
 
 R, P, T, C = Target.RUN, Target.PARAGRAPH, Target.TABLE, Target.CELL
-_BOOL = "true | false"
+_BOOL = "on | off"
 _LEN = "length (e.g. 12pt, 0.5cm)"
 
 _SPECS: tuple[PropSpec, ...] = (

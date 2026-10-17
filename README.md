@@ -8,9 +8,17 @@ converters, wordgenx aims to expose *Word's own document model*: styles, multile
 fields, cross-references, footnotes, content controls, tracked changes, and the rest. The output should be a
 document a Word user can keep editing as if a careful human had built it.
 
-**Status:** early development (milestone M1). `wordgenx build` compiles documents with paragraphs, headings, inline
-formatting, hyperlinks, lists with real Word numbering, style sheets, macros and includes. Tables, images, fields,
-notes and cross-references are next (see the [roadmap](docs/06-roadmap.md)).
+**Status:** milestones M0–M6 are done (see the [roadmap](docs/06-roadmap.md)): styles and style sheets, lists with
+real Word numbering, tables, pictures, captions and cross-references, fields, notes, math, code, citations, sections,
+text boxes, forms, comments, templates, and importing Word documents back to source.
+
+## Learning the language
+
+- [wordgenx in one page](docs/guide/README.md): the short guide, with links to the topic guides (tables, pictures,
+  styles, references, sections, math and code, macros, forms, import).
+- [For TeX users](docs/guide/tex.md): LaTeX constructs and their nearest wordgenx equivalents.
+- [Command reference](docs/reference.md): every command, option and formatting property, generated from the
+  compiler's own tables (`python tools/make_reference.py`).
 
 ## Design documents
 

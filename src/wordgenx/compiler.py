@@ -102,9 +102,9 @@ def build(
 
 
 OUTPUT_HELP = (
-    "Word may report the document as damaged. Raw XML (\\raw, ooxml.*) and template content "
-    "are written as they are, so check them; otherwise this is a bug in wordgenx: please "
-    "report it with the document"
+    "Word may report the document as damaged, or a link may go nowhere. Raw XML (\\raw, "
+    "ooxml.*), template content and links to #bookmark names are written as they are, so "
+    "check them; otherwise this is a bug in wordgenx: please report it with the document"
 )
 
 

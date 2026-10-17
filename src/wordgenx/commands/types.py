@@ -323,7 +323,9 @@ class PropValue(ValueType):
             raise OptionError(str(e), value.span) from None
 
     def describe(self) -> str:
-        return f"a {self.target.label} {self.name} value"
+        from wordgenx.props.registry import REGISTRY
+
+        return REGISTRY[self.target][self.name].values
 
 
 # --- compound values -------------------------------------------------------------------
