@@ -198,10 +198,19 @@ Steps, in order. Each stays simple; what turns out intrusive is reported as lost
    documents and 13 examples (built, then imported) compile with the same text; so does the private test document
    (locally: no errors, the same text, the same tables, pictures and sections in Word; 19 pages instead of 17, since
    it now has wordgenx's theme and settings rather than its own).
-3. **Styles.** The style sheet from step 2, made readable: printing only what differs from wordgenx's built-ins,
-   linked styles as `linked`, the theme's colours and fonts. Alternative mode: keep the original's styles, theme,
-   numbering and headers exactly by writing them as a body-less template the source compiles into
+3. [x] **Styles.** The style sheet from step 2, made readable: printing only what differs from wordgenx's
+   built-ins, linked styles as `linked`, the theme's colours and fonts. Alternative mode: keep the original's
+   styles, theme, numbering and headers exactly by writing them as a body-less template the source compiles into
    (`\document[template=…]`).
+   *Status:* the reader reads the theme, and the style sheet has a `theme` rule with the colours and fonts that
+   differ from wordgenx's. A style wordgenx has built in becomes `modify paragraph "Heading 1" { … }` with only
+   what differs, when its own definition can be extended to it (a style sheet cannot take a property away);
+   a paragraph style whose "… Char" style formats text the same way becomes one `linked` rule. Where the original's
+   defaults leave out the font or size, the sheet writes Word's legacy Times New Roman 10pt, since wordgenx would
+   fill in its own (this was the private document's two extra pages). `wordgenx import --keep-styles` writes the
+   original without its body (and without the final section's header references) as `doc.template.docx`, and the
+   source compiles into it with no style sheet: templates now know unnamed lists by the names the reader gives
+   them ("List 3"). The private test document comes back at its 17 pages either way.
 4. **Clean up and sugar (L2).** Merge Word's run soup into runs that differ in effective formatting, drop proofing
    and revision-id noise, and use the language's own forms where the result compiles to the same thing: `=`
    headings, `-` and `1.` lists, `*strong*`/`_emph_`, pipe tables, `{#label}` and `@label` from bookmarks and REF

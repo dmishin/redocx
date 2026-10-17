@@ -18,6 +18,7 @@ from wordgenx.compiler import build, compile_source
 from wordgenx.ooxml.constants import CT
 from wordgenx.ooxml.parts.theme import Theme, theme_from_xml, theme_xml
 from wordgenx.ooxml.template import load_template
+from wordgenx.ooxml.writer import to_docx_bytes
 from wordgenx.values import Length
 
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
@@ -393,3 +394,21 @@ def test_template_is_kept_on_the_document(tmp_path: Path) -> None:
     assert isinstance(result.document, ir.Document)
     assert result.document.template is not None
     assert result.document.template.name == "t.dotx"
+
+
+def test_unnamed_lists_are_known_by_the_names_the_reader_gives(tmp_path: Path) -> None:
+    """An imported document compiles into its original (wordgenx import --keep-styles) and
+    uses its lists, which Word often leaves without a w:name, as "List 1", "List 2", ..."""
+    numbering = ir.Numbering("Steps", (ir.NumberingLevel(1),))
+    item = ir.Paragraph((ir.Run("x"),), list_item=ir.ListItemRef("Steps", 1))
+    data = to_docx_bytes(ir.Document(body=(item,), numbering=(numbering,)))
+    unnamed = tmp_path / "unnamed.docx"
+    with zipfile.ZipFile(io.BytesIO(data)) as archive:
+        parts = {name: archive.read(name) for name in archive.namelist()}
+    named = b'<w:name w:val="Steps"/>'
+    parts["word/numbering.xml"] = parts["word/numbering.xml"].replace(named, b"")
+    with zipfile.ZipFile(unnamed, "w") as archive:
+        for name, content in parts.items():
+            archive.writestr(name, content)
+    template = load_template(unnamed)
+    assert set(template.lists) == {"List 1"}

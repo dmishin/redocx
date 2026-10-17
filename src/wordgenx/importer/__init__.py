@@ -7,17 +7,22 @@ and compares its text with the original's.
 
 from __future__ import annotations
 
+import io
 import re
+import zipfile
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
 from wordgenx import ir
 from wordgenx.compiler import compile_file
-from wordgenx.importer.printer import Printed, print_document
-from wordgenx.ooxml.reader import ImportReport, read_docx
+from wordgenx.importer.printer import KeptStyles, Printed, print_document
+from wordgenx.ooxml.constants import NS
+from wordgenx.ooxml.reader import ImportReport, NotADocxError, open_package, read_docx
+from wordgenx.ooxml.template import load_template
+from wordgenx.ooxml.xml import serialize
 
-__all__ = ["Imported", "import_docx", "text_difference", "visible_text"]
+__all__ = ["Imported", "import_docx", "styles_template", "text_difference", "visible_text"]
 
 
 @dataclass(frozen=True)
@@ -53,16 +58,25 @@ class Imported:
         return "\n".join(lines) + "\n"
 
 
-def import_docx(docx: str | Path, out_dir: str | Path) -> Imported:
-    """Import `docx` into the folder `out_dir` (created when missing)."""
+def import_docx(docx: str | Path, out_dir: str | Path, *, keep_styles: bool = False) -> Imported:
+    """Import `docx` into the folder `out_dir` (created when missing). With `keep_styles`,
+    the original without its body becomes `doc.template.docx`, which the source compiles
+    into: its styles, theme, lists, defaults and settings are kept as they are."""
     docx, folder = Path(docx), Path(out_dir)
-    result = read_docx(docx)
+    data = docx.read_bytes()
+    result = read_docx(data)
     stem = re.sub(r"[^\w.-]+", "-", docx.stem).strip("-") or "document"
-    printed = print_document(result.document, f"{stem}.wgxs")
     folder.mkdir(parents=True, exist_ok=True)
+    kept = None
+    if keep_styles:
+        template = folder / f"{stem}.template.docx"
+        template.write_bytes(styles_template(data))
+        kept = KeptStyles(template.name, frozenset(load_template(template).lists))
+    printed = print_document(result.document, f"{stem}.wgxs", kept)
     source = folder / f"{stem}.wgx"
     source.write_bytes(printed.source.encode("utf-8"))
-    (folder / f"{stem}.wgxs").write_bytes(printed.stylesheet.encode("utf-8"))
+    if printed.stylesheet:
+        (folder / f"{stem}.wgxs").write_bytes(printed.stylesheet.encode("utf-8"))
     for name, data in printed.files.items():
         target = folder / name
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -125,3 +139,29 @@ def _texts_of_inlines(items: tuple[ir.Inline, ...]) -> Iterator[str]:
             yield from _texts_of_blocks(item.content)
         elif isinstance(item, ir.CommentStart):
             yield from _texts_of_blocks(item.comment.content)
+
+
+def styles_template(data: bytes) -> bytes:
+    """The package without its body content: what is left is a template with the original's
+    styles, theme, lists, defaults, settings and page setup. The final section keeps its
+    page setup but not its headers and footers, which the imported source writes itself."""
+    with zipfile.ZipFile(io.BytesIO(data)) as archive:
+        parts = {info.filename: archive.read(info) for info in archive.infolist()}
+    reader, document_part = open_package(data)
+    root = reader.parse(document_part)
+    body = root.find(f"{{{NS.W}}}body") if root is not None else None
+    if root is None or body is None:
+        raise NotADocxError("the document part has no w:body")
+    for child in list(body):
+        if child.tag != f"{{{NS.W}}}sectPr":
+            body.remove(child)
+    for section in body.findall(f"{{{NS.W}}}sectPr"):
+        for tag in ("headerReference", "footerReference"):
+            for reference in section.findall(f"{{{NS.W}}}{tag}"):
+                section.remove(reference)
+    parts[document_part] = serialize(root)
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+        for name, content in parts.items():
+            archive.writestr(name, content)
+    return buffer.getvalue()

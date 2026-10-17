@@ -934,6 +934,14 @@ class PropertySet(Mapping[str, object]):
         merged._values = self._ordered(self._target, values)
         return merged
 
+    def without(self, names: Iterable[str]) -> PropertySet:
+        """A new set without the properties `names` (values are not coerced again)."""
+        drop = set(names)
+        out = PropertySet.__new__(PropertySet)
+        out._target = self._target
+        out._values = {k: v for k, v in self._values.items() if k not in drop}
+        return out
+
     def emit(self, ctx: EmitContext) -> dict[str, Attrs]:
         """Element local name -> merged attributes, for every property in the set."""
         elements: dict[str, Attrs] = {}

@@ -30,6 +30,7 @@ from wordgenx.importer.values import (
     quote,
 )
 from wordgenx.lower.builtins import BUILTIN_STYLES
+from wordgenx.ooxml.parts.theme import Theme
 from wordgenx.ooxml.style_names import is_builtin, stored_name
 from wordgenx.props import REGISTRY, PropertySet, Target
 from wordgenx.stylesheet.compiler import BANDS, CONDITION_TARGETS, RUN_LAST, TABLE_PARTS
@@ -140,9 +141,12 @@ def _date(moment: datetime) -> str:
 
 
 class Printer:
-    def __init__(self, document: ir.Document, stylesheet_name: str) -> None:
+    def __init__(
+        self, document: ir.Document, stylesheet_name: str, template: KeptStyles | None = None
+    ) -> None:
         self.doc = document
         self.sheet_name = stylesheet_name
+        self.template = template
         self.files: dict[str, bytes] = {}
         self.media: dict[str, str] = {}
         """Content hash -> file name."""
@@ -166,10 +170,12 @@ class Printer:
             if section_break:
                 index += 1
                 body_chunks.append(self.section(sections[index], sections[index - 1]))
-        preamble = [*self.preamble(), self.section(sections[0], None)]
+        first = self.section(sections[0], None)
+        sheet = self.stylesheet()  # after the content: it holds what the content uses
+        preamble = [*self.preamble(uses_sheet=bool(sheet)), first]
         parts = [p for p in preamble if p] + body_chunks
         source = "\n\n".join(parts) + "\n"
-        return Printed(source, self.stylesheet(), self.files, self.lost)
+        return Printed(source, sheet, self.files, self.lost)
 
     @staticmethod
     def _split(blocks: tuple[ir.Block, ...]) -> list[tuple[tuple[ir.Block, ...], bool]]:
@@ -184,9 +190,11 @@ class Printer:
         out.append((tuple(current), False))
         return out
 
-    def preamble(self) -> list[str]:
+    def preamble(self, uses_sheet: bool) -> list[str]:
         doc, meta, settings = self.doc, self.doc.meta, self.doc.settings
         document = ["smart-quotes=off"]
+        if self.template is not None:
+            document.insert(0, f"template={_string(self.template.file)}")
         if meta.language:
             document.append(f"lang={quote(meta.language)}")
         if settings.page_color is not None:
@@ -240,7 +248,8 @@ class Printer:
             opts.append("hyphenation=auto")
         if opts:
             out.append(f"\\settings{_opts(opts)}")
-        out.append(f"\\use{{{self.sheet_name}}}")
+        if uses_sheet:
+            out.append(f"\\use{{{self.sheet_name}}}")
         del doc
         return out
 
@@ -803,22 +812,80 @@ class Printer:
     def stylesheet(self) -> str:
         doc = self.doc
         names, numbering = self._closure()
+        if self.template is not None:  # the template has the styles, theme and defaults
+            lists = [
+                self._numbering_rule(d)
+                for d in doc.numbering
+                if d.name in self.numbering_used and d.name not in self.template.lists
+            ]
+            if not lists:
+                return ""
+            head = "% Lists the template cannot give by name (it keeps the styles and theme)."
+            return "\n\n".join([head, *lists]) + "\n"
         chunks: list[str] = ["% Styles and lists of the imported document."]
+        # Where the original's defaults leave the font or size out, Word uses its legacy
+        # Times New Roman 10pt; wordgenx would fill in its own (the theme font, 11pt).
+        legacy = {"font": "Times New Roman", "size": Length.pt(10)}
+        run = PropertySet(
+            Target.RUN, {k: v for k, v in legacy.items() if k not in doc.default_run}
+        ).merged(doc.default_run)
         defaults = [
-            *self._decls((Target.RUN, Target.PARAGRAPH), Target.RUN, doc.default_run, "defaults"),
+            *self._decls((Target.RUN, Target.PARAGRAPH), Target.RUN, run, "defaults"),
             *self._decls(
                 (Target.RUN, Target.PARAGRAPH), Target.PARAGRAPH, doc.default_paragraph, "defaults"
             ),
         ]
         if defaults:
             chunks.append(_rule("defaults", defaults))
+        if doc.theme is not None and (theme := self._theme_rule(doc.theme)):
+            chunks.append(theme)
         for definition in doc.numbering:
             if definition.name in numbering:
                 chunks.append(self._numbering_rule(definition))
+        linked = self._linked_pairs(names)
+        skipped = {char.name.lower() for char in linked.values()}
         for style in doc.styles:
-            if style.name.lower() in names:
-                chunks.append(self._style_rule(style))
+            if style.name.lower() in names and style.name.lower() not in skipped:
+                chunks.append(self._style_rule(style, linked=style.name.lower() in linked))
         return "\n\n".join(chunks) + "\n"
+
+    def _theme_rule(self, theme: ir.ThemeChoice) -> str | None:
+        """The theme's colours and fonts that differ from wordgenx's own theme."""
+        default = Theme()
+        body = [
+            f"{_THEME_KEYS[slot]}: #{rgb};"
+            for slot, rgb in theme.colors
+            if slot in _THEME_KEYS and default.colors.get(slot) != rgb
+        ]
+        for key, font, base in (
+            ("major-font", theme.major_font, default.major_font),
+            ("minor-font", theme.minor_font, default.minor_font),
+        ):
+            if font is not None and font != base:
+                body.append(f"{key}: {_string(font)};")
+        if not body:
+            return None
+        name = f" {_string(theme.name)}" if theme.name and theme.name != default.name else ""
+        return _rule(f"theme{name}", body)
+
+    def _linked_pairs(self, names: set[str]) -> dict[str, ir.Style]:
+        """Paragraph styles whose "<name> Char" style formats text the same way: these are
+        written as one `linked` rule (lower-case name -> the character style)."""
+        pairs: dict[str, ir.Style] = {}
+        for name in names:
+            style = self.styles[name]
+            if style.kind is not ir.StyleKind.PARAGRAPH or style.link is None:
+                continue
+            char = self.styles.get(style.link.lower())
+            expected = f"{display_name(style.name)} Char".lower()
+            if (
+                char is not None
+                and char.kind is ir.StyleKind.CHARACTER
+                and display_name(char.name).lower() == expected
+                and char.run == style.run
+            ):
+                pairs[name] = char
+        return pairs
 
     def _closure(self) -> tuple[set[str], set[str]]:
         names = {n for n in self.styles_used if n in self.styles}
@@ -858,27 +925,41 @@ class Printer:
                 skip.add(name)
         return declarations(target, props, frozenset(skip))
 
-    def _style_rule(self, style: ir.Style) -> str:
-        name = quote(display_name(style.name))
+    def _style_rule(self, style: ir.Style, linked: bool = False) -> str:
+        shown = display_name(style.name)
+        name = quote(shown)
         base = f" : {quote(display_name(style.based_on))}" if style.based_on else ""
         kind = style.kind
         if kind is ir.StyleKind.TABLE:
             return self._table_style(style, name, base)
+        builtin = BUILTIN_STYLES[shown]() if shown in BUILTIN_STYLES else None
+        modify = builtin is not None and builtin.kind is kind and _extends(style, builtin)
+        run, paragraph, next_style = style.run, style.paragraph, style.next
+        if modify:  # only what differs from wordgenx's own definition of the style
+            assert builtin is not None
+            run, paragraph = (
+                _differences(run, builtin.run),
+                _differences(paragraph, builtin.paragraph),
+            )
+            next_style = None if style.next == builtin.next else style.next
+            base = "" if _same_name(style.based_on, builtin.based_on) else base
+        prefix = "modify " if modify else ""
         if kind is ir.StyleKind.CHARACTER:
-            body = self._decls((Target.RUN,), Target.RUN, style.run, "a character style")
-            return _rule(f"character {name}{base}", body)
+            body = self._decls((Target.RUN,), Target.RUN, run, "a character style")
+            return _rule(f"{prefix}character {name}{base}", body)
         targets = (Target.RUN, Target.PARAGRAPH)
         body = [
-            *self._decls(targets, Target.RUN, style.run, "a paragraph style"),
-            *self._decls(targets, Target.PARAGRAPH, style.paragraph, "a paragraph style"),
+            *self._decls(targets, Target.RUN, run, "a paragraph style"),
+            *self._decls(targets, Target.PARAGRAPH, paragraph, "a paragraph style"),
         ]
-        if style.next is not None and style.next.lower() in self.styles:
-            body.append(f"next: {quote(display_name(style.next))};")
+        if next_style is not None and next_style.lower() in self.styles:
+            body.append(f"next: {quote(display_name(next_style))};")
         if style.numbering is not None and style.numbering.name in self.numbering:
             body.append(f"numbering: {quote(style.numbering.name)} level {style.numbering.level};")
         if style.name == "Normal" and base:
             base = ""
-        return _rule(f"paragraph {name}{base}", body)
+        word = "linked" if linked else "paragraph"
+        return _rule(f"{prefix}{word} {name}{base}", body)
 
     def _table_style(self, style: ir.Style, name: str, base: str) -> str:
         targets = (Target.RUN, Target.TABLE, Target.CELL, Target.PARAGRAPH)
@@ -933,6 +1014,31 @@ class Printer:
             body += self._decls(targets, Target.RUN, level.run, "a list level")
             levels.append(_rule(f"level {level.level}", body))
         return _rule(f"numbering {quote(definition.name)}", levels)
+
+
+_THEME_KEYS = {slot: key for key, slot in reversed(ir.THEME_COLOR_NAMES.items())}
+"""Theme slot -> its style-sheet name (dark1 rather than text1)."""
+
+
+def _same_name(a: str | None, b: str | None) -> bool:
+    return (a or "").lower() == (b or "").lower()
+
+
+def _extends(style: ir.Style, builtin: ir.Style) -> bool:
+    """Whether `modify` of the built-in can give `style`: it sets everything the built-in
+    sets (a style sheet cannot take a property away), keeps its base, next style and list."""
+    return (
+        set(builtin.run) <= set(style.run)
+        and set(builtin.paragraph) <= set(style.paragraph)
+        and (builtin.based_on is None or style.based_on is not None)
+        and (builtin.next is None or style.next is not None)
+        and (builtin.numbering is None or style.numbering is not None)
+    )
+
+
+def _differences(props: PropertySet, base: PropertySet) -> PropertySet:
+    """The properties of `props` that `base` does not already have with the same value."""
+    return props.without(name for name, value in props.items() if base.get(name) == value)
 
 
 def _string(text: str) -> str:
@@ -996,6 +1102,19 @@ def _merge_runs(items: Sequence[ir.Inline]) -> list[ir.Inline]:
     return out
 
 
-def print_document(document: ir.Document, stylesheet_name: str) -> Printed:
-    """`document` as wordgenx source that `\\use`s the style sheet `stylesheet_name`."""
-    return Printer(document, stylesheet_name).print()
+@dataclass(frozen=True)
+class KeptStyles:
+    """The original's styles kept as a template the source compiles into."""
+
+    file: str
+    """The template's file name, next to the source."""
+    lists: frozenset[str]
+    """The list definitions the template has by name."""
+
+
+def print_document(
+    document: ir.Document, stylesheet_name: str, template: KeptStyles | None = None
+) -> Printed:
+    """`document` as wordgenx source that `\\use`s the style sheet `stylesheet_name`, or
+    that compiles into `template` (and uses a style sheet only for lists it lacks)."""
+    return Printer(document, stylesheet_name, template).print()

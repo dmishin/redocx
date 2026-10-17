@@ -29,6 +29,7 @@ from lxml import etree
 
 from wordgenx import ir
 from wordgenx.ooxml.constants import NS, RT
+from wordgenx.ooxml.parts.theme import theme_from_xml
 from wordgenx.ooxml.xml import Element
 from wordgenx.props import EMPTY_PARAGRAPH, EMPTY_RUN, PropertySet, Target
 from wordgenx.values import (
@@ -1994,6 +1995,13 @@ def read_docx(source: bytes | str | PathLike[str]) -> ImportResult:
     default_run, _ = _run_props(_defaults(styles_root, "rPrDefault"), ctx)
     default_paragraph, _, _ = _para_props(_defaults(styles_root, "pPrDefault"), ctx)
 
+    theme_root = _related(opc, document_part, RT.THEME, "word/theme/theme1.xml")
+    theme = None
+    if theme_root is not None:
+        read = theme_from_xml(theme_root)
+        theme = ir.ThemeChoice(
+            read.name, tuple(read.colors.items()), read.major_font, read.minor_font
+        )
     meta = _read_meta(meta_root)
     custom_root = _package_part(opc, RT.CUSTOM_PROPERTIES, "docProps/custom.xml")
     if custom_root is not None:
@@ -2007,6 +2015,7 @@ def read_docx(source: bytes | str | PathLike[str]) -> ImportResult:
         default_run=default_run,
         default_paragraph=default_paragraph,
         section=section,
+        theme=theme,
     )
     return ImportResult(document, stats.report())
 
@@ -2080,6 +2089,9 @@ class PackageDefinitions:
     section: ir.Section
     """The final section's page setup (headers and footers are not read)."""
     report: ImportReport
+    list_ids: dict[str, int] = field(default_factory=lambda: {})
+    """List definition name (as `numbering` names it, "List 3" for an unnamed one) ->
+    its w:abstractNumId."""
 
 
 def open_package(data: bytes) -> tuple[PackageReader, str]:
@@ -2113,4 +2125,11 @@ def read_definitions(opc: PackageReader, document_part: str) -> PackageDefinitio
         ]:
             page_only.remove(reference)
         section = _read_section(page_only, ctx)
-    return PackageDefinitions(styles, numbering, section, stats.report())
+    list_ids: dict[str, int] = {}
+    if numbering_root is not None:
+        for num in numbering_root.findall(_w("num")):
+            num_id, ref = _int(num.get(_w("numId"))), num.find(_w("abstractNumId"))
+            name = defs.get(num_id) or (instances[num_id][0] if num_id in instances else None)
+            if name is not None and ref is not None:
+                list_ids.setdefault(name, _int(ref.get(_w("val"))))
+    return PackageDefinitions(styles, numbering, section, stats.report(), list_ids)

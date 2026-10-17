@@ -290,3 +290,11 @@ def test_custom_document_properties_are_read() -> None:
     custom = (("project-code", "WX-001"), ("N° ISO", "A12"), ("count", 3), ("final", True))
     meta = read_docx(to_docx_bytes(ir.Document(meta=ir.Meta(custom=custom)))).document.meta
     assert meta.custom == custom
+
+
+def test_the_theme_is_read() -> None:
+    theme = ir.ThemeChoice("Coastal", (("accent1", "0B7A75"),), "Georgia", "Segoe UI")
+    read = read_docx(to_docx_bytes(ir.Document(theme=theme))).document.theme
+    assert read is not None
+    assert (read.name, read.major_font, read.minor_font) == ("Coastal", "Georgia", "Segoe UI")
+    assert ("accent1", "0B7A75") in read.colors

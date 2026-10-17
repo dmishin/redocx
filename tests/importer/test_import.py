@@ -7,6 +7,7 @@ wordgenx, then imported), and from small IR documents for the details of printin
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -17,6 +18,7 @@ from wordgenx.compiler import build, compile_file
 from wordgenx.importer import import_docx, visible_text
 from wordgenx.importer.printer import display_name, print_document
 from wordgenx.importer.values import length, line_spacing
+from wordgenx.lower.builtins import BUILTIN_STYLES
 from wordgenx.ooxml.writer import to_docx_bytes
 from wordgenx.props import para_props, run_props
 from wordgenx.syntax import Source
@@ -215,3 +217,44 @@ def test_custom_properties_round_trip(tmp_path: Path) -> None:
     source, compiled = imported(ir.Document(meta=ir.Meta(custom=custom)), tmp_path)
     assert 'custom."N° ISO"="A12"' in source
     assert compiled.meta.custom == custom
+
+
+def test_the_theme_is_printed_where_it_differs(tmp_path: Path) -> None:
+    theme = ir.ThemeChoice("Coastal", (("accent1", "0B7A75"),), "Georgia", None)
+    _, compiled = imported(ir.Document(body=(ir.paragraph("x"),), theme=theme), tmp_path)
+    sheet = (tmp_path / "out" / "doc.wgxs").read_text("utf-8")
+    assert 'theme "Coastal" {\n  accent1: #0B7A75;\n  major-font: "Georgia";\n}' in sheet
+    assert compiled.theme is not None
+    assert ("accent1", "0B7A75") in compiled.theme.colors
+    assert compiled.theme.major_font == "Georgia"
+
+
+def test_built_in_styles_print_only_their_differences(tmp_path: Path) -> None:
+    heading = BUILTIN_STYLES["Heading 1"]()
+    changed = replace(
+        heading, run=heading.run.merged(run_props(color="#C00000")), link="Heading 1 Char"
+    )
+    char = ir.Style(ir.StyleKind.CHARACTER, "Heading 1 Char", run=changed.run, link="Heading 1")
+    body = (ir.Paragraph((ir.Run("Title"),), "Heading 1"),)
+    _, compiled = imported(ir.Document(body=body, styles=(changed, char)), tmp_path)
+    sheet = (tmp_path / "out" / "doc.wgxs").read_text("utf-8")
+    assert 'modify linked "Heading 1" {\n  color: #C00000;\n}' in sheet
+    back = next(s for s in compiled.styles if s.name == "Heading 1")
+    assert back.run == changed.run
+    assert back.link == "Heading 1 Char"
+
+
+def test_word_legacy_defaults_are_written_out() -> None:
+    """Without a font or size in the defaults Word uses Times New Roman 10pt, while wordgenx
+    would fill in its own: the style sheet says what Word does."""
+    sheet = print_document(ir.Document(body=(ir.paragraph("x"),)), "s.wgxs").stylesheet
+    assert 'defaults {\n  font: "Times New Roman";\n  size: 10pt;\n}' in sheet
+
+
+@pytest.mark.parametrize("docx", CORPUS, ids=lambda p: p.stem)
+def test_keep_styles_compiles_into_the_original(docx: Path, tmp_path: Path) -> None:
+    result = import_docx(docx, tmp_path, keep_styles=True)
+    assert (result.errors, result.difference) == (0, None)
+    source = result.source.read_text("utf-8")
+    assert source.startswith(f'\\document[template="{docx.stem}.template.docx"')
+    assert not (tmp_path / f"{docx.stem}.wgxs").exists()  # the template has the styles and lists

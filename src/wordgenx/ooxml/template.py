@@ -239,6 +239,11 @@ def load_template(path: str | PathLike[str]) -> Template:
                 and element.find(f"{W}lvl") is not None  # not a w:numStyleLink
             ):
                 template.lists.setdefault(name, (int(abstract_id), definitions[name]))
+        # Unnamed definitions, under the names the reader gives them ("List 3"), so that an
+        # imported document can use the lists of the original it compiles into.
+        for name, abstract_id in template.definitions.list_ids.items():
+            if name in definitions:
+                template.lists.setdefault(name, (abstract_id, definitions[name]))
     return template
 
 

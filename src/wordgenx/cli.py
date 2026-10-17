@@ -218,12 +218,12 @@ def _inspect(path: str) -> int:
     return 0
 
 
-def _import(path: str, output: str | None) -> int:
+def _import(path: str, output: str | None, keep_styles: bool) -> int:
     from wordgenx.importer import import_docx  # the importer compiles; load it only here
 
     folder = Path(output) if output else Path(path).with_suffix("")
     try:
-        imported = import_docx(path, folder)
+        imported = import_docx(path, folder, keep_styles=keep_styles)
     except OSError as e:
         print(f"error: cannot read {path}: {e.strerror}", file=sys.stderr)
         return 1
@@ -286,10 +286,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     importer.add_argument(
         "-o", "--output", metavar="DIR", help="the folder (default: FILE without .docx)"
     )
+    importer.add_argument(
+        "--keep-styles",
+        action="store_true",
+        help="keep the original's styles, theme and lists exactly: compile into it as a template",
+    )
 
     args = parser.parse_args(argv)
     if args.command == "import":
-        return _import(args.file, args.output)
+        return _import(args.file, args.output, args.keep_styles)
     if args.command == "build":
         return _build(args.file, args.output, args.template, args.emit_ir)
     if args.command == "check":
