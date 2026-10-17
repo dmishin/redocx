@@ -82,14 +82,20 @@ Steps, in order. Each stays simple: a part that turns out intrusive (new parts, 
 
 Tracked revisions in the source and `wordgenx diff` redlines are postponed; data binding stays "Later".
 
-== M6: Ecosystem
+== M6: Import (`docx → wordgenx`)
 
-- Language server (diagnostics, completion from the property registry, go-to-label, hover docs).
-- VS Code extension (TextMate grammar plus LSP client).
-- `wordgenx watch` (rebuild on change; optionally refresh in Word).
-- `wordgenx finalize` / `--pdf` (Word COM or LibreOffice).
-- `docx → wordgenx` importer (best effort).
-- Website plus playground.
+The goal is a *reliable import of the significant part of a document and its formatting*, not a round trip: some data is inevitably stripped or approximated, and the import says what (no silent loss). `wordgenx import doc.docx` writes a folder: `doc.wgx`, a style sheet, the pictures, and a report. The reader (`.docx` → IR, behind `wordgenx inspect`) exists since M1; the work is mostly the other half, printing IR as readable source, plus filling the reader's gaps. The thinking behind it is in the decompiler note.
+
+Steps, in order. Each stays simple; what turns out intrusive is reported as lost and listed in Postponed features.
+
+1. *Measure and fill the reader's gaps.* Build a small public corpus of Word-authored test documents (made through Word itself, so they are ours to commit) and run `inspect` on them and, locally, on the user's real test document. Count what the reader drops, by construct, and teach it the most frequent ones first, starting with what the writer already supports: sections with headers and footers, notes, comments, fields (TOC, REF, SEQ, PAGE), bookmarks, numbering, tables with merges, floating pictures, text boxes, content controls.
+2. *Print canonical source (L1).* IR → `.wgx` with commands only: `\p[style=…]`, direct formatting as `\font[…]`, `\table`/`\row`/`\cell`, `\section`, `\header`/`\footer`, `\footnote`, `\image` (pictures extracted), fields as their commands or `\field`. Escaping, and units snapped to what a person writes (1cm, 12pt). Anything not printable becomes a `% import:` comment and a line in the report. The check: the printed source compiles without errors and has the original's text.
+3. *Styles.* A style sheet with the styles the document uses (and their bases), printing only what differs from wordgenx's built-ins; numbering definitions; the theme's colours and fonts; document defaults. Alternative mode: keep the original's styles, theme, numbering and headers exactly by writing them as a body-less template the source compiles into (`\document[template=…]`).
+4. *Clean up and sugar (L2).* Merge Word's run soup into runs that differ in effective formatting, drop proofing and revision-id noise, and use the language's own forms where the result compiles to the same thing: `=` headings, `-` and `1.` lists, `*strong*`/`_emph_`, pipe tables, `{#label}` and `@label` from bookmarks and REF fields, `\toc`, captions from SEQ fields.
+5. *The oracle.* `wordgenx import --check` compiles the imported source and compares it with the original: text, block structure, paragraph styles and effective character formatting, reported as a share of paragraphs that match and a list of differences. Round-trip tests on the examples (`.wgx → .docx → import → .docx`) keep it honest.
+- *Exit:* the user's real test document imports with its text complete, its structure (headings, lists, tables, sections, notes) and most of its formatting, the report lists what was lost, and the recompiled document is checked in Word. That document is private: it is only read locally, and neither it nor its imported output is committed or published; committed tests use the public corpus.
+
+Tooling (language server, editor support, `watch`, PDF export and `finalize`, a website) waits until the language has settled: see tooling ideas.
 
 == Later / candidates
 

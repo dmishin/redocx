@@ -162,7 +162,7 @@ The tier is the milestone where a feature first ships (see roadmap). *Esc* means
 
 == Document-level
 
-\table[style="Book Table", header-rows=1, widths=(48fr, 7fr, 7fr)]{
+\table[style="Book Table", header-rows=1, widths=(48fr, 21fr, 7fr)]{
 | Feature | Tier | Diff. |
 | Templates (.dotx/.docx base); writing .dotx | M2 ✓ | ●●● |
 | Compatibility mode settings | M1 | ● |
@@ -170,7 +170,7 @@ The tier is the milestone where a feature first ships (see roadmap). *Esc* means
 | Embedded fonts | Later | ●● |
 | altChunk (embed docx) | M3 ✓ | ● |
 | Glossary / building blocks | Later | ●● |
-| Finalize (update fields via Word / LibreOffice), PDF export | M6 | ●● |
+| Finalize (update fields via Word / LibreOffice), PDF export | Later (tooling ideas) | ●● |
 }
 
 == Will not do

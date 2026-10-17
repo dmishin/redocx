@@ -161,7 +161,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Embedded fonts | Later | ●● |
 | altChunk (embed docx) | M3 ✓ | ● |
 | Glossary / building blocks | Later | ●● |
-| Finalize (update fields via Word / LibreOffice), PDF export | M6 | ●● |
+| Finalize (update fields via Word / LibreOffice), PDF export | Later ([tooling ideas](ideas/tooling.md)) | ●● |
 
 ## 5.11 Will not do
 
