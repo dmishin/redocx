@@ -36,5 +36,6 @@ These are the parts of finished features that were left out to keep them simple.
 | Frames | General text frames (`w:framePr` other than drop caps): text boxes do their job | §3.6 |
 | Comments | Replies and the resolved state (Word 2013's `commentsExtended.xml`); comments in headers, notes and text boxes | §3.17 |
 | Content controls | Repeating sections (Word 2013's `w15:repeatingSection`); rich-text controls around whole paragraphs (block-level `w:sdt`); placeholders from building blocks | §3.17 |
+| Import (reader) | Equations (OMML) are dropped; shapes without text; tracked changes are read as accepted (deletions dropped); emphasis marks; Word 2010 text effects (glow, shadow, 3-D, ligatures); embedded objects keep only their picture | M6 |
 | Right to left | Separate complex-script values for bold, italic and size (they follow the Latin ones); `start`/`end` alignment | §3.4 |
 }

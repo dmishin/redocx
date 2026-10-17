@@ -336,7 +336,14 @@ class BookmarkEnd:
     name: str
 
 
-IMAGE_FORMATS = {"png": "png", "jpeg": "jpeg", "gif": "gif", "bmp": "bmp"}
+IMAGE_FORMATS = {
+    "png": "png",
+    "jpeg": "jpeg",
+    "gif": "gif",
+    "bmp": "bmp",
+    "emf": "emf",
+    "wmf": "wmf",
+}
 """Image formats Word embeds directly -> file extension."""
 
 WRAPS = {

@@ -167,11 +167,19 @@ the reader's gaps. The thinking behind it is in [the decompiler note](ideas/docx
 Steps, in order. Each stays simple; what turns out intrusive is reported as lost and listed in
 [Postponed features](09-postponed.md).
 
-1. **Measure and fill the reader's gaps.** Build a small public corpus of Word-authored test documents (made through
-   Word itself, so they are ours to commit) and run `inspect` on them and, locally, on the user's real test document.
-   Count what the reader drops, by construct, and teach it the most frequent ones first, starting with what the
-   writer already supports: sections with headers and footers, notes, comments, fields (TOC, REF, SEQ, PAGE),
+1. [x] **Measure and fill the reader's gaps.** Build a small public corpus of Word-authored test documents (made
+   through Word itself, so they are ours to commit) and run `inspect` on them and, locally, on the user's real test
+   document. Count what the reader drops, by construct, and teach it the most frequent ones first, starting with what
+   the writer already supports: sections with headers and footers, notes, comments, fields (TOC, REF, SEQ, PAGE),
    bookmarks, numbering, tables with merges, floating pictures, text boxes, content controls.
+   *Status:* `tools/corpus/make-corpus.ps1` drives Word to build six documents in `tests/corpus` (text, tables,
+   references, sections, drawings, review), and `tests/ooxml/test_corpus.py` checks what each holds is read, that the
+   only losses are the expected ones, and that the IR read back writes a valid package. The reader now reads notes,
+   comments, block fields (the TOC), table styles with their conditions, table and cell borders and margins,
+   paragraph and run borders and shading, floating pictures with crop, border and rotation, text boxes, drop caps,
+   EMF/WMF previews of embedded objects, page borders and section columns. On the private test document the
+   fallbacks went from 557 to 48 (text effects, orphan bookmark ends, emphasis marks, one embedded object), and what
+   is read writes a package both validators accept.
 2. **Print canonical source (L1).** IR → `.wgx` with commands only: `\p[style=…]`, direct formatting as
    `\font[…]`, `\table`/`\row`/`\cell`, `\section`, `\header`/`\footer`, `\footnote`, `\image` (pictures extracted),
    fields as their commands or `\field`. Escaping, and units snapped to what a person writes (1cm, 12pt). Anything

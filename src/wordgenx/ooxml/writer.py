@@ -149,6 +149,8 @@ IMAGE_CONTENT_TYPES = {
     "gif": CT.GIF,
     "bmp": CT.BMP,
     "svg": CT.SVG,
+    "emf": CT.EMF,
+    "wmf": CT.WMF,
 }
 
 

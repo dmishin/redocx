@@ -138,10 +138,10 @@ def _patched(document: ir.Document, old: bytes, new: bytes) -> bytes:
 
 
 def test_reports_constructs_it_cannot_represent() -> None:
-    # Inject a run-level border: the property registry has no such property.
+    # Inject an emphasis mark (East Asian typography): the registry has no such property.
     bold = ir.Document(body=(ir.paragraph(ir.run("plain", bold=True)),))
-    report = read_docx(_patched(bold, b"<w:b/>", b'<w:b/><w:bdr w:val="single"/>')).report
-    assert ("w:bdr", 1) in report.unsupported
+    report = read_docx(_patched(bold, b"<w:b/>", b'<w:b/><w:em w:val="dot"/>')).report
+    assert ("w:em", 1) in report.unsupported
 
 
 def test_one_bad_value_keeps_the_other_properties() -> None:

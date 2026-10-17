@@ -31,7 +31,17 @@ from wordgenx import ir
 from wordgenx.ooxml.constants import NS, RT
 from wordgenx.ooxml.xml import Element
 from wordgenx.props import EMPTY_PARAGRAPH, EMPTY_RUN, PropertySet, Target
-from wordgenx.values import TAB_ALIGNMENTS, TAB_LEADERS, Color, Length, LineSpacing, TabStop
+from wordgenx.values import (
+    BORDER_STYLES,
+    TAB_ALIGNMENTS,
+    TAB_LEADERS,
+    Border,
+    Color,
+    InvalidValueError,
+    Length,
+    LineSpacing,
+    TabStop,
+)
 
 _A = "http://schemas.openxmlformats.org/drawingml/2006/main"
 _WP = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
@@ -40,9 +50,19 @@ _PIC = "http://schemas.openxmlformats.org/drawingml/2006/picture"
 
 _PREFIX_BY_URI = {NS.W: "w", NS.R: "r", _A: "a", _WP: "wp", _PIC: "pic"}
 
-_RUN_IMAGE_FORMATS = {"png": "png", "jpeg": "jpeg", "jpg": "jpeg", "gif": "gif", "bmp": "bmp"}
+_RUN_IMAGE_FORMATS = {
+    "png": "png",
+    "jpeg": "jpeg",
+    "jpg": "jpeg",
+    "gif": "gif",
+    "bmp": "bmp",
+    "emf": "emf",
+    "wmf": "wmf",
+}
+_VML = "urn:schemas-microsoft-com:vml"
+_VML_SIZE = re.compile(r"(width|height)\s*:\s*([0-9.]+)(pt|in|cm|mm|px)")
 
-_BUILTIN_TABLE_STYLES = {"normal table", "table grid"}
+_BUILTIN_TABLE_STYLES = {"normal table"}
 _LEADER_NAMES = {value: key for key, value in TAB_LEADERS.items()}
 _PAGE_NUMBER_FORMATS = {value: key for key, value in ir.PAGE_NUMBER_FORMATS.items()}
 _SECTION_STARTS = {value: key for key, value in ir.SECTION_STARTS.items()}
@@ -266,6 +286,12 @@ class _Ctx:
     """w:numId of a list instance -> (numbering name, instance, start)."""
     bookmark_names: dict[str, str] = field(default_factory=lambda: dict[str, str]())
     """w:id -> bookmark name, so an end element can name its start."""
+    notes: dict[str, tuple[str, dict[str, Element]]] = field(
+        default_factory=lambda: dict[str, tuple[str, dict[str, Element]]]()
+    )
+    """footnote | endnote -> (its part, w:id -> w:footnote or w:endnote)."""
+    comments: tuple[str, dict[str, Element]] = ("", {})
+    """The comments part and w:id -> w:comment."""
 
     def for_part(self, part: str) -> _Ctx:
         return replace(self, part=part)
@@ -322,6 +348,27 @@ def _decode_line_spacing(element: Element) -> LineSpacing | None:
     return None
 
 
+_BORDER_STYLES = {"nil": "nil", "none": "nil"}
+
+
+def _decode_border(element: Element) -> Border:
+    """w:top, w:bdr, ...: style, width (eighths of a point), space (points), colour."""
+    style = element.get(_w("val")) or "single"
+    if style in _BORDER_STYLES:
+        return Border("nil")
+    eighths = max(2, min(96, _int(element.get(_w("sz")), 4)))
+    color = element.get(_w("color"))
+    try:
+        return Border(
+            style if style in BORDER_STYLES else "single",
+            Length(eighths * 12700 // 8),
+            Color(rgb=color.upper()) if color and color != "auto" else Color(),
+            Length.pt(_int(element.get(_w("space")))),
+        )
+    except InvalidValueError:
+        return Border()
+
+
 def _decode_tabs(element: Element, ctx: _Ctx) -> tuple[TabStop, ...] | None:
     stops: list[TabStop] = []
     for tab in element.findall(_w("tab")):
@@ -330,13 +377,29 @@ def _decode_tabs(element: Element, ctx: _Ctx) -> tuple[TabStop, ...] | None:
             ctx.stats.note("w:tab without a position")
             continue
         align = tab.get(_w("val")) or "left"
-        align = {"start": "left", "end": "right"}.get(align, align)
-        if align not in TAB_ALIGNMENTS:  # clear (removes an inherited stop), num (lists)
+        align = {"start": "left", "end": "right", "num": "left"}.get(align, align)
+        if align == "clear":  # removes a stop the style sets: nothing to keep
+            continue
+        if align not in TAB_ALIGNMENTS:
             ctx.stats.note(f"tab stop {align!r}")
             continue
         leader = _LEADER_NAMES.get(tab.get(_w("leader")) or "none", "none")
         stops.append(TabStop(Length.twips(_int(position)), align, leader))
     return tuple(stops) if stops else None
+
+
+_IGNORED_RUN = frozenset(
+    "noProof webHidden specVanish snapToGrid szCs rStyle bCs iCs effect".split()
+)
+"""Run properties that are proofing or layout bookkeeping, or set together with others."""
+_IGNORED_PARAGRAPH = frozenset(
+    "rPr snapToGrid autoSpaceDE autoSpaceDN adjustRightInd kinsoku overflowPunct "
+    "topLinePunct wordWrap textAlignment sectPr cnfStyle framePr".split()
+)
+"""Paragraph properties without a meaning wordgenx keeps (rPr: the paragraph mark's)."""
+_W14 = "http://schemas.microsoft.com/office/word/2010/wordml"
+_IGNORED_ELEMENTS = frozenset({"lastRenderedPageBreak", "proofErr", "permStart", "permEnd"})
+"""Markers in the text that Word writes for its own bookkeeping."""
 
 
 _RUN_TOGGLES = {
@@ -387,10 +450,25 @@ def _run_props(rpr: Element | None, ctx: _Ctx) -> tuple[PropertySet, str | None]
                 if value := child.get(_w(attr)):
                     values["lang"] = value
                     break
+        elif child.tag == _w("kern"):
+            if (kern := _int(child.get(_w("val")))) > 0:  # 0: no kerning
+                values["kerning"] = Length(kern * 6350)
+        elif child.tag == _w("w"):
+            if (scale := _int(child.get(_w("val")), 100)) != 100:
+                values["scale"] = f"{scale}%"
+        elif child.tag == _w("position"):
+            values["position"] = Length(_int(child.get(_w("val"))) * 6350)
+        elif child.tag == _w("shd"):
+            if (fill := child.get(_w("fill"))) and fill != "auto":
+                values["shading"] = Color(rgb=fill.upper())
+        elif child.tag == _w("bdr"):
+            values["border"] = _decode_border(child)
         elif _local(child.tag) in _RUN_TOGGLES:
             values[_RUN_TOGGLES[_local(child.tag)]] = _toggle_state(child)
-        elif name in ("w:szCs", "w:rStyle", "w:bCs", "w:iCs"):  # set with sz, b, i
+        elif _local(child.tag) in _IGNORED_RUN and etree.QName(child).namespace == NS.W:
             pass
+        elif etree.QName(child).namespace == _W14:
+            ctx.stats.note("text effect (glow, shadow, 3-D, ligatures, ...)")
         else:
             ctx.stats.note(name)
     return _property_set(Target.RUN, values, ctx, "run"), style
@@ -436,10 +514,20 @@ def _para_props(
                 child.get(_w("val")) or "", child.get(_w("val")) or ""
             )
         elif child.tag == _w("outlineLvl"):
-            values["outline-level"] = _int(child.get(_w("val"))) + 1
+            level = _int(child.get(_w("val"))) + 1
+            if level <= 9:  # Word writes 9 (level 10) for "body text"
+                values["outline-level"] = level
+        elif child.tag == _w("pBdr"):
+            for side in child:
+                local = _local(side.tag)
+                if local in ("top", "left", "bottom", "right", "between", "bar"):
+                    values[f"border-{local}"] = _decode_border(side)
+        elif child.tag == _w("shd"):
+            if (fill := child.get(_w("fill"))) and fill != "auto":
+                values["shading"] = Color(rgb=fill.upper())
         elif child.tag == _w("numPr"):
             numbering = _decode_numbering(child)
-        elif child.tag == _w("sectPr"):
+        elif _local(child.tag) in _IGNORED_PARAGRAPH:
             pass
         elif _local(child.tag) in _PARAGRAPH_TOGGLES:
             values[_PARAGRAPH_TOGGLES[_local(child.tag)]] = _toggle_state(child)
@@ -497,11 +585,175 @@ def _local(tag: object) -> str:
 # --- runs, fields and inline content -----------------------------------------------------
 
 
-def _read_drawing(drawing: Element, ctx: _Ctx) -> ir.Image | None:
-    blip = drawing.find(f".//{_a('blip')}")
-    inline = drawing.find(f".//{_wp('inline')}")
-    if blip is None:
+def _read_vml_picture(element: Element, ctx: _Ctx) -> ir.Image | None:
+    """The picture of a VML shape (w:pict) or of an embedded object's preview (w:object)."""
+    shape = element.find(f"{{{_VML}}}shape")
+    data_element = shape.find(f"{{{_VML}}}imagedata") if shape is not None else None
+    rel_id = data_element.get(_r("id")) if data_element is not None else None
+    if shape is None or rel_id is None:
         return None
+    part, external = ctx.opc.target(ctx.part, rel_id)
+    data = ctx.opc.read(part) if part is not None and not external else None
+    if part is None or data is None:
+        return None
+    image_format = _RUN_IMAGE_FORMATS.get(posixpath.splitext(part)[1].lstrip(".").lower())
+    sizes = {
+        m[1]: Length.of(m[2], m[3] if m[3] != "px" else "pt")
+        for m in _VML_SIZE.finditer(shape.get("style") or "")
+    }
+    if image_format is None or "width" not in sizes or "height" not in sizes:
+        return None
+    ctx.stats.count("image")
+    return ir.Image(
+        data, image_format, sizes["width"], sizes["height"], "", posixpath.basename(part)
+    )
+
+
+_MC = "http://schemas.openxmlformats.org/markup-compatibility/2006"
+_WPS = "http://schemas.microsoft.com/office/word/2010/wordprocessingShape"
+_H_FROM = {value: key for key, value in ir.H_ANCHORS.items()}
+_V_FROM = {value: key for key, value in ir.V_ANCHORS.items()}
+_WRAP_SIDES = {value: key for key, value in ir.WRAP_SIDES.items()}
+_PRESET_COLORS = {
+    "black": "000000",
+    "white": "FFFFFF",
+    "red": "FF0000",
+    "green": "008000",
+    "blue": "0000FF",
+    "yellow": "FFFF00",
+    "gray": "808080",
+    "darkGray": "A9A9A9",
+    "lightGray": "D3D3D3",
+}
+"""DrawingML preset colours Word uses for lines (the others read as black)."""
+_FIXED_STYLES = frozenset({"default paragraph font", "normal table", "no list"})
+"""Styles every document has and the writer always writes itself."""
+_SCHEME_COLORS = {
+    "tx1": "text1",
+    "bg1": "background1",
+    "tx2": "text2",
+    "bg2": "background2",
+    "dk1": "dark1",
+    "lt1": "light1",
+    "dk2": "dark2",
+    "lt2": "light2",
+    "hlink": "hyperlink",
+    "folHlink": "followedHyperlink",
+}
+
+
+def _read_anchor(anchor: Element) -> ir.Anchor | None:
+    """Where a floating drawing sits and how text flows around it (wp:anchor)."""
+
+    def position(tag: str, names: dict[str, str]) -> tuple[Length | str, str]:
+        element = anchor.find(_wp(tag))
+        if element is None:
+            return Length(0), ""
+        relative = names.get(element.get("relativeFrom") or "", "")
+        align = element.findtext(_wp("align"))
+        if align:
+            return align, relative
+        return Length(_int(element.findtext(_wp("posOffset")))), relative
+
+    x, x_from = position("positionH", _H_FROM)
+    y, y_from = position("positionV", _V_FROM)
+    wrap, side = "front", "both"
+    for element in anchor:
+        local = _local(element.tag)
+        if local in ("wrapSquare", "wrapTight", "wrapThrough"):
+            wrap = "square" if local == "wrapSquare" else "tight"
+            side = _WRAP_SIDES.get(element.get("wrapText") or "bothSides", "both")
+        elif local == "wrapTopAndBottom":
+            wrap = "top-bottom"
+        elif local == "wrapNone":
+            wrap = "behind" if anchor.get("behindDoc") == "1" else "front"
+    distance = tuple(Length(_int(anchor.get(a))) for a in ("distT", "distB", "distL", "distR"))
+    try:
+        return ir.Anchor(
+            wrap,
+            side,
+            x if not isinstance(x, str) or x in ir.H_ALIGNS else Length(0),
+            x_from or "column",
+            y if not isinstance(y, str) or y in ir.V_ALIGNS else Length(0),
+            y_from or "paragraph",
+            distance,  # type: ignore[arg-type]
+        )
+    except ValueError:
+        return None
+
+
+def _drawing_color(fill: Element | None) -> Color | None:
+    """The colour of an a:solidFill (an RGB or a scheme colour, lighter or darker)."""
+    if fill is None:
+        return None
+    if (rgb := fill.find(_a("srgbClr"))) is not None:
+        return Color(rgb=(rgb.get("val") or "000000").upper())
+    if (preset := fill.find(_a("prstClr"))) is not None:
+        return Color(rgb=_PRESET_COLORS.get(preset.get("val") or "", "000000"))
+    if (scheme := fill.find(_a("schemeClr"))) is not None:
+        name = scheme.get("val") or ""
+        name = _SCHEME_COLORS.get(name, name)
+        mod = scheme.find(_a("lumMod"))
+        off = scheme.find(_a("lumOff"))
+        try:
+            if mod is not None and off is not None:
+                return Color(theme=name, tint=round(_int(mod.get("val")) * 255 / 100000))
+            if mod is not None:
+                return Color(theme=name, shade=round(_int(mod.get("val")) * 255 / 100000))
+            return Color(theme=name)
+        except (ValueError, InvalidValueError):
+            return None
+    return None
+
+
+def _drawing_line(properties: Element | None) -> Border | None:
+    """a:ln of a picture or shape as a border; None without a visible line."""
+    line = properties.find(_a("ln")) if properties is not None else None
+    if line is None or line.find(_a("noFill")) is not None:
+        return None
+    color = _drawing_color(line.find(_a("solidFill")))
+    if color is None:
+        return None
+    dash = line.find(_a("prstDash"))
+    dashes = {"sysDot": "dotted", "dot": "dotted", "dash": "dashed", "sysDash": "dashed"}
+    plain = "double" if line.get("cmpd") == "dbl" else "single"
+    style = dashes.get((dash.get("val") or "") if dash is not None else "", plain)
+    width = Length(max(3175, min(152400, _int(line.get("w"), 12700))))
+    try:
+        return Border(style, width, color)
+    except InvalidValueError:
+        return None
+
+
+def _rotation(properties: Element | None) -> int:
+    transform = properties.find(_a("xfrm")) if properties is not None else None
+    return round(_int(transform.get("rot")) / 60000) if transform is not None else 0
+
+
+def _frame(drawing: Element) -> tuple[Element, ir.Anchor | None] | None:
+    """The wp:inline or wp:anchor of a w:drawing, and the anchor's placement."""
+    if (inline := drawing.find(_wp("inline"))) is not None:
+        return inline, None
+    if (anchor := drawing.find(_wp("anchor"))) is not None:
+        return anchor, _read_anchor(anchor)
+    return None
+
+
+def _extent(frame: Element) -> tuple[Length, Length] | None:
+    extent = frame.find(_wp("extent"))
+    if extent is None:
+        return None
+    width, height = Length(_int(extent.get("cx"))), Length(_int(extent.get("cy")))
+    return (width, height) if width.emu > 0 and height.emu > 0 else None
+
+
+def _read_drawing(drawing: Element, ctx: _Ctx) -> ir.Image | None:
+    """A picture, inline or floating, with its crop, rotation and border."""
+    framed = _frame(drawing)
+    blip = drawing.find(f".//{_a('blip')}")
+    if blip is None or framed is None:
+        return None
+    frame, anchor = framed
     rel_id = blip.get(_r("embed"))
     if rel_id is None:
         return None
@@ -516,23 +768,101 @@ def _read_drawing(drawing: Element, ctx: _Ctx) -> ir.Image | None:
     if image_format is None:
         ctx.stats.note(f"image format .{extension}")
         return None
-    if inline is None:
+    size = _extent(frame)
+    if size is None:
         return None
-    extent = inline.find(_wp("extent"))
-    if extent is None:
-        return None
-    width = Length(_int(extent.get("cx")))
-    height = Length(_int(extent.get("cy")))
-    if width.emu <= 0 or height.emu <= 0:
-        return None
-    doc_pr = inline.find(_wp("docPr"))
+    doc_pr = frame.find(_wp("docPr"))
     description = name = ""
     if doc_pr is not None:
         description = doc_pr.get("descr") or ""
         name = doc_pr.get("name") or ""
+    crop = None
+    if (rect := drawing.find(f".//{_a('srcRect')}")) is not None:
+        sides = {
+            k: max(0, _int(rect.get(a)))
+            for k, a in (("left", "l"), ("top", "t"), ("right", "r"), ("bottom", "b"))
+        }
+        if any(sides.values()):
+            try:
+                crop = ir.Crop(**sides)
+            except ValueError:
+                crop = None
+    properties = drawing.find(".//{http://schemas.openxmlformats.org/drawingml/2006/picture}spPr")
     ctx.stats.count("image")
-    svg = _svg_blip(blip, ctx)
-    return ir.Image(data, image_format, width, height, description, name, svg=svg)
+    try:
+        return ir.Image(
+            data,
+            image_format,
+            size[0],
+            size[1],
+            description,
+            name,
+            svg=_svg_blip(blip, ctx),
+            anchor=anchor,
+            crop=crop,
+            rotation=_rotation(properties),
+            border=_drawing_line(properties),
+        )
+    except ValueError as e:
+        ctx.stats.note(f"picture ({e})")
+        return None
+
+
+def _read_text_box(alternate: Element, ctx: _Ctx) -> ir.TextBox | None:
+    """A Word 2010 text box: the wps shape in mc:AlternateContent's choice."""
+    choice = alternate.find(f"{{{_MC}}}Choice")
+    drawing = choice.find(_w("drawing")) if choice is not None else None
+    shape = drawing.find(f".//{{{_WPS}}}wsp") if drawing is not None else None
+    if drawing is None or shape is None:
+        return None
+    content = shape.find(f"{{{_WPS}}}txbx/{_w('txbxContent')}")
+    framed = _frame(drawing)
+    if content is None or framed is None:
+        ctx.stats.note("shape (no text)")
+        return None
+    frame, anchor = framed
+    size = _extent(frame)
+    if size is None:
+        return None
+    properties = shape.find(f"{{{_WPS}}}spPr")
+    fill = properties.find(_a("solidFill")) if properties is not None else None
+    body = shape.find(f"{{{_WPS}}}bodyPr")
+    padding = ir.TextBox((), size[0]).padding
+    valign = "top"
+    autofit = True
+    if body is not None:
+
+        def inset(attr: str, default: Length) -> Length:
+            raw = body.get(attr)
+            return Length(_int(raw)) if raw is not None else default
+
+        top, bottom, left, right = padding
+        padding = (
+            inset("tIns", top),
+            inset("bIns", bottom),
+            inset("lIns", left),
+            inset("rIns", right),
+        )
+        valign = {"ctr": "center", "b": "bottom"}.get(body.get("anchor") or "t", "top")
+        autofit = body.find(_a("spAutoFit")) is not None
+    doc_pr = frame.find(_wp("docPr"))
+    ctx.stats.count("text box")
+    try:
+        return ir.TextBox(
+            _read_blocks(content, ctx),
+            size[0],
+            None if autofit else size[1],
+            _drawing_color(fill),
+            _drawing_line(properties),
+            padding,
+            valign,
+            _rotation(properties),
+            anchor,
+            (doc_pr.get("name") or "") if doc_pr is not None else "",
+        )
+    except ValueError as e:
+        ctx.stats.note(f"text box ({e})")
+        return None
 
 
 def _read_run(run: Element, ctx: _Ctx) -> list[ir.Inline]:
@@ -573,18 +903,84 @@ def _read_run(run: Element, ctx: _Ctx) -> list[ir.Inline]:
                 buffer += chr(int(char or "", 16))
             except ValueError:
                 ctx.stats.note("w:sym without a hex w:char")
+        elif tag == f"{{{_MC}}}AlternateContent":
+            flush()
+            if (box := _read_text_box(child, ctx)) is not None:
+                items.append(box)
+        elif tag in (_w("object"), _w("pict")):
+            flush()
+            if (image := _read_vml_picture(child, ctx)) is not None:
+                items.append(image)
+                if tag == _w("object"):
+                    ctx.stats.note("embedded object (kept as its picture)")
+            else:
+                ctx.stats.note(_qname(tag))
         elif tag == _w("drawing"):
             flush()
             if (image := _read_drawing(child, ctx)) is not None:
                 items.append(image)
             else:
                 ctx.stats.note("w:drawing")
-        elif tag in (_w("rPr"), _w("fldChar"), _w("instrText")):
-            pass
+        elif tag in (_w("footnoteReference"), _w("endnoteReference")):
+            flush()
+            kind = "footnote" if tag == _w("footnoteReference") else "endnote"
+            if (note := _read_note(kind, child.get(_w("id")), props, style, ctx)) is not None:
+                items.append(note)
+        elif tag in (_w("footnoteRef"), _w("endnoteRef")):
+            flush()
+            items.append(ir.NoteMark("footnote" if tag == _w("footnoteRef") else "endnote", style))
+        elif tag in (
+            _w("rPr"),
+            _w("fldChar"),
+            _w("instrText"),
+            _w("lastRenderedPageBreak"),
+        ) or tag in (
+            _w("separator"),
+            _w("continuationSeparator"),
+            _w("commentReference"),
+            _w("annotationRef"),
+        ):
+            pass  # the writer puts a comment's reference mark after its range
         else:
             ctx.stats.note(_qname(tag))
     flush()
     return items
+
+
+def _read_comment(ident: str, ctx: _Ctx) -> ir.Comment | None:
+    """A comment: its author, initials, date and text, from the comments part."""
+    part, comments = ctx.comments
+    element = comments.get(ident)
+    if element is None:
+        ctx.stats.note("comment without its text")
+        return None
+    date = None
+    if raw := element.get(_w("date")):
+        try:
+            date = datetime.fromisoformat(raw.removesuffix("Z"))
+        except ValueError:
+            date = None
+    ctx.stats.count("comment")
+    return ir.Comment(
+        f"_Comment{ident}",
+        _read_blocks(element, ctx.for_part(part)),
+        element.get(_w("author")) or "",
+        element.get(_w("initials")) or "",
+        date,
+    )
+
+
+def _read_note(
+    kind: str, ident: str | None, props: PropertySet, style: str | None, ctx: _Ctx
+) -> ir.Note | None:
+    """A footnote or endnote: its text, read from its own part."""
+    part, notes = ctx.notes.get(kind, ("", {}))
+    element = notes.get(ident or "")
+    if element is None:
+        ctx.stats.note(f"{kind} {ident} not found")
+        return None
+    ctx.stats.count(kind)
+    return ir.Note(kind, _read_blocks(element, ctx.for_part(part)), props, style)
 
 
 def _read_hyperlink(link: Element, ctx: _Ctx) -> ir.Hyperlink:
@@ -711,8 +1107,14 @@ def _read_inline_element(element: Element, ctx: _Ctx) -> list[ir.Inline]:
         ident = element.get(_w("id"))
         name = ctx.bookmark_names.get(ident) if ident is not None else None
         return [ir.BookmarkEnd(name)] if name is not None else []
-    if tag == _w("proofErr"):
+    if _local(tag) in _IGNORED_ELEMENTS:
         return []
+    if tag == _w("commentRangeStart"):
+        comment = _read_comment(element.get(_w("id")) or "", ctx)
+        return [ir.CommentStart(comment)] if comment is not None else []
+    if tag == _w("commentRangeEnd"):
+        ident = element.get(_w("id")) or ""
+        return [ir.CommentEnd(f"_Comment{ident}")] if ident in ctx.comments[1] else []
     if tag in (_w("ins"), _w("smartTag"), _w("dir"), _w("bdo")):
         return list(_read_inline(element, ctx))
     if tag == _w("sdt"):
@@ -750,8 +1152,16 @@ def _read_paragraph(element: Element, ctx: _Ctx) -> tuple[ir.Paragraph, ir.Secti
         else:
             ctx.stats.note(f"list numId {num_id}")
 
+    drop_cap = None
+    frame = ppr.find(_w("framePr")) if ppr is not None else None
+    if frame is not None:
+        if (kind := frame.get(_w("dropCap"))) in ("drop", "margin"):
+            lines = max(2, min(10, _int(frame.get(_w("lines")), 3)))
+            drop_cap = ir.DropCap(lines, kind == "margin")
+        else:
+            ctx.stats.note("text frame")
     ctx.stats.count("paragraph")
-    return ir.Paragraph(content, style, props, list_item, unnumbered), section
+    return ir.Paragraph(content, style, props, list_item, unnumbered, drop_cap), section
 
 
 @dataclass
@@ -789,11 +1199,19 @@ def _read_table(element: Element, ctx: _Ctx) -> ir.Table | None:
     if tbl_pr is not None:
         if (tbl_style := tbl_pr.find(_w("tblStyle"))) is not None:
             style = ctx.style_name(tbl_style.get(_w("val")))
-            if style is not None and style.lower() != "table grid":
-                ctx.stats.note(f"table style {style!r}")
-                style = None
         if (jc := tbl_pr.find(_w("jc"))) is not None:
-            align = jc.get(_w("val"))
+            align = {"start": "left", "end": "right"}.get(
+                jc.get(_w("val")) or "", jc.get(_w("val"))
+            )
+    values = _table_values(tbl_pr)
+    if (
+        style is None
+        and all(isinstance(v, Border) and v.style == "nil" for v in values.values())
+        and len(values) == len(_NO_TABLE_BORDERS)
+    ):
+        values = {}  # a table without a style and without borders: what "no style" means
+    table_props = _property_set(Target.TABLE, values, ctx, "table")
+    look = _table_look(tbl_pr)
 
     rows_elements = element.findall(_w("tr"))
     row_cells: list[list[_CellBuilder]] = [[] for _ in rows_elements]
@@ -828,7 +1246,14 @@ def _read_table(element: Element, ctx: _Ctx) -> ir.Table | None:
 
     rows = [_build_row(tr, row_cells[r]) for r, tr in enumerate(rows_elements)]
     try:
-        table = ir.Table(tuple(rows), tuple(widths), style, align)
+        table = ir.Table(
+            tuple(rows),
+            tuple(widths),
+            style,
+            align if align in ("left", "center", "right") else None,
+            table_props,
+            look if look is not None else ir.DEFAULT_TABLE_LOOK,
+        )
     except ValueError as e:
         ctx.stats.note(f"unrepresentable table ({e})")
         return None
@@ -840,6 +1265,128 @@ def _cell_colspan(tc_pr: Element | None) -> int:
     if tc_pr is None or (span := tc_pr.find(_w("gridSpan"))) is None:
         return 1
     return max(1, _int(span.get(_w("val")), 1))
+
+
+_TABLE_SIDES = {
+    "top": "top",
+    "left": "left",
+    "start": "left",
+    "bottom": "bottom",
+    "right": "right",
+    "end": "right",
+    "insideH": "inside-h",
+    "insideV": "inside-v",
+}
+_NO_TABLE_BORDERS = ("top", "left", "bottom", "right", "inside-h", "inside-v")
+_LOOK_ATTRIBUTES = {
+    "firstRow": "header-row",
+    "lastRow": "last-row",
+    "firstColumn": "first-column",
+    "lastColumn": "last-column",
+}
+
+
+def _table_values(tbl_pr: Element | None) -> dict[str, object]:
+    """Borders and cell margins of a table or table style (w:tblPr)."""
+    values: dict[str, object] = {}
+    if tbl_pr is None:
+        return values
+    if (borders := tbl_pr.find(_w("tblBorders"))) is not None:
+        for side in borders:
+            if (name := _TABLE_SIDES.get(_local(side.tag))) is not None:
+                values[f"border-{name}"] = _decode_border(side)
+    if (margins := tbl_pr.find(_w("tblCellMar"))) is not None:
+        for side in margins:
+            name = _TABLE_SIDES.get(_local(side.tag))
+            if name in ("top", "left", "bottom", "right") and side.get(_w("type")) in (None, "dxa"):
+                values[f"cell-margin-{name}"] = Length.twips(_int(side.get(_w("w"))))
+    return values
+
+
+def _cell_values(tc_pr: Element | None) -> dict[str, object]:
+    """Shading, borders and vertical alignment of a cell or a table style's cells."""
+    values: dict[str, object] = {}
+    if tc_pr is None:
+        return values
+    if (fill := _cell_shading(tc_pr)) is not None:
+        values["shading"] = Color(rgb=fill.upper())
+    if (valign := _cell_valign(tc_pr)) is not None:
+        values["valign"] = valign
+    if (borders := tc_pr.find(_w("tcBorders"))) is not None:
+        for side in borders:
+            if (name := _TABLE_SIDES.get(_local(side.tag))) is not None:
+                values[f"border-{name}"] = _decode_border(side)
+    return values
+
+
+def _table_look(tbl_pr: Element | None) -> frozenset[str] | None:
+    """Which table-style parts apply (w:tblLook attributes, else its hex mask)."""
+    look = tbl_pr.find(_w("tblLook")) if tbl_pr is not None else None
+    if look is None:
+        return None
+    flags: set[str] = set()
+    if any(look.get(_w(attr)) is not None for attr in _LOOK_ATTRIBUTES):
+        flags = {flag for attr, flag in _LOOK_ATTRIBUTES.items() if look.get(_w(attr)) == "1"}
+        if look.get(_w("noHBand")) != "1":
+            flags.add("banded-rows")
+        if look.get(_w("noVBand")) != "1":
+            flags.add("banded-columns")
+        return frozenset(flags)
+    mask = int(look.get(_w("val")) or "0", 16)
+    for flag, bit in (
+        ("header-row", 0x20),
+        ("last-row", 0x40),
+        ("first-column", 0x80),
+        ("last-column", 0x100),
+    ):
+        if mask & bit:
+            flags.add(flag)
+    if not mask & 0x200:
+        flags.add("banded-rows")
+    if not mask & 0x400:
+        flags.add("banded-columns")
+    return frozenset(flags)
+
+
+def _base(element: Element, ctx: _Ctx) -> str | None:
+    """A style's base; the fixed default styles are implicit bases, so they are left out."""
+    base = ctx.style_name(_attr(element, "basedOn", "val"))
+    return None if base is None or base.lower() in _FIXED_STYLES else base
+
+
+def _read_table_style(element: Element, name: str, ctx: _Ctx) -> ir.Style:
+    """A table style: the whole table, every cell, and its conditional parts."""
+    paragraph, _style, _numbering = _para_props(element.find(_w("pPr")), ctx)
+    run, _ = _run_props(element.find(_w("rPr")), ctx)
+    table = _property_set(Target.TABLE, _table_values(element.find(_w("tblPr"))), ctx, "table")
+    cell = _property_set(Target.CELL, _cell_values(element.find(_w("tcPr"))), ctx, "cell")
+    conditions: list[ir.TableCondition] = []
+    repeat = False
+    for part in element.findall(_w("tblStylePr")):
+        kind = part.get(_w("type"))
+        if kind not in ir.TABLE_CONDITIONS or any(c.kind == kind for c in conditions):
+            continue
+        part_paragraph, _s, _n = _para_props(part.find(_w("pPr")), ctx)
+        part_run, _ = _run_props(part.find(_w("rPr")), ctx)
+        part_cell = _property_set(Target.CELL, _cell_values(part.find(_w("tcPr"))), ctx, "cell")
+        conditions.append(ir.TableCondition(kind, part_paragraph, part_run, part_cell))
+        if kind == "firstRow" and part.find(f"{_w('trPr')}/{_w('tblHeader')}") is not None:
+            repeat = True
+    order = {kind: i for i, kind in enumerate(ir.TABLE_CONDITIONS)}
+    conditions.sort(key=lambda c: order[c.kind])
+    return ir.Style(
+        kind=ir.StyleKind.TABLE,
+        name=name,
+        based_on=_base(element, ctx),
+        paragraph=paragraph,
+        run=run,
+        quick_format=element.find(_w("qFormat")) is not None,
+        ui_priority=_optional_int(_attr(element, "uiPriority", "val")),
+        table=table,
+        cell=cell,
+        conditions=tuple(conditions),
+        repeat_header=repeat,
+    )
 
 
 def _cell_shading(tc_pr: Element | None) -> str | None:
@@ -870,10 +1417,76 @@ def _build_row(tr: Element, builders: list[_CellBuilder]) -> ir.Row:
     return ir.Row(tuple(b.build() for b in builders), header, height, exact, cant_split)
 
 
+def _field_depth(paragraph: Element) -> int:
+    """How many fields a paragraph leaves open (begins minus ends)."""
+    depth = 0
+    for char in paragraph.iter(_w("fldChar")):
+        kind = char.get(_w("fldCharType"))
+        depth += 1 if kind == "begin" else -1 if kind == "end" else 0
+    return depth
+
+
+def _read_field_block(paragraphs: list[Element], ctx: _Ctx) -> ir.FieldBlock:
+    """A field whose result is whole paragraphs (a table of contents, an index): its
+    instruction, and its result read as paragraphs without the outer field's marks."""
+    copies = [copy.deepcopy(p) for p in paragraphs]
+    instruction: list[str] = []
+    dirty = False
+    depth = 0
+    state = "result"
+    for paragraph in copies:
+        for run in list(paragraph.iter(_w("r"))):
+            outer = False
+            for child in run:
+                if child.tag == _w("fldChar"):
+                    kind = child.get(_w("fldCharType"))
+                    if kind == "begin":
+                        depth += 1
+                        if depth == 1:
+                            outer, state = True, "instruction"
+                            dirty = child.get(_w("dirty")) == "true"
+                    elif kind == "separate" and depth == 1:
+                        outer, state = True, "result"
+                    elif kind == "end":
+                        if depth == 1:
+                            outer = True
+                        depth -= 1
+                elif child.tag == _w("instrText") and depth == 1 and state == "instruction":
+                    instruction.append(child.text or "")
+                    outer = True
+            if outer or (depth == 1 and state == "instruction"):
+                parent = run.getparent()
+                if parent is not None:
+                    parent.remove(run)
+    content = tuple(_read_paragraph(p, ctx)[0] for p in copies)
+    code = "".join(instruction).strip()
+    ctx.stats.count("field")
+    return ir.FieldBlock(ir.Field((code,) if code else (), dirty=dirty), content)
+
+
 def _read_blocks(container: Element, ctx: _Ctx) -> tuple[ir.Block, ...]:
     blocks: list[ir.Block] = []
-    for child in container:
+    children = list(container)
+    index = 0
+    while index < len(children):
+        child = children[index]
+        index += 1
         tag = child.tag
+        if tag == _w("p") and (depth := _field_depth(child)) > 0:
+            # A field that ends in a later paragraph: gather the paragraphs it spans.
+            span = [child]
+            while depth > 0 and index < len(children) and children[index].tag == _w("p"):
+                depth += _field_depth(children[index])
+                span.append(children[index])
+                index += 1
+            if depth == 0:
+                blocks.append(_read_field_block(span, ctx))
+                for paragraph in span:
+                    sect = paragraph.find(f"{_w('pPr')}/{_w('sectPr')}")
+                    if sect is not None:
+                        blocks.append(ir.SectionBreak(_read_section(sect, ctx)))
+                continue
+            index -= len(span) - 1  # never closed: read the paragraphs one by one
         if tag == _w("p"):
             paragraph, section = _read_paragraph(child, ctx)
             blocks.append(paragraph)
@@ -909,6 +1522,37 @@ def _read_section(sect_pr: Element, ctx: _Ctx) -> ir.Section:
         if (raw := pg_num.get(_w("start"))) is not None:
             start_number = _int(raw)
     columns, gap, separator = _read_columns(sect_pr)
+    widths: tuple[Length, ...] = ()
+    if (cols := sect_pr.find(_w("cols"))) is not None and cols.get(_w("equalWidth")) == "0":
+        widths = tuple(Length.twips(_int(c.get(_w("w")))) for c in cols.findall(_w("col")))
+        if len(widths) != columns or not all(w.emu > 0 for w in widths):
+            widths = ()
+    borders = None
+    if (page_borders := sect_pr.find(_w("pgBorders"))) is not None:
+        sides = {
+            _local(side.tag): _decode_border(side)
+            for side in page_borders
+            if _local(side.tag) in ir.PAGE_BORDER_SIDES
+        }
+        sides = {
+            k: b for k, b in sides.items() if b.style != "nil" and b.space.emu <= Length.pt(31).emu
+        }
+        if sides:
+            pages = {"firstPage": "first", "notFirstPage": "not-first"}.get(
+                page_borders.get(_w("display")) or "", "all"
+            )
+            offset = "text" if page_borders.get(_w("offsetFrom")) == "text" else "page"
+            borders = ir.PageBorders(**sides, offset_from=offset, pages=pages)
+    valign = None
+    if (v_align := sect_pr.find(_w("vAlign"))) is not None:
+        valign = {"both": "justify"}.get(v_align.get(_w("val")) or "", v_align.get(_w("val")))
+        if valign not in ir.VERTICAL_ALIGNMENTS:
+            valign = None
+    direction = sect_pr.find(_w("textDirection"))
+    vertical = direction is not None and direction.get(_w("val")) in ("tbRl", "tbRlV")
+    for child in sect_pr:
+        if _local(child.tag) not in _KNOWN_SECTION:
+            ctx.stats.note(f"section: {_qname(child.tag)}")
     headers = _read_references(sect_pr, "headerReference", ctx)
     footers = _read_references(sect_pr, "footerReference", ctx)
     ctx.stats.count("section")
@@ -923,7 +1567,20 @@ def _read_section(sect_pr: Element, ctx: _Ctx) -> ir.Section:
         columns=columns,
         column_gap=gap,
         column_separator=separator,
+        column_widths=widths,
+        borders=borders,
+        vertical_align=valign,
+        rtl=sect_pr.find(_w("bidi")) is not None,
+        text_direction="vertical" if vertical else "horizontal",
     )
+
+
+_KNOWN_SECTION = frozenset(
+    "headerReference footerReference footnotePr endnotePr type pgSz pgMar paperSrc pgBorders "
+    "lnNumType pgNumType cols formProt vAlign noEndnote titlePg textDirection bidi rtlGutter "
+    "docGrid printerSettings".split()
+)
+"""What a section reads, or knowingly leaves out (paper trays, the document grid)."""
 
 
 def _read_page_setup(sect_pr: Element) -> ir.PageSetup:
@@ -1003,9 +1660,12 @@ def _read_styles(root: Element, ctx: _Ctx) -> tuple[ir.Style, ...]:
         name = name_element.get(_w("val")) if name_element is not None else None
         if not name:
             continue
+        if name.lower() in _FIXED_STYLES:
+            continue
         if kind is ir.StyleKind.TABLE:
-            if name.lower() not in _BUILTIN_TABLE_STYLES:
-                ctx.stats.note(f"table style {name!r}")
+            if name.lower() not in _BUILTIN_TABLE_STYLES:  # wordgenx knows those
+                styles.append(_read_table_style(element, name, ctx))
+                ctx.stats.count("style")
             continue
         ppr = element.find(_w("pPr"))
         paragraph, _style, numbering = _para_props(ppr, ctx)
@@ -1021,7 +1681,7 @@ def _read_styles(root: Element, ctx: _Ctx) -> tuple[ir.Style, ...]:
             ir.Style(
                 kind=kind,
                 name=name,
-                based_on=ctx.style_name(_attr(element, "basedOn", "val")),
+                based_on=_base(element, ctx),
                 next=ctx.style_name(_attr(element, "next", "val")),
                 paragraph=paragraph,
                 run=run,
@@ -1196,7 +1856,34 @@ def read_docx(source: bytes | str | PathLike[str]) -> ImportResult:
     numbering, defs, instances = (
         _read_numbering(numbering_root, ctx) if numbering_root is not None else ((), {}, {})
     )
-    ctx = replace(ctx, numbering_defs=defs, numbering_instances=instances)
+    notes: dict[str, tuple[str, dict[str, Element]]] = {}
+    for kind, reltype in (("footnote", RT.FOOTNOTES), ("endnote", RT.ENDNOTES)):
+        part = _related_part(opc, document_part, reltype)
+        notes_root = opc.parse(part) if part is not None else None
+        if part is not None and notes_root is not None:
+            notes[kind] = (
+                part,
+                {
+                    note.get(_w("id")) or "": note
+                    for note in notes_root.findall(_w(kind))
+                    if note.get(_w("type")) in (None, "normal")
+                },
+            )
+    comments: tuple[str, dict[str, Element]] = ("", {})
+    comments_part = _related_part(opc, document_part, RT.COMMENTS)
+    comments_root = opc.parse(comments_part) if comments_part is not None else None
+    if comments_part is not None and comments_root is not None:
+        comments = (
+            comments_part,
+            {c.get(_w("id")) or "": c for c in comments_root.findall(_w("comment"))},
+        )
+    ctx = replace(
+        ctx,
+        numbering_defs=defs,
+        numbering_instances=instances,
+        notes=notes,
+        comments=comments,
+    )
     styles = _read_styles(styles_root, ctx) if styles_root is not None else ()
 
     root = opc.parse(document_part)
@@ -1242,6 +1929,14 @@ def _document_part(opc: _Opc) -> str | None:
             return posixpath.normpath(target.lstrip("/"))
     if opc.read("word/document.xml") is not None:
         return "word/document.xml"
+    return None
+
+
+def _related_part(opc: _Opc, source: str, reltype: str) -> str | None:
+    """The name of the part `source` relates to with `reltype`."""
+    for rtype, target, external in opc.relationships(source).values():
+        if rtype == reltype and not external:
+            return posixpath.normpath(posixpath.join(posixpath.dirname(source), target))
     return None
 
 

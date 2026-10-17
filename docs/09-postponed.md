@@ -38,4 +38,5 @@ feature is documented. They are smaller than 9.1 and can be picked up whenever a
 | Frames | General text frames (`w:framePr` other than drop caps): text boxes do their job | [§3.6](03-language-design.md) |
 | Comments | Replies and the resolved state (Word 2013's `commentsExtended.xml`); comments in headers, notes and text boxes | [§3.17](03-language-design.md) |
 | Content controls | Repeating sections (Word 2013's `w15:repeatingSection`); rich-text controls around whole paragraphs (block-level `w:sdt`); placeholders from building blocks | [§3.17](03-language-design.md) |
+| Import (reader) | Equations (OMML) are dropped; shapes without text; tracked changes are read as accepted (deletions dropped); emphasis marks; Word 2010 text effects (glow, shadow, 3-D, ligatures); embedded objects keep only their picture | [M6](06-roadmap.md) |
 | Right to left | Separate complex-script values for bold, italic and size (they follow the Latin ones); `start`/`end` alignment | [§3.4](03-language-design.md) |
