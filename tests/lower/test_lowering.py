@@ -292,7 +292,7 @@ def test_suggestions() -> None:
 
 
 def test_planned_features_warn_but_build() -> None:
-    result = diagnostics(r"Text and \comment[author=A]{kept} \control{in a box}")
+    result = diagnostics(r"Text and \control{kept} \control{in a box}")
     assert result.document is not None
     assert {d.severity for _, d in result.diagnostics} == {Severity.WARNING}
     assert texts(result.document) == ["Text and kept in a box"]

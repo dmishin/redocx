@@ -139,7 +139,8 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 
 | Feature | Tier | Diff. |
 |---------|------|-------|
-| Comments (anchored ranges, replies, resolved state) | M5 | ●● |
+| Comments (anchored ranges) | M5 ✓ | ●● |
+| Comment replies and resolved state | Postponed | ●● |
 | Tracked insertions/deletions | Postponed (§9.1) | ●● |
 | Tracked formatting changes | Postponed (§9.1) | ●●● |
 | `wordgenx diff` → redline docx | Postponed (§9.1) | ●●● |

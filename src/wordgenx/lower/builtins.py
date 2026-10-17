@@ -167,6 +167,14 @@ BUILTIN_STYLES: dict[str, Callable[[], Style]] = {
         for kind in ("Footnote", "Endnote")
     },
     "Footnote Reference": _character("Footnote Reference", vertical_align="superscript"),
+    "annotation text": lambda: Style(  # Word's Comment Text
+        StyleKind.PARAGRAPH,
+        "annotation text",
+        based_on="Normal",
+        paragraph=para_props(space_after="0pt", line_spacing=1),
+        run=run_props(size="10pt"),
+    ),
+    "annotation reference": _character("annotation reference", size="8pt"),
     "Endnote Reference": _character("Endnote Reference", vertical_align="superscript"),
     "Bibliography": lambda: Style(  # entries with a hanging indent
         StyleKind.PARAGRAPH,

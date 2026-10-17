@@ -699,6 +699,14 @@ figures) and takes a .docx only, not a macro-enabled document or a template.
 Form protection is set with `\settings[protection=(mode=forms, enforce)]`, and `\settings[track-changes]` turns on
 Word's Track Changes for edits made later in Word.
 
+**Comments** (M5): `\comment[text=…]{commented text}` puts a comment in the margin on the text in its body; without a
+body it marks a point. `text` is plain (`"…"`) or markup in braces (paragraphs, lists, emphasis). `author` defaults
+to `\meta[author]` (else "Author"), `initials` to the author's initials, `date` (`2026-10-13` or
+`2026-10-13T09:30`) to the build time. They are written as Word writes them: `w:commentRangeStart`/`End` around the
+text, a reference mark in the "annotation reference" style, and the comment in `comments.xml` in "annotation text"
+(Word's Comment Text). Comments are in the body and in table cells, not in headers, notes or text boxes. Replies and
+the resolved state are not written.
+
 Tracked revisions written in the source (`\ins`, `\del`) and the `wordgenx diff` redline are postponed indefinitely
 (see [Postponed features](09-postponed.md)): `\ins` keeps its text and `\del` drops it, each with a warning.
 

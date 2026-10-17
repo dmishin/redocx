@@ -138,7 +138,7 @@ over the writer) goes to [Postponed features](09-postponed.md) instead.
 
 1. [x] **Settings**: `\settings[track-changes]` (Word's Track Changes on for edits made later in Word) and
    `hyphenation=auto` (left over from M4).
-2. **Comments**: `\comment[author=…, initials=…, date=…, text={…}]{commented text}`: the range, the reference mark
+2. [x] **Comments**: `\comment[author=…, initials=…, date=…, text={…}]{commented text}`: the range, the reference mark
    and `comments.xml`; markup in the comment; a point comment without a body. Replies and the resolved state are
    left out.
 3. **Content controls**: `\control[type=…, tag=…, title=…, lock=…]`, inline or around blocks: plain and rich text,

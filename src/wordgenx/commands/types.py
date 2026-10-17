@@ -125,6 +125,19 @@ BOOL_WORDS = {"on": True, "true": True, "yes": True, "off": False, "false": Fals
 
 
 @dataclass(frozen=True)
+class MarkupValue(ValueType):
+    """Text with markup in braces ({Rich *text*.}), or a word or "string"."""
+
+    def parse(self, value: ast.Value) -> ast.MarkupBody | str:
+        if isinstance(value, ast.MarkupBody):
+            return value
+        return text_of(value)
+
+    def describe(self) -> str:
+        return 'text: {markup}, a word or a "string"'
+
+
+@dataclass(frozen=True)
 class Bool(ValueType):
     """on/off, true/false or yes/no; the bare option name means on."""
 

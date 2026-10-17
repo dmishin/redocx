@@ -27,6 +27,9 @@ from wordgenx.ir import (
     BookmarkStart,
     Break,
     Cell,
+    Comment,
+    CommentEnd,
+    CommentStart,
     Document,
     EmbeddedDocx,
     Field,
@@ -105,6 +108,10 @@ class BodyContext:
     template_body: Callable[[], list[Element]] = lambda: []
     """The template's body content, rewritten for this package; it precedes the document's."""
     chunk: Callable[[EmbeddedDocx], str] = lambda chunk: ""
+    comment: Callable[[Comment], int] = lambda comment: 0
+    """Writes a comment into comments.xml; returns its w:id."""
+    comment_id: Callable[[str], int] = lambda name: 0
+    """The w:id of a comment written before, by name."""
     """Stores an embedded .docx as an alternative format import part (of the main
     document); returns its relationship id."""
 
@@ -524,6 +531,15 @@ def _inline(item: Inline, ctx: BodyContext) -> list[Element]:
         return [_text_box(item, ctx)]
     if isinstance(item, Watermark):
         return [_watermark(item, ctx)]
+    if isinstance(item, CommentStart):
+        return [E("w:commentRangeStart", {"w:id": str(ctx.comment(item.comment))})]
+    if isinstance(item, CommentEnd):
+        comment_id = str(ctx.comment_id(item.name))
+        reference = E("w:rPr", E("w:rStyle", {"w:val": style_id("annotation reference")}))
+        return [
+            E("w:commentRangeEnd", {"w:id": comment_id}),
+            E("w:r", reference, E("w:commentReference", {"w:id": comment_id})),
+        ]
     if isinstance(item, Field):
         return _field(item, ctx)
     if isinstance(item, BookmarkStart):
@@ -875,6 +891,30 @@ def document_xml(document: Document, ctx: BodyContext, root: Element | None = No
         root.append(E("w:background", attrs))
     root.append(E("w:body", *body, final))
     return root
+
+
+def comment_xml(comment: Comment, comment_id: int, ctx: BodyContext) -> Element:
+    """One w:comment: the text, its first paragraph opening with Word's annotation mark."""
+    attrs = {"w:id": str(comment_id), "w:author": comment.author}
+    if comment.date is not None:
+        attrs["w:date"] = comment.date.replace(microsecond=0, tzinfo=None).isoformat() + "Z"
+    if comment.initials:
+        attrs["w:initials"] = comment.initials
+    blocks = _blocks(comment.content, ctx)
+    mark = E(
+        "w:r",
+        E("w:rPr", E("w:rStyle", {"w:val": style_id("annotation reference")})),
+        E("w:annotationRef"),
+    )
+    first = next((b for b in blocks if b.tag == qn("w:p")), None)
+    if first is not None:
+        properties = first.find(qn("w:pPr"))
+        first.insert(1 if properties is not None else 0, mark)
+    return E("w:comment", attrs, *blocks)
+
+
+def comments_xml(comments: list[Element]) -> Element:
+    return E("w:comments", *comments, nsmap=nsmap(*PART_NAMESPACES))
 
 
 def note_xml(note: Note, note_id: int, ctx: BodyContext) -> Element:

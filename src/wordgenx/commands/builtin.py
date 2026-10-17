@@ -23,6 +23,7 @@ from wordgenx.commands.types import (
     LengthValue,
     LevelRange,
     ListOf,
+    MarkupValue,
     PageBordersValue,
     PageSize,
     PageSizeValue,
@@ -530,7 +531,14 @@ _command(
     _o("none", FLAG, "no watermark from this section on"),
     positional="text", body=None,
 )  # fmt: skip
-_command("comment", INLINE, "A comment.", planned="M5", keep_body=True)
+_command(
+    "comment", INLINE, "A comment in the margin on the text in the body (none: a point).",
+    _o("text", MarkupValue(), "what the comment says", required=True),
+    _o("author", TEXT, "default: the document's author"),
+    _o("initials", TEXT, "default: from the author's name"),
+    _o("date", TEXT, "YYYY-MM-DD or YYYY-MM-DDThh:mm (default: the build time)"),
+    body_doc="the commented text",
+)  # fmt: skip
 _command("ins", INLINE, "Tracked inserted text.", planned=POSTPONED, keep_body=True)
 _command("del", INLINE, "Tracked deleted text.", planned=POSTPONED)
 _command("control", INLINE, "A content control.", planned="M5", keep_body=True)

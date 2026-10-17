@@ -61,6 +61,8 @@ _OTHER_BUILTINS = {
 _SPECIAL_IDS = {
     "Normal Table": "TableNormal",
     "table of figures": "TableofFigures",
+    "annotation text": "CommentText",
+    "annotation reference": "CommentReference",
     **{f"toc {i}": f"TOC{i}" for i in range(1, 10)},
 }
 

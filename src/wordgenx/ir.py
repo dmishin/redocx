@@ -590,6 +590,33 @@ class Watermark:
             raise ValueError("a watermark is either text or a picture")
 
 
+@dataclass(frozen=True)
+class Comment:
+    """A comment in the margin (w:comment in comments.xml) on the text between its start
+    and end marks."""
+
+    name: str
+    """Unique in the document: pairs the start and end marks."""
+    content: tuple[Block, ...]
+    author: str = ""
+    initials: str = ""
+    date: datetime | None = None
+
+
+@dataclass(frozen=True)
+class CommentStart:
+    """Where the commented text begins (w:commentRangeStart); carries the comment."""
+
+    comment: Comment
+
+
+@dataclass(frozen=True)
+class CommentEnd:
+    """Where it ends: w:commentRangeEnd and the reference mark."""
+
+    name: str
+
+
 Inline = (
     Run
     | Break
@@ -604,6 +631,8 @@ Inline = (
     | Math
     | TextBox
     | Watermark
+    | CommentStart
+    | CommentEnd
 )
 
 
@@ -1002,12 +1031,28 @@ def table_layout(table: Table) -> list[list[Slot]]:
     return layout
 
 
+def _nested(item: Inline) -> tuple[Block, ...] | None:
+    """The blocks inside a note, text box or comment."""
+    if isinstance(item, Note | TextBox):
+        return item.content
+    if isinstance(item, CommentStart):
+        return item.comment.content
+    return None
+
+
+def _with_nested(item: Inline, blocks: tuple[Block, ...]) -> Inline:
+    if isinstance(item, CommentStart):
+        return replace(item, comment=replace(item.comment, content=blocks))
+    assert isinstance(item, Note | TextBox)
+    return replace(item, content=blocks)
+
+
 def _with_notes(paragraph: Paragraph) -> Iterator[Paragraph]:
-    """The paragraph, then those of its notes and text boxes."""
+    """The paragraph, then those of its notes, text boxes and comments."""
     yield paragraph
     for item in paragraph.content:
-        if isinstance(item, Note | TextBox):
-            yield from iter_paragraphs(item.content)
+        if (nested := _nested(item)) is not None:
+            yield from iter_paragraphs(nested)
 
 
 def iter_paragraphs(blocks: tuple[Block, ...]) -> Iterator[Paragraph]:
@@ -1041,8 +1086,8 @@ def iter_tables(blocks: tuple[Block, ...]) -> Iterator[Table]:
                     yield from iter_tables(cell.content)
         elif isinstance(block, Paragraph):
             for item in block.content:
-                if isinstance(item, Note | TextBox):
-                    yield from iter_tables(item.content)
+                if (nested := _nested(item)) is not None:
+                    yield from iter_tables(nested)
 
 
 def map_paragraphs(
@@ -1074,13 +1119,14 @@ def map_paragraphs(
 
 
 def _map_paragraph(paragraph: Paragraph, fn: Callable[[Paragraph], Paragraph]) -> Paragraph:
-    """`fn` applied to the paragraph, then to the paragraphs of its notes and text boxes."""
+    """`fn` applied to the paragraph, then to the paragraphs of its notes, text boxes and
+    comments."""
     paragraph = fn(paragraph)
-    if not any(isinstance(item, Note | TextBox) for item in paragraph.content):
+    if all(_nested(item) is None for item in paragraph.content):
         return paragraph
     content = tuple(
-        replace(item, content=map_paragraphs(item.content, fn))
-        if isinstance(item, Note | TextBox)
+        _with_nested(item, map_paragraphs(nested, fn))
+        if (nested := _nested(item)) is not None
         else item
         for item in paragraph.content
     )

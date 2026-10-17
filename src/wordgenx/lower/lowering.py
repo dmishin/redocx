@@ -33,6 +33,7 @@ from wordgenx.highlight import DEFAULT_THEME
 from wordgenx.lower import (
     citations,
     code,
+    comments,
     equations,
     fields,
     index,
@@ -100,6 +101,7 @@ INLINE_HANDLERS: dict[str, InlineHandler] = {
     **equations.INLINES,
     **citations.INLINES,
     **index.INLINES,
+    **comments.INLINES,
 }
 
 
@@ -132,6 +134,8 @@ class Lowering:
     even_headers: bool = False
     header_kinds: set[str] = field(default_factory=lambda: set[str]())
     """Header/footer kinds defined so far ("header:first", ...): what a new section inherits."""
+    comment_count: int = 0
+    """Comments so far (they are named _Comment1, _Comment2, ...)."""
     container_depth: int = 0
     """> 0 while lowering a table cell, header, footer or note (no section breaks there)."""
     part: str | None = None

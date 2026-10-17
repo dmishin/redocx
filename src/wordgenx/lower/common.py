@@ -48,6 +48,7 @@ class Piece:
     math: ir.Math | None = None
     citation: ir.Run | None = None
     textbox: ir.TextBox | None = None
+    comment: ir.CommentStart | ir.CommentEnd | None = None
 
 
 BlockHandler = Callable[["Lowering", ast.Command, Args], list[ir.Block]]
@@ -172,6 +173,7 @@ def assemble(pieces: list[Piece], smart_quotes: bool) -> tuple[ir.Inline, ...]:
             or piece.math
             or piece.citation
             or piece.textbox
+            or piece.comment
         )
         if special is not None:  # not inside hyperlinks (yet)
             flush_link()

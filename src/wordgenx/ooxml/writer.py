@@ -14,6 +14,7 @@ from wordgenx.ir import (
     IMAGE_FORMATS,
     NOTE_KINDS,
     Block,
+    Comment,
     Document,
     EmbeddedDocx,
     Note,
@@ -39,6 +40,8 @@ from wordgenx.ooxml.opc import Package, Part
 from wordgenx.ooxml.parts.docprops import app_xml, core_xml, custom_xml
 from wordgenx.ooxml.parts.document import (
     BodyContext,
+    comment_xml,
+    comments_xml,
     document_xml,
     header_footer_xml,
     note_xml,
@@ -436,7 +439,24 @@ def build_package(
         written.append(note_xml(item, note_id, note_context))
         return note_id
 
-    body = context(main)
+    comments: list[Element] = []
+    comment_ids: dict[str, int] = {}
+    comment_part: list[tuple[Part, BodyContext]] = []
+
+    def comment(item: Comment) -> int:
+        """Comments are numbered 0, 1, ... in the order they start in the body."""
+        if not comment_part:
+            part = pkg.add_part("/word/comments.xml", CT.WML_COMMENTS)
+            main.relate(part, RT.COMMENTS)
+            comment_part.append((part, context(part)))
+        comment_id = comment_ids.setdefault(item.name, len(comment_ids))
+        comments.append(comment_xml(item, comment_id, comment_part[0][1]))
+        return comment_id
+
+    def comment_id(name: str) -> int:
+        return comment_ids[name]
+
+    body = replace(context(main), comment=comment, comment_id=comment_id)
     root = None
     if template is not None and template.body:  # its namespaces (w14, mc:Ignorable, ...)
         source = template.document_root
@@ -444,6 +464,8 @@ def build_package(
     main.data = finish(document_xml(document, body, root))
     for kind, (part, _, written) in notes.items():
         part.data = finish(notes_xml(kind, written))
+    if comment_part:
+        comment_part[0][0].data = finish(comments_xml(comments))
     if template is not None and copier is not None:
         _copy_unmanaged(template, copier, pkg, main, custom=not document.meta.custom)
     return pkg
