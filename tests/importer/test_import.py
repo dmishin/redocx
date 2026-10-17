@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from dataclasses import replace
 from pathlib import Path
-from typing import cast
 
 import pytest
 
@@ -17,15 +16,14 @@ from wordgenx import ir
 from wordgenx.cli import main
 from wordgenx.compiler import build, compile_file
 from wordgenx.importer import import_docx, visible_text
+from wordgenx.importer.check import Comparison, compare
 from wordgenx.importer.printer import display_name, print_document
 from wordgenx.importer.values import length, line_spacing
 from wordgenx.lower.builtins import BUILTIN_STYLES
-from wordgenx.ooxml.reader import read_docx
-from wordgenx.ooxml.style_names import stored_name
 from wordgenx.ooxml.writer import to_docx_bytes
-from wordgenx.props import PropertySet, Target, para_props, run_props
+from wordgenx.props import para_props, run_props
 from wordgenx.syntax import Source
-from wordgenx.values import Border, Color, Length, LineSpacing, TabStop
+from wordgenx.values import Border, Color, Length, LineSpacing
 
 ROOT = Path(__file__).resolve().parents[2]
 CORPUS_DIR = ROOT / "tests" / "corpus"
@@ -55,11 +53,8 @@ def test_corpus_imports(docx: Path, tmp_path: Path) -> None:
     result = import_docx(docx, tmp_path)
     assert result.errors == 0
     assert result.difference is None
-    assert (
-        (tmp_path / f"{docx.stem}.import.txt")
-        .read_text("utf-8")
-        .endswith("Its text is the original's.\n")
-    )
+    report = (tmp_path / f"{docx.stem}.import.txt").read_text("utf-8")
+    assert "The printed source compiles.\nIts text is the original's.\n" in report
 
 
 @pytest.mark.parametrize("example", EXAMPLES)
@@ -265,127 +260,68 @@ def test_keep_styles_compiles_into_the_original(docx: Path, tmp_path: Path) -> N
     assert not (tmp_path / f"{docx.stem}.wgxs").exists()  # the template has the styles and lists
 
 
-def _shapes(document: ir.Document) -> list[tuple[object, ...]]:
-    """Each paragraph's style, formatting and list level, and each table's spans and header
-    rows, in order (drop caps and generated blocks such as the TOC left out)."""
-    out: list[tuple[object, ...]] = []
-
-    def blocks(items: tuple[ir.Block, ...]) -> None:
-        for block in items:
-            only = (
-                block.content[0]
-                if isinstance(block, ir.Paragraph) and len(block.content) == 1
-                else None
-            )
-            if isinstance(block, ir.FieldBlock) or (
-                isinstance(only, ir.Field) and only.code.split()[:1] == ["INDEX"]
-            ):
-                out.append(("field block",))  # an INDEX block comes back as its field
-            elif isinstance(block, ir.Paragraph) and block.drop_cap is None:
-                style = stored_name(block.style or "Normal").lower()
-                level = block.list_item.level if block.list_item else None
-                out.append(("p", style, _in_twips(block.props), level))
-                for item in block.content:
-                    if isinstance(item, ir.Note | ir.TextBox):
-                        blocks(item.content)
-            elif isinstance(block, ir.Table):
-                spans = [[(c.colspan, c.rowspan) for c in row.cells] for row in block.rows]
-                out.append(("table", spans, [row.header for row in block.rows]))
-                for row in block.rows:
-                    for cell in row.cells:
-                        blocks(cell.content)
-
-    blocks(document.body)
-    for section in document.sections():
-        for kind, parts in (*section.headers, *section.footers):
-            shown = kind == "default" or (
-                section.title_page if kind == "first" else document.settings.even_and_odd_headers
-            )
-            if shown:  # the parts Word does not show are not imported (and reported)
-                blocks(parts)
-    return out
+ALL_EXAMPLES = sorted(
+    str(p.relative_to(ROOT)).replace("\\", "/")
+    for p in (ROOT / "examples").rglob("*.wgx")
+    if "spike" not in p.parts and p.parent.name != "chapters"
+)
+MODES = pytest.mark.parametrize("keep_styles", [False, True], ids=["style-sheet", "keep-styles"])
 
 
-def _in_twips(props: PropertySet) -> dict[str, object]:
-    """Lengths as Word stores them (twips), so 1.02cm and 578 twips are the same."""
-
-    def value(v: object) -> object:
-        if isinstance(v, Length):
-            return v.in_twips
-        if isinstance(v, tuple):  # tab stops
-            stops = cast(tuple[TabStop, ...], v)
-            return tuple((t.position.in_twips, t.align, t.leader) for t in stops)
-        return v
-
-    return {name: value(v) for name, v in props.items()}
-
-
-def _looks(document: ir.Document) -> list[list[tuple[str, dict[str, object]]]]:
-    """For each body paragraph: its text in pieces of one effective run formatting (the
-    defaults, the paragraph style's chain, the character style's, then direct formatting),
-    whitespace left out."""
-    styles = {stored_name(s.name).lower(): s for s in document.styles}
-
-    def chain(name: str | None) -> PropertySet:
-        found: list[ir.Style] = []
-        while name is not None and (style := styles.get(stored_name(name).lower())) is not None:
-            if style in found:
-                break
-            found.append(style)
-            name = style.based_on
-        props = PropertySet(Target.RUN)
-        for style in reversed(found):
-            props = props.merged(style.run)
-        return props
-
-    legacy = PropertySet(Target.RUN, {"font": "Times New Roman", "size": "10pt"})
-    base = legacy.merged(document.default_run)
-    out: list[list[tuple[str, dict[str, object]]]] = []
-    for block in document.body:
-        if not isinstance(block, ir.Paragraph) or block.drop_cap is not None:
-            continue
-        paragraph = base.merged(chain(block.style or "Normal"))
-        pieces: list[tuple[str, dict[str, object]]] = []
-        for run in block.runs():
-            look = paragraph.merged(chain(run.style)).merged(run.props)
-            text, key = "".join(run.text.split()), _in_twips(look)
-            if not text:
-                continue
-            if pieces and pieces[-1][1] == key:
-                pieces[-1] = (pieces[-1][0] + text, key)
-            else:
-                pieces.append((text, key))
-        if pieces:
-            out.append(pieces)
-    return out
-
-
-def _same_shapes(docx: Path, folder: Path, **options: bool) -> None:
+def _comparison(docx: Path, folder: Path, **options: bool) -> Comparison:
     result = import_docx(docx, folder, **options)
-    assert (result.errors, result.difference) == (0, None)
-    compiled = compile_file(result.source).document
-    assert compiled is not None
-    document = read_docx(docx).document
-    original, rebuilt = _shapes(document), _shapes(compiled)
-    for index, (a, b) in enumerate(zip(original, rebuilt, strict=False)):
-        assert a == b, f"block {index}"
-    assert len(original) == len(rebuilt)
-    for index, (a, b) in enumerate(zip(_looks(document), _looks(compiled), strict=True)):
-        assert a == b, f"paragraph {index}"
+    assert result.errors == 0, (folder / f"{docx.stem}.diagnostics.txt").read_text("utf-8")
+    assert result.comparison is not None
+    return result.comparison
 
 
+@MODES
 @pytest.mark.parametrize("docx", CORPUS, ids=lambda p: p.stem)
-def test_sugar_keeps_the_structure(docx: Path, tmp_path: Path) -> None:
-    _same_shapes(docx, tmp_path)
+def test_the_corpus_compiles_to_what_it_was(docx: Path, keep_styles: bool, tmp_path: Path) -> None:
+    comparison = _comparison(docx, tmp_path, keep_styles=keep_styles)
+    assert comparison.same, comparison.render()
 
 
-@pytest.mark.parametrize("example", EXAMPLES)
-def test_sugar_keeps_the_structure_of_examples(example: str, tmp_path: Path) -> None:
+@MODES
+@pytest.mark.parametrize("example", ALL_EXAMPLES)
+def test_examples_compile_to_what_they_were(
+    example: str, keep_styles: bool, tmp_path: Path
+) -> None:
+    """.wgx -> .docx -> import -> .docx: the oracle on documents wordgenx wrote."""
     data, _ = build(Source.from_path(ROOT / example))
     assert data is not None
     docx = tmp_path / "original.docx"
     docx.write_bytes(data)
-    _same_shapes(docx, tmp_path / "import")
+    comparison = _comparison(docx, tmp_path / "import", keep_styles=keep_styles)
+    assert comparison.same, comparison.render()
+
+
+def test_the_comparison_names_what_differs() -> None:
+    heading = ir.Paragraph((ir.Run("Title"),), "Heading 1")
+    body = ir.Paragraph((ir.run("Text", bold=True),))
+    original = ir.Document(body=(heading, body))
+    changed = ir.Document(
+        body=(replace(heading, style="Heading 2"), ir.Paragraph((ir.Run("Text"),)))
+    )
+    comparison = compare(original, changed)
+    assert not comparison.same
+    assert comparison.text is None
+    assert comparison.blocks == (1, 2)
+    assert comparison.paragraphs == (1, 2)  # the heading looks the same either way
+    assert (
+        comparison.differences[0]
+        == "block 1: paragraph (heading 1): style heading 1 became heading 2"
+    )
+    assert "paragraph 2: text formatted differently: bold" in comparison.differences
+    assert "Blocks that match the original: 1 of 2." in comparison.render()
+
+
+def test_the_import_command_checks_the_result(tmp_path: Path) -> None:
+    docx = CORPUS_DIR / "tables.docx"
+    assert main(["import", str(docx), "-o", str(tmp_path / "a"), "--check"]) == 0
+    report = (tmp_path / "a" / "tables.import.txt").read_text("utf-8")
+    assert "Blocks that match the original: 20 of 20." in report
+    assert "Paragraphs whose text looks the same: 2 of 2." in report
 
 
 def test_a_link_without_the_hyperlink_look_stays_plain(tmp_path: Path) -> None:

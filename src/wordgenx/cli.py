@@ -218,7 +218,7 @@ def _inspect(path: str) -> int:
     return 0
 
 
-def _import(path: str, output: str | None, keep_styles: bool, sugar: bool) -> int:
+def _import(path: str, output: str | None, keep_styles: bool, sugar: bool, check: bool) -> int:
     from wordgenx.importer import import_docx  # the importer compiles; load it only here
 
     folder = Path(output) if output else Path(path).with_suffix("")
@@ -232,7 +232,10 @@ def _import(path: str, output: str | None, keep_styles: bool, sugar: bool) -> in
         return 1
     print(imported.report(), end="")
     print(f"wrote {imported.source} and its style sheet, pictures and report", file=sys.stderr)
-    return 1 if imported.errors else 0
+    if imported.errors:
+        return 1
+    # --check: the import must compile to what the original was
+    return 1 if check and not (imported.comparison and imported.comparison.same) else 0
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -287,6 +290,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         "-o", "--output", metavar="DIR", help="the folder (default: FILE without .docx)"
     )
     importer.add_argument(
+        "--check",
+        action="store_true",
+        help="fail unless the imported source compiles to what the original was",
+    )
+    importer.add_argument(
         "--commands-only",
         action="store_true",
         help="print commands only (\\p[style=...] rather than = headings, ...)",
@@ -299,7 +307,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
     if args.command == "import":
-        return _import(args.file, args.output, args.keep_styles, not args.commands_only)
+        return _import(args.file, args.output, args.keep_styles, not args.commands_only, args.check)
     if args.command == "build":
         return _build(args.file, args.output, args.template, args.emit_ir)
     if args.command == "check":

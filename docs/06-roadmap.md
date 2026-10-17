@@ -231,14 +231,27 @@ Steps, in order. Each stays simple; what turns out intrusive is reported as lost
    `style=none`; and paragraphs in tables in headers and footers took the Header and Footer styles. The private
    test document: the same structure (300 blocks) and look (every body paragraph); 30 headings are `=` lines, and
    `\font[…]` goes from 125 to 74.
-5. **The oracle.** `wordgenx import --check` compiles the imported source and compares it with the original: text,
-   block structure, paragraph styles and effective character formatting, reported as a share of paragraphs that match
-   and a list of differences. Round-trip tests on the examples (`.wgx → .docx → import → .docx`) keep it honest.
+5. [x] **The oracle.** `wordgenx import --check` compiles the imported source and compares it with the original:
+   text, block structure, paragraph styles and effective character formatting, reported as a share of paragraphs
+   that match and a list of differences. Round-trip tests on the examples (`.wgx → .docx → import → .docx`) keep it
+   honest.
+   *Status:* `wordgenx.importer.check` (moved out of step 4's tests) compares the text, the blocks (each
+   paragraph's style, formatting and list level, each table's spans and header rows), the effective run formatting
+   of each body paragraph (resolved with the original's styles when the source compiles into it with
+   `--keep-styles`) and the counts of sections, notes, comments, pictures and text boxes. Every import reports
+   "Blocks that match the original: N of M", the same for paragraphs, and the first differences; `--check` makes
+   any difference fail the command. Known losses are not counted (drop caps, a regenerated TOC, an INDEX that
+   comes back as its field, headers Word does not show). Layout is Word's and is not compared. The tests run it on
+   the six corpus documents and all 13 examples, in both modes.
 
 - **Exit:** the user's real test document imports with its text complete, its structure (headings, lists, tables,
   sections, notes) and most of its formatting, the report lists what was lost, and the recompiled document is checked
   in Word. That document is private: it is only read locally, and neither it nor its imported output is committed or
   published; committed tests use the public corpus.
+  *Status: met.* Locally, in both modes: it compiles, its text is the original's, 300 of 300 blocks and 46 of 46
+  body paragraphs match, and Word lays out 17 pages, as for the original, with no field errors. The report lists
+  what was lost (repeated spaces, two even-page parts Word does not show, text effects, emphasis marks, objects kept
+  as pictures).
 
 Tooling (language server, editor support, `watch`, PDF export and `finalize`, a website) waits until the language has
 settled: see [tooling ideas](ideas/tooling.md).

@@ -45,6 +45,7 @@ uv run wordgenx inspect examples/hello.docx          # read a .docx back, report
 uv run wordgenx import examples/hello.docx -o hello  # turn a .docx into source: .wgx, .wgxs, pictures, report
 uv run wordgenx import report.docx --keep-styles    # ... compiling into the original's styles as a template
 uv run wordgenx import report.docx --commands-only  # ... with commands only, no sugar (level L1)
+uv run wordgenx import report.docx --check          # ... failing unless it compiles to what the original was
 ```
 
 Golden snapshots (`tests/golden/expected/`) record the exact XML of each test document. After an intended output
