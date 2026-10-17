@@ -202,3 +202,16 @@ def test_nested_fields_print_in_field_braces(tmp_path: Path) -> None:
     nested = [part for part in field.instruction if isinstance(part, ir.Field)]
     assert [part.code.strip() for part in nested] == ["NUMPAGES"]
     assert " ".join(field.code.split()) == "={ NUMPAGES }-1"  # spacing aside, the same code
+
+
+def test_custom_properties_round_trip(tmp_path: Path) -> None:
+    custom = (
+        ("project", "WX-001"),
+        ("N° ISO", "A12"),
+        ("count", 3),
+        ("code", "7"),
+        ("final", True),
+    )
+    source, compiled = imported(ir.Document(meta=ir.Meta(custom=custom)), tmp_path)
+    assert 'custom."N° ISO"="A12"' in source
+    assert compiled.meta.custom == custom

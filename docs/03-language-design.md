@@ -89,6 +89,7 @@ the HSL luminance), so other readers show the same colour.
   subject  = "Compiler design",
   keywords = (docx, compiler),
   custom.project-code = "WX-001",   % custom document property (text; bare 3, 0.5, true: number, yes/no)
+  custom."N° ISO" = "A12",          % a name that is not a word is quoted after the dot
 ]
 
 \settings[even-odd-headers, update-fields-on-open=on]
@@ -869,6 +870,8 @@ The parser (`wordgenx.syntax`) fixes these details that the sections above leave
   is the command `product-based`. Write `\product{}-based` instead.
 - **Options and body must touch the name.** `\b{x}` is a command with a body. `\b {x}` is the command `\b`, a space,
   then a stray `{` (an error). `[` must directly follow the name, and `{` must directly follow the name or `]`.
+- **Option names** start with a letter and hold letters, digits, `_`, `.` and `-`. A name that ends in `.` may
+  continue with a quoted string touching it, for names that are not words: `custom."N° ISO"="A12"`.
 - **Bare `{` in text is an error.** Escape it as `\{`. `\#{` is a literal `#{`.
 - **`\define` and `\let`** are the only forms with two brace groups: `\define{name}[params]{body}`.
 - **Labels** match `[A-Za-z][A-Za-z0-9_-]*(:[A-Za-z0-9_-]+)*`, e.g. `fig:arch`, `cl:term`. Trailing sentence punctuation is

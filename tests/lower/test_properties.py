@@ -119,6 +119,24 @@ def test_custom_properties_are_typed_by_their_form() -> None:
     )
 
 
+def test_custom_property_names_that_are_not_words_are_quoted() -> None:
+    doc = compiled(
+        '\\meta[custom."N° ISO" = "A12", custom."Say \\"hi\\"" = 2]\n\n'
+        'ISO: \\field{DOCPROPERTY "N° ISO"}'
+    )
+    assert doc.meta.custom == (("N° ISO", "A12"), ('Say "hi"', 2))
+    (paragraph,) = doc.all_paragraphs()
+    field = paragraph.content[-1]
+    assert isinstance(field, ir.Field)
+    assert field.result == "A12"
+
+
+def test_a_quoted_option_name_needs_a_value() -> None:
+    result = compile_source('\\meta[custom."N° ISO"]\n\nx')
+    assert result.document is None
+    assert "a quoted option name needs a value" in result.render_diagnostics()
+
+
 def test_custom_properties_part() -> None:
     package = built(
         '\\meta[custom.project = "WX-001", custom.revision = 3, custom.approved = true]\n\nx'

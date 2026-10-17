@@ -879,11 +879,28 @@ class Parser:
         if first is None:
             return None
         node.children.append(first)
+        quoted = (
+            isinstance(first, Token)
+            and first.kind is K.BARE
+            and first.text.endswith(".")
+            and self.char() == '"'
+        )
+        if quoted:  # custom."N° ISO"=...: a name that is not a word, quoted after the dot
+            node.children.append(self.string())
         save = self.pos
         spaces: list[Node | Token] = []
         self.whitespace(spaces)
         if self.char() != "=":
             self.pos = save
+            if quoted:
+                self.report(
+                    error(
+                        Code.INVALID_OPTION,
+                        "a quoted option name needs a value",
+                        first.span,
+                        help='write it as custom."N° ISO"="A12"',
+                    )
+                )
             return node
         if not (isinstance(first, Token) and first.kind is K.BARE and KEY_RE.fullmatch(first.text)):
             self.report(

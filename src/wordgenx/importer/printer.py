@@ -200,11 +200,10 @@ class Printer:
         if meta.keywords:
             fields.append("keywords=(" + ", ".join(quote(k) for k in meta.keywords) + ")")
         for name, value in meta.custom:
-            if not _CUSTOM_NAME_RE.fullmatch(name):
-                self.lost["custom property with a name that is not a word"] += 1
-                continue
-            text = quote(value) if isinstance(value, str) else str(value).lower()
-            fields.append(f"custom.{name}={text}")
+            key = name if _CUSTOM_NAME_RE.fullmatch(name) else _string(name)
+            # Text is always quoted: a bare 3 or true would be a number or yes/no property.
+            text = _string(value) if isinstance(value, str) else str(value).lower()
+            fields.append(f"custom.{key}={text}")
         if fields:
             out.append("\\meta[\n" + "".join(f"  {f},\n" for f in fields) + "]")
 

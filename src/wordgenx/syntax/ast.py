@@ -465,6 +465,18 @@ def _option_items(node: CstNode) -> tuple[Option, ...]:
         if isinstance(first, Token) and first.kind is K.HASH_LABEL:
             items.append(Option("id", BareValue(first.text[1:], span=first.span), span=child.span))
             continue
+        if (
+            isinstance(first, Token)
+            and first.kind is K.BARE
+            and len(parts) >= 2
+            and isinstance(parts[1], Token)
+            and parts[1].kind is K.STRING
+        ):  # custom."N° ISO"=...: the quoted part is the end of the name
+            name = _value(parts[1])
+            assert isinstance(name, StringValue)
+            if len(parts) >= 4 and _is_equals(parts[2]):
+                items.append(Option(first.text + name.text, _value(parts[3]), span=child.span))
+            continue  # without a value: already reported
         has_key = len(parts) >= 2 and isinstance(parts[1], Token) and parts[1].kind is K.EQUALS
         if has_key:
             if not (isinstance(first, Token) and first.kind is K.BARE):
@@ -568,3 +580,7 @@ def _quote(text: str) -> str:
 
 def _snake(name: str) -> str:
     return "".join("_" + c.lower() if c.isupper() and i else c.lower() for i, c in enumerate(name))
+
+
+def _is_equals(element: CstNode | Token) -> bool:
+    return isinstance(element, Token) and element.kind is K.EQUALS
