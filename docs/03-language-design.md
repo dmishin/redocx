@@ -140,7 +140,7 @@ on automatic hyphenation (`suppress-hyphenation` keeps a paragraph out of it).
 | `` `code` `` | inline code (character style `Code`) | `\code{code}` |
 | `\m{x^2}` | inline math (there is no sugar; `$` is literal) | `\m{x^2}` |
 | `<https://…>` | autolink | `\url{https://…}` (string body) |
-| `[text](url)` | hyperlink | `\link[to="url"]{text}`; `to="#name"` links to a bookmark in the document |
+| `[text](url)` | hyperlink | `\link[to="url"]{text}`; `to="#name"` links to a bookmark in the document; `style=none` keeps the text's own look (no Hyperlink style) |
 | `@label` | cross-reference (§3.11) | `\ref{label}` |
 
 **Flanking rules.** `*` and `_` open emphasis only at a word start and close only at a word end, so `5 * 3`,

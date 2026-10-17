@@ -211,10 +211,26 @@ Steps, in order. Each stays simple; what turns out intrusive is reported as lost
    original without its body (and without the final section's header references) as `doc.template.docx`, and the
    source compiles into it with no style sheet: templates now know unnamed lists by the names the reader gives
    them ("List 3"). The private test document comes back at its 17 pages either way.
-4. **Clean up and sugar (L2).** Merge Word's run soup into runs that differ in effective formatting, drop proofing
-   and revision-id noise, and use the language's own forms where the result compiles to the same thing: `=`
-   headings, `-` and `1.` lists, `*strong*`/`_emph_`, pipe tables, `{#label}` and `@label` from bookmarks and REF
-   fields, `\toc`, captions from SEQ fields.
+4. [x] **Clean up and sugar (L2).** Merge Word's run soup into runs that differ in effective formatting, drop
+   proofing and revision-id noise, and use the language's own forms where the result compiles to the same thing:
+   `=` headings, `-` and `1.` lists, `*strong*`/`_emph_`, pipe tables, `{#label}` and `@label` from bookmarks and
+   REF fields, `\toc`, captions from SEQ fields.
+   *Status:* the import prints sugar by default (`--commands-only` gives L1). Direct formatting that repeats what
+   the paragraph's style gives is left out (outside tables, whose styles format text too), and runs that end up
+   alike merge. Headings without direct formatting are `=` lines; bold, italic, underline, strike, superscript,
+   subscript and hidden text are `\b{…}` … `\hidden{…}`; the Strong and Emphasis styles are `*…*` and `_…_`
+   where the words around allow it. Table rows of plain one-paragraph cells are pipe rows (`header-rows=N` for the
+   leading header rows), inside `\table[…]`. `importer.labels` finds the bookmarks REF and PAGEREF fields point
+   at: one around a whole heading becomes `{#sec:…}`, and in a Caption-style paragraph written as `Figure
+   {SEQ Figure}: text` the caption becomes `\caption[Figure, id=fig:…]{text}`; the fields become `@label`,
+   `\ref[form=text|full|number]{…}` and `\pageref{…}`, and hidden `_Ref` bookmarks nothing points at are dropped.
+   Lists were already `\list[Name]{1. …}`, the TOC `\toc`. Each form is used only where it compiles to the same
+   thing: the tests compare, for the corpus and the examples, every paragraph's style, formatting and list level,
+   every table's spans and header rows, and the effective formatting of every run. They found two step-2 bugs,
+   now fixed: links without the Hyperlink style (wordgenx's citations) came back blue, so `\link` takes
+   `style=none`; and paragraphs in tables in headers and footers took the Header and Footer styles. The private
+   test document: the same structure (300 blocks) and look (every body paragraph); 30 headings are `=` lines, and
+   `\font[…]` goes from 125 to 74.
 5. **The oracle.** `wordgenx import --check` compiles the imported source and compares it with the original: text,
    block structure, paragraph styles and effective character formatting, reported as a share of paragraphs that match
    and a list of differences. Round-trip tests on the examples (`.wgx → .docx → import → .docx`) keep it honest.

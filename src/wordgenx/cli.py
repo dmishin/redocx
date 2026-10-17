@@ -218,12 +218,12 @@ def _inspect(path: str) -> int:
     return 0
 
 
-def _import(path: str, output: str | None, keep_styles: bool) -> int:
+def _import(path: str, output: str | None, keep_styles: bool, sugar: bool) -> int:
     from wordgenx.importer import import_docx  # the importer compiles; load it only here
 
     folder = Path(output) if output else Path(path).with_suffix("")
     try:
-        imported = import_docx(path, folder, keep_styles=keep_styles)
+        imported = import_docx(path, folder, keep_styles=keep_styles, sugar=sugar)
     except OSError as e:
         print(f"error: cannot read {path}: {e.strerror}", file=sys.stderr)
         return 1
@@ -287,6 +287,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         "-o", "--output", metavar="DIR", help="the folder (default: FILE without .docx)"
     )
     importer.add_argument(
+        "--commands-only",
+        action="store_true",
+        help="print commands only (\\p[style=...] rather than = headings, ...)",
+    )
+    importer.add_argument(
         "--keep-styles",
         action="store_true",
         help="keep the original's styles, theme and lists exactly: compile into it as a template",
@@ -294,7 +299,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
     if args.command == "import":
-        return _import(args.file, args.output, args.keep_styles)
+        return _import(args.file, args.output, args.keep_styles, not args.commands_only)
     if args.command == "build":
         return _build(args.file, args.output, args.template, args.emit_ir)
     if args.command == "check":

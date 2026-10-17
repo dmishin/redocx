@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -19,13 +20,16 @@ from wordgenx.importer import import_docx, visible_text
 from wordgenx.importer.printer import display_name, print_document
 from wordgenx.importer.values import length, line_spacing
 from wordgenx.lower.builtins import BUILTIN_STYLES
+from wordgenx.ooxml.reader import read_docx
+from wordgenx.ooxml.style_names import stored_name
 from wordgenx.ooxml.writer import to_docx_bytes
-from wordgenx.props import para_props, run_props
+from wordgenx.props import PropertySet, Target, para_props, run_props
 from wordgenx.syntax import Source
-from wordgenx.values import Border, Color, Length, LineSpacing
+from wordgenx.values import Border, Color, Length, LineSpacing, TabStop
 
 ROOT = Path(__file__).resolve().parents[2]
-CORPUS = sorted((ROOT / "tests" / "corpus").glob("*.docx"))
+CORPUS_DIR = ROOT / "tests" / "corpus"
+CORPUS = sorted(CORPUS_DIR.glob("*.docx"))
 EXAMPLES = [
     "examples/tables.wgx",
     "examples/index.wgx",
@@ -142,9 +146,10 @@ def test_lists_print_as_named_lists(tmp_path: Path) -> None:
 def test_internal_links_and_bookmarks(tmp_path: Path) -> None:
     body = (
         ir.Paragraph((ir.BookmarkStart("target"), ir.Run("Here"), ir.BookmarkEnd("target"))),
-        ir.Paragraph((ir.Hyperlink("", (ir.Run("back"),), anchor="target"),)),
+        ir.Paragraph((ir.Hyperlink("", (ir.Run("back", style="Hyperlink"),), anchor="target"),)),
     )
-    source, compiled = imported(ir.Document(body=body), tmp_path)
+    hyperlink = ir.character_style("Hyperlink", underline="single")
+    source, compiled = imported(ir.Document(body=body, styles=(hyperlink,)), tmp_path)
     assert '\\link[to="#target"]{back}' in source
     links = [i for p in compiled.body if isinstance(p, ir.Paragraph) for i in p.content]
     assert ir.Hyperlink("", (ir.Run("back", style="Hyperlink"),), anchor="target") in links
@@ -155,7 +160,7 @@ def test_internal_links_and_bookmarks(tmp_path: Path) -> None:
 def test_values_are_written_in_round_units() -> None:
     assert length(Length.twips(1440), "cm") == "2.54cm"
     assert length(Length.twips(567), "cm") == "1cm"
-    assert length(Length.twips(708), "cm") == "1.25cm"
+    assert length(Length.twips(708), "cm") == "1.249cm"  # what Word stores for 1.25cm
     assert length(Length.pt(11)) == "11pt"
     assert length(Length(3008 * 635), "size") == "5.31cm"
     assert line_spacing(LineSpacing.lines("1.1583333333")) == "1.16"
@@ -258,3 +263,199 @@ def test_keep_styles_compiles_into_the_original(docx: Path, tmp_path: Path) -> N
     source = result.source.read_text("utf-8")
     assert source.startswith(f'\\document[template="{docx.stem}.template.docx"')
     assert not (tmp_path / f"{docx.stem}.wgxs").exists()  # the template has the styles and lists
+
+
+def _shapes(document: ir.Document) -> list[tuple[object, ...]]:
+    """Each paragraph's style, formatting and list level, and each table's spans and header
+    rows, in order (drop caps and generated blocks such as the TOC left out)."""
+    out: list[tuple[object, ...]] = []
+
+    def blocks(items: tuple[ir.Block, ...]) -> None:
+        for block in items:
+            only = (
+                block.content[0]
+                if isinstance(block, ir.Paragraph) and len(block.content) == 1
+                else None
+            )
+            if isinstance(block, ir.FieldBlock) or (
+                isinstance(only, ir.Field) and only.code.split()[:1] == ["INDEX"]
+            ):
+                out.append(("field block",))  # an INDEX block comes back as its field
+            elif isinstance(block, ir.Paragraph) and block.drop_cap is None:
+                style = stored_name(block.style or "Normal").lower()
+                level = block.list_item.level if block.list_item else None
+                out.append(("p", style, _in_twips(block.props), level))
+                for item in block.content:
+                    if isinstance(item, ir.Note | ir.TextBox):
+                        blocks(item.content)
+            elif isinstance(block, ir.Table):
+                spans = [[(c.colspan, c.rowspan) for c in row.cells] for row in block.rows]
+                out.append(("table", spans, [row.header for row in block.rows]))
+                for row in block.rows:
+                    for cell in row.cells:
+                        blocks(cell.content)
+
+    blocks(document.body)
+    for section in document.sections():
+        for kind, parts in (*section.headers, *section.footers):
+            shown = kind == "default" or (
+                section.title_page if kind == "first" else document.settings.even_and_odd_headers
+            )
+            if shown:  # the parts Word does not show are not imported (and reported)
+                blocks(parts)
+    return out
+
+
+def _in_twips(props: PropertySet) -> dict[str, object]:
+    """Lengths as Word stores them (twips), so 1.02cm and 578 twips are the same."""
+
+    def value(v: object) -> object:
+        if isinstance(v, Length):
+            return v.in_twips
+        if isinstance(v, tuple):  # tab stops
+            stops = cast(tuple[TabStop, ...], v)
+            return tuple((t.position.in_twips, t.align, t.leader) for t in stops)
+        return v
+
+    return {name: value(v) for name, v in props.items()}
+
+
+def _looks(document: ir.Document) -> list[list[tuple[str, dict[str, object]]]]:
+    """For each body paragraph: its text in pieces of one effective run formatting (the
+    defaults, the paragraph style's chain, the character style's, then direct formatting),
+    whitespace left out."""
+    styles = {stored_name(s.name).lower(): s for s in document.styles}
+
+    def chain(name: str | None) -> PropertySet:
+        found: list[ir.Style] = []
+        while name is not None and (style := styles.get(stored_name(name).lower())) is not None:
+            if style in found:
+                break
+            found.append(style)
+            name = style.based_on
+        props = PropertySet(Target.RUN)
+        for style in reversed(found):
+            props = props.merged(style.run)
+        return props
+
+    legacy = PropertySet(Target.RUN, {"font": "Times New Roman", "size": "10pt"})
+    base = legacy.merged(document.default_run)
+    out: list[list[tuple[str, dict[str, object]]]] = []
+    for block in document.body:
+        if not isinstance(block, ir.Paragraph) or block.drop_cap is not None:
+            continue
+        paragraph = base.merged(chain(block.style or "Normal"))
+        pieces: list[tuple[str, dict[str, object]]] = []
+        for run in block.runs():
+            look = paragraph.merged(chain(run.style)).merged(run.props)
+            text, key = "".join(run.text.split()), _in_twips(look)
+            if not text:
+                continue
+            if pieces and pieces[-1][1] == key:
+                pieces[-1] = (pieces[-1][0] + text, key)
+            else:
+                pieces.append((text, key))
+        if pieces:
+            out.append(pieces)
+    return out
+
+
+def _same_shapes(docx: Path, folder: Path, **options: bool) -> None:
+    result = import_docx(docx, folder, **options)
+    assert (result.errors, result.difference) == (0, None)
+    compiled = compile_file(result.source).document
+    assert compiled is not None
+    document = read_docx(docx).document
+    original, rebuilt = _shapes(document), _shapes(compiled)
+    for index, (a, b) in enumerate(zip(original, rebuilt, strict=False)):
+        assert a == b, f"block {index}"
+    assert len(original) == len(rebuilt)
+    for index, (a, b) in enumerate(zip(_looks(document), _looks(compiled), strict=True)):
+        assert a == b, f"paragraph {index}"
+
+
+@pytest.mark.parametrize("docx", CORPUS, ids=lambda p: p.stem)
+def test_sugar_keeps_the_structure(docx: Path, tmp_path: Path) -> None:
+    _same_shapes(docx, tmp_path)
+
+
+@pytest.mark.parametrize("example", EXAMPLES)
+def test_sugar_keeps_the_structure_of_examples(example: str, tmp_path: Path) -> None:
+    data, _ = build(Source.from_path(ROOT / example))
+    assert data is not None
+    docx = tmp_path / "original.docx"
+    docx.write_bytes(data)
+    _same_shapes(docx, tmp_path / "import")
+
+
+def test_a_link_without_the_hyperlink_look_stays_plain(tmp_path: Path) -> None:
+    """wordgenx's own citations link to their entries without the Hyperlink style."""
+    body = (
+        ir.Paragraph((ir.BookmarkStart("entry"), ir.Run("Entry"), ir.BookmarkEnd("entry"))),
+        ir.Paragraph((ir.Hyperlink("", (ir.Run("(Smith, 2020)"),), anchor="entry"),)),
+    )
+    source, compiled = imported(ir.Document(body=body), tmp_path)
+    assert '\\link[to="#entry", style=none]{(Smith, 2020)}' in source
+    links = [i for p in compiled.body if isinstance(p, ir.Paragraph) for i in p.content]
+    assert ir.Hyperlink("", (ir.Run("(Smith, 2020)"),), anchor="entry") in links
+
+
+# --- sugar (M6 step 4) ---------------------------------------------------------------------
+
+
+def _source(name: str, tmp_path: Path, **options: bool) -> str:
+    return import_docx(CORPUS_DIR / f"{name}.docx", tmp_path, **options).source.read_text("utf-8")
+
+
+def test_headings_captions_and_references_use_their_sugar(tmp_path: Path) -> None:
+    source = _source("references", tmp_path)
+    assert "= Introduction {#sec:introduction}" in source
+    assert "\\caption[Figure, id=fig:the-logo]{The logo}" in source
+    assert (
+        "See @fig:the-logo on page \\pageref{fig:the-logo}, and the section @sec:introduction."
+        in source
+    )
+    assert "_Ref" not in source  # the bookmarks became labels
+
+
+def test_simple_formatting_and_pipe_tables_use_their_sugar(tmp_path: Path) -> None:
+    text = _source("text", tmp_path / "text")
+    assert "Plain, \\b{bold}, \\i{italic}, \\u{underlined}, \\s{struck}," in text
+    tables = _source("tables", tmp_path / "tables")
+    assert "header-rows=1]{\n  | Item | Q1 | Q2 |\n  | Revenue | 10.5 | 12.25 |\n  \\row{" in tables
+
+
+def test_commands_only_prints_no_sugar(tmp_path: Path) -> None:
+    source = _source("references", tmp_path, sugar=False)
+    assert '\\p[style="Heading 1"]{\\raw[ooxml]{<w:bookmarkStart' in source  # no labels
+    assert "= Introduction" not in source
+    assert "@" not in source.replace("\\@", "")
+
+
+def test_strong_and_emphasis_where_the_words_allow(tmp_path: Path) -> None:
+    runs = (
+        ir.Run("Very "),
+        ir.Run("bold", style="Strong"),
+        ir.Run(" and "),
+        ir.Run("it", style="Emphasis"),
+        ir.Run("alic."),
+    )
+    styles = (ir.character_style("Strong", bold=True), ir.character_style("Emphasis", italic=True))
+    source, compiled = imported(ir.Document(body=(ir.Paragraph(runs),), styles=styles), tmp_path)
+    assert "Very *bold* and \\emph{it}alic." in source  # "_it_alic" would not close
+    (paragraph,) = compiled.body
+    assert isinstance(paragraph, ir.Paragraph)
+    assert [(r.text, r.style) for r in paragraph.runs()] == [
+        ("Very ", None),
+        ("bold", "Strong"),
+        (" and ", None),
+        ("it", "Emphasis"),
+        ("alic.", None),
+    ]
+
+
+def test_formatting_the_style_gives_is_left_out(tmp_path: Path) -> None:
+    normal = ir.paragraph_style("Normal", run=run_props(font="Arial", size="10pt"))
+    runs = (ir.run("same", font="Arial"), ir.run(" bigger", font="Arial", size="12pt"))
+    source, _ = imported(ir.Document(body=(ir.Paragraph(runs),), styles=(normal,)), tmp_path)
+    assert "same\\font[size=12pt]{ bigger}" in source

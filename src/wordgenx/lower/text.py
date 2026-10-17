@@ -332,7 +332,13 @@ def styled(lw: Lowering, command: ast.Command, args: Args, fmt: Format) -> list[
 def link(lw: Lowering, command: ast.Command, args: Args, fmt: Format) -> list[Piece]:
     url = args.text("to")
     if url is not None:
-        fmt = lw.with_link(fmt, url, command.span)
+        linked = lw.with_link(fmt, url, command.span)
+        style = args.text("style")
+        if style == "none":  # a link that looks like the text around it
+            linked = replace(linked, style=fmt.style)
+        elif style is not None:
+            linked = lw.with_style(replace(linked, style=fmt.style), style, args.span_of("style"))
+        fmt = linked
     return lw.body_inlines(command, fmt)
 
 

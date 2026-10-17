@@ -425,7 +425,9 @@ _command(
 )  # fmt: skip
 _command(
     "link", INLINE, "A hyperlink.",
-    _o("to", TEXT, "the address", required=True), body_required=True,
+    _o("to", TEXT, "the address", required=True),
+    _o("style", TEXT, "a character style for the text, or none (default: Hyperlink)"),
+    body_required=True,
 )  # fmt: skip
 _command(
     "url", INLINE, "A hyperlink showing its address.",

@@ -12,7 +12,6 @@ from wordgenx.values import Border, Color, InvalidValueError, Length, LineSpacin
 _BARE_RE = re.compile(r"[A-Za-z0-9#.%+-]+(\([0-9]+%\))?")
 _NEEDS_QUOTES = frozenset({"on", "off", "true", "false", "yes", "no", "none"})
 _POINT = 12_700
-_TWIP = 635
 
 
 def quote(text: str) -> str:
@@ -30,9 +29,9 @@ def number(value: Decimal) -> str:
 
 def length(value: Length, prefer: str = "pt") -> str:
     """A length in round units: points for font sizes and spacing (`prefer="pt"`),
-    centimetres for page and indent measures (`prefer="cm"`, within a twip of the value),
-    and centimetres to two places for the sizes of tables, pictures and boxes
-    (`prefer="size"`, within 0.05mm)."""
+    centimetres for page and indent measures (`prefer="cm"`: the shortest that gives the
+    twips Word stores), and centimetres to two places for the sizes of tables, pictures and
+    boxes (`prefer="size"`, within 0.05mm)."""
     emu = value.emu
     if emu == 0:
         return "0"
@@ -40,9 +39,9 @@ def length(value: Length, prefer: str = "pt") -> str:
         return number(Decimal(emu) / _POINT) + "pt"
     if prefer == "size":
         return number(round(Decimal(emu) / 360_000, 2)) + "cm"
-    for unit, size, places in (("cm", 360_000, 2), ("in", 914_400, 2)):
+    for unit, size, places in (("cm", 360_000, 2), ("in", 914_400, 2), ("cm", 360_000, 3)):
         rounded = round(Decimal(emu) / size, places)
-        if abs(int(rounded * size) - emu) <= _TWIP:
+        if Length.of(rounded, unit).in_twips == value.in_twips:
             return number(rounded) + unit
     return number(round(Decimal(emu) / _POINT, 2)) + "pt"
 

@@ -58,10 +58,13 @@ class Imported:
         return "\n".join(lines) + "\n"
 
 
-def import_docx(docx: str | Path, out_dir: str | Path, *, keep_styles: bool = False) -> Imported:
+def import_docx(
+    docx: str | Path, out_dir: str | Path, *, keep_styles: bool = False, sugar: bool = True
+) -> Imported:
     """Import `docx` into the folder `out_dir` (created when missing). With `keep_styles`,
     the original without its body becomes `doc.template.docx`, which the source compiles
-    into: its styles, theme, lists, defaults and settings are kept as they are."""
+    into: its styles, theme, lists, defaults and settings are kept as they are. Without
+    `sugar`, the source has commands only (headings as \\p[style=...], ...)."""
     docx, folder = Path(docx), Path(out_dir)
     data = docx.read_bytes()
     result = read_docx(data)
@@ -72,7 +75,7 @@ def import_docx(docx: str | Path, out_dir: str | Path, *, keep_styles: bool = Fa
         template = folder / f"{stem}.template.docx"
         template.write_bytes(styles_template(data))
         kept = KeptStyles(template.name, frozenset(load_template(template).lists))
-    printed = print_document(result.document, f"{stem}.wgxs", kept)
+    printed = print_document(result.document, f"{stem}.wgxs", kept, sugar=sugar)
     source = folder / f"{stem}.wgx"
     source.write_bytes(printed.source.encode("utf-8"))
     if printed.stylesheet:

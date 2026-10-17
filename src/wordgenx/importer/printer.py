@@ -20,6 +20,7 @@ from decimal import Decimal
 
 from wordgenx import ir
 from wordgenx.commands.builtin import NOTE_FORMATS, NOTE_POSITIONS, NOTE_RESTARTS, PAGE_SIZES
+from wordgenx.importer.labels import HIDDEN, Caption, Labels, analyse
 from wordgenx.importer.values import (
     border,
     color,
@@ -49,7 +50,7 @@ _DISPLAY = {name.lower(): name for name in BUILTIN_STYLES}
 _PART_NAMES = {kind: name for name, kind in reversed(TABLE_PARTS.items())}
 _BAND_NAMES = {kind: (name, i) for name, kinds in BANDS.items() for i, kind in enumerate(kinds)}
 _CUSTOM_NAME_RE = re.compile(r"[A-Za-z][A-Za-z0-9_-]*")
-_HIDDEN_BOOKMARKS = ("_GoBack", "_Toc")
+_HIDDEN_BOOKMARKS = HIDDEN
 _RAW_BOOKMARK_IDS = 100_000
 """Bookmarks kept as raw XML count from here, clear of the ids wordgenx writes."""
 
@@ -79,14 +80,36 @@ class _Tok:
     text: str
     bare: bool = False
     """A command without options or body: needs `{}` before a letter, digit, `-` or `[`."""
+    sugar: str | None = None
+    """A shorter form (`*strong*`, `@label`) used where the text around it allows."""
+    kind: str = ""
+    """emphasis | ref: what the text around the sugar must allow."""
+
+
+_LABEL_CHAR_RE = re.compile(r"[A-Za-z0-9_:-]")
+
+
+def _sugar_fits(kind: str, before: str, after: str) -> bool:
+    """`*x*` opens at a word start and closes at a word end; `@label` follows a space or
+    an opening bracket, and is not followed by more label characters."""
+    if kind == "emphasis":
+        return not before[-1:].isalnum() and not after[:1].isalnum() and after[:1] not in "*_"
+    return (not before or before[-1] in " \t([{\"'") and not _LABEL_CHAR_RE.match(after[:1])
 
 
 def _join(tokens: Sequence[_Tok]) -> str:
+    texts = [tok.text for tok in tokens]
+    for i, tok in enumerate(tokens):  # sugar where it reads the same way
+        if tok.sugar is not None:
+            before = "".join(texts[:i])
+            after = "".join(texts[i + 1 : i + 2])
+            if _sugar_fits(tok.kind, before, after):
+                texts[i] = tok.sugar
     out: list[str] = []
     for i, tok in enumerate(tokens):
-        out.append(tok.text)
+        out.append(texts[i])
         if tok.bare and i + 1 < len(tokens):
-            nxt = tokens[i + 1].text[:1]
+            nxt = texts[i + 1][:1]
             if nxt.isalnum() or nxt in "-[":
                 out.append("{}")
     return "".join(out)
@@ -142,11 +165,24 @@ def _date(moment: datetime) -> str:
 
 class Printer:
     def __init__(
-        self, document: ir.Document, stylesheet_name: str, template: KeptStyles | None = None
+        self,
+        document: ir.Document,
+        stylesheet_name: str,
+        template: KeptStyles | None = None,
+        sugar: bool = True,
     ) -> None:
         self.doc = document
         self.sheet_name = stylesheet_name
         self.template = template
+        self.sugar = sugar
+        self.labels = analyse(document) if sugar else Labels()
+        self.table_depth = 0
+        self.part_style: str | None = None
+        """While printing a header or footer: its style, which the lowering gives every
+        paragraph there without one (in tables and text boxes too)."""
+        self.run_base: PropertySet | None = None
+        """While printing a paragraph's text: the run formatting its style gives (direct
+        formatting that repeats it is left out). None: everything is printed."""
         self.files: dict[str, bytes] = {}
         self.media: dict[str, str] = {}
         """Content hash -> file name."""
@@ -324,7 +360,12 @@ class Printer:
                     self.lost[f"even-page {family} without odd and even headers"] += 1
                     continue
                 arg = "" if kind == "default" else f"[{kind}]"
-                out.append(f"\\{family}{arg}{{{self.body(blocks, default_style=family)}}}")
+                self.part_style = family  # in its tables too: the lowering styles them all
+                try:
+                    body = self.body(blocks, default_style=family)
+                finally:
+                    self.part_style = None
+                out.append(f"\\{family}{arg}{{{body}}}")
         return "\n".join(out)
 
     @staticmethod
@@ -423,6 +464,8 @@ class Printer:
         self, p: ir.Paragraph, default_style: str | None = None, drop: ir.Paragraph | None = None
     ) -> str:
         style = self._style(p.style, default_style)
+        if (caption := self.labels.captions.get(id(p))) is not None:
+            return self.caption(caption)
         content = p.content
         opts: list[str] = []
         if drop is not None:
@@ -434,15 +477,22 @@ class Printer:
                 f"drop-cap=(lines={lines}, in-margin)" if drop.drop_cap.in_margin
                 else f"drop-cap={lines}"
             )  # fmt: skip
-        text = self.inline(content)
-        if style is not None and p.unnumbered and (m := _HEADING_RE.fullmatch(style)):
+        text = self.inline(content, self._run_base(p.style or default_style))
+        heading = _HEADING_RE.fullmatch(style) if style is not None else None
+        label = self.labels.headings.get(id(p))
+        tail = f" {{#{label}}}" if label else ""
+        if heading is not None and p.unnumbered:
             if p.props or opts:
                 self.lost["formatting of an unnumbered heading"] += 1
-            return "=" * int(m.group(1)) + "* " + text
+            return "=" * int(heading.group(1)) + "* " + text + tail
         if p.unnumbered:
             self.lost["numbering turned off on a paragraph"] += 1
+        if self.sugar and heading and not p.props and not opts and text.strip():
+            return "=" * int(heading.group(1)) + " " + text + tail
         if style is not None:
             opts.insert(0, f"style={quote(style)}")
+        if label is not None:
+            opts.append(f"id={label}")
         opts.extend(options(Target.PARAGRAPH, p.props))
         if content and all(isinstance(i, ir.Break) for i in content) and not opts:
             return text
@@ -520,8 +570,29 @@ class Printer:
         opts.extend(options(Target.TABLE, table.props))
         if table.anchor is not None:
             opts.extend(self._anchor(table.anchor, table=True))
+        self.table_depth += 1
+        try:
+            rows = self._rows(table, opts)
+        finally:
+            self.table_depth -= 1
+        return f"\\table{_opts(opts)}{{\n" + _indent("\n".join(rows), INDENT) + "\n}"
+
+    def _rows(self, table: ir.Table, opts: list[str]) -> list[str]:
+        """The rows: as pipe rows (`| a | b |`) where every cell is plain text, else as
+        \\row{\\cell{…} …}. Leading header rows become `header-rows=N`."""
+        leading = next((i for i, row in enumerate(table.rows) if not row.header), len(table.rows))
+        pipes = [self._pipe_row(row) if self.sugar else None for row in table.rows]
+        headers = leading if all(pipes[:leading]) else 0
+        if headers:
+            opts.insert(
+                len(opts) - len(options(Target.TABLE, table.props)), f"header-rows={headers}"
+            )
         rows: list[str] = []
-        for row in table.rows:
+        for index, row in enumerate(table.rows):
+            pipe = pipes[index]
+            if pipe is not None and (not row.header or index < headers):
+                rows.append(pipe)
+                continue
             row_opts: list[str] = []
             if row.header:
                 row_opts.append("header")
@@ -534,7 +605,26 @@ class Printer:
                 )
             cells = [self.cell(cell) for cell in row.cells]
             rows.append(f"\\row{_opts(row_opts)}{{\n" + _indent("\n".join(cells), INDENT) + "\n}")
-        return f"\\table{_opts(opts)}{{\n" + _indent("\n".join(rows), INDENT) + "\n}"
+        return rows
+
+    def _pipe_row(self, row: ir.Row) -> str | None:
+        if row.cant_split or row.height is not None:
+            return None
+        texts: list[str] = []
+        for cell in row.cells:
+            if cell.colspan > 1 or cell.rowspan > 1 or cell.props or len(cell.content) != 1:
+                return None
+            (paragraph,) = cell.content
+            if not isinstance(paragraph, ir.Paragraph):
+                return None
+            empty = paragraph == ir.Paragraph() and self.part_style is None
+            if not empty and not self._is_plain(paragraph, self.part_style):
+                return None
+            text = self.body(cell.content, self.part_style) if not empty else ""
+            if "|" in text or "\n" in text:
+                return None
+            texts.append(text)
+        return "| " + " | ".join(texts) + " |"
 
     def cell(self, cell: ir.Cell) -> str:
         opts: list[str] = []
@@ -545,14 +635,47 @@ class Printer:
         opts.extend(options(Target.CELL, cell.props))
         blocks = cell.content
         only = blocks[0] if len(blocks) == 1 else None
-        if isinstance(only, ir.Paragraph) and only == ir.Paragraph():
+        if isinstance(only, ir.Paragraph) and only == ir.Paragraph() and not self.part_style:
             blocks = ()  # an empty cell
-        return f"\\cell{_opts(opts)}{{{self.body(blocks)}}}"
+        return f"\\cell{_opts(opts)}{{{self.body(blocks, self.part_style)}}}"
 
     # --- inline content --------------------------------------------------------------------
 
-    def inline(self, items: Sequence[ir.Inline]) -> str:
-        return _join(self.tokens(items))
+    def inline(self, items: Sequence[ir.Inline], base: PropertySet | None = None) -> str:
+        """`items` as markup; with `base` (the run formatting of the paragraph's style),
+        direct formatting that only repeats it is left out."""
+        saved, self.run_base = self.run_base, base
+        try:
+            return _join(self.tokens(items))
+        finally:
+            self.run_base = saved
+
+    def _run_base(self, style: str | None) -> PropertySet | None:
+        """The run formatting a paragraph style gives: the defaults, then its chain of
+        bases. None where it cannot be known here: in a table (its style formats text too)
+        or without sugar."""
+        if not self.sugar or self.table_depth:
+            return None
+        chain: list[ir.Style] = []
+        name = style or "Normal"
+        while (found := self.styles.get(name.lower())) is not None and found not in chain:
+            chain.append(found)
+            if found.based_on is None:
+                break
+            name = found.based_on
+        legacy = {"font": "Times New Roman", "size": Length.pt(10)}
+        base = PropertySet(Target.RUN, legacy).merged(self.doc.default_run)
+        for found in reversed(chain):
+            base = base.merged(found.run)
+        return base.without(RUN_LAST)  # a style sheet cannot keep these on a paragraph style
+
+    def caption(self, caption: Caption) -> str:
+        opts = [quote(caption.kind)]
+        if caption.label is not None:
+            opts.append(f"id={caption.label}")
+        self.styles_used.add("caption")
+        text = self.inline(caption.text, self._run_base("Caption"))
+        return f"\\caption{_opts(opts)}{{{_guard(text)}}}"
 
     def tokens(self, items: Sequence[ir.Inline]) -> list[_Tok]:
         out: list[_Tok] = []
@@ -605,8 +728,13 @@ class Printer:
                 for r in item.content
             ]
             inner = _join(self.tokens(content))
-            return [_Tok(f"\\link[to={_string(target)}]{{{_guard(inner)}}}")]
+            runs = [r for r in item.content if isinstance(r, ir.Run)]
+            plain = bool(runs) and all(r.style is None for r in runs)  # no Hyperlink look
+            opts = f"to={_string(target)}" + (", style=none" if plain else "")
+            return [_Tok(f"\\link[{opts}]{{{_guard(inner)}}}")]
         if isinstance(item, ir.Field):
+            if (ref := self.labels.is_label_field(item)) is not None:
+                return [self._reference(*ref)]
             return [_Tok(self.field(item))]
         if isinstance(item, ir.BookmarkStart | ir.BookmarkEnd):
             return self.bookmark(item)
@@ -638,17 +766,35 @@ class Printer:
                 tokens.append(_Tok("\\br", bare=True))
             elif piece:
                 tokens.append(_Tok(_escape(piece)))
-        return self._formatted(tokens, run.props, run.style)
+        props = run.props
+        if self.run_base is not None and run.style is None:
+            props = _differences(props, self.run_base)  # what the paragraph style already gives
+        return self._formatted(tokens, props, run.style, run.text)
 
-    def _formatted(self, tokens: list[_Tok], props: PropertySet, style: str | None) -> list[_Tok]:
+    def _formatted(
+        self, tokens: list[_Tok], props: PropertySet, style: str | None, text: str = ""
+    ) -> list[_Tok]:
         if not tokens:
             return []
+        if self.sugar:
+            props, wrappers = _simple_formatting(props)
+        else:
+            wrappers = []
         if props:
             tokens = [_Tok(f"\\font{_opts(options(Target.RUN, props))}{{{_guard(_join(tokens))}}}")]
+        for command in wrappers:
+            tokens = [_Tok(f"\\{command}{{{_guard(_join(tokens))}}}")]
         if style is not None:
             self.styles_used.add(style.lower())
-            name = quote(display_name(style))
-            tokens = [_Tok(f"\\style[{name}]{{{_guard(_join(tokens))}}}")]
+            shown = display_name(style)
+            body = _guard(_join(tokens))
+            marker = _EMPHASIS.get(shown) if self.sugar and not props and not wrappers else None
+            if marker is not None:
+                command = {"*": "strong", "_": "emph"}[marker]
+                plain = text and text == text.strip() and not set(text) & set("*_\t\n\\")
+                sugar = f"{marker}{body}{marker}" if plain else None
+                return [_Tok(f"\\{command}{{{body}}}", sugar=sugar, kind="emphasis")]
+            tokens = [_Tok(f"\\style[{quote(shown)}]{{{body}}}")]
         return tokens
 
     def field(self, item: ir.Field) -> str:
@@ -663,8 +809,16 @@ class Printer:
             return _join(self._formatted([_Tok(text)], item.props, item.style))
         return text
 
+    def _reference(self, field: str, label: str, form: str) -> _Tok:
+        """A REF or PAGEREF to a label: `@label` where it reads the same way."""
+        if field == "PAGEREF":
+            return _Tok(f"\\pageref{{{label}}}")
+        if form == "default":
+            return _Tok(f"\\ref{{{label}}}", sugar=f"@{label}", kind="ref")
+        return _Tok(f"\\ref[form={form}]{{{label}}}")
+
     def bookmark(self, item: ir.BookmarkStart | ir.BookmarkEnd) -> list[_Tok]:
-        if item.name.startswith(_HIDDEN_BOOKMARKS):
+        if item.name.startswith(_HIDDEN_BOOKMARKS) or item.name in self.labels.dropped:
             return []
         ident = self.bookmarks.setdefault(item.name, _RAW_BOOKMARK_IDS + len(self.bookmarks))
         if isinstance(item, ir.BookmarkStart):
@@ -777,7 +931,7 @@ class Printer:
             opts.append(f"name={quote(box.name)}")
         if box.anchor is not None:
             opts.extend(self._anchor(box.anchor))
-        return f"\\textbox{_opts(opts)}{{{self.body(box.content)}}}"
+        return f"\\textbox{_opts(opts)}{{{self.body(box.content, self.part_style)}}}"
 
     def control(self, control: ir.ContentControl) -> str:
         opts = [control.kind]
@@ -1086,6 +1240,27 @@ def _line_numbers(numbers: ir.LineNumbers | None) -> str:
     return "(" + ", ".join(parts) + ")"
 
 
+_SIMPLE_COMMANDS = (
+    ("bold", True, "b"),
+    ("italic", True, "i"),
+    ("underline", "single", "u"),
+    ("strike", True, "s"),
+    ("vertical-align", "superscript", "sup"),
+    ("vertical-align", "subscript", "sub"),
+    ("hidden", True, "hidden"),
+)
+"""Run properties with a command of their own: \\b{…} for bold, ..."""
+_EMPHASIS = {"Strong": "*", "Emphasis": "_"}
+"""Character styles with sugar: *strong* and _emphasis_."""
+
+
+def _simple_formatting(props: PropertySet) -> tuple[PropertySet, list[str]]:
+    """The properties left for \\font, and the commands for the others (innermost first)."""
+    commands = [cmd for name, value, cmd in _SIMPLE_COMMANDS if props.get(name) == value]
+    names = {name for name, value, _ in _SIMPLE_COMMANDS if props.get(name) == value}
+    return props.without(names), commands
+
+
 def _merge_runs(items: Sequence[ir.Inline]) -> list[ir.Inline]:
     """Adjacent runs with the same formatting as one run."""
     out: list[ir.Inline] = []
@@ -1113,8 +1288,12 @@ class KeptStyles:
 
 
 def print_document(
-    document: ir.Document, stylesheet_name: str, template: KeptStyles | None = None
+    document: ir.Document,
+    stylesheet_name: str,
+    template: KeptStyles | None = None,
+    *,
+    sugar: bool = True,
 ) -> Printed:
     """`document` as wordgenx source that `\\use`s the style sheet `stylesheet_name`, or
     that compiles into `template` (and uses a style sheet only for lists it lacks)."""
-    return Printer(document, stylesheet_name, template).print()
+    return Printer(document, stylesheet_name, template, sugar).print()
