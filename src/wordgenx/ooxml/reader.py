@@ -1029,13 +1029,13 @@ def _read_field(
     children: Sequence[Element], start: int, ctx: _Ctx
 ) -> tuple[ir.Field, int, list[ir.Image]]:
     """A complex field between begin and end; returns it, the next index, and the pictures
-    its result shows (an EMBED or INCLUDEPICTURE field's result is a picture)."""
-    instruction: list[str] = []
-    result: list[str] = []
+    its result shows (an EMBED or INCLUDEPICTURE field's result is a picture).
+
+    Fields nest: `{ = { NUMPAGES } -1 }` is a field inside the instruction of another.
+    Inside an instruction, Word keeps the nested field's cached result as w:instrText
+    after its separate mark; it belongs to the nested field, not to the outer code."""
+    frames: list[_FieldFrame] = []
     pictures: list[ir.Image] = []
-    props, style, dirty = EMPTY_RUN, None, False
-    state = "before"
-    depth = 0
     index = start
     while index < len(children):
         element = children[index]
@@ -1044,51 +1044,87 @@ def _read_field(
             continue
         run_props, run_style = _run_props(element.find(_w("rPr")), ctx)
         for child in element:
+            top = frames[-1] if frames else None
             if child.tag == _w("fldChar"):
                 kind = child.get(_w("fldCharType"))
                 if kind == "begin":
-                    if depth == 0:
-                        props, style = run_props, run_style
-                        dirty = child.get(_w("dirty")) == "true"
-                        state = "instruction"
-                    depth += 1
-                elif kind == "separate":
-                    if depth == 1:
-                        state = "result"
-                elif kind == "end":
-                    depth -= 1
-                    if depth == 0:
+                    dirty = child.get(_w("dirty")) == "true"
+                    frames.append(_FieldFrame(run_props, run_style, dirty))
+                elif kind == "separate" and top is not None:
+                    top.in_result = True
+                elif kind == "end" and top is not None:
+                    frames.pop()
+                    done = top.build()
+                    if not frames:
                         ctx.stats.count("field")
-                        field = _make_field(instruction, result, props, style, dirty)
-                        return field, index, pictures
-            elif child.tag == _w("instrText") and state == "instruction":
-                instruction.append(child.text or "")
-            elif child.tag == _w("t") and state == "result":
-                result.append(child.text or "")
-            elif child.tag == _w("tab") and state == "result":
-                result.append("\t")
-            elif child.tag == _w("br") and state == "result":
-                result.append("\n")
-            elif child.tag in (_w("object"), _w("pict")) and state == "result":
+                        return done, index, pictures
+                    parent = frames[-1]
+                    if parent.in_result:
+                        parent.result.append(done.result)  # a field inside a result: its text
+                    else:
+                        parent.instruction.append(done)
+            elif top is None:
+                continue
+            elif child.tag == _w("instrText"):
+                (top.result if top.in_result else top.instruction).append(child.text or "")
+            elif not top.in_result:
+                continue
+            elif child.tag == _w("t"):
+                top.result.append(child.text or "")
+            elif child.tag == _w("tab"):
+                top.result.append("\t")
+            elif child.tag == _w("br"):
+                top.result.append("\n")
+            elif child.tag in (_w("object"), _w("pict")) and len(frames) == 1:
                 if (picture := _read_vml_picture(child, ctx)) is not None:
                     pictures.append(picture)
-            elif child.tag == _w("drawing") and state == "result":
+            elif child.tag == _w("drawing") and len(frames) == 1:
                 if (picture := _read_drawing(child, ctx)) is not None:
                     pictures.append(picture)
     ctx.stats.note("w:fldChar without an end")
     ctx.stats.count("field")
-    return _make_field(instruction, result, props, style, dirty), index, pictures
+    while len(frames) > 1:  # close what is open, innermost first
+        inner = frames.pop().build()
+        frames[-1].instruction.append(inner)
+    outer = frames[0].build() if frames else ir.Field(())
+    return outer, index, pictures
+
+
+@dataclass
+class _FieldFrame:
+    """A field being read: its instruction (text and nested fields) and result so far."""
+
+    props: PropertySet
+    style: str | None
+    dirty: bool
+    instruction: list[str | ir.Field] = field(default_factory=lambda: [])
+    result: list[str] = field(default_factory=lambda: [])
+    in_result: bool = False
+
+    def build(self) -> ir.Field:
+        return _make_field(self.instruction, self.result, self.props, self.style, self.dirty)
 
 
 def _make_field(
-    instruction: list[str],
+    instruction: Sequence[str | ir.Field],
     result: list[str],
     props: PropertySet,
     style: str | None,
     dirty: bool,
 ) -> ir.Field:
-    code = "".join(instruction).strip()
-    return ir.Field((code,) if code else (), "".join(result), props, style, dirty)
+    """The field, its instruction's text runs joined and its outer spaces trimmed."""
+    parts: list[str | ir.Field] = []
+    for part in instruction:
+        if isinstance(part, str) and parts and isinstance(parts[-1], str):
+            parts[-1] += part
+        else:
+            parts.append(part)
+    if parts and isinstance(parts[0], str):
+        parts[0] = parts[0].lstrip()
+    if parts and isinstance(parts[-1], str):
+        parts[-1] = parts[-1].rstrip()
+    instruction = tuple(p for p in parts if p != "")
+    return ir.Field(instruction, "".join(result), props, style, dirty)
 
 
 def _read_inline(container: Element, ctx: _Ctx) -> tuple[ir.Inline, ...]:
@@ -1847,6 +1883,33 @@ def _read_meta(root: Element | None) -> ir.Meta:
     )
 
 
+def _read_custom(root: Element, ctx: _Ctx) -> tuple[tuple[str, ir.CustomValue], ...]:
+    """Custom document properties (File > Info > Properties > Custom): text, numbers and
+    yes/no; a date is kept as its text."""
+    out: list[tuple[str, ir.CustomValue]] = []
+    for prop in root:
+        name = prop.get("name")
+        if not name or not len(prop):
+            continue
+        value = prop[0]
+        kind, text = _local(value.tag), value.text or ""
+        if kind == "bool":
+            out.append((name, text.strip().lower() in ("true", "1")))
+        elif kind in ("i1", "i2", "i4", "i8", "int", "ui1", "ui2", "ui4", "ui8", "uint"):
+            out.append((name, _int(text)))
+        elif kind in ("r4", "r8", "decimal"):
+            try:
+                out.append((name, float(text)))
+            except ValueError:
+                out.append((name, text))
+        elif kind in ("lpwstr", "lpstr", "bstr"):
+            out.append((name, text))
+        else:
+            ctx.stats.note(f"custom property of type {kind} (kept as text)")
+            out.append((name, text))
+    return tuple(out)
+
+
 def _read_settings(root: Element | None) -> ir.Settings:
     if root is None:
         return ir.Settings()
@@ -1931,9 +1994,13 @@ def read_docx(source: bytes | str | PathLike[str]) -> ImportResult:
     default_run, _ = _run_props(_defaults(styles_root, "rPrDefault"), ctx)
     default_paragraph, _, _ = _para_props(_defaults(styles_root, "pPrDefault"), ctx)
 
+    meta = _read_meta(meta_root)
+    custom_root = _package_part(opc, RT.CUSTOM_PROPERTIES, "docProps/custom.xml")
+    if custom_root is not None:
+        meta = replace(meta, custom=_read_custom(custom_root, ctx))
     document = ir.Document(
         body=blocks,
-        meta=_read_meta(meta_root),
+        meta=meta,
         settings=_read_settings(settings_root),
         styles=styles,
         numbering=numbering,

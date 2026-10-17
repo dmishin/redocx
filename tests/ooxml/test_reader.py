@@ -267,3 +267,26 @@ def test_borders_keep_their_theme_colours() -> None:
     (paragraph,) = read_docx(to_docx_bytes(document)).document.body
     assert isinstance(paragraph, ir.Paragraph)
     assert paragraph.props["border-top"] == border
+
+
+def test_nested_fields_keep_their_structure() -> None:
+    """{ = { NUMPAGES } -1 }: Word keeps the nested result as w:instrText in the code."""
+    outer = ir.Field(("=", ir.Field(("NUMPAGES",), "17"), "-1"), "16")
+    data = _repackaged(
+        to_docx_bytes(ir.Document(body=(ir.Paragraph((outer,)),))),
+        "word/document.xml",
+        b"<w:t>17</w:t>",
+        b"<w:instrText>17</w:instrText>",
+    )
+    (paragraph,) = read_docx(data).document.body
+    assert isinstance(paragraph, ir.Paragraph)
+    (field,) = paragraph.content
+    assert field == outer
+    assert isinstance(field, ir.Field)
+    assert field.code == "={ NUMPAGES }-1"
+
+
+def test_custom_document_properties_are_read() -> None:
+    custom = (("project-code", "WX-001"), ("N° ISO", "A12"), ("count", 3), ("final", True))
+    meta = read_docx(to_docx_bytes(ir.Document(meta=ir.Meta(custom=custom)))).document.meta
+    assert meta.custom == custom

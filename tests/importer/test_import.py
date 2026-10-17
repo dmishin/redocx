@@ -189,3 +189,16 @@ def test_what_cannot_be_printed_is_counted() -> None:
         "first-page header of a section without a different first page": 1,
         "repeated spaces (collapsed to one)": 1,
     }
+
+
+def test_nested_fields_print_in_field_braces(tmp_path: Path) -> None:
+    outer = ir.Field(("=", ir.Field(("NUMPAGES",), "17"), "-1"), "16")
+    source, compiled = imported(ir.Document(body=(ir.Paragraph((outer,)),)), tmp_path)
+    assert "\\field[result=16]{={ NUMPAGES }-1}" in source
+    (paragraph,) = compiled.body
+    assert isinstance(paragraph, ir.Paragraph)
+    (field,) = paragraph.content
+    assert isinstance(field, ir.Field)
+    nested = [part for part in field.instruction if isinstance(part, ir.Field)]
+    assert [part.code.strip() for part in nested] == ["NUMPAGES"]
+    assert " ".join(field.code.split()) == "={ NUMPAGES }-1"  # spacing aside, the same code
