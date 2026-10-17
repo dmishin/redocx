@@ -1,0 +1,702 @@
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    <w:p>
+      <w:r>
+        <w:drawing>
+          <wp:anchor xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" allowOverlap="1" behindDoc="1" distB="0" distL="114300" distR="114300" distT="0" layoutInCell="1" locked="0" relativeHeight="251659264" simplePos="0">
+            <wp:simplePos x="0" y="0"/>
+            <wp:positionH relativeFrom="page">
+              <wp:posOffset>0</wp:posOffset>
+            </wp:positionH>
+            <wp:positionV relativeFrom="page">
+              <wp:posOffset>0</wp:posOffset>
+            </wp:positionV>
+            <wp:extent cx="7560000" cy="10692000"/>
+            <wp:effectExtent b="0" l="0" r="0" t="0"/>
+            <wp:wrapNone/>
+            <wp:docPr descr="A dusk sky over a harbour of light trails" id="1" name="cover.png"/>
+            <wp:cNvGraphicFramePr>
+              <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>
+            </wp:cNvGraphicFramePr>
+            <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                  <pic:nvPicPr>
+                    <pic:cNvPr descr="A dusk sky over a harbour of light trails" id="0" name="cover.png"/>
+                    <pic:cNvPicPr/>
+                  </pic:nvPicPr>
+                  <pic:blipFill>
+                    <a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId5"/>
+                    <a:stretch>
+                      <a:fillRect/>
+                    </a:stretch>
+                  </pic:blipFill>
+                  <pic:spPr>
+                    <a:xfrm>
+                      <a:off x="0" y="0"/>
+                      <a:ext cx="7560000" cy="10692000"/>
+                    </a:xfrm>
+                    <a:prstGeom prst="rect">
+                      <a:avLst/>
+                    </a:prstGeom>
+                  </pic:spPr>
+                </pic:pic>
+              </a:graphicData>
+            </a:graphic>
+          </wp:anchor>
+        </w:drawing>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Kicker"/>
+        <w:spacing w:before="6600"/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:color w:val="EDAE49"/>
+        </w:rPr>
+        <w:t>Autumn issue · No. 7</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="CoverTitle"/>
+      </w:pPr>
+      <w:r>
+        <w:t>Harbour City Mobility Review</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="CoverLine"/>
+      </w:pPr>
+      <w:r>
+        <w:t>The ring road learns to see its own traffic</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="CoverLine"/>
+        <w:sectPr>
+          <w:pgSz w:h="16838" w:w="11906"/>
+          <w:pgMar w:bottom="1134" w:footer="709" w:gutter="0" w:header="709" w:left="1134" w:right="1134" w:top="1701"/>
+          <w:cols w:space="708"/>
+          <w:docGrid w:linePitch="360"/>
+        </w:sectPr>
+      </w:pPr>
+      <w:r>
+        <w:t>Ten sensors per kilometre · Waves that travel backwards · What comes next</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Kicker"/>
+      </w:pPr>
+      <w:r>
+        <w:t>Feature</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading1"/>
+      </w:pPr>
+      <w:r>
+        <w:t>Seeing the wave before it arrives</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Standfirst"/>
+      </w:pPr>
+      <w:r>
+        <w:t>Loop detectors tell the city how fast traffic moves where they sit. Floating cars fill the gaps. Together they let the traffic centre see a jam forming minutes before drivers do.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:keepNext/>
+        <w:framePr w:dropCap="drop" w:hAnchor="text" w:lines="3" w:vAnchor="text" w:wrap="around"/>
+        <w:spacing w:after="0" w:line="975" w:lineRule="exact"/>
+        <w:textAlignment w:val="baseline"/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:asciiTheme="majorHAnsi" w:cstheme="majorBidi" w:eastAsiaTheme="majorEastAsia" w:hAnsiTheme="majorHAnsi"/>
+          <w:color w:themeColor="accent1" w:val="0B7A75"/>
+          <w:position w:val="-7"/>
+          <w:sz w:val="112"/>
+          <w:szCs w:val="112"/>
+        </w:rPr>
+        <w:t>E</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:drawing>
+          <wp:anchor xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" allowOverlap="1" behindDoc="0" distB="0" distL="114300" distR="114300" distT="0" layoutInCell="1" locked="0" relativeHeight="251660288" simplePos="0">
+            <wp:simplePos x="0" y="0"/>
+            <wp:positionH relativeFrom="margin">
+              <wp:align>center</wp:align>
+            </wp:positionH>
+            <wp:positionV relativeFrom="margin">
+              <wp:align>top</wp:align>
+            </wp:positionV>
+            <wp:extent cx="6264000" cy="2610000"/>
+            <wp:effectExtent b="0" l="0" r="0" t="0"/>
+            <wp:wrapTopAndBottom/>
+            <wp:docPr descr="A city skyline above three lanes of traffic" id="2" name="skyline.png"/>
+            <wp:cNvGraphicFramePr>
+              <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>
+            </wp:cNvGraphicFramePr>
+            <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                  <pic:nvPicPr>
+                    <pic:cNvPr descr="A city skyline above three lanes of traffic" id="0" name="skyline.png"/>
+                    <pic:cNvPicPr/>
+                  </pic:nvPicPr>
+                  <pic:blipFill>
+                    <a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId6"/>
+                    <a:stretch>
+                      <a:fillRect/>
+                    </a:stretch>
+                  </pic:blipFill>
+                  <pic:spPr>
+                    <a:xfrm>
+                      <a:off x="0" y="0"/>
+                      <a:ext cx="6264000" cy="2610000"/>
+                    </a:xfrm>
+                    <a:prstGeom prst="rect">
+                      <a:avLst/>
+                    </a:prstGeom>
+                  </pic:spPr>
+                </pic:pic>
+              </a:graphicData>
+            </a:graphic>
+          </wp:anchor>
+        </w:drawing>
+      </w:r>
+      <w:r>
+        <w:t>very weekday morning a wave moves along the ring road. It is not water but traffic: a band of slow cars that starts near the harbour bridge and travels backwards, against the flow, at about eighteen kilometres an hour. Drivers caught in it see brake lights appear from nowhere; drivers behind it never learn why the road suddenly slowed.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+          <mc:Choice Requires="wps">
+            <w:drawing>
+              <wp:anchor xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" allowOverlap="1" behindDoc="0" distB="0" distL="114300" distR="114300" distT="0" layoutInCell="1" locked="0" relativeHeight="251661312" simplePos="0">
+                <wp:simplePos x="0" y="0"/>
+                <wp:positionH relativeFrom="page">
+                  <wp:align>center</wp:align>
+                </wp:positionH>
+                <wp:positionV relativeFrom="page">
+                  <wp:posOffset>6840000</wp:posOffset>
+                </wp:positionV>
+                <wp:extent cx="2520000" cy="622400"/>
+                <wp:effectExtent b="0" l="0" r="0" t="0"/>
+                <wp:wrapSquare wrapText="bothSides"/>
+                <wp:docPr id="3" name="Text Box 3"/>
+                <wp:cNvGraphicFramePr/>
+                <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+                  <a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+                    <wps:wsp xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+                      <wps:cNvSpPr txBox="1"/>
+                      <wps:spPr>
+                        <a:xfrm>
+                          <a:off x="0" y="0"/>
+                          <a:ext cx="2520000" cy="622400"/>
+                        </a:xfrm>
+                        <a:prstGeom prst="rect">
+                          <a:avLst/>
+                        </a:prstGeom>
+                        <a:solidFill>
+                          <a:schemeClr val="accent1">
+                            <a:lumMod val="14902"/>
+                            <a:lumOff val="85098"/>
+                          </a:schemeClr>
+                        </a:solidFill>
+                        <a:ln w="12700">
+                          <a:solidFill>
+                            <a:schemeClr val="accent1"/>
+                          </a:solidFill>
+                        </a:ln>
+                      </wps:spPr>
+                      <wps:txbx>
+                        <w:txbxContent>
+                          <w:p>
+                            <w:pPr>
+                              <w:pStyle w:val="PullQuote"/>
+                            </w:pPr>
+                            <w:r>
+                              <w:t>“We used to read the road like yesterday’s newspaper. Now we read it like a weather radar.”</w:t>
+                            </w:r>
+                          </w:p>
+                          <w:p>
+                            <w:pPr>
+                              <w:pStyle w:val="QuoteSource"/>
+                            </w:pPr>
+                            <w:r>
+                              <w:t>Traffic centre duty manager</w:t>
+                            </w:r>
+                          </w:p>
+                        </w:txbxContent>
+                      </wps:txbx>
+                      <wps:bodyPr anchor="t" anchorCtr="0" bIns="108000" lIns="108000" rIns="108000" rot="0" tIns="108000" vert="horz" wrap="square">
+                        <a:spAutoFit/>
+                      </wps:bodyPr>
+                    </wps:wsp>
+                  </a:graphicData>
+                </a:graphic>
+              </wp:anchor>
+            </w:drawing>
+          </mc:Choice>
+        </mc:AlternateContent>
+      </w:r>
+      <w:r>
+        <w:t>For decades the city knew about such waves only after the fact. The loop detectors under the asphalt, one every half kilometre, count vehicles and measure their speed, but between two detectors the road is dark. A wave that forms between them is invisible until it reaches the next loop.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading2"/>
+      </w:pPr>
+      <w:r>
+        <w:t>Filling the gaps</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t>The new system adds a second source: anonymous speed reports from navigation apps and delivery fleets, the so-called floating cars. They are few, a few percent of all vehicles, but they cover every metre of road. A mathematical model of traffic flow, the same one engineers have used since the 1950s, ties the two sources together.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:drawing>
+          <wp:anchor xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" allowOverlap="1" behindDoc="0" distB="0" distL="108000" distR="114300" distT="0" layoutInCell="1" locked="0" relativeHeight="251662336" simplePos="0">
+            <wp:simplePos x="0" y="0"/>
+            <wp:positionH relativeFrom="column">
+              <wp:align>right</wp:align>
+            </wp:positionH>
+            <wp:positionV relativeFrom="paragraph">
+              <wp:posOffset>0</wp:posOffset>
+            </wp:positionV>
+            <wp:extent cx="1512000" cy="1512000"/>
+            <wp:effectExtent b="0" l="0" r="0" t="0"/>
+            <wp:wrapTight wrapText="bothSides">
+              <wp:wrapPolygon edited="0">
+                <wp:start x="0" y="0"/>
+                <wp:lineTo x="0" y="21600"/>
+                <wp:lineTo x="21600" y="21600"/>
+                <wp:lineTo x="21600" y="0"/>
+                <wp:lineTo x="0" y="0"/>
+              </wp:wrapPolygon>
+            </wp:wrapTight>
+            <wp:docPr descr="A ring of twelve sensors" id="4" name="sensors.png"/>
+            <wp:cNvGraphicFramePr>
+              <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>
+            </wp:cNvGraphicFramePr>
+            <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                  <pic:nvPicPr>
+                    <pic:cNvPr descr="A ring of twelve sensors" id="0" name="sensors.png"/>
+                    <pic:cNvPicPr/>
+                  </pic:nvPicPr>
+                  <pic:blipFill>
+                    <a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId7"/>
+                    <a:stretch>
+                      <a:fillRect/>
+                    </a:stretch>
+                  </pic:blipFill>
+                  <pic:spPr>
+                    <a:xfrm>
+                      <a:off x="0" y="0"/>
+                      <a:ext cx="1512000" cy="1512000"/>
+                    </a:xfrm>
+                    <a:prstGeom prst="rect">
+                      <a:avLst/>
+                    </a:prstGeom>
+                  </pic:spPr>
+                </pic:pic>
+              </a:graphicData>
+            </a:graphic>
+          </wp:anchor>
+        </w:drawing>
+      </w:r>
+      <w:r>
+        <w:t>The model divides the road into cells of five hundred metres and predicts, every ten seconds, how many vehicles each cell holds. Where a detector or a floating car reports, the prediction is corrected. Where nothing reports, the model carries the picture forward. The result is a live map of density along the whole ring, updated faster than the traffic changes.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading2"/>
+      </w:pPr>
+      <w:r>
+        <w:t>What the numbers say</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t>Over four test weeks the combined estimate was a third more accurate than the detectors alone, and almost twice as accurate in congestion, exactly where it matters most.</w:t>
+      </w:r>
+    </w:p>
+    <w:tbl>
+      <w:tblPr>
+        <w:tblStyle w:val="DataTable"/>
+        <w:tblpPr w:bottomFromText="113" w:horzAnchor="text" w:leftFromText="180" w:rightFromText="227" w:tblpXSpec="left" w:tblpY="113" w:topFromText="0" w:vertAnchor="text"/>
+        <w:tblW w:type="dxa" w:w="4309"/>
+        <w:tblLayout w:type="fixed"/>
+        <w:tblLook w:firstColumn="1" w:firstRow="1" w:lastColumn="0" w:lastRow="0" w:noHBand="0" w:noVBand="1" w:val="04A0"/>
+      </w:tblPr>
+      <w:tblGrid>
+        <w:gridCol w:w="1814"/>
+        <w:gridCol w:w="1134"/>
+        <w:gridCol w:w="1361"/>
+      </w:tblGrid>
+      <w:tr>
+        <w:trPr>
+          <w:tblHeader/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1814"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Condition</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1134"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="right"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Detectors</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1361"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="right"/>
+            </w:pPr>
+            <w:r>
+              <w:t>With floating cars</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1814"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Free flow</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1134"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:tabs>
+                <w:tab w:pos="578" w:val="decimal"/>
+              </w:tabs>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>4.1</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1361"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:tabs>
+                <w:tab w:pos="804" w:val="decimal"/>
+              </w:tabs>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>3.6</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1814"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Slowing</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1134"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:tabs>
+                <w:tab w:pos="578" w:val="decimal"/>
+              </w:tabs>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>9.8</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1361"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:tabs>
+                <w:tab w:pos="804" w:val="decimal"/>
+              </w:tabs>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>6.9</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1814"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>Congestion</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1134"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:tabs>
+                <w:tab w:pos="578" w:val="decimal"/>
+              </w:tabs>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>17.2</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="1361"/>
+          </w:tcPr>
+          <w:p>
+            <w:pPr>
+              <w:tabs>
+                <w:tab w:pos="804" w:val="decimal"/>
+              </w:tabs>
+              <w:jc w:val="left"/>
+            </w:pPr>
+            <w:r>
+              <w:t>9.1</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+    </w:tbl>
+    <w:p>
+      <w:r>
+        <w:t>The table shows the average error in vehicles per kilometre. In free flow both methods do well: the road is empty enough that little can go wrong. As traffic thickens, the detectors alone fall behind, because a queue can grow for minutes before it reaches a loop.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+          <mc:Choice Requires="wps">
+            <w:drawing>
+              <wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distB="0" distL="0" distR="0" distT="0">
+                <wp:extent cx="2988000" cy="419200"/>
+                <wp:effectExtent b="0" l="0" r="0" t="0"/>
+                <wp:docPr id="5" name="Text Box 5"/>
+                <wp:cNvGraphicFramePr/>
+                <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+                  <a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+                    <wps:wsp xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+                      <wps:cNvSpPr txBox="1"/>
+                      <wps:spPr>
+                        <a:xfrm>
+                          <a:off x="0" y="0"/>
+                          <a:ext cx="2988000" cy="419200"/>
+                        </a:xfrm>
+                        <a:prstGeom prst="rect">
+                          <a:avLst/>
+                        </a:prstGeom>
+                        <a:solidFill>
+                          <a:schemeClr val="accent3">
+                            <a:lumMod val="29804"/>
+                            <a:lumOff val="70196"/>
+                          </a:schemeClr>
+                        </a:solidFill>
+                        <a:ln>
+                          <a:noFill/>
+                        </a:ln>
+                      </wps:spPr>
+                      <wps:txbx>
+                        <w:txbxContent>
+                          <w:p>
+                            <w:pPr>
+                              <w:pStyle w:val="Sidebar"/>
+                            </w:pPr>
+                            <w:r>
+                              <w:rPr>
+                                <w:b/>
+                                <w:bCs/>
+                              </w:rPr>
+                              <w:t>How a backward wave works.</w:t>
+                            </w:r>
+                            <w:r>
+                              <w:t xml:space="preserve"> When the car in front brakes, you brake a moment later, and the driver behind you a moment after that. The slowdown passes from car to car towards the back of the queue, so the wave moves upstream even though every car moves forward.</w:t>
+                            </w:r>
+                          </w:p>
+                        </w:txbxContent>
+                      </wps:txbx>
+                      <wps:bodyPr anchor="t" anchorCtr="0" bIns="108000" lIns="108000" rIns="108000" rot="0" tIns="108000" vert="horz" wrap="square">
+                        <a:spAutoFit/>
+                      </wps:bodyPr>
+                    </wps:wsp>
+                  </a:graphicData>
+                </a:graphic>
+              </wp:inline>
+            </w:drawing>
+          </mc:Choice>
+        </mc:AlternateContent>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading2"/>
+      </w:pPr>
+      <w:r>
+        <w:t>What comes next</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t>The traffic centre now plans to use the live map for ramp metering, letting cars onto the ring in a steady trickle when a wave is building, and to publish travel times that account for jams that have not yet reached the next sign.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="FigureNote"/>
+      </w:pPr>
+      <w:r>
+        <w:drawing>
+          <wp:anchor xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" allowOverlap="1" behindDoc="0" distB="0" distL="114300" distR="114300" distT="0" layoutInCell="1" locked="0" relativeHeight="251664384" simplePos="0">
+            <wp:simplePos x="0" y="0"/>
+            <wp:positionH relativeFrom="column">
+              <wp:align>center</wp:align>
+            </wp:positionH>
+            <wp:positionV relativeFrom="paragraph">
+              <wp:posOffset>0</wp:posOffset>
+            </wp:positionV>
+            <wp:extent cx="2340000" cy="1462500"/>
+            <wp:effectExtent b="0" l="0" r="0" t="0"/>
+            <wp:wrapTopAndBottom/>
+            <wp:docPr descr="The fundamental diagram of traffic flow" id="6" name="fundamental-diagram.svg"/>
+            <wp:cNvGraphicFramePr>
+              <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>
+            </wp:cNvGraphicFramePr>
+            <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                  <pic:nvPicPr>
+                    <pic:cNvPr descr="The fundamental diagram of traffic flow" id="0" name="fundamental-diagram.svg"/>
+                    <pic:cNvPicPr/>
+                  </pic:nvPicPr>
+                  <pic:blipFill>
+                    <a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId8">
+                      <a:extLst>
+                        <a:ext uri="{96DAC541-7B7A-43D3-8B79-37D633B846F1}">
+                          <asvg:svgBlip xmlns:asvg="http://schemas.microsoft.com/office/drawing/2016/SVG/main" r:embed="rId9"/>
+                        </a:ext>
+                      </a:extLst>
+                    </a:blip>
+                    <a:stretch>
+                      <a:fillRect/>
+                    </a:stretch>
+                  </pic:blipFill>
+                  <pic:spPr>
+                    <a:xfrm>
+                      <a:off x="0" y="0"/>
+                      <a:ext cx="2340000" cy="1462500"/>
+                    </a:xfrm>
+                    <a:prstGeom prst="rect">
+                      <a:avLst/>
+                    </a:prstGeom>
+                  </pic:spPr>
+                </pic:pic>
+              </a:graphicData>
+            </a:graphic>
+          </wp:anchor>
+        </w:drawing>
+      </w:r>
+      <w:r>
+        <w:t>The fundamental diagram: as density rises, flow grows until the road reaches capacity, then falls as the road jams.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t>The engineers are careful not to promise miracles. The model is only as good as its picture of how the road behaves, and roads change: lanes close, new junctions open, drivers adapt. But for the first time the city can see the wave before its drivers do, and that is a start.</w:t>
+      </w:r>
+    </w:p>
+    <w:sectPr>
+      <w:headerReference xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId10" w:type="default"/>
+      <w:footerReference xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId11" w:type="default"/>
+      <w:pgSz w:h="16838" w:w="11906"/>
+      <w:pgMar w:bottom="1134" w:footer="709" w:gutter="0" w:header="709" w:left="1020" w:right="1020" w:top="1247"/>
+      <w:pgBorders w:offsetFrom="text">
+        <w:top w:color="0B7A75" w:space="4" w:sz="6" w:themeColor="accent1" w:val="single"/>
+        <w:bottom w:color="0B7A75" w:space="4" w:sz="6" w:themeColor="accent1" w:val="single"/>
+      </w:pgBorders>
+      <w:cols w:num="2" w:space="454"/>
+      <w:docGrid w:linePitch="360"/>
+    </w:sectPr>
+  </w:body>
+</w:document>

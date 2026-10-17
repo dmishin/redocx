@@ -1,0 +1,52 @@
+% The magazine's own look: a harbour palette, Georgia headings and Segoe UI text.
+
+theme Harbour {
+  dark2: #1B2A41; light2: #EEF2F6;
+  accent1: #0B7A75; accent2: #D1495B; accent3: #EDAE49; accent4: #00798C;
+  hyperlink: #0B7A75;
+  major-font: "Georgia"; minor-font: "Segoe UI";
+}
+
+defaults {
+  font: theme.minor; size: 10pt; lang: en-GB;
+  space-after: 6pt; line-spacing: 1.15;
+}
+
+paragraph Normal { widow-control; align: left; }  % ragged right, beside floats
+
+paragraph Kicker : Normal {
+  font: theme.minor; size: 9pt; bold; caps; character-spacing: 1.5pt;
+  color: theme.accent2; align: left; space-after: 2pt;
+}
+paragraph "Cover Title" : Normal {
+  font: theme.major; size: 44pt; color: #FFFFFF; align: left; space-after: 6pt; line-spacing: 1;
+}
+paragraph "Cover Line" : Normal { size: 15pt; color: #FFFFFF; align: left; space-after: 4pt; }
+
+paragraph "Heading 1" : Normal {
+  font: theme.major; size: 26pt; color: theme.text2; align: left;
+  space-before: 0; space-after: 4pt; keep-with-next; line-spacing: 1; outline-level: 1;
+}
+paragraph Standfirst : Normal {
+  font: theme.major; size: 13pt; italic; color: theme.accent1.darker(25%); align: left;
+  space-after: 14pt;
+}
+paragraph "Heading 2" : Normal {
+  font: theme.minor; size: 11pt; bold; color: theme.accent1; align: left;
+  space-before: 10pt; space-after: 3pt; keep-with-next; outline-level: 2;
+}
+paragraph "Pull Quote" : Normal {
+  font: theme.major; size: 16pt; italic; color: theme.accent1.darker(25%); align: center;
+  line-spacing: 1.05; space-after: 4pt;
+}
+paragraph "Quote Source" : Normal { size: 8.5pt; caps; color: theme.accent2; align: center; }
+paragraph Sidebar : Normal { size: 9pt; align: left; space-after: 4pt; }
+paragraph "Figure Note" : Normal { size: 8pt; italic; color: theme.text2; align: left; space-after: 10pt; }
+
+table "Data Table" : "Table Grid" {
+  borders: (top=(single, 1pt, theme.accent1), bottom=(single, 1pt, theme.accent1), inner=none,
+            left=none, right=none);
+  size: 8.5pt;
+  header-row { bold; color: #FFFFFF; shading: theme.accent1; repeat; }
+  banded-rows { odd { shading: theme.accent1.lighter(85%); } }
+}

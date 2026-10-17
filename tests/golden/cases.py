@@ -208,9 +208,18 @@ def example_thesis() -> ir.Document:
     return result.document
 
 
+def example_magazine() -> ir.Document:
+    """examples/magazine: the M4 exit sample; cover, floats, text boxes, watermark, theme."""
+    path = Path(__file__).resolve().parents[2] / "examples" / "magazine" / "magazine.wgx"
+    result = compile_file(path)
+    assert result.document is not None, result.render_diagnostics()
+    return result.document
+
+
 CASES: dict[str, Callable[[], ir.Document]] = {
     "example-citations": example_citations,
     "example-index": example_index,
+    "example-magazine": example_magazine,
     "example-media": example_media,
     "example-thesis": example_thesis,
     "example-math": example_math,

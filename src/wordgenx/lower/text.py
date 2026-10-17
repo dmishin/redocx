@@ -218,6 +218,8 @@ def drop_cap(
     for i, item in enumerate(content):
         if isinstance(item, ir.BookmarkStart | ir.BookmarkEnd):
             continue
+        if isinstance(item, ir.Image | ir.TextBox) and item.anchor is not None:
+            continue  # floats beside the text; stays anchored in the paragraph
         if not isinstance(item, ir.Run) or not item.text.strip():
             return None
         text = item.text.lstrip()

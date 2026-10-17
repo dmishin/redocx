@@ -68,7 +68,7 @@ Steps, in order (the small ones first; the drawing steps share one positioning m
 
 Basic shapes (lines, arrows, rectangles) come only if they stay small; see Postponed features.
 
-- *Exit:* a magazine-style report: a cover page with a full-bleed picture, floating figures with text around them, a pull quote in a text box, a drop cap, a "DRAFT" watermark and its own theme.
+- *Exit:* a magazine-style report: a cover page with a full-bleed picture, floating figures with text around them, a pull quote in a text box, a drop cap, a "DRAFT" watermark and its own theme. _Status: met._ `examples/magazine/magazine.wgx` is a three-page review: a full-bleed cover behind white Georgia titles; a two-column feature with a page-wide picture at the top, a drop cap in the heading font, a pull quote floating across the columns, a tightly wrapped picture, a floating table, a sidebar box and an SVG figure; a running head, a page frame and a DRAFT watermark, all in its own Harbour theme. It builds without diagnostics, passes both validators and lays out in Word as intended. Building it changed two things: percentage widths in a section with columns are now of the column, and a drop cap skips floating objects anchored at the start of its paragraph.
 
 == M5: Collaboration & forms
 

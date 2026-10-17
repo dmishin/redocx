@@ -634,7 +634,15 @@ class Lowering:
         )
 
     def text_width(self) -> Length:
-        return self.section.page.text_width
+        """The width text takes: a column's in a section with columns (the narrowest of
+        unequal ones), as Word fits pictures and tables to the column; else the page's."""
+        section = self.section
+        if section.column_widths:
+            return min(section.column_widths, key=lambda width: width.emu)
+        if section.columns > 1:
+            gaps = section.column_gap.emu * (section.columns - 1)
+            return Length((section.page.text_width.emu - gaps) // section.columns)
+        return section.page.text_width
 
     def load(self, path: Path, command: ast.Command) -> ParseResult | None:
         if len(self.include_stack) > MAX_INCLUDE_DEPTH:

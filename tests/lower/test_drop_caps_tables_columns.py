@@ -72,6 +72,28 @@ def test_drop_cap_sizes_match_word(lines: int, line: str, size: str, position: s
     assert run.find(f"{W}position").get(f"{W}val") == position  # pyright: ignore[reportOptionalMemberAccess]
 
 
+def test_floating_objects_before_the_first_letter_stay_in_the_paragraph() -> None:
+    frame, rest = compiled(
+        "\\p[drop-cap]{\\textbox[width=3cm, wrap=square, x=right]{Box}\n\\font[bold]{W}ord.}"
+    ).body
+    assert isinstance(frame, ir.Paragraph)
+    assert isinstance(rest, ir.Paragraph)
+    assert frame.text() == "W"
+    assert frame.runs()[0].props["bold"] is True  # the letter keeps its formatting
+    assert isinstance(rest.content[0], ir.TextBox)
+    assert rest.text() == "ord."
+
+
+def test_percentages_are_of_the_column() -> None:
+    doc = compiled("\\section[columns=(count=2, gap=1cm)]\n\n\\textbox[width=100%]{A}")
+    (box,) = [i for p in doc.all_paragraphs() for i in p.content if isinstance(i, ir.TextBox)]
+    text_width = doc.section.page.text_width
+    assert box.width == Length((text_width.emu - Length.cm(1).emu) // 2)
+    doc = compiled("\\section[columns=(widths=(10cm, 4cm))]\n\n\\textbox[width=50%]{A}")
+    (box,) = [i for p in doc.all_paragraphs() for i in p.content if isinstance(i, ir.TextBox)]
+    assert box.width == Length.cm(2)  # of the narrowest column
+
+
 def test_drop_cap_in_the_margin_and_errors() -> None:
     document = document_xml("\\p[drop-cap=(lines=2, in-margin)]{Word.}")
     frame = next(document.iter(f"{W}framePr"))

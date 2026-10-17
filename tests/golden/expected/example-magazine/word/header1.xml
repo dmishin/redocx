@@ -1,0 +1,54 @@
+<w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:p>
+    <w:pPr>
+      <w:pStyle w:val="Header"/>
+    </w:pPr>
+    <w:r>
+      <w:rPr>
+        <w:noProof/>
+      </w:rPr>
+      <w:pict>
+        <v:shapetype xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml" adj="10800" coordsize="21600,21600" id="_x0000_t136" path="m@7,l@8,m@5,21600l@6,21600e" o:spt="136">
+          <v:formulas>
+            <v:f eqn="sum #0 0 10800"/>
+            <v:f eqn="prod #0 2 1"/>
+            <v:f eqn="sum 21600 0 @1"/>
+            <v:f eqn="sum 0 0 @2"/>
+            <v:f eqn="sum 21600 0 @3"/>
+            <v:f eqn="if @0 @3 0"/>
+            <v:f eqn="if @0 21600 @1"/>
+            <v:f eqn="if @0 0 @2"/>
+            <v:f eqn="if @0 @4 21600"/>
+            <v:f eqn="mid @5 @6"/>
+            <v:f eqn="mid @8 @5"/>
+            <v:f eqn="mid @7 @8"/>
+            <v:f eqn="mid @6 @7"/>
+            <v:f eqn="sum @6 0 @5"/>
+          </v:formulas>
+          <v:path textpathok="t" o:connectangles="270,180,90,0" o:connectlocs="@9,0;@10,10800;@11,21600;@12,10800" o:connecttype="custom"/>
+          <v:textpath fitshape="t" on="t"/>
+          <v:handles>
+            <v:h position="#0,bottomRight" xrange="6629,14971"/>
+          </v:handles>
+          <o:lock shapetype="t" text="t" v:ext="edit"/>
+        </v:shapetype>
+        <v:shape xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml" fillcolor="#C0C0C0" id="PowerPlusWaterMarkObject7" stroked="f" style="position:absolute;margin-left:0;margin-top:0;width:493.23pt;height:159.11pt;rotation:315;z-index:-251657216;mso-position-horizontal:center;mso-position-horizontal-relative:margin;mso-position-vertical:center;mso-position-vertical-relative:margin" type="#_x0000_t136" o:allowincell="f" o:spid="_x0000_s2055">
+          <v:fill opacity=".5"/>
+          <v:textpath string="DRAFT" style="font-family:&quot;Calibri&quot;;font-size:1pt"/>
+          <w10:wrap xmlns:w10="urn:schemas-microsoft-com:office:word" anchorx="margin" anchory="margin"/>
+        </v:shape>
+      </w:pict>
+    </w:r>
+    <w:r>
+      <w:rPr>
+        <w:color w:themeColor="accent1" w:val="0B7A75"/>
+        <w:sz w:val="16"/>
+        <w:szCs w:val="16"/>
+      </w:rPr>
+      <w:t>HARBOUR CITY MOBILITY REVIEW</w:t>
+      <w:tab/>
+      <w:tab/>
+      <w:t>AUTUMN ISSUE</w:t>
+    </w:r>
+  </w:p>
+</w:hdr>
