@@ -9,9 +9,11 @@ from wordgenx import ir
 from wordgenx.commands.bind import Args
 from wordgenx.lower.common import Format, InlineHandler, Piece, markup
 from wordgenx.lower.fields import format_date
+from wordgenx.lower.media import placeholder as blank_picture
 from wordgenx.props import PropertySet, Target
 from wordgenx.syntax import ast
 from wordgenx.syntax.diagnostics import Code
+from wordgenx.values import Length
 
 if TYPE_CHECKING:
     from wordgenx.lower.lowering import Lowering
@@ -27,6 +29,7 @@ PLACEHOLDERS = {
 """Word's own placeholder texts."""
 CHECKED, UNCHECKED = "☒", "☐"  # ☒ ☐, as Word's checkbox shows them
 CHECKBOX_FONT = "MS Gothic"
+EMPTY_PICTURE = (Length.cm(4), Length.cm(3))
 
 
 def control(lw: Lowering, command: ast.Command, args: Args, fmt: Format) -> list[Piece]:
@@ -67,7 +70,23 @@ def control(lw: Lowering, command: ast.Command, args: Args, fmt: Format) -> list
         else:
             content = (ir.Run(format_date(moment, picture), fmt.props, fmt.style),)
     placeholder = False
-    if kind == "checkbox":
+    if kind == "picture":
+        pictures = [i for i in content if isinstance(i, ir.Image)]
+        if content and (len(pictures) != 1 or len(content) != 1):
+            lw.report(
+                Code.INVALID_ARGUMENT,
+                "a picture control holds one \\image",
+                command.span,
+                help="\\control[picture]{\\image[width=4cm]{signature.png}}",
+            )
+            return []
+        if not content:  # an empty frame for the reader's picture
+            placeholder = True
+            width = args.get("width", Length) or EMPTY_PICTURE[0]
+            height = args.get("height", Length) or EMPTY_PICTURE[1]
+            empty = ir.Image(blank_picture((width, height)), "png", width, height, "", "Picture")
+            content = (empty,)
+    elif kind == "checkbox":
         box = CHECKED if args.flag("checked") else UNCHECKED
         font = PropertySet(Target.RUN, {"font": CHECKBOX_FONT})
         content = (ir.Run(box, fmt.props.merged(font), fmt.style),)

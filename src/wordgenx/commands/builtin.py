@@ -552,6 +552,8 @@ _command(
     _o("format", TEXT, "a date's display format, as Word's (d MMMM yyyy)"),
     _o("date", TEXT, "a date's value, YYYY-MM-DD"),
     _o("checked", FLAG, "a checkbox that is ticked"),
+    _o("width", LengthValue(nonnegative=True), "an empty picture control's size (4cm)"),
+    _o("height", LengthValue(nonnegative=True), "(3cm)"),
     positional="type",
 )  # fmt: skip
 

@@ -5,13 +5,16 @@ from __future__ import annotations
 import io
 import zipfile
 from datetime import datetime
+from pathlib import Path
 
 import pytest
 from lxml import etree
+from PIL import Image as PILImage
 
 from tests.support.xsd import validate_package
 from wordgenx import ir
 from wordgenx.compiler import build, compile_source
+from wordgenx.values import Length
 
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 W14 = "{http://schemas.microsoft.com/office/word/2010/wordml}"
@@ -110,6 +113,26 @@ def test_checkbox_is_word_2010s_and_ignorable() -> None:
     plain, _ = build("No checkbox.")
     assert plain is not None
     assert b"mc:Ignorable" not in zipfile.ZipFile(io.BytesIO(plain)).read("word/document.xml")
+
+
+def test_picture_control(tmp_path: Path) -> None:
+    empty = control("\\control[picture, tag=photo, width=3cm, height=4cm]")
+    assert empty.showing_placeholder
+    (frame,) = empty.content
+    assert isinstance(frame, ir.Image)
+    assert (frame.width, frame.height) == (Length.cm(3), Length.cm(4))
+    assert sdt("\\control[picture]").find(f"{W}sdtPr/{W}picture") is not None
+    PILImage.new("RGB", (40, 20), "red").save(tmp_path / "sig.png")
+    result = compile_source("\\control[picture]{\\image[width=4cm]{sig.png}}", tmp_path)
+    assert result.document is not None, result.render_diagnostics()
+    (filled,) = [
+        i
+        for p in result.document.all_paragraphs()
+        for i in p.content
+        if isinstance(i, ir.ContentControl)
+    ]
+    assert not filled.showing_placeholder
+    assert errors("\\control[picture]{text}") == ["a picture control holds one \\image"]
 
 
 def test_control_errors() -> None:

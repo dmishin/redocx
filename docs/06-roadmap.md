@@ -143,9 +143,15 @@ over the writer) goes to [Postponed features](09-postponed.md) instead.
    left out.
 3. [x] **Content controls**: `\control[type=…, tag=…, title=…, lock=…]`, inline or around blocks: plain and rich text,
    dropdown and combo box, date, checkbox; placeholder text; with the existing form protection.
-4. **Picture and repeating controls**, if they stay small.
+4. [x] **Picture controls** (an image, or an empty frame). Repeating sections are postponed (Word 2013's `w15`
+   markup and a section that repeats are more than they give).
 
 - **Exit:** a fillable onboarding form: every field type, form protection, a reviewer's comments, Track Changes on.
+  *Status: met.* `examples/forms/onboarding.wgx` is a one-page form protected for filling in: text, dropdown, combo,
+  date, picture, rich-text and checkbox fields with placeholders, a locked field, a reviewer's comments (one with
+  markup) and Track Changes on. It builds without diagnostics and passes both validators; in Word all fourteen
+  controls read back with their types, filling a field, a dropdown and a checkbox works under protection, the
+  comments show in the margin, and once unprotected, edits are tracked.
 
 Tracked revisions in the source and `wordgenx diff` redlines are [postponed](09-postponed.md); data binding stays
 "Later".

@@ -617,7 +617,7 @@ class CommentEnd:
     name: str
 
 
-CONTROL_KINDS = ("text", "rich-text", "dropdown", "combo", "date", "checkbox")
+CONTROL_KINDS = ("text", "rich-text", "dropdown", "combo", "date", "checkbox", "picture")
 CONTROL_LOCKS = {"content": "contentLocked", "control": "sdtLocked", "both": "sdtContentLocked"}
 """What a content control's lock keeps -> w:lock: its content, the control itself, or both."""
 

@@ -1,0 +1,543 @@
+<w:document xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" mc:Ignorable="w14">
+  <w:body>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Title"/>
+      </w:pPr>
+      <w:r>
+        <w:t>New Starter Onboarding</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t xml:space="preserve">Please fill in every field. The form is protected: only the grey fields can be edited. </w:t>
+      </w:r>
+      <w:commentRangeStart w:id="0"/>
+      <w:r>
+        <w:t>Return it to the People Team</w:t>
+      </w:r>
+      <w:commentRangeEnd w:id="0"/>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CommentReference"/>
+        </w:rPr>
+        <w:commentReference w:id="0"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> before your first day.</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading1"/>
+      </w:pPr>
+      <w:r>
+        <w:t>About you</w:t>
+      </w:r>
+    </w:p>
+    <w:tbl>
+      <w:tblPr>
+        <w:tblStyle w:val="FormGrid"/>
+        <w:tblW w:type="dxa" w:w="9638"/>
+        <w:tblLayout w:type="fixed"/>
+        <w:tblLook w:firstColumn="1" w:firstRow="1" w:lastColumn="0" w:lastRow="0" w:noHBand="0" w:noVBand="1" w:val="04A0"/>
+      </w:tblPr>
+      <w:tblGrid>
+        <w:gridCol w:w="2835"/>
+        <w:gridCol w:w="6803"/>
+      </w:tblGrid>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2835"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:rPr>
+                <w:rStyle w:val="FormLabel"/>
+              </w:rPr>
+              <w:t>Full name</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="6803"/>
+          </w:tcPr>
+          <w:p>
+            <w:sdt>
+              <w:sdtPr>
+                <w:alias w:val="Full name"/>
+                <w:tag w:val="name"/>
+                <w:id w:val="1"/>
+                <w:showingPlcHdr/>
+                <w:text/>
+              </w:sdtPr>
+              <w:sdtContent>
+                <w:r>
+                  <w:rPr>
+                    <w:rStyle w:val="PlaceholderText"/>
+                  </w:rPr>
+                  <w:t>First and last name</w:t>
+                </w:r>
+              </w:sdtContent>
+            </w:sdt>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2835"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:rPr>
+                <w:rStyle w:val="FormLabel"/>
+              </w:rPr>
+              <w:t>Preferred name</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="6803"/>
+          </w:tcPr>
+          <w:p>
+            <w:sdt>
+              <w:sdtPr>
+                <w:alias w:val="Preferred name"/>
+                <w:tag w:val="preferred"/>
+                <w:id w:val="2"/>
+                <w:showingPlcHdr/>
+                <w:text/>
+              </w:sdtPr>
+              <w:sdtContent>
+                <w:r>
+                  <w:rPr>
+                    <w:rStyle w:val="PlaceholderText"/>
+                  </w:rPr>
+                  <w:t>Click or tap here to enter text.</w:t>
+                </w:r>
+              </w:sdtContent>
+            </w:sdt>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2835"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:rPr>
+                <w:rStyle w:val="FormLabel"/>
+              </w:rPr>
+              <w:t>Department</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="6803"/>
+          </w:tcPr>
+          <w:p>
+            <w:sdt>
+              <w:sdtPr>
+                <w:alias w:val="Department"/>
+                <w:tag w:val="department"/>
+                <w:id w:val="3"/>
+                <w:showingPlcHdr/>
+                <w:dropDownList>
+                  <w:listItem w:displayText="Engineering" w:value="Engineering"/>
+                  <w:listItem w:displayText="Operations" w:value="Operations"/>
+                  <w:listItem w:displayText="Finance" w:value="Finance"/>
+                  <w:listItem w:displayText="People" w:value="People"/>
+                </w:dropDownList>
+              </w:sdtPr>
+              <w:sdtContent>
+                <w:r>
+                  <w:rPr>
+                    <w:rStyle w:val="PlaceholderText"/>
+                  </w:rPr>
+                  <w:t>Choose an item.</w:t>
+                </w:r>
+              </w:sdtContent>
+            </w:sdt>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2835"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:rPr>
+                <w:rStyle w:val="FormLabel"/>
+              </w:rPr>
+              <w:t>Role</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="6803"/>
+          </w:tcPr>
+          <w:p>
+            <w:sdt>
+              <w:sdtPr>
+                <w:alias w:val="Role"/>
+                <w:tag w:val="role"/>
+                <w:id w:val="4"/>
+                <w:showingPlcHdr/>
+                <w:comboBox>
+                  <w:listItem w:displayText="Analyst" w:value="Analyst"/>
+                  <w:listItem w:displayText="Engineer" w:value="Engineer"/>
+                  <w:listItem w:displayText="Manager" w:value="Manager"/>
+                </w:comboBox>
+              </w:sdtPr>
+              <w:sdtContent>
+                <w:r>
+                  <w:rPr>
+                    <w:rStyle w:val="PlaceholderText"/>
+                  </w:rPr>
+                  <w:t>Choose an item.</w:t>
+                </w:r>
+              </w:sdtContent>
+            </w:sdt>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2835"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:rPr>
+                <w:rStyle w:val="FormLabel"/>
+              </w:rPr>
+              <w:t>Start date</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="6803"/>
+          </w:tcPr>
+          <w:p>
+            <w:sdt>
+              <w:sdtPr>
+                <w:alias w:val="Start date"/>
+                <w:tag w:val="start"/>
+                <w:id w:val="5"/>
+                <w:showingPlcHdr/>
+                <w:date>
+                  <w:dateFormat w:val="d MMMM yyyy"/>
+                  <w:lid w:val="en-GB"/>
+                  <w:storeMappedDataAs w:val="dateTime"/>
+                  <w:calendar w:val="gregorian"/>
+                </w:date>
+              </w:sdtPr>
+              <w:sdtContent>
+                <w:r>
+                  <w:rPr>
+                    <w:rStyle w:val="PlaceholderText"/>
+                  </w:rPr>
+                  <w:t>Click or tap to enter a date.</w:t>
+                </w:r>
+              </w:sdtContent>
+            </w:sdt>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="2835"/>
+          </w:tcPr>
+          <w:p>
+            <w:r>
+              <w:rPr>
+                <w:rStyle w:val="FormLabel"/>
+              </w:rPr>
+              <w:t>Photo</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:type="dxa" w:w="6803"/>
+          </w:tcPr>
+          <w:p>
+            <w:sdt>
+              <w:sdtPr>
+                <w:alias w:val="Photo for your badge"/>
+                <w:tag w:val="photo"/>
+                <w:id w:val="6"/>
+                <w:showingPlcHdr/>
+                <w:picture/>
+              </w:sdtPr>
+              <w:sdtContent>
+                <w:r>
+                  <w:drawing>
+                    <wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distB="0" distL="0" distR="0" distT="0">
+                      <wp:extent cx="1080000" cy="1440000"/>
+                      <wp:effectExtent b="0" l="0" r="0" t="0"/>
+                      <wp:docPr id="7" name="Picture"/>
+                      <wp:cNvGraphicFramePr>
+                        <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>
+                      </wp:cNvGraphicFramePr>
+                      <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+                        <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                          <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                            <pic:nvPicPr>
+                              <pic:cNvPr id="0" name="Picture"/>
+                              <pic:cNvPicPr/>
+                            </pic:nvPicPr>
+                            <pic:blipFill>
+                              <a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId6"/>
+                              <a:stretch>
+                                <a:fillRect/>
+                              </a:stretch>
+                            </pic:blipFill>
+                            <pic:spPr>
+                              <a:xfrm>
+                                <a:off x="0" y="0"/>
+                                <a:ext cx="1080000" cy="1440000"/>
+                              </a:xfrm>
+                              <a:prstGeom prst="rect">
+                                <a:avLst/>
+                              </a:prstGeom>
+                            </pic:spPr>
+                          </pic:pic>
+                        </a:graphicData>
+                      </a:graphic>
+                    </wp:inline>
+                  </w:drawing>
+                </w:r>
+              </w:sdtContent>
+            </w:sdt>
+          </w:p>
+        </w:tc>
+      </w:tr>
+    </w:tbl>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading1"/>
+      </w:pPr>
+      <w:r>
+        <w:t>Equipment and access</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:sdt>
+        <w:sdtPr>
+          <w:tag w:val="laptop"/>
+          <w:id w:val="8"/>
+          <w14:checkbox xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml">
+            <w14:checked w14:val="0"/>
+            <w14:checkedState w14:font="MS Gothic" w14:val="2612"/>
+            <w14:uncheckedState w14:font="MS Gothic" w14:val="2610"/>
+          </w14:checkbox>
+        </w:sdtPr>
+        <w:sdtContent>
+          <w:r>
+            <w:rPr>
+              <w:rFonts w:ascii="MS Gothic" w:hAnsi="MS Gothic"/>
+            </w:rPr>
+            <w:t>☐</w:t>
+          </w:r>
+        </w:sdtContent>
+      </w:sdt>
+      <w:r>
+        <w:t xml:space="preserve"> Laptop</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:sdt>
+        <w:sdtPr>
+          <w:tag w:val="phone"/>
+          <w:id w:val="9"/>
+          <w14:checkbox xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml">
+            <w14:checked w14:val="0"/>
+            <w14:checkedState w14:font="MS Gothic" w14:val="2612"/>
+            <w14:uncheckedState w14:font="MS Gothic" w14:val="2610"/>
+          </w14:checkbox>
+        </w:sdtPr>
+        <w:sdtContent>
+          <w:r>
+            <w:rPr>
+              <w:rFonts w:ascii="MS Gothic" w:hAnsi="MS Gothic"/>
+            </w:rPr>
+            <w:t>☐</w:t>
+          </w:r>
+        </w:sdtContent>
+      </w:sdt>
+      <w:r>
+        <w:t xml:space="preserve"> Mobile phone</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:sdt>
+        <w:sdtPr>
+          <w:tag w:val="parking"/>
+          <w:id w:val="10"/>
+          <w14:checkbox xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml">
+            <w14:checked w14:val="0"/>
+            <w14:checkedState w14:font="MS Gothic" w14:val="2612"/>
+            <w14:uncheckedState w14:font="MS Gothic" w14:val="2610"/>
+          </w14:checkbox>
+        </w:sdtPr>
+        <w:sdtContent>
+          <w:r>
+            <w:rPr>
+              <w:rFonts w:ascii="MS Gothic" w:hAnsi="MS Gothic"/>
+            </w:rPr>
+            <w:t>☐</w:t>
+          </w:r>
+        </w:sdtContent>
+      </w:sdt>
+      <w:r>
+        <w:t xml:space="preserve"> Parking permit</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t xml:space="preserve">Anything else we should know? </w:t>
+      </w:r>
+      <w:sdt>
+        <w:sdtPr>
+          <w:alias w:val="Notes"/>
+          <w:tag w:val="notes"/>
+          <w:id w:val="11"/>
+          <w:showingPlcHdr/>
+        </w:sdtPr>
+        <w:sdtContent>
+          <w:r>
+            <w:rPr>
+              <w:rStyle w:val="PlaceholderText"/>
+            </w:rPr>
+            <w:t>Accessibility needs, dietary requirements, ...</w:t>
+          </w:r>
+        </w:sdtContent>
+      </w:sdt>
+    </w:p>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Heading1"/>
+      </w:pPr>
+      <w:r>
+        <w:t>Declaration</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:sdt>
+        <w:sdtPr>
+          <w:tag w:val="handbook"/>
+          <w:id w:val="12"/>
+          <w14:checkbox xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml">
+            <w14:checked w14:val="0"/>
+            <w14:checkedState w14:font="MS Gothic" w14:val="2612"/>
+            <w14:uncheckedState w14:font="MS Gothic" w14:val="2610"/>
+          </w14:checkbox>
+        </w:sdtPr>
+        <w:sdtContent>
+          <w:r>
+            <w:rPr>
+              <w:rFonts w:ascii="MS Gothic" w:hAnsi="MS Gothic"/>
+            </w:rPr>
+            <w:t>☐</w:t>
+          </w:r>
+        </w:sdtContent>
+      </w:sdt>
+      <w:r>
+        <w:t xml:space="preserve"> I have read the staff handbook (version </w:t>
+      </w:r>
+      <w:sdt>
+        <w:sdtPr>
+          <w:tag w:val="version"/>
+          <w:id w:val="13"/>
+          <w:lock w:val="sdtContentLocked"/>
+          <w:text/>
+        </w:sdtPr>
+        <w:sdtContent>
+          <w:r>
+            <w:t>2026.2</w:t>
+          </w:r>
+        </w:sdtContent>
+      </w:sdt>
+      <w:r>
+        <w:t>).</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t xml:space="preserve">Signed: </w:t>
+      </w:r>
+      <w:sdt>
+        <w:sdtPr>
+          <w:alias w:val="Signature"/>
+          <w:tag w:val="signature"/>
+          <w:id w:val="14"/>
+          <w:showingPlcHdr/>
+          <w:text/>
+        </w:sdtPr>
+        <w:sdtContent>
+          <w:r>
+            <w:rPr>
+              <w:rStyle w:val="PlaceholderText"/>
+            </w:rPr>
+            <w:t>Type your name</w:t>
+          </w:r>
+        </w:sdtContent>
+      </w:sdt>
+      <w:r>
+        <w:t xml:space="preserve"> </w:t>
+      </w:r>
+      <w:commentRangeStart w:id="1"/>
+      <w:commentRangeEnd w:id="1"/>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CommentReference"/>
+        </w:rPr>
+        <w:commentReference w:id="1"/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">Date: </w:t>
+      </w:r>
+      <w:sdt>
+        <w:sdtPr>
+          <w:tag w:val="signed"/>
+          <w:id w:val="15"/>
+          <w:showingPlcHdr/>
+          <w:date>
+            <w:dateFormat w:val="d MMM yyyy"/>
+            <w:lid w:val="en-GB"/>
+            <w:storeMappedDataAs w:val="dateTime"/>
+            <w:calendar w:val="gregorian"/>
+          </w:date>
+        </w:sdtPr>
+        <w:sdtContent>
+          <w:r>
+            <w:rPr>
+              <w:rStyle w:val="PlaceholderText"/>
+            </w:rPr>
+            <w:t>Click or tap to enter a date.</w:t>
+          </w:r>
+        </w:sdtContent>
+      </w:sdt>
+    </w:p>
+    <w:sectPr>
+      <w:footerReference xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId7" w:type="default"/>
+      <w:pgSz w:h="16838" w:w="11906"/>
+      <w:pgMar w:bottom="1134" w:footer="709" w:gutter="0" w:header="709" w:left="1134" w:right="1134" w:top="1134"/>
+      <w:cols w:space="708"/>
+      <w:docGrid w:linePitch="360"/>
+    </w:sectPr>
+  </w:body>
+</w:document>

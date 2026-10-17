@@ -940,6 +940,8 @@ def _control(control: ContentControl, ctx: BodyContext) -> Element:
                     E("w:calendar", {"w:val": "gregorian"}),
                 )
             )
+        case "picture":
+            properties.append(E("w:picture"))
         case "checkbox":  # Word 2010's checkbox, ignorable by older readers
             properties.append(
                 E(

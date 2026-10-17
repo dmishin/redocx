@@ -1,0 +1,92 @@
+<w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:p>
+    <w:pPr>
+      <w:pStyle w:val="Footer"/>
+      <w:jc w:val="center"/>
+    </w:pPr>
+    <w:r>
+      <w:rPr>
+        <w:sz w:val="16"/>
+        <w:szCs w:val="16"/>
+      </w:rPr>
+      <w:t xml:space="preserve">People Team · Form HR-07 · Page </w:t>
+    </w:r>
+    <w:r>
+      <w:rPr>
+        <w:sz w:val="16"/>
+        <w:szCs w:val="16"/>
+      </w:rPr>
+      <w:fldChar w:fldCharType="begin"/>
+    </w:r>
+    <w:r>
+      <w:rPr>
+        <w:sz w:val="16"/>
+        <w:szCs w:val="16"/>
+      </w:rPr>
+      <w:instrText xml:space="preserve"> PAGE </w:instrText>
+    </w:r>
+    <w:r>
+      <w:rPr>
+        <w:sz w:val="16"/>
+        <w:szCs w:val="16"/>
+      </w:rPr>
+      <w:fldChar w:fldCharType="separate"/>
+    </w:r>
+    <w:r>
+      <w:rPr>
+        <w:sz w:val="16"/>
+        <w:szCs w:val="16"/>
+      </w:rPr>
+      <w:t>1</w:t>
+    </w:r>
+    <w:r>
+      <w:rPr>
+        <w:sz w:val="16"/>
+        <w:szCs w:val="16"/>
+      </w:rPr>
+      <w:fldChar w:fldCharType="end"/>
+    </w:r>
+    <w:r>
+      <w:rPr>
+        <w:sz w:val="16"/>
+        <w:szCs w:val="16"/>
+      </w:rPr>
+      <w:t xml:space="preserve"> of </w:t>
+    </w:r>
+    <w:r>
+      <w:rPr>
+        <w:sz w:val="16"/>
+        <w:szCs w:val="16"/>
+      </w:rPr>
+      <w:fldChar w:fldCharType="begin"/>
+    </w:r>
+    <w:r>
+      <w:rPr>
+        <w:sz w:val="16"/>
+        <w:szCs w:val="16"/>
+      </w:rPr>
+      <w:instrText xml:space="preserve"> NUMPAGES </w:instrText>
+    </w:r>
+    <w:r>
+      <w:rPr>
+        <w:sz w:val="16"/>
+        <w:szCs w:val="16"/>
+      </w:rPr>
+      <w:fldChar w:fldCharType="separate"/>
+    </w:r>
+    <w:r>
+      <w:rPr>
+        <w:sz w:val="16"/>
+        <w:szCs w:val="16"/>
+      </w:rPr>
+      <w:t>1</w:t>
+    </w:r>
+    <w:r>
+      <w:rPr>
+        <w:sz w:val="16"/>
+        <w:szCs w:val="16"/>
+      </w:rPr>
+      <w:fldChar w:fldCharType="end"/>
+    </w:r>
+  </w:p>
+</w:ftr>

@@ -699,14 +699,16 @@ is an inline `w:sdt`; the type is the first bare value or `type=`:
 
 - `text` (the default; plain text), `rich-text` (formatted text), `dropdown` and `combo` (`items=("A", "B")`; a combo
   box also takes typed text), `date` (`format="d MMMM yyyy"` as Word's date pictures, `date=2026-11-02` for a value),
-  and `checkbox` (`checked`; Word 2010's check box with ☒ and ☐, written under `mc:Ignorable` so older readers skip
-  it). The body is the value; a checkbox has none (its label goes beside it).
+  `checkbox` (`checked`; Word 2010's check box with ☒ and ☐, written under `mc:Ignorable` so older readers skip
+  it), and `picture` (`\control[picture]{\image{…}}`, or an empty grey frame of `width` × `height`, 4cm × 3cm by
+  default, for the reader's picture). The body is the value; a checkbox has none (its label goes beside it).
 - Without a value, the control shows its placeholder in Word's "Placeholder Text" style until it is filled in:
   `placeholder="…"`, or Word's own ("Click or tap here to enter text.", "Choose an item.", …).
 - `tag` names the field for programs that read the form, `title` shows on the control in Word, and
   `lock=content|control|both` stops the value being edited, the control being deleted, or both.
 
-A control holds text, not blocks (rich text around whole paragraphs is not supported). Form protection is set with
+A control holds text, not blocks (rich text around whole paragraphs is not supported), and repeating sections are
+not supported. Form protection is set with
 `\settings[protection=(mode=forms, enforce)]`: then only the controls can be edited, and `\settings[track-changes]` turns on
 Word's Track Changes for edits made later in Word.
 

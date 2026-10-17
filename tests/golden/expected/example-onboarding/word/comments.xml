@@ -1,0 +1,44 @@
+<w:comments xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:comment w:author="R. Patel" w:date="2026-10-13T00:00:00Z" w:id="0" w:initials="RP">
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="CommentText"/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CommentReference"/>
+        </w:rPr>
+        <w:annotationRef/>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve">Shall we add the </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:b/>
+          <w:bCs/>
+        </w:rPr>
+        <w:t>emergency contact</w:t>
+      </w:r>
+      <w:r>
+        <w:t xml:space="preserve"> here, or keep it in the HR system only?</w:t>
+      </w:r>
+    </w:p>
+  </w:comment>
+  <w:comment w:author="R. Patel" w:date="2026-10-13T00:00:00Z" w:id="1" w:initials="RP">
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="CommentText"/>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rStyle w:val="CommentReference"/>
+        </w:rPr>
+        <w:annotationRef/>
+      </w:r>
+      <w:r>
+        <w:t>Legal asked whether a typed name is enough. Check before go-live.</w:t>
+      </w:r>
+    </w:p>
+  </w:comment>
+</w:comments>
