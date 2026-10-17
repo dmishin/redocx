@@ -222,6 +222,19 @@ def test_field_errors() -> None:
     assert "unknown option `bogus` for `\\field`" in messages
 
 
+def test_unknown_field_names_are_warnings() -> None:
+    result = compile_source(
+        "\\field{PAGEREFF x} \\field{IF { MERGEFEILD a } = 1 y} \\field{= { NUMPAGES } - 1} "
+        "\\field{styleref 1}"
+    )
+    assert result.ok
+    found = [(d.severity.value, d.message, d.help) for _, d in result.diagnostics]
+    assert found == [
+        ("warning", "Word has no field `PAGEREFF`", "did you mean `PAGEREF`?"),
+        ("warning", "Word has no field `MERGEFEILD`", "did you mean `MERGEFIELD`?"),
+    ]
+
+
 # --- tab stops -----------------------------------------------------------------------------------
 
 

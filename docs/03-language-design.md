@@ -540,7 +540,9 @@ a multi-column index in continuous section breaks of its own. Marks in notes and
 ranges (`XE \r`) and sort keys that differ from the term.
 
 `\field` is the general escape hatch. It takes the raw field instruction and an optional cached result. It emits
-`w:fldChar` begin/separate/end. `{ … }` inside the instruction are nested fields, in Word's display notation.
+`w:fldChar` begin/separate/end. `{ … }` inside the instruction are nested fields, in Word's display notation. A
+field type Word does not know (`\field{PAGEREFF x}`, also in a nested field) is a warning, with the closest
+known name; the rest of the instruction (switches, arguments) is not checked.
 
 ## 3.13 Custom counters (F-12)
 

@@ -3,6 +3,7 @@ codes with nested fields, and Word date pictures (design §3.12)."""
 
 from __future__ import annotations
 
+import difflib
 import os
 import re
 from datetime import UTC, datetime
@@ -13,13 +14,25 @@ from wordgenx.commands.bind import Args
 from wordgenx.commands.builtin import DATE_FIELDS
 from wordgenx.lower.common import Format, InlineHandler, Piece, verbatim
 from wordgenx.syntax import ast
-from wordgenx.syntax.diagnostics import Code
+from wordgenx.syntax.diagnostics import Code, Severity
 
 if TYPE_CHECKING:
     from wordgenx.lower.lowering import Lowering
 
 PAGE_FIELDS = {"pagenum": "PAGE", "numpages": "NUMPAGES", "sectionpages": "SECTIONPAGES"}
 META_FIELDS = {"TITLE": "title", "SUBJECT": "subject", "AUTHOR": "author", "KEYWORDS": "keywords"}
+WORD_FIELDS = frozenset(
+    """ADDIN ADDRESSBLOCK ADVANCE ASK AUTHOR AUTONUM AUTONUMLGL AUTONUMOUT AUTOTEXT AUTOTEXTLIST
+    BARCODE BIBLIOGRAPHY BIDIOUTLINE CITATION COMMENTS COMPARE CONTROL CREATEDATE DATABASE DATE
+    DDE DDEAUTO DISPLAYBARCODE DOCPROPERTY DOCVARIABLE EDITTIME EMBED EQ FILENAME FILESIZE FILLIN
+    FORMCHECKBOX FORMDROPDOWN FORMTEXT GLOSSARY GOTOBUTTON GREETINGLINE HYPERLINK IF IMPORT
+    INCLUDE INCLUDEPICTURE INCLUDETEXT INDEX INFO KEYWORDS LASTSAVEDBY LINK LISTNUM MACROBUTTON
+    MERGEBARCODE MERGEFIELD MERGEREC MERGESEQ NEXT NEXTIF NOTEREF NUMCHARS NUMPAGES NUMWORDS PAGE
+    PAGEREF PRINT PRINTDATE PRIVATE QUOTE RD REF REVNUM SAVEDATE SECTION SECTIONPAGES SEQ SET
+    SHAPE SKIPIF STYLEREF SUBJECT SYMBOL TA TC TEMPLATE TIME TITLE TOA TOC USERADDRESS
+    USERINITIALS USERNAME XE""".split()
+)
+"""The field types Word knows (Word's field-code reference); `=` (a formula) as well."""
 DOCPROPERTY_RE = re.compile(r'\s*DOCPROPERTY\s+(?:"([^"]+)"|(\S+))', re.IGNORECASE)
 
 _MONTHS = (
@@ -139,6 +152,15 @@ def any_field(lw: Lowering, command: ast.Command, args: Args, fmt: Format) -> li
     except ValueError as e:
         lw.report(Code.INVALID_ARGUMENT, str(e), command.span)
         return []
+    for name in _unknown_fields(instruction):
+        close = difflib.get_close_matches(name, WORD_FIELDS, n=1)
+        lw.report(
+            Code.INVALID_ARGUMENT,
+            f"Word has no field `{name}`",
+            command.body.span if command.body is not None else command.span,
+            help=f"did you mean `{close[0]}`?" if close else "Word shows an error in its place",
+            severity=Severity.WARNING,
+        )
     result = args.text("result")
     dirty = False
     if result is None:
@@ -147,6 +169,19 @@ def any_field(lw: Lowering, command: ast.Command, args: Args, fmt: Format) -> li
         result = known or ""
     field = ir.Field(merge_text((" ", *instruction, " ")), result, fmt.props, fmt.style, dirty)
     return [Piece("", fmt, "field", field=field)]
+
+
+def _unknown_fields(parts: tuple[str | ir.Field, ...]) -> list[str]:
+    """The names of the field and its nested fields that Word does not know."""
+    unknown: list[str] = []
+    if parts and isinstance(parts[0], str) and parts[0].strip():
+        name = field_name(parts[0])
+        if not name.startswith("=") and name not in WORD_FIELDS:
+            unknown.append(name)
+    for part in parts:
+        if isinstance(part, ir.Field):
+            unknown += _unknown_fields(part.instruction)
+    return unknown
 
 
 def _known_result(lw: Lowering, name: str, code: str) -> str | None:
