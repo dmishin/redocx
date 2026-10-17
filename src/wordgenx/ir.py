@@ -617,6 +617,39 @@ class CommentEnd:
     name: str
 
 
+CONTROL_KINDS = ("text", "rich-text", "dropdown", "combo", "date", "checkbox")
+CONTROL_LOCKS = {"content": "contentLocked", "control": "sdtLocked", "both": "sdtContentLocked"}
+"""What a content control's lock keeps -> w:lock: its content, the control itself, or both."""
+
+
+@dataclass(frozen=True)
+class ContentControl:
+    """An inline content control (w:sdt): a field the reader fills in Word."""
+
+    kind: str
+    """A value of CONTROL_KINDS."""
+    content: tuple[Inline, ...] = ()
+    """What it shows: the value, or the placeholder text."""
+    showing_placeholder: bool = False
+    tag: str = ""
+    title: str = ""
+    lock: str | None = None
+    """A key of CONTROL_LOCKS."""
+    items: tuple[str, ...] = ()
+    """The choices of a dropdown or combo box."""
+    date_format: str = "d MMMM yyyy"
+    date: datetime | None = None
+    language: str = "en-US"
+    """For a date's month names."""
+    checked: bool = False
+
+    def __post_init__(self) -> None:
+        if self.kind not in CONTROL_KINDS:
+            raise ValueError(f"content control type must be one of {', '.join(CONTROL_KINDS)}")
+        if self.lock is not None and self.lock not in CONTROL_LOCKS:
+            raise ValueError(f"lock must be one of {', '.join(CONTROL_LOCKS)}")
+
+
 Inline = (
     Run
     | Break
@@ -633,6 +666,7 @@ Inline = (
     | Watermark
     | CommentStart
     | CommentEnd
+    | ContentControl
 )
 
 

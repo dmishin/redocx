@@ -687,16 +687,27 @@ figures) and takes a .docx only, not a macro-enabled document or a template.
 \comment[author="R. Patel", date=2026-10-13, text="Please confirm the commercial position."]{thirty (30) days}
 \comment[author="R. Patel", text={Rich comment with *markup*.}]{commented range}
 
-\control[type=text, tag=name, placeholder="Enter name", lock=content]
-\control[type=dropdown, tag=status, items=("Draft", "Final")]{Draft}
-\control[type=date, tag=start, format="d MMM yyyy"]
-\control[type=checkbox, tag=agree, checked]
-\control[type=rich-text, tag=address]
-\control[type=picture, tag=signature]
-\control[type=repeating, tag=contacts, min=1, max=3]{ …block content repeated per entry… }
+\control[tag=name, title="Full name", placeholder="Enter name", lock=control]
+\control[dropdown, tag=status, items=("Draft", "Final")]{Draft}
+\control[date, tag=start, format="d MMM yyyy"]
+\control[checkbox, tag=agree, checked] I agree
+\control[rich-text, tag=notes]{Prefers \b{morning} meetings.}
 ```
 
-Form protection is set with `\settings[protection=(mode=forms, enforce)]`, and `\settings[track-changes]` turns on
+**Content controls** (M5) are the fields of a Word form. `\control[type, tag=…, title=…, placeholder=…, lock=…]{value}`
+is an inline `w:sdt`; the type is the first bare value or `type=`:
+
+- `text` (the default; plain text), `rich-text` (formatted text), `dropdown` and `combo` (`items=("A", "B")`; a combo
+  box also takes typed text), `date` (`format="d MMMM yyyy"` as Word's date pictures, `date=2026-11-02` for a value),
+  and `checkbox` (`checked`; Word 2010's check box with ☒ and ☐, written under `mc:Ignorable` so older readers skip
+  it). The body is the value; a checkbox has none (its label goes beside it).
+- Without a value, the control shows its placeholder in Word's "Placeholder Text" style until it is filled in:
+  `placeholder="…"`, or Word's own ("Click or tap here to enter text.", "Choose an item.", …).
+- `tag` names the field for programs that read the form, `title` shows on the control in Word, and
+  `lock=content|control|both` stops the value being edited, the control being deleted, or both.
+
+A control holds text, not blocks (rich text around whole paragraphs is not supported). Form protection is set with
+`\settings[protection=(mode=forms, enforce)]`: then only the controls can be edited, and `\settings[track-changes]` turns on
 Word's Track Changes for edits made later in Word.
 
 **Comments** (M5): `\comment[text=…]{commented text}` puts a comment in the margin on the text in its body; without a

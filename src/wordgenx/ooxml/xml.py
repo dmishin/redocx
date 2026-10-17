@@ -29,6 +29,7 @@ PREFIXES: dict[str, str] = {
     "v": "urn:schemas-microsoft-com:vml",
     "o": "urn:schemas-microsoft-com:office:office",
     "w10": "urn:schemas-microsoft-com:office:word",
+    "w14": "http://schemas.microsoft.com/office/word/2010/wordml",
     "cp": NS.CP,
     "dc": NS.DC,
     "dcterms": NS.DCTERMS,

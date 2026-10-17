@@ -52,6 +52,21 @@ def process_compatibility(root: etree._Element) -> None:  # pyright: ignore[repo
         parent.remove(alternate)
         for offset, child in enumerate(chosen):
             parent.insert(index + offset, child)
+    # mc:Ignorable: elements and attributes of ignorable namespaces the reader does not know
+    # are left out (a w14:checkbox, w14:paraId, ...).
+    prefixes = (root.get(f"{{{MC}}}Ignorable") or "").split()
+    ignorable = {root.nsmap.get(p) for p in prefixes} - known - {None}
+    if ignorable:
+        for element in list(root.iter()):
+            if etree.QName(element).namespace in ignorable:
+                parent = element.getparent()
+                if parent is not None:
+                    parent.remove(element)
+                continue
+            for attr in list(element.attrib):
+                if etree.QName(attr).namespace in ignorable:
+                    del element.attrib[attr]
+    root.attrib.pop(f"{{{MC}}}Ignorable", None)
 
 
 def validate_part(data: bytes) -> list[str]:

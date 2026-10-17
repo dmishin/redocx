@@ -35,5 +35,6 @@ These are the parts of finished features that were left out to keep them simple.
 | Watermarks | Keeping a template's own headers in the first section when it has a watermark | §3.16 |
 | Frames | General text frames (`w:framePr` other than drop caps): text boxes do their job | §3.6 |
 | Comments | Replies and the resolved state (Word 2013's `commentsExtended.xml`); comments in headers, notes and text boxes | §3.17 |
+| Content controls | Rich-text controls around whole paragraphs (block-level `w:sdt`); placeholders from building blocks | §3.17 |
 | Right to left | Separate complex-script values for bold, italic and size (they follow the Latin ones); `start`/`end` alignment | §3.4 |
 }

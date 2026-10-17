@@ -291,11 +291,11 @@ def test_suggestions() -> None:
     assert d.label == "did you mean `keep-with-next`?"
 
 
-def test_planned_features_warn_but_build() -> None:
-    result = diagnostics(r"Text and \control{kept} \control{in a box}")
+def test_unsupported_features_warn_but_build() -> None:
+    result = diagnostics(r"Text and \ins{kept} \ins{as well}\del{gone}.")
     assert result.document is not None
     assert {d.severity for _, d in result.diagnostics} == {Severity.WARNING}
-    assert texts(result.document) == ["Text and kept in a box"]
+    assert texts(result.document) == ["Text and kept as well."]
 
 
 def test_postponed_commands_warn_and_say_so() -> None:

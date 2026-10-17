@@ -541,7 +541,19 @@ _command(
 )  # fmt: skip
 _command("ins", INLINE, "Tracked inserted text.", planned=POSTPONED, keep_body=True)
 _command("del", INLINE, "Tracked deleted text.", planned=POSTPONED)
-_command("control", INLINE, "A content control.", planned="M5", keep_body=True)
+_command(
+    "control", INLINE, "A content control: a field to fill in Word (the body: its value).",
+    _o("type", Choice.of(*ir.CONTROL_KINDS), "default: text"),
+    _o("tag", TEXT, "a name for programs that read the form"),
+    _o("title", TEXT, "shown on the control in Word"),
+    _o("placeholder", TEXT, "grey text shown until it is filled in"),
+    _o("lock", Choice.of(*ir.CONTROL_LOCKS), "what cannot be edited or deleted"),
+    _o("items", ListOf(TEXT), "the choices of a dropdown or combo box"),
+    _o("format", TEXT, "a date's display format, as Word's (d MMMM yyyy)"),
+    _o("date", TEXT, "a date's value, YYYY-MM-DD"),
+    _o("checked", FLAG, "a checkbox that is ticked"),
+    positional="type",
+)  # fmt: skip
 
 # --- fenced code block attributes (design §3.15) ------------------------------------------
 

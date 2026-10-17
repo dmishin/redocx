@@ -175,6 +175,7 @@ BUILTIN_STYLES: dict[str, Callable[[], Style]] = {
         run=run_props(size="10pt"),
     ),
     "annotation reference": _character("annotation reference", size="8pt"),
+    "Placeholder Text": _character("Placeholder Text", color="#808080"),
     "Endnote Reference": _character("Endnote Reference", vertical_align="superscript"),
     "Bibliography": lambda: Style(  # entries with a hanging indent
         StyleKind.PARAGRAPH,

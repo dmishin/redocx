@@ -34,6 +34,7 @@ from wordgenx.lower import (
     citations,
     code,
     comments,
+    controls,
     equations,
     fields,
     index,
@@ -102,6 +103,7 @@ INLINE_HANDLERS: dict[str, InlineHandler] = {
     **citations.INLINES,
     **index.INLINES,
     **comments.INLINES,
+    **controls.INLINES,
 }
 
 

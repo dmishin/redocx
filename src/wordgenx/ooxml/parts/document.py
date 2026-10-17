@@ -9,6 +9,7 @@ from dataclasses import dataclass, field, replace
 from decimal import Decimal
 
 from wordgenx.ir import (
+    CONTROL_LOCKS,
     H_ANCHORS,
     LINE_NUMBER_RESTARTS,
     NOTE_KINDS,
@@ -30,6 +31,7 @@ from wordgenx.ir import (
     Comment,
     CommentEnd,
     CommentStart,
+    ContentControl,
     Document,
     EmbeddedDocx,
     Field,
@@ -531,6 +533,8 @@ def _inline(item: Inline, ctx: BodyContext) -> list[Element]:
         return [_text_box(item, ctx)]
     if isinstance(item, Watermark):
         return [_watermark(item, ctx)]
+    if isinstance(item, ContentControl):
+        return [_control(item, ctx)]
     if isinstance(item, CommentStart):
         return [E("w:commentRangeStart", {"w:id": str(ctx.comment(item.comment))})]
     if isinstance(item, CommentEnd):
@@ -885,12 +889,70 @@ def document_xml(document: Document, ctx: BodyContext, root: Element | None = No
     body = [*ctx.template_body(), *_blocks(document.body, ctx, final=True)]
     final = _section_properties(document.section, ctx)
     if root is None:
-        root = E("w:document", nsmap=nsmap(*PART_NAMESPACES))
+        uses_w14 = any(
+            isinstance(item, ContentControl) and item.kind == "checkbox"
+            for paragraph in document.all_paragraphs()
+            for item in paragraph.content
+        )
+        if uses_w14:
+            root = E("w:document", nsmap=nsmap(*PART_NAMESPACES, "mc", "w14"))
+            root.set(qn("mc:Ignorable"), "w14")
+        else:
+            root = E("w:document", nsmap=nsmap(*PART_NAMESPACES))
     if (color := document.settings.page_color) is not None:
         attrs = {f"w:{k}": v for k, v in color_attrs(color, ctx.emit).items()}
         root.append(E("w:background", attrs))
     root.append(E("w:body", *body, final))
     return root
+
+
+def _control(control: ContentControl, ctx: BodyContext) -> Element:
+    """An inline w:sdt, as Word writes each kind of content control."""
+    properties: list[Element] = []
+    if control.title:
+        properties.append(E("w:alias", {"w:val": control.title}))
+    if control.tag:
+        properties.append(E("w:tag", {"w:val": control.tag}))
+    properties.append(E("w:id", {"w:val": str(ctx.drawing_id())}))
+    if control.lock is not None:
+        properties.append(E("w:lock", {"w:val": CONTROL_LOCKS[control.lock]}))
+    if control.showing_placeholder:
+        properties.append(E("w:showingPlcHdr"))
+    choices = [E("w:listItem", {"w:displayText": i, "w:value": i}) for i in control.items]
+    match control.kind:
+        case "text":
+            properties.append(E("w:text"))
+        case "dropdown":
+            properties.append(E("w:dropDownList", *choices))
+        case "combo":
+            properties.append(E("w:comboBox", *choices))
+        case "date":
+            date: dict[str, str] = {}
+            if control.date is not None:
+                date["w:fullDate"] = control.date.strftime("%Y-%m-%dT00:00:00Z")
+            properties.append(
+                E(
+                    "w:date",
+                    date,
+                    E("w:dateFormat", {"w:val": control.date_format}),
+                    E("w:lid", {"w:val": control.language}),
+                    E("w:storeMappedDataAs", {"w:val": "dateTime"}),
+                    E("w:calendar", {"w:val": "gregorian"}),
+                )
+            )
+        case "checkbox":  # Word 2010's checkbox, ignorable by older readers
+            properties.append(
+                E(
+                    "w14:checkbox",
+                    E("w14:checked", {"w14:val": "1" if control.checked else "0"}),
+                    E("w14:checkedState", {"w14:val": "2612", "w14:font": "MS Gothic"}),
+                    E("w14:uncheckedState", {"w14:val": "2610", "w14:font": "MS Gothic"}),
+                )
+            )
+        case _:  # rich text: no type element
+            pass
+    content = [element for item in control.content for element in _inline(item, ctx)]
+    return E("w:sdt", E("w:sdtPr", *properties), E("w:sdtContent", *content))
 
 
 def comment_xml(comment: Comment, comment_id: int, ctx: BodyContext) -> Element:

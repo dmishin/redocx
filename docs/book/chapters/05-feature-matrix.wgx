@@ -152,7 +152,8 @@ The tier is the milestone where a feature first ships (see roadmap). *Esc* means
 | Tracked insertions/deletions | Postponed (§9.1) | ●● |
 | Tracked formatting changes | Postponed (§9.1) | ●●● |
 | `wordgenx diff` → redline docx | Postponed (§9.1) | ●●● |
-| Content controls (text, rich text, dropdown, combo, date, checkbox, picture) | M5 | ●● |
+| Content controls (text, rich text, dropdown, combo, date, checkbox) | M5 ✓ | ●● |
+| Picture content controls | M5 step 4 | ●● |
 | Repeating-section content controls | M5 | ●● |
 | Content-control data binding to custom XML | Later | ●●● |
 | Legacy form fields | Later | ●● |
