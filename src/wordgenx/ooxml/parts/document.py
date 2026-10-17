@@ -726,6 +726,12 @@ def _section_properties(section: Section, ctx: BodyContext) -> Element:
     children["cols"] = E("w:cols", columns, *widths)
     if section.title_page:
         children["titlePg"] = E("w:titlePg")
+    if section.text_direction == "vertical":
+        children["textDirection"] = E("w:textDirection", {"w:val": "tbRl"})
+    if section.rtl:
+        children["bidi"] = E("w:bidi")
+        if section.page.gutter.emu:
+            children["rtlGutter"] = E("w:rtlGutter")
     if section.vertical_align is not None:
         children["vAlign"] = E("w:vAlign", {"w:val": VERTICAL_ALIGNMENTS[section.vertical_align]})
     if (borders := section.borders) is not None:

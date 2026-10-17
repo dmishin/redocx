@@ -80,7 +80,7 @@ BANDS: dict[str, tuple[str, str]] = {
 }
 """Banding blocks -> (odd, even) w:tblStylePr types."""
 CONDITION_TARGETS = (Target.RUN, Target.CELL, Target.PARAGRAPH)
-RUN_LAST = frozenset({"shading"})
+RUN_LAST = frozenset({"shading", "rtl"})
 """Keys a run shares with paragraphs or cells, where styles mean the other one."""
 """In table styles, borders and shading are the table's and the cells', not paragraphs'."""
 NUMBERING_REF_RE = re.compile(r'\s*(?:"([^"]*)"|(\S+))(?:\s+level\s+(\d))?\s*')
@@ -368,6 +368,15 @@ class StyleSheetCompiler:
                     decl.key_span,
                     help="character styles take run properties only; table and cell "
                     "properties belong in table styles",
+                )
+                return
+            if key == "rtl" and target is Target.RUN:
+                self._report(
+                    Code.UNKNOWN_PROPERTY,
+                    "Word keeps no right-to-left setting in character styles",
+                    decl.key_span,
+                    help="Hebrew and Arabic letters run right to left by themselves; use "
+                    "\\font[rtl]{...} for neutral text, or rtl in a paragraph style",
                 )
                 return
             try:

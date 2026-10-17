@@ -6,6 +6,7 @@ from wordgenx.ir import NOTE_KINDS, PROTECTION_MODES, Document, Math, NoteSettin
 from wordgenx.math.omml import math_properties
 from wordgenx.ooxml.schema_order import SETTINGS, ordered
 from wordgenx.ooxml.xml import E, Element, nsmap
+from wordgenx.props.registry import COMPLEX_LANGUAGES, EAST_ASIAN_LANGUAGES
 
 WORD_URI = "http://schemas.microsoft.com/office/word"
 
@@ -44,6 +45,17 @@ def note_properties(notes: NoteSettings) -> list[Element]:
     return out
 
 
+def _theme_font_lang(language: str) -> dict[str, str]:
+    """w:themeFontLang: a complex-script or East Asian document language goes beside
+    English, as Word writes it, so the theme picks fonts for both scripts."""
+    primary = language.split("-")[0].lower()
+    if primary in COMPLEX_LANGUAGES:
+        return {"w:val": "en-US", "w:bidi": language}
+    if primary in EAST_ASIAN_LANGUAGES:
+        return {"w:val": "en-US", "w:eastAsia": language}
+    return {"w:val": language}
+
+
 def settings_xml(document: Document) -> Element:
     settings = document.settings
     language = document.meta.language or "en-US"
@@ -58,7 +70,7 @@ def settings_xml(document: Document) -> Element:
                 for name, value in _COMPAT_SETTINGS
             ),
         ),
-        "themeFontLang": E("w:themeFontLang", {"w:val": language}),
+        "themeFontLang": E("w:themeFontLang", _theme_font_lang(language)),
         "clrSchemeMapping": E("w:clrSchemeMapping", _COLOR_SCHEME_MAPPING),
     }
     if settings.even_and_odd_headers:

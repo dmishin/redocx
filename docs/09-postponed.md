@@ -36,3 +36,4 @@ feature is documented. They are smaller than 9.1 and can be picked up whenever a
 | Text boxes | A VML fallback for Word 2007; linked text boxes (text flowing from one to the next) | [§3.16](03-language-design.md) |
 | Watermarks | Keeping a template's own headers in the first section when it has a watermark | [§3.16](03-language-design.md) |
 | Frames | General text frames (`w:framePr` other than drop caps): text boxes do their job | [§3.6](03-language-design.md) |
+| Right to left | Separate complex-script values for bold, italic and size (they follow the Latin ones); `start`/`end` alignment | [§3.4](03-language-design.md) |

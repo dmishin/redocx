@@ -102,6 +102,7 @@
       </w:pPr>
       <w:rPr>
         <w:b/>
+        <w:bCs/>
         <w:color w:themeColor="accent1" w:val="1F6FB2"/>
       </w:rPr>
     </w:lvl>

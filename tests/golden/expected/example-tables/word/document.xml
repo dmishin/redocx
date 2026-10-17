@@ -421,6 +421,7 @@
             <w:r>
               <w:rPr>
                 <w:b/>
+                <w:bCs/>
               </w:rPr>
               <w:t>formatting</w:t>
             </w:r>

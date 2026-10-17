@@ -1360,6 +1360,7 @@
       <w:r>
         <w:rPr>
           <w:b/>
+          <w:bCs/>
         </w:rPr>
         <w:t>[Must]</w:t>
       </w:r>
@@ -1374,6 +1375,7 @@
       <w:r>
         <w:rPr>
           <w:b/>
+          <w:bCs/>
         </w:rPr>
         <w:t>[Must]</w:t>
       </w:r>
@@ -1388,6 +1390,7 @@
       <w:r>
         <w:rPr>
           <w:b/>
+          <w:bCs/>
         </w:rPr>
         <w:t>[Should]</w:t>
       </w:r>
@@ -1414,6 +1417,7 @@
       <w:r>
         <w:rPr>
           <w:b/>
+          <w:bCs/>
         </w:rPr>
         <w:t>[Must]</w:t>
       </w:r>
@@ -1455,6 +1459,7 @@
             <w:r>
               <w:rPr>
                 <w:b/>
+                <w:bCs/>
               </w:rPr>
               <w:t>Warning</w:t>
             </w:r>
@@ -1586,6 +1591,7 @@
       <w:r>
         <w:rPr>
           <w:b/>
+          <w:bCs/>
         </w:rPr>
         <w:t>[Must]</w:t>
       </w:r>
@@ -1627,6 +1633,7 @@
             <w:r>
               <w:rPr>
                 <w:b/>
+                <w:bCs/>
               </w:rPr>
               <w:t>Testing</w:t>
             </w:r>

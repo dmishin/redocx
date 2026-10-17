@@ -101,6 +101,7 @@
     <w:rPr>
       <w:rFonts w:asciiTheme="majorHAnsi" w:cstheme="majorBidi" w:eastAsiaTheme="majorEastAsia" w:hAnsiTheme="majorHAnsi"/>
       <w:b/>
+      <w:bCs/>
     </w:rPr>
   </w:style>
 </w:styles>

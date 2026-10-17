@@ -819,6 +819,10 @@ class Section:
     """Lines around the pages of the section (w:pgBorders)."""
     watermark: Watermark | None = None
     """Written into each header the section uses (see `lower.watermarks`)."""
+    rtl: bool = False
+    """A right-to-left section: columns and the gutter from the right (w:bidi)."""
+    text_direction: str = "horizontal"
+    """horizontal | vertical (East Asian vertical text, w:textDirection tbRl)."""
 
     def __post_init__(self) -> None:
         if self.vertical_align not in (None, *VERTICAL_ALIGNMENTS):

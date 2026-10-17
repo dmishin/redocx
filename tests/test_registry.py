@@ -64,7 +64,7 @@ def test_theme_color_emits_rgb_fallback() -> None:
 
 
 def test_false_toggle_is_explicit() -> None:
-    assert run_props(bold=False).emit(Theme()) == {"b": {"val": "0"}}
+    assert run_props(bold=False).emit(Theme()) == {"b": {"val": "0"}, "bCs": {"val": "0"}}
 
 
 def test_every_property_is_documented() -> None:

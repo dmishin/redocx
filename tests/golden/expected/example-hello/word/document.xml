@@ -74,6 +74,7 @@
       <w:r>
         <w:rPr>
           <w:b/>
+          <w:bCs/>
         </w:rPr>
         <w:t>Tip:</w:t>
       </w:r>

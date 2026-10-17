@@ -104,6 +104,10 @@ def section(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
             )
     if (valign := args.text("valign")) is not None:
         s = replace(s, vertical_align=valign)
+    if "rtl" in args:
+        s = replace(s, rtl=args.flag("rtl"))
+    if (direction := args.text("text-direction")) is not None:
+        s = replace(s, text_direction=direction)
     if (borders := args.get("borders", PageBorderSpec)) is not None:
         s = replace(s, borders=_page_borders(lw, borders, s.borders, args.span_of("borders")))
     if "line-numbers" in args:

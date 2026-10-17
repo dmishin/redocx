@@ -21,7 +21,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Hidden, emboss, imprint, outline, shadow | `w:vanish`, … | M2 ✓ | ● |
 | Language (spell-check, hyphenation) | `w:lang` | M1 | ● |
 | Run border | `w:bdr` | M4 ✓ | ● |
-| RTL, complex script | `w:rtl`, `w:cs` | M4 | ●● |
+| RTL, complex script | `w:rtl`, `w:cs` | M4 ✓ | ●● |
 | East Asian layout, emphasis marks, ruby | `w:eastAsianLayout`, `w:em`, `w:ruby` | Later | ●● |
 | Text effects (glow, reflection, etc. – w14) | `w14:*` | Later / Esc | ●● |
 
@@ -40,7 +40,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Suppress line numbers, suppress auto-hyphens | M2 ✓ | ● |
 | Drop caps | M4 ✓ | ●● |
 | Text frames (`w:framePr` other than drop caps) | Postponed (text boxes instead) | ●● |
-| Bidi paragraph, text direction | M4 | ●● |
+| Bidi paragraph, text direction | M4 ✓ | ●● |
 | East Asian typography (kinsoku, snap to grid, …) | Later / Esc | ● |
 
 ## 5.3 Styles & themes
@@ -83,7 +83,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Page borders | M4 ✓ | ● |
 | Watermark (VML/DrawingML in header) | M4 ✓ | ●● |
 | Page background color | M4 ✓ | ● |
-| Text direction / RTL section | M4 | ●● |
+| Text direction / RTL section | M4 ✓ | ●● |
 
 ## 5.6 Tables
 

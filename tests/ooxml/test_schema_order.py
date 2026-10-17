@@ -80,6 +80,8 @@ def _sample(name: str, target: Target) -> object:
         "lang": "en-US",
         "highlight": "yellow",
         "border": "single 0.5pt",
+        "font-cs": "Arial",
+        "font-east-asian": "MS Mincho",
         "underline": "single",
         "vertical-align": "superscript",
         "align": "center",

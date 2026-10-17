@@ -166,6 +166,7 @@
     <w:qFormat/>
     <w:rPr>
       <w:i/>
+      <w:iCs/>
     </w:rPr>
   </w:style>
   <w:style w:customStyle="1" w:styleId="CodeBlock" w:type="paragraph">
@@ -211,6 +212,7 @@
     <w:tblStylePr w:type="firstRow">
       <w:rPr>
         <w:b/>
+        <w:bCs/>
         <w:color w:val="FFFFFF"/>
       </w:rPr>
       <w:tcPr>
@@ -319,6 +321,7 @@
     <w:qFormat/>
     <w:rPr>
       <w:i/>
+      <w:iCs/>
     </w:rPr>
   </w:style>
   <w:style w:styleId="Caption" w:type="paragraph">
@@ -332,6 +335,7 @@
     </w:pPr>
     <w:rPr>
       <w:i/>
+      <w:iCs/>
       <w:color w:themeColor="text2" w:val="1F2A44"/>
       <w:sz w:val="18"/>
       <w:szCs w:val="18"/>
@@ -343,6 +347,7 @@
     <w:qFormat/>
     <w:rPr>
       <w:b/>
+      <w:bCs/>
     </w:rPr>
   </w:style>
   <w:style w:customStyle="1" w:styleId="CodeKeyword" w:type="character">

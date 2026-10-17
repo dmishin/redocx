@@ -347,6 +347,8 @@ _RUN_TOGGLES = {
     "strike": "strike",
     "dstrike": "double-strike",
     "vanish": "hidden",
+    "rtl": "rtl",
+    "cs": "complex-script",
 }
 
 
@@ -380,11 +382,14 @@ def _run_props(rpr: Element | None, ctx: _Ctx) -> tuple[PropertySet, str | None]
             if value := child.get(_w("val")):
                 values["vertical-align"] = _kebab(value)
         elif child.tag == _w("lang"):
-            if value := child.get(_w("val")):
-                values["lang"] = value
+            # the Latin language, else the complex-script or East Asian one
+            for attr in ("val", "bidi", "eastAsia"):
+                if value := child.get(_w(attr)):
+                    values["lang"] = value
+                    break
         elif _local(child.tag) in _RUN_TOGGLES:
             values[_RUN_TOGGLES[_local(child.tag)]] = _toggle_state(child)
-        elif name in ("w:szCs", "w:rStyle"):
+        elif name in ("w:szCs", "w:rStyle", "w:bCs", "w:iCs"):  # set with sz, b, i
             pass
         else:
             ctx.stats.note(name)

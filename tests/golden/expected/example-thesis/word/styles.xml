@@ -108,6 +108,7 @@
     <w:rPr>
       <w:rFonts w:asciiTheme="majorHAnsi" w:cstheme="majorBidi" w:eastAsiaTheme="majorEastAsia" w:hAnsiTheme="majorHAnsi"/>
       <w:b/>
+      <w:bCs/>
       <w:sz w:val="40"/>
       <w:szCs w:val="40"/>
     </w:rPr>
@@ -171,6 +172,7 @@
     </w:pPr>
     <w:rPr>
       <w:i/>
+      <w:iCs/>
     </w:rPr>
   </w:style>
   <w:style w:customStyle="1" w:styleId="ThesisTable" w:type="table">
@@ -200,6 +202,7 @@
     <w:tblStylePr w:type="firstRow">
       <w:rPr>
         <w:b/>
+        <w:bCs/>
       </w:rPr>
       <w:tcPr>
         <w:tcBorders>
@@ -276,6 +279,7 @@
     <w:qFormat/>
     <w:rPr>
       <w:b/>
+      <w:bCs/>
     </w:rPr>
   </w:style>
   <w:style w:styleId="FootnoteText" w:type="paragraph">
@@ -308,6 +312,7 @@
     </w:pPr>
     <w:rPr>
       <w:i/>
+      <w:iCs/>
       <w:color w:themeColor="text2" w:val="1F2A44"/>
       <w:sz w:val="18"/>
       <w:szCs w:val="18"/>
@@ -440,6 +445,7 @@
     <w:rPr>
       <w:rFonts w:asciiTheme="majorHAnsi" w:cstheme="majorBidi" w:eastAsiaTheme="majorEastAsia" w:hAnsiTheme="majorHAnsi"/>
       <w:b/>
+      <w:bCs/>
     </w:rPr>
   </w:style>
   <w:style w:styleId="TableofFigures" w:type="paragraph">

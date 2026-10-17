@@ -249,6 +249,8 @@ _command(
     ),
     _o("valign", Choice.of(*ir.VERTICAL_ALIGNMENTS), "where the text sits on the page"),
     _o("borders", PageBordersValue(), "lines around the pages"),
+    _o("rtl", FLAG, "right to left: columns and the gutter from the right"),
+    _o("text-direction", Choice.of("horizontal", "vertical"), "vertical: East Asian layout"),
     _o(
         "line-numbers",
         Toggle(

@@ -125,6 +125,7 @@
     </w:pPr>
     <w:rPr>
       <w:b/>
+      <w:bCs/>
       <w:color w:themeColor="accent1" w:themeShade="BF" w:val="175385"/>
     </w:rPr>
   </w:style>
@@ -133,6 +134,7 @@
     <w:qFormat/>
     <w:rPr>
       <w:i/>
+      <w:iCs/>
       <w:color w:themeColor="accent2" w:val="E07A1F"/>
     </w:rPr>
   </w:style>
@@ -142,6 +144,7 @@
     <w:qFormat/>
     <w:rPr>
       <w:b/>
+      <w:bCs/>
     </w:rPr>
   </w:style>
   <w:style w:styleId="Quote" w:type="paragraph">
@@ -155,6 +158,7 @@
     </w:pPr>
     <w:rPr>
       <w:i/>
+      <w:iCs/>
       <w:color w:themeColor="text2" w:val="1F2A44"/>
     </w:rPr>
   </w:style>
@@ -163,6 +167,7 @@
     <w:link w:val="Quote"/>
     <w:rPr>
       <w:i/>
+      <w:iCs/>
       <w:color w:themeColor="text2" w:val="1F2A44"/>
     </w:rPr>
   </w:style>
@@ -191,6 +196,7 @@
     <w:tblStylePr w:type="firstRow">
       <w:rPr>
         <w:b/>
+        <w:bCs/>
         <w:color w:val="FFFFFF"/>
       </w:rPr>
       <w:tcPr>
@@ -203,6 +209,7 @@
     <w:tblStylePr w:type="firstCol">
       <w:rPr>
         <w:b/>
+        <w:bCs/>
       </w:rPr>
     </w:tblStylePr>
     <w:tblStylePr w:type="band1Horz">
@@ -275,6 +282,7 @@
     <w:qFormat/>
     <w:rPr>
       <w:i/>
+      <w:iCs/>
     </w:rPr>
   </w:style>
   <w:style w:customStyle="1" w:styleId="Code" w:type="character">

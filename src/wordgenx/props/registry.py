@@ -132,6 +132,30 @@ def _font_size(value: object) -> Length:
 _LANG_RE = re.compile(r"[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*")
 
 
+COMPLEX_LANGUAGES = frozenset(
+    "ar he fa ur yi ps sd ug dv syr ku th lo km my "
+    "hi bn ta te kn ml mr gu pa or si ne am bo".split()
+)
+"""Languages Word keeps in w:lang/@w:bidi (complex scripts, right-to-left among them)."""
+EAST_ASIAN_LANGUAGES = frozenset({"zh", "ja", "ko"})
+
+
+def _emit_lang(value: object, ctx: EmitContext) -> Emitted:
+    language = str(value)
+    primary = language.split("-")[0].lower()
+    if primary in COMPLEX_LANGUAGES:
+        return [("lang", {"bidi": language})]
+    if primary in EAST_ASIAN_LANGUAGES:
+        return [("lang", {"eastAsia": language})]
+    return [("lang", {"val": language})]
+
+
+def _font_name(value: object) -> str:
+    if not isinstance(value, str) or not value.strip() or value.startswith("theme."):
+        raise InvalidValueError(f"expected a font name, got {value!r}")
+    return value
+
+
 def _lang(value: object) -> str:
     if not isinstance(value, str) or not _LANG_RE.fullmatch(value):
         raise InvalidValueError(f"expected a language tag such as en-US, got {value!r}")
@@ -193,6 +217,15 @@ def _choice(ooxml_values: Iterable[str]) -> Callable[[object], object]:
 def _toggle(element: str) -> Callable[[object, EmitContext], Emitted]:
     def emit(value: object, ctx: EmitContext) -> Emitted:
         return [(element, {} if value else {"val": "0"})]
+
+    return emit
+
+
+def _toggles(*elements: str) -> Callable[[object, EmitContext], Emitted]:
+    """On/off elements set together, as Word sets w:b and w:bCs for Bold."""
+
+    def emit(value: object, ctx: EmitContext) -> Emitted:
+        return [(element, {} if value else {"val": "0"}) for element in elements]
 
     return emit
 
@@ -404,8 +437,8 @@ _SPECS: tuple[PropSpec, ...] = (
         "Font family (Latin text).",
         "font name | theme.major | theme.minor",
     ),
-    PropSpec("bold", R, _bool, _toggle("b"), "Bold.", _BOOL),
-    PropSpec("italic", R, _bool, _toggle("i"), "Italic.", _BOOL),
+    PropSpec("bold", R, _bool, _toggles("b", "bCs"), "Bold (complex scripts too).", _BOOL),
+    PropSpec("italic", R, _bool, _toggles("i", "iCs"), "Italic (complex scripts too).", _BOOL),
     PropSpec("caps", R, _bool, _toggle("caps"), "Display all letters as capitals.", _BOOL),
     PropSpec(
         "small-caps", R, _bool, _toggle("smallCaps"), "Lower-case letters as small capitals.", _BOOL
@@ -497,11 +530,38 @@ _SPECS: tuple[PropSpec, ...] = (
         "lang",
         R,
         _lang,
-        _val("lang"),
-        "Language for proofing and hyphenation.",
+        _emit_lang,
+        "Language for proofing and hyphenation (Arabic, Hebrew, Thai, ... and Chinese,"
+        " Japanese, Korean go where Word keeps complex-script and East Asian languages).",
         "language tag, e.g. en-US",
     ),
+    PropSpec("rtl", R, _bool, _toggle("rtl"), "Right-to-left text.", _BOOL),
+    PropSpec(
+        "complex-script",
+        R,
+        _bool,
+        _toggle("cs"),
+        "Format the text with its complex-script properties (w:cs).",
+        _BOOL,
+    ),
+    PropSpec(
+        "font-cs",
+        R,
+        _font_name,
+        lambda value, ctx: [("rFonts", {"cs": str(value)})],
+        "Font for complex scripts (Arabic, Hebrew, Thai, Indic).",
+        "font name",
+    ),
+    PropSpec(
+        "font-east-asian",
+        R,
+        _font_name,
+        lambda value, ctx: [("rFonts", {"eastAsia": str(value)})],
+        "Font for East Asian text (Chinese, Japanese, Korean).",
+        "font name",
+    ),
     # Paragraph properties ---------------------------------------------------------
+    PropSpec("rtl", P, _bool, _toggle("bidi"), "A right-to-left paragraph.", _BOOL),
     PropSpec(
         "keep-with-next",
         P,
@@ -666,6 +726,7 @@ _TABLE_SPECS: tuple[PropSpec, ...] = (
         )
         for side in MARGIN_SIDES
     ),
+    PropSpec("rtl", T, _bool, _toggle("bidiVisual"), "Columns right to left.", _BOOL),
     PropSpec(
         "table-align",
         T,
@@ -873,6 +934,10 @@ class PropertySet(Mapping[str, object]):
         for name, value in self._values.items():
             for element, attrs in REGISTRY[self._target][name].emit(value, ctx):
                 elements.setdefault(element, {}).update(attrs)
+        fonts = elements.get("rFonts", {})
+        for script, theme in (("cs", "cstheme"), ("eastAsia", "eastAsiaTheme")):
+            if script in fonts:  # font-cs="Arial" beats the cs part of font: theme.minor
+                fonts.pop(theme, None)
         return elements
 
     def emit_children(self, ctx: EmitContext) -> dict[str, list[tuple[str, Attrs]]]:

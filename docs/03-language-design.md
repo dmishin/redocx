@@ -157,6 +157,20 @@ Direct formatting is always available:
 \hidden{text}                     % hidden text
 ```
 
+**Right-to-left and complex scripts** (M4). Arabic, Hebrew and other right-to-left letters run right to left by
+themselves (Word applies the Unicode bidirectional algorithm). What wordgenx adds:
+
+- `rtl` on a paragraph (`\p[rtl]`, or in a paragraph style) makes it a right-to-left paragraph (`w:bidi`): it starts
+  at the right margin, and neutral characters and numbers follow its direction. On a table (`\table[rtl]`) the first
+  column is on the right (`w:bidiVisual`). On text (`\font[rtl]{…}`) it is `w:rtl`; Word keeps no right-to-left
+  setting in character styles, so there it is an error.
+- `lang` puts a complex-script language (Arabic, Hebrew, Persian, Urdu, Thai, Hindi, …) in `w:lang/@w:bidi` and an
+  East Asian one (Chinese, Japanese, Korean) in `@w:eastAsia`, where Word looks for them; `\document[lang=ar-SA]`
+  sets the theme's complex-script language too.
+- `font-cs` and `font-east-asian` set the fonts for those scripts (an explicit one beats the theme's), and
+  `complex-script` formats text with its complex-script properties (`w:cs`). `bold` and `italic` also write `w:bCs`
+  and `w:iCs`, as Word's own buttons do, so Arabic and Hebrew text is bold and italic too; `size` already sets both.
+
 ## 3.5 Styles and style sheets
 
 Styles are the center of the design. A style sheet (`.wgxs`, or inline in `\styles{…}`) uses a CSS-like block syntax
@@ -438,7 +452,8 @@ Page borders: `borders=(single, 1.5pt, theme.accent1)` puts the same line on all
 measured from (the page edge, the default, or the text) and which pages of the section have them. A side's
 `space=` is its distance, at most 31pt; without it Word's defaults apply (24pt from the page edge, 4pt from the
 text). A section without `borders=` keeps the previous section's; `borders=` replaces them, and `borders=none` removes
-them. Text direction comes later (M4).
+them. `rtl` makes the section right to left (columns from the right, and the gutter on the right when there is one);
+`text-direction=vertical` lays the text out vertically from the top right, for East Asian documents.
 
 Columns of different widths (M4): `columns=(widths=(10cm, 4.5cm), gap=1cm, separator)` gives one width per column
 (the count follows from them) with the gap between each pair. Widths and gaps wider than the text are a warning; Word

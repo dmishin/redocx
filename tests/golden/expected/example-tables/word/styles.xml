@@ -83,6 +83,7 @@
     <w:qFormat/>
     <w:rPr>
       <w:b/>
+      <w:bCs/>
     </w:rPr>
   </w:style>
   <w:style w:styleId="ListParagraph" w:type="paragraph">

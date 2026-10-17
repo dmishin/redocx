@@ -117,8 +117,8 @@ Steps, in order (the small ones first; the drawing steps share one positioning m
 5. [x] **Frames and floating tables**: drop caps (`w:framePr`; other text frames are postponed), floating tables
    (`w:tblpPr`), columns
    of different widths.
-6. **Right-to-left and complex scripts**: right-to-left paragraphs, runs and sections, complex-script fonts and
-   sizes, the text direction of sections and cells.
+6. [x] **Right-to-left and complex scripts**: right-to-left paragraphs, tables, runs and sections; complex-script
+   and East Asian fonts and languages; bold and italic for complex scripts; vertical sections.
 
 Basic shapes (lines, arrows, rectangles) come only if they stay small; see [Postponed features](09-postponed.md).
 

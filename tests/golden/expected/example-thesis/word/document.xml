@@ -5859,6 +5859,7 @@
       <w:r>
         <w:rPr>
           <w:i/>
+          <w:iCs/>
         </w:rPr>
         <w:t>Transportation Research Part B: Methodological</w:t>
       </w:r>
@@ -5868,6 +5869,7 @@
       <w:r>
         <w:rPr>
           <w:i/>
+          <w:iCs/>
         </w:rPr>
         <w:t>28</w:t>
       </w:r>
@@ -5895,6 +5897,7 @@
       <w:r>
         <w:rPr>
           <w:i/>
+          <w:iCs/>
         </w:rPr>
         <w:t>Fundamentals of Transportation and Traffic Operations</w:t>
       </w:r>
@@ -5914,6 +5917,7 @@
       <w:r>
         <w:rPr>
           <w:i/>
+          <w:iCs/>
         </w:rPr>
         <w:t>Highway Research Board Proceedings</w:t>
       </w:r>
@@ -5923,6 +5927,7 @@
       <w:r>
         <w:rPr>
           <w:i/>
+          <w:iCs/>
         </w:rPr>
         <w:t>14</w:t>
       </w:r>
@@ -5942,6 +5947,7 @@
       <w:r>
         <w:rPr>
           <w:i/>
+          <w:iCs/>
         </w:rPr>
         <w:t>Transactions of the ASME, Journal of Basic Engineering</w:t>
       </w:r>
@@ -5951,6 +5957,7 @@
       <w:r>
         <w:rPr>
           <w:i/>
+          <w:iCs/>
         </w:rPr>
         <w:t>82</w:t>
       </w:r>
@@ -5970,6 +5977,7 @@
       <w:r>
         <w:rPr>
           <w:i/>
+          <w:iCs/>
         </w:rPr>
         <w:t>Proceedings of the Royal Society of London. Series A</w:t>
       </w:r>
@@ -5979,6 +5987,7 @@
       <w:r>
         <w:rPr>
           <w:i/>
+          <w:iCs/>
         </w:rPr>
         <w:t>229</w:t>
       </w:r>
@@ -6006,6 +6015,7 @@
       <w:r>
         <w:rPr>
           <w:i/>
+          <w:iCs/>
         </w:rPr>
         <w:t>Operations Research</w:t>
       </w:r>
@@ -6015,6 +6025,7 @@
       <w:r>
         <w:rPr>
           <w:i/>
+          <w:iCs/>
         </w:rPr>
         <w:t>4</w:t>
       </w:r>
@@ -6042,6 +6053,7 @@
       <w:r>
         <w:rPr>
           <w:i/>
+          <w:iCs/>
         </w:rPr>
         <w:t>Traffic Flow Dynamics: Data, Models and Simulation</w:t>
       </w:r>

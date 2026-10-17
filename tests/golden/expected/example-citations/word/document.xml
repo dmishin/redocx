@@ -81,6 +81,7 @@
       <w:r>
         <w:rPr>
           <w:i/>
+          <w:iCs/>
         </w:rPr>
         <w:t>Fundamentals of Transportation and Traffic Operations</w:t>
       </w:r>
@@ -100,6 +101,7 @@
       <w:r>
         <w:rPr>
           <w:i/>
+          <w:iCs/>
         </w:rPr>
         <w:t>The TeXbook</w:t>
       </w:r>
@@ -119,6 +121,7 @@
       <w:r>
         <w:rPr>
           <w:i/>
+          <w:iCs/>
         </w:rPr>
         <w:t>Proceedings of Something</w:t>
       </w:r>
@@ -138,6 +141,7 @@
       <w:r>
         <w:rPr>
           <w:i/>
+          <w:iCs/>
         </w:rPr>
         <w:t>Journal of the Royal Statistical Society: Series B</w:t>
       </w:r>

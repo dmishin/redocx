@@ -63,6 +63,7 @@
     <w:rPr>
       <w:rFonts w:asciiTheme="majorHAnsi" w:cstheme="majorBidi" w:eastAsiaTheme="majorEastAsia" w:hAnsiTheme="majorHAnsi"/>
       <w:b/>
+      <w:bCs/>
       <w:color w:themeColor="accent1" w:val="1F6FB2"/>
       <w:sz w:val="32"/>
       <w:szCs w:val="32"/>
@@ -98,6 +99,7 @@
     <w:qFormat/>
     <w:rPr>
       <w:i/>
+      <w:iCs/>
       <w:color w:themeColor="accent2" w:val="E07A1F"/>
     </w:rPr>
   </w:style>
@@ -107,6 +109,7 @@
     <w:qFormat/>
     <w:rPr>
       <w:b/>
+      <w:bCs/>
     </w:rPr>
   </w:style>
 </w:styles>
