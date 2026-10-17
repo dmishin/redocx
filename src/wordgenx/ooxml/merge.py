@@ -21,7 +21,7 @@ from wordgenx.ooxml.constants import NS
 from wordgenx.ooxml.opc import Package, Part
 from wordgenx.ooxml.schema_order import NUMBERING, PPR, RPR, SETTINGS, STYLE, TBL_PR, TC_PR, TR_PR
 from wordgenx.ooxml.template import Template
-from wordgenx.ooxml.xml import E, Element
+from wordgenx.ooxml.xml import E, Element, qn
 
 W = f"{{{NS.W}}}"
 R = f"{{{NS.R}}}"
@@ -51,6 +51,10 @@ def _local(element: Element) -> str:
     return tag.rsplit("}", 1)[-1] if isinstance(tag, str) else ""
 
 
+_OTHER_NAMESPACES = frozenset({qn("m:mathPr")})
+"""Schema-ordered elements outside w: (CT_Settings holds m:mathPr)."""
+
+
 def _sort(parent: Element, order: Sequence[str]) -> None:
     """Put `parent`'s children in schema order; unknown elements stay after the element
     that preceded them."""
@@ -59,7 +63,7 @@ def _sort(parent: Element, order: Sequence[str]) -> None:
     last = -1.0
     for position, child in enumerate(parent):
         name = _local(child)
-        if name in index and str(child.tag).startswith(W):
+        if name in index and (str(child.tag).startswith(W) or child.tag in _OTHER_NAMESPACES):
             last = float(index[name])
             keyed.append((last, position, child))
         else:

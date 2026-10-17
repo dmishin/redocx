@@ -8,10 +8,18 @@ from pathlib import Path
 import pytest
 
 from tests.golden.cases import CASES
+from wordgenx.compiler import build
 from wordgenx.ooxml import Package
 from wordgenx.ooxml.writer import write_docx
+from wordgenx.syntax import Source
 
-PROJECT = Path(__file__).resolve().parents[2] / "tools" / "ooxml-validate"
+ROOT = Path(__file__).resolve().parents[2]
+PROJECT = ROOT / "tools" / "ooxml-validate"
+EXAMPLES = sorted(
+    p
+    for p in [*(ROOT / "examples").rglob("*.wgx"), *(ROOT / "docs" / "book").glob("*.wgx")]
+    if "spike" not in p.parts and p.parent.name != "chapters"
+)
 
 
 def _dotnet_sdk_available() -> bool:
@@ -39,9 +47,9 @@ def validator_dll(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return out / "ooxml-validate.dll"
 
 
-def _validate(dll: Path, path: Path) -> subprocess.CompletedProcess[str]:
+def _validate(dll: Path, *paths: Path) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["dotnet", str(dll), str(path)], capture_output=True, text=True, check=False
+        ["dotnet", str(dll), *map(str, paths)], capture_output=True, text=True, check=False
     )
 
 
@@ -59,6 +67,18 @@ def test_golden_case_is_valid(validator_dll: Path, case: str, tmp_path: Path) ->
     path = tmp_path / f"{case}.docx"
     write_docx(CASES[case](), path)
     result = _validate(validator_dll, path)
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_examples_are_valid(validator_dll: Path, tmp_path: Path) -> None:
+    """Every example and the book, compiled from source: one validator run for all."""
+    paths: list[Path] = []
+    for example in EXAMPLES:
+        data, result = build(Source.from_path(example))
+        assert data is not None, result.render_diagnostics()
+        paths.append(tmp_path / f"{example.stem}.docx")
+        paths[-1].write_bytes(data)
+    result = _validate(validator_dll, *paths)
     assert result.returncode == 0, result.stdout + result.stderr
 
 

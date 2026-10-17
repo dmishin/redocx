@@ -2,10 +2,24 @@ from pathlib import Path
 
 import pytest
 
+from tests.support.xsd import validate_package
 from wordgenx.cli import main
+from wordgenx.compiler import build
 from wordgenx.syntax import Source, parse
 
 EXAMPLES = Path(__file__).resolve().parents[2] / "examples"
+
+
+BUILT = sorted(
+    p for p in EXAMPLES.rglob("*.wgx") if "spike" not in p.parts and p.parent.name != "chapters"
+)
+
+
+@pytest.mark.parametrize("path", BUILT, ids=lambda p: p.stem)
+def test_examples_compile_to_schema_valid_documents(path: Path) -> None:
+    data, result = build(Source.from_path(path))
+    assert data is not None, result.render_diagnostics()
+    assert validate_package(data) == {}
 
 
 def test_syntax_tour_has_no_diagnostics() -> None:
