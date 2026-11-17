@@ -5,9 +5,9 @@ from __future__ import annotations
 import pytest
 from lxml import etree
 
-from wordgenx import ir
-from wordgenx.compiler import compile_source
-from wordgenx.math.nodes import (
+from redocx import ir
+from redocx.compiler import compile_source
+from redocx.math.nodes import (
     Accent,
     Align,
     Delim,
@@ -22,8 +22,8 @@ from wordgenx.math.nodes import (
     Scripts,
     linear_text,
 )
-from wordgenx.math.omml import omml
-from wordgenx.math.parser import MathError, parse_math
+from redocx.math.omml import omml
+from redocx.math.parser import MathError, parse_math
 
 M = "{http://schemas.openxmlformats.org/officeDocument/2006/math}"
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
@@ -213,7 +213,7 @@ def test_equation_numbers_and_references() -> None:
 def test_math_errors_point_into_the_document() -> None:
     result = compile_source("Text \\m{x + \\foo} end.")
     (diagnostic,) = [d for _, d in result.diagnostics]
-    assert diagnostic.code.value == "WGX0311"
+    assert diagnostic.code.value == "RDX0311"
     assert result.diagnostics[0][0].text[diagnostic.span.start : diagnostic.span.end] == "\\foo"
 
 

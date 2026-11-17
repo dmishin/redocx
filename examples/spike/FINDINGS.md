@@ -10,11 +10,11 @@ language is awkward, ambiguous, or missing something before the grammar is froze
 
 | Sample | Kind | Main stress points |
 |--------|------|--------------------|
-| [01-design-spec.wgx](01-design-spec.wgx) | Software design spec | Template, front matter with roman page numbers, TOC, requirement IDs, landscape section |
-| [02-quarterly-report.wgx](02-quarterly-report.wgx) | Business report | Currency and percentages, numeric tables, generated includes, two-column section |
-| [03-services-agreement.wgx](03-services-agreement.wgx) | Contract | Legal numbering, clause cross-references, defined terms, tracked changes, comments |
-| [04-thesis-chapter.wgx](04-thesis-chapter.wgx) | Thesis chapter | Math, equation numbering, citations, theorems, subfigures, listings |
-| [05-onboarding-form.wgx](05-onboarding-form.wgx) | Fillable form | Content controls, layout tables, protection, repeating sections |
+| [01-design-spec.rdx](01-design-spec.rdx) | Software design spec | Template, front matter with roman page numbers, TOC, requirement IDs, landscape section |
+| [02-quarterly-report.rdx](02-quarterly-report.rdx) | Business report | Currency and percentages, numeric tables, generated includes, two-column section |
+| [03-services-agreement.rdx](03-services-agreement.rdx) | Contract | Legal numbering, clause cross-references, defined terms, tracked changes, comments |
+| [04-thesis-chapter.rdx](04-thesis-chapter.rdx) | Thesis chapter | Math, equation numbering, citations, theorems, subfigures, listings |
+| [05-onboarding-form.rdx](05-onboarding-form.rdx) | Fillable form | Content controls, layout tables, protection, repeating sections |
 
 Where a sample needed something the design does not define yet, it uses an invented construct and refers to a
 finding below.
@@ -44,7 +44,7 @@ finding below.
 
 ## F-1 Whitespace after commands (High)
 
-**Observed.** In `01-design-spec.wgx` the author wrote `\gateway{} payment` out of TeX habit. TeX swallows the space
+**Observed.** In `01-design-spec.rdx` the author wrote `\gateway{} payment` out of TeX habit. TeX swallows the space
 after a control word, so `\gateway payment` would print "PayFlowpayment". In the other direction, `\control[…] Full-time`
 in the form *needs* the space kept.
 
@@ -76,7 +76,7 @@ whitespace, and the report needs no escapes. Only `% of` after a space (rare; st
   followed by a digit. Works in most cases but is a heuristic, which conflicts with the "predictable parsing" goal.
 - (c) **`$` is literal text. Inline math is `\m{…}`. Display math stays `$$…$$`** (rare in prose, so unambiguous).
 
-**Recommendation: (c).** wordgenx is DOCX-first, and business documents use currency far more than inline math. The thesis
+**Recommendation: (c).** redocx is DOCX-first, and business documents use currency far more than inline math. The thesis
 cost is `\m{x}` instead of `$x$`. A per-document `math-dollars=on` switch is possible but makes tools mode-dependent. Avoid unless
 asked for.
 
@@ -101,9 +101,9 @@ table. Generated tables (`\include`) can't carry their own caption, and the labe
 "Figure 3" is a `REF` to a **bookmark around the caption**. Word has no figure container.
 
 **Recommendation.** Do it the same way:
-```wgx
+```rdx
 \caption[Table, id=tbl:income]{Condensed income statement}   % placed above the table
-\include{generated/q3-income-statement.wgx}
+\include{generated/q3-income-statement.rdx}
 
 \figure[id=fig:rev]{ \image{…} \caption{Revenue by region} }  % sugar: image paragraph + caption, kept together; id moves to the caption
 ```
@@ -143,7 +143,7 @@ has no body. Parameters are referenced as `\label` and `\type`, which **collide 
 `\type` could easily become built-ins. Substitution inside option values (`type=\type`) is not specified.
 
 **Recommendation.**
-```wgx
+```rdx
 \define{field}[label, tag, type=text, placeholder="Click to enter"]{
   \p[style="Field Label"]{#label}
   \p{\control[type=#type, tag=#tag, placeholder=#placeholder]}
@@ -151,7 +151,7 @@ has no body. Parameters are referenced as `\label` and `\type`, which **collide 
 \define{callout}[title="Key takeaway"]{ … #title … #body … }   % #body = the invocation's body, if any
 ```
 Macros take options plus **at most one body** (`#body`). `#name` is valid only inside `\define`, so it doesn't conflict with
-the reserved `#{…}`. Substitution works in both text and option positions. Macro files are loaded with `\use{macros.wgx}`, as
+the reserved `#{…}`. Substitution works in both text and option positions. Macro files are loaded with `\use{macros.rdx}`, as
 style sheets are.
 
 ## F-9 Clause-numbered documents are verbose (Medium)
@@ -162,7 +162,7 @@ style sheets are.
 numbers the paragraph, and vice versa.
 
 **Recommendation.** Let list sugar drive style-linked numbering, and allow labels on list items:
-```wgx
+```rdx
 \list[MSA]{
 1. {#cl:term} Term
    1. This Agreement commences on the Effective Date …
@@ -206,7 +206,7 @@ plain text plus bookmarks and hyperlinks into the bibliography. This needs a sec
 native concepts.
 
 **Recommendation.** Keep them **out of the core** (DOCX-only principle) and ship a **standard macro library** (prelude) written in
-`.wgx` that builds them from Word primitives:
+`.rdx` that builds them from Word primitives:
 - theorem: a styled paragraph with `Theorem {SEQ Theorem}` and an optional name
 - callout: a one-cell table with a table style
 - subfigure: a borderless layout table with images and `SEQ` captions (letter format)

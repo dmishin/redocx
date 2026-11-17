@@ -2,7 +2,7 @@
 
 import pytest
 
-from wordgenx.syntax import ast, parse
+from redocx.syntax import ast, parse
 
 
 def blocks(text: str) -> list[str]:

@@ -6,8 +6,8 @@ import pytest
 from hypothesis import example, given, settings
 from hypothesis import strategies as st
 
-from wordgenx.syntax import ast, parse
-from wordgenx.syntax.cst import Node, Token
+from redocx.syntax import ast, parse
+from redocx.syntax.cst import Node, Token
 
 # Biased towards characters that matter to the grammar.
 ALPHABET = [

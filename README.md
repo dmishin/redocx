@@ -1,10 +1,12 @@
-# wordgenx
+# redocx
 
 > A typed document markup language that compiles to **native, fully formatted Word (.docx) documents**.
 
-wordgenx is to Word what TeX is to typesetting: a plain-text source language you can version, diff, review,
+Formerly *wordgenx*; source files were `.wgx` and style sheets `.wgxs`.
+
+redocx is to Word what TeX is to typesetting: a plain-text source language you can version, diff, review,
 generate and include, with a compiler that produces the final document. Unlike Markdown-to-DOCX
-converters, wordgenx aims to expose *Word's own document model*: styles, multilevel numbering, sections, headers and footers,
+converters, redocx aims to expose *Word's own document model*: styles, multilevel numbering, sections, headers and footers,
 fields, cross-references, footnotes, content controls, tracked changes, and the rest. The output should be a
 document a Word user can keep editing as if a careful human had built it.
 
@@ -14,9 +16,9 @@ text boxes, forms, comments, templates, and importing Word documents back to sou
 
 ## Learning the language
 
-- [wordgenx in one page](docs/guide/README.md): the short guide, with links to the topic guides (tables, pictures,
+- [redocx in one page](docs/guide/README.md): the short guide, with links to the topic guides (tables, pictures,
   styles, references, sections, math and code, macros, forms, import).
-- [For TeX users](docs/guide/tex.md): LaTeX constructs and their nearest wordgenx equivalents.
+- [For TeX users](docs/guide/tex.md): LaTeX constructs and their nearest redocx equivalents.
 - [Command reference](docs/reference.md): every command, option and formatting property, generated from the
   compiler's own tables (`python tools/make_reference.py`).
 
@@ -44,39 +46,39 @@ uv run pytest              # tests (validator tests are skipped without the .NET
 uv run ruff check          # lint
 uv run ruff format         # format
 uv run pyright             # strict type check
-uv run wordgenx build examples/hello.wgx             # compile to examples/hello.docx
-uv run wordgenx check examples/syntax-tour.wgx       # compile and report diagnostics, write nothing
-uv run wordgenx fmt examples/hello.wgx               # rewrite in the canonical layout (--check, --diff)
-uv run wordgenx build examples/hello.wgx --emit-ir - # also print the IR as JSON
-uv run wordgenx build examples/hello.wgx --validate  # also check every part against the schemas
-uv run wordgenx parse examples/syntax-tour.wgx       # print the AST (--tree cst for the CST)
-uv run wordgenx explain table                        # a command, property, macro or std: module
-uv run wordgenx explain note --in examples/hello.wgx # ... including the document's own macros
-uv run wordgenx inspect examples/hello.docx          # read a .docx back, report structure and coverage
-uv run wordgenx import examples/hello.docx -o hello  # turn a .docx into source: .wgx, .wgxs, pictures, report
-uv run wordgenx import report.docx --keep-styles    # ... compiling into the original's styles as a template
-uv run wordgenx import report.docx --commands-only  # ... with commands only, no sugar (level L1)
-uv run wordgenx import report.docx --check          # ... failing unless it compiles to what the original was
+uv run redocx build examples/hello.rdx             # compile to examples/hello.docx
+uv run redocx check examples/syntax-tour.rdx       # compile and report diagnostics, write nothing
+uv run redocx fmt examples/hello.rdx               # rewrite in the canonical layout (--check, --diff)
+uv run redocx build examples/hello.rdx --emit-ir - # also print the IR as JSON
+uv run redocx build examples/hello.rdx --validate  # also check every part against the schemas
+uv run redocx parse examples/syntax-tour.rdx       # print the AST (--tree cst for the CST)
+uv run redocx explain table                        # a command, property, macro or std: module
+uv run redocx explain note --in examples/hello.rdx # ... including the document's own macros
+uv run redocx inspect examples/hello.docx          # read a .docx back, report structure and coverage
+uv run redocx import examples/hello.docx -o hello  # turn a .docx into source: .rdx, .rdxs, pictures, report
+uv run redocx import report.docx --keep-styles    # ... compiling into the original's styles as a template
+uv run redocx import report.docx --commands-only  # ... with commands only, no sugar (level L1)
+uv run redocx import report.docx --check          # ... failing unless it compiles to what the original was
 ```
 
 Golden snapshots (`tests/golden/expected/`) record the exact XML of each test document. After an intended output
 change, regenerate them and review the diff before committing:
 
 ```bash
-WORDGENX_UPDATE_GOLDEN=1 uv run pytest tests/golden
+REDOCX_UPDATE_GOLDEN=1 uv run pytest tests/golden
 ```
 
-Every golden document is also validated against the ECMA-376 schemas (`src/wordgenx/data/schemas/`) and by Microsoft's Open XML SDK.
+Every golden document is also validated against the ECMA-376 schemas (`src/redocx/data/schemas/`) and by Microsoft's Open XML SDK.
 
-Layout: `src/wordgenx/` (package), `tests/`, `src/wordgenx/data/schemas/` (XSDs), `tools/ooxml-validate/` (.NET validator,
+Layout: `src/redocx/` (package), `tests/`, `src/redocx/data/schemas/` (XSDs), `tools/ooxml-validate/` (.NET validator,
 CI and dev only), `docs/` (design), `examples/` (sample sources).
 
 ### Python API (early)
 
 ```python
-from wordgenx import ir
-from wordgenx.props import para_props, run_props
-from wordgenx.ooxml.writer import write_docx
+from redocx import ir
+from redocx.props import para_props, run_props
+from redocx.ooxml.writer import write_docx
 
 doc = ir.Document(
     styles=(

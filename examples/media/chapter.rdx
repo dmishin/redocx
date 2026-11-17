@@ -1,0 +1,16 @@
+% The chapter media.rdx embeds. Rebuild chapter.docx after changing it:
+%   redocx build examples/media/chapter.rdx -o examples/media/chapter.docx
+
+\document[lang=en-GB]
+
+= Measurements
+
+This chapter was written as a document of its own. Its list and headings join the
+main document when Word merges it:
+
+- loop detectors
+- floating cars
+
+== Calibration
+
+Each detector was checked against manual counts.

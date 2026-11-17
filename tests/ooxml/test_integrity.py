@@ -1,4 +1,4 @@
-"""The consistency check of written packages (wordgenx.ooxml.integrity), build --validate."""
+"""The consistency check of written packages (redocx.ooxml.integrity), build --validate."""
 
 import io
 import zipfile
@@ -6,13 +6,13 @@ from pathlib import Path
 
 import pytest
 
-from wordgenx import ir
-from wordgenx.cli import main
-from wordgenx.compiler import build
-from wordgenx.ooxml import validate
-from wordgenx.ooxml.integrity import package_problems
-from wordgenx.ooxml.writer import build_package
-from wordgenx.syntax.diagnostics import Code
+from redocx import ir
+from redocx.cli import main
+from redocx.compiler import build
+from redocx.ooxml import validate
+from redocx.ooxml.integrity import package_problems
+from redocx.ooxml.writer import build_package
+from redocx.syntax.diagnostics import Code
 
 
 def _problems(raw: str) -> list[str]:
@@ -87,7 +87,7 @@ def test_build_reports_problems_as_one_warning() -> None:
     assert warning.code is Code.INCONSISTENT_OUTPUT
     assert warning.notes == ("word/document.xml: bookmark id 7 is never closed",)
     rendered = result.render_diagnostics()
-    assert "warning[WGX0401]: the written document is inconsistent (1 problem)" in rendered
+    assert "warning[RDX0401]: the written document is inconsistent (1 problem)" in rendered
     assert "  = note: word/document.xml: bookmark id 7 is never closed" in rendered
     assert " | " not in rendered  # no source line: the problem has no place in the source
 
@@ -95,7 +95,7 @@ def test_build_reports_problems_as_one_warning() -> None:
 def test_build_validate_fails_on_schema_errors(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    source = tmp_path / "a.wgx"
+    source = tmp_path / "a.rdx"
     source.write_text("Hello", encoding="utf-8")
     out = tmp_path / "a.docx"
     assert main(["build", str(source), "-o", str(out), "--validate"]) == 0

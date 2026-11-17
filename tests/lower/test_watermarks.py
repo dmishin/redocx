@@ -10,10 +10,10 @@ import pytest
 from lxml import etree
 from PIL import Image as PILImage
 
+from redocx import ir
+from redocx.compiler import build, compile_source
+from redocx.values import Color, Length
 from tests.support.xsd import validate_package
-from wordgenx import ir
-from wordgenx.compiler import build, compile_source
-from wordgenx.values import Color, Length
 
 V = "{urn:schemas-microsoft-com:vml}"
 

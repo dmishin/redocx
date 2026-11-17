@@ -1,16 +1,16 @@
-# wordgenx for TeX users
+# redocx for TeX users
 
-If you know LaTeX, most of wordgenx will look familiar: backslash commands, `%` comments, `~`, `--` and `---`,
-labels and references, math in LaTeX notation. This page maps common LaTeX constructs to their nearest wordgenx
-equivalents. They are analogies, not translations: wordgenx writes Word documents, and some LaTeX ideas have no
+If you know LaTeX, most of redocx will look familiar: backslash commands, `%` comments, `~`, `--` and `---`,
+labels and references, math in LaTeX notation. This page maps common LaTeX constructs to their nearest redocx
+equivalents. They are analogies, not translations: redocx writes Word documents, and some LaTeX ideas have no
 counterpart in Word, or a different one.
 
 ## Different assumptions
 
-- **Word lays out the pages.** wordgenx writes a document; Word decides where lines and pages break when it opens it.
+- **Word lays out the pages.** redocx writes a document; Word decides where lines and pages break when it opens it.
   So there is no `\clearpage` trickery, no float placement, no overfull boxes. Page numbers in references are filled
   in by Word, which updates fields when the document opens.
-- **Styles, not macros, carry the formatting.** Where LaTeX redefines `\section`, wordgenx modifies the *Heading 1*
+- **Styles, not macros, carry the formatting.** Where LaTeX redefines `\section`, redocx modifies the *Heading 1*
   style in a style sheet. The output stays editable: a Word user changes the style, and every heading follows.
 - **Macros are templates, not a language.** `\define` substitutes parameters; there is no expansion order, no
   catcodes, no `\if`, no counters arithmetic. Generate the source from a program when you need logic.
@@ -23,17 +23,17 @@ counterpart in Word, or a different one.
 
 ## Document structure
 
-| LaTeX | wordgenx | Notes |
+| LaTeX | redocx | Notes |
 |-------|----------|-------|
 | `\documentclass{article}` | nothing, or `\document[template="report.dotx"]` | the "class" is a Word template or a style sheet |
-| `\usepackage{…}` | `\use{house.wgxs}`, `\use{std:callout}` | style sheets, macro files, standard modules |
+| `\usepackage{…}` | `\use{house.rdxs}`, `\use{std:callout}` | style sheets, macro files, standard modules |
 | `\begin{document}` … `\end{document}` | nothing | the content starts after the preamble |
 | `\title`, `\author`, `\date` | `\meta[title=…, author=…]` | document properties (File > Info) |
 | `\maketitle` | `\p[style=Title]{…}`, `\p[style=Subtitle]{…}` | Word's Title and Subtitle styles |
 | `\chapter`, `\section`, `\subsection` | `=`, `==`, `===` | Heading 1, 2, 3 … up to 9 |
 | `\section*{…}` | `=* …` | a heading without a number |
 | `\paragraph{…}` | `====` or a style of your own | |
-| `\input{f}`, `\include{f}` | `\include{f.wgx}` | |
+| `\input{f}`, `\include{f}` | `\include{f.rdx}` | |
 | `\appendix` | a numbering or style change in a style sheet | |
 | `\tableofcontents` | `\toc[levels=1-3, title="Contents"]` | a Word TOC field, filled in |
 | `\listoffigures`, `\listoftables` | `\listof[Figure]`, `\listof[Table]` | |
@@ -42,7 +42,7 @@ counterpart in Word, or a different one.
 
 ## Text
 
-| LaTeX | wordgenx | Notes |
+| LaTeX | redocx | Notes |
 |-------|----------|-------|
 | blank line, `\par` | blank line | |
 | `\\`, `\newline` | `\br` | |
@@ -75,7 +75,7 @@ counterpart in Word, or a different one.
 
 ## Lists
 
-| LaTeX | wordgenx |
+| LaTeX | redocx |
 |-------|----------|
 | `itemize` with `\item` | lines starting `- ` |
 | `enumerate` with `\item` | lines starting `1. ` (nested: `a. `) |
@@ -87,7 +87,7 @@ counterpart in Word, or a different one.
 
 ## Labels and references
 
-| LaTeX | wordgenx | Notes |
+| LaTeX | redocx | Notes |
 |-------|----------|-------|
 | `\label{sec:x}` | `= Title {#sec:x}`, or `id=sec:x` on a command | a Word bookmark |
 | `\ref{x}` | `\ref[form=number]{x}` | just the number |
@@ -102,7 +102,7 @@ counterpart in Word, or a different one.
 
 ## Citations (biblatex, natbib)
 
-| LaTeX | wordgenx |
+| LaTeX | redocx |
 |-------|----------|
 | `\addbibresource{refs.bib}` with a style | `\bibliography[file="refs.bib", style=apa]` (CSL styles) |
 | `\parencite{k}`, `\citep{k}` | `\cite{k}` |
@@ -113,7 +113,7 @@ counterpart in Word, or a different one.
 
 ## Floats, figures and pictures
 
-| LaTeX | wordgenx | Notes |
+| LaTeX | redocx | Notes |
 |-------|----------|-------|
 | `figure` with `\centering`, `\includegraphics`, `\caption`, `\label` | `\figure[id=fig:x]{ \image{…} \caption{…} }` | |
 | `\includegraphics[width=.5\textwidth]{f}` | `\image[width=50%]{f.png}` | PNG, JPEG, SVG, … |
@@ -125,7 +125,7 @@ counterpart in Word, or a different one.
 
 ## Tables
 
-| LaTeX | wordgenx | Notes |
+| LaTeX | redocx | Notes |
 |-------|----------|-------|
 | `tabular{lcr}` | `\table[columns=(left, center, right)]{…}` | |
 | `a & b \\` | `\| a \| b \|` | one line per row |
@@ -140,7 +140,7 @@ counterpart in Word, or a different one.
 
 ## Math
 
-| LaTeX | wordgenx |
+| LaTeX | redocx |
 |-------|----------|
 | `$x^2$`, `\(x^2\)` | `\m{x^2}` |
 | `\[ … \]`, `equation*` | `$$ … $$` |
@@ -154,7 +154,7 @@ The math is converted to Word's own equations, so it stays editable in Word. The
 
 ## Page layout
 
-| LaTeX | wordgenx |
+| LaTeX | redocx |
 |-------|----------|
 | `geometry` (`a4paper, margin=2.5cm`) | `\section[size=A4, margins=2.5cm]` |
 | `twoside` | `\section[mirror]`, `\settings[even-odd-headers]` |
@@ -169,7 +169,7 @@ The math is converted to Word's own equations, so it stays editable in Word. The
 
 ## Code listings
 
-| LaTeX | wordgenx |
+| LaTeX | redocx |
 |-------|----------|
 | `lstlisting`, `minted{python}` | ` ```python ` … ` ``` ` |
 | `caption=…, label=lst:x` | ` ```python {#lst:x, caption="…"} ` |
@@ -178,7 +178,7 @@ The math is converted to Word's own equations, so it stays editable in Word. The
 
 ## Macros
 
-| LaTeX | wordgenx |
+| LaTeX | redocx |
 |-------|----------|
 | `\newcommand{\product}{Widget}` | `\let{product}{Widget}` |
 | `\newcommand{\term}[1]{\emph{#1}}` | `\define{term}{_#body_}` |
@@ -190,7 +190,7 @@ The math is converted to Word's own equations, so it stays editable in Word. The
 
 A theorem environment, for example:
 
-```wgx
+```rdx
 \styles{ paragraph Theorem : Normal { italic; space-before: 6pt; } }
 
 \define{theorem}[id]{\p[style=Theorem]{*Theorem \seq[Theorem, id=#id].* #body}}
@@ -220,7 +220,7 @@ By \eqref{eq:wait}, waits grow without bound as $\rho \to 1$.\footnote{For an M/
 \end{document}
 ```
 
-```wgx
+```rdx
 \meta[title="Queues", author="Jane Doe"]
 \section[size=A4, margins=2.5cm]
 

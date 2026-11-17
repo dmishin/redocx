@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Driver schema: imports every namespace redocx emits, with local locations,
+  so one compiled schema can validate any XML part of a generated package.
+  Imports listed first win; later imports of the same namespace (including the
+  remote Dublin Core locations in opc-coreProperties.xsd) are skipped.
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="w3c/xml.xsd"/>
+  <xsd:import namespace="http://purl.org/dc/elements/1.1/" schemaLocation="dublin-core/dc.xsd"/>
+  <xsd:import namespace="http://purl.org/dc/terms/" schemaLocation="dublin-core/dcterms.xsd"/>
+
+  <xsd:import namespace="http://schemas.openxmlformats.org/package/2006/content-types"
+              schemaLocation="opc/opc-contentTypes.xsd"/>
+  <xsd:import namespace="http://schemas.openxmlformats.org/package/2006/relationships"
+              schemaLocation="opc/opc-relationships.xsd"/>
+  <xsd:import namespace="http://schemas.openxmlformats.org/package/2006/metadata/core-properties"
+              schemaLocation="opc/opc-coreProperties.xsd"/>
+
+  <xsd:import namespace="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+              schemaLocation="ecma-376-transitional/wml.xsd"/>
+  <xsd:import namespace="http://schemas.openxmlformats.org/drawingml/2006/main"
+              schemaLocation="ecma-376-transitional/dml-main.xsd"/>
+  <xsd:import namespace="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"
+              schemaLocation="ecma-376-transitional/shared-documentPropertiesExtended.xsd"/>
+  <xsd:import namespace="http://schemas.openxmlformats.org/officeDocument/2006/custom-properties"
+              schemaLocation="ecma-376-transitional/shared-documentPropertiesCustom.xsd"/>
+</xsd:schema>

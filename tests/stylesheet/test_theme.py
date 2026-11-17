@@ -8,10 +8,10 @@ from pathlib import Path
 
 from lxml import etree
 
+from redocx import ir
+from redocx.compiler import build, compile_source
+from redocx.values import Border, Color, apply_tint_shade
 from tests.support.xsd import validate_package
-from wordgenx import ir
-from wordgenx.compiler import build, compile_source
-from wordgenx.values import Border, Color, apply_tint_shade
 
 ROOT = Path(__file__).resolve().parents[2]
 A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"

@@ -6,7 +6,7 @@
           <wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distB="0" distL="0" distR="0" distT="0">
             <wp:extent cx="2160000" cy="720000"/>
             <wp:effectExtent b="0" l="0" r="0" t="0"/>
-            <wp:docPr descr="wordgenx logo" id="1" name="logo.png"/>
+            <wp:docPr descr="redocx logo" id="1" name="logo.png"/>
             <wp:cNvGraphicFramePr>
               <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>
             </wp:cNvGraphicFramePr>
@@ -14,7 +14,7 @@
               <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
                 <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
                   <pic:nvPicPr>
-                    <pic:cNvPr descr="wordgenx logo" id="0" name="logo.png"/>
+                    <pic:cNvPr descr="redocx logo" id="0" name="logo.png"/>
                     <pic:cNvPicPr/>
                   </pic:nvPicPr>
                   <pic:blipFill>

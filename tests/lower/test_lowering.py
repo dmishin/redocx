@@ -2,12 +2,12 @@ from pathlib import Path
 
 import pytest
 
-from wordgenx import ir
-from wordgenx.cli import main
-from wordgenx.compiler import CompileResult, build, compile_source
-from wordgenx.props import para_props, run_props
-from wordgenx.syntax.diagnostics import Code, Severity
-from wordgenx.values import Length, LineSpacing
+from redocx import ir
+from redocx.cli import main
+from redocx.compiler import CompileResult, build, compile_source
+from redocx.props import para_props, run_props
+from redocx.syntax.diagnostics import Code, Severity
+from redocx.values import Length, LineSpacing
 
 
 def compiled(text: str, base_dir: Path | None = None) -> ir.Document:
@@ -221,11 +221,11 @@ def test_list_level_style_from_numbering() -> None:
 
 def test_let_and_define() -> None:
     doc = compiled(
-        "\\let{product}{wordgenx}\n"
+        "\\let{product}{redocx}\n"
         '\\define{note}[title="Note", id]{\\b{#title:} #body}\n\n'
         "The \\product{}s are here. \\note[title=Tip]{Read *this*.} \\note{Defaults.}"
     )
-    assert texts(doc) == ["The wordgenxs are here. Tip: Read this. Note: Defaults."]
+    assert texts(doc) == ["The redocxs are here. Tip: Read this. Note: Defaults."]
 
 
 def test_block_macro() -> None:
@@ -246,20 +246,20 @@ def test_macro_errors() -> None:
 
 
 def test_include_and_macro_files(tmp_path: Path) -> None:
-    (tmp_path / "chapter.wgx").write_text(
+    (tmp_path / "chapter.rdx").write_text(
         "== Included\n\nChapter text with \\shout{it}.", encoding="utf-8"
     )
-    (tmp_path / "macros.wgx").write_text(
-        "\\define{shout}{\\b{#body}}\n\\use{more.wgx}", encoding="utf-8"
+    (tmp_path / "macros.rdx").write_text(
+        "\\define{shout}{\\b{#body}}\n\\use{more.rdx}", encoding="utf-8"
     )
-    (tmp_path / "more.wgx").write_text("\\let{x}{X}", encoding="utf-8")
-    (tmp_path / "self.wgx").write_text("\\include{self.wgx}", encoding="utf-8")
-    doc = compiled("\\use{macros.wgx}\n\n= Main \\x\n\n\\include{chapter.wgx}", tmp_path)
+    (tmp_path / "more.rdx").write_text("\\let{x}{X}", encoding="utf-8")
+    (tmp_path / "self.rdx").write_text("\\include{self.rdx}", encoding="utf-8")
+    doc = compiled("\\use{macros.rdx}\n\n= Main \\x\n\n\\include{chapter.rdx}", tmp_path)
     assert texts(doc) == ["Main X", "Included", "Chapter text with it."]
     assert paragraphs(doc)[2].runs()[1].props == run_props(bold=True)
-    loop = diagnostics("\\include{self.wgx}", tmp_path)
+    loop = diagnostics("\\include{self.rdx}", tmp_path)
     assert any("includes itself" in d.message for _, d in loop.diagnostics)
-    missing = diagnostics("\\include{nope.wgx}", tmp_path)
+    missing = diagnostics("\\include{nope.rdx}", tmp_path)
     assert [d.code for _, d in missing.diagnostics] == [Code.INCLUDE]
 
 
@@ -333,13 +333,13 @@ def test_build_produces_valid_docx() -> None:
 
 
 def test_cli_build(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    source = tmp_path / "doc.wgx"
+    source = tmp_path / "doc.rdx"
     source.write_text("= Hello\n\nWorld.", encoding="utf-8")
     assert main(["build", str(source)]) == 0
     assert (tmp_path / "doc.docx").exists()
     assert "wrote" in capsys.readouterr().err
 
-    bad = tmp_path / "bad.wgx"
+    bad = tmp_path / "bad.rdx"
     bad.write_text("\\nosuch", encoding="utf-8")
     assert main(["build", str(bad), "-o", str(tmp_path / "bad.docx")]) == 1
     assert not (tmp_path / "bad.docx").exists()

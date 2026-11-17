@@ -1,6 +1,6 @@
 # Syntax
 
-The exact rules of a `.wgx` file. Files are UTF-8; style sheets (`.wgxs`) have their own syntax, described in
+The exact rules of a `.rdx` file. Files are UTF-8; style sheets (`.rdxs`) have their own syntax, described in
 [styles](styles.md).
 
 ## Paragraphs and text
@@ -81,7 +81,7 @@ A group with a main field accepts that field alone: `margins=2.5cm` is `margins=
 
 ## Short forms
 
-Each short form has a command form, which is what `wordgenx import --commands-only` prints.
+Each short form has a command form, which is what `redocx import --commands-only` prints.
 
 | Short form | Command form |
 |------------|--------------|
@@ -110,8 +110,8 @@ part of it: `see @fig:arch.` works.
 
 ## Files
 
-- `\include{chapter.wgx}` splices another file's content in at that point.
-- `\use{file}` loads a style sheet (`.wgxs`), a macro file (`.wgx`, definitions only) or a standard module
+- `\include{chapter.rdx}` splices another file's content in at that point.
+- `\use{file}` loads a style sheet (`.rdxs`), a macro file (`.rdx`, definitions only) or a standard module
   (`std:callout`).
 - Paths are relative to the file that names them.
 - Everything before the first content is the **preamble**: `\document`, `\meta`, `\settings`, `\use`,
@@ -122,8 +122,8 @@ part of it: `see @fig:arch.` works.
 Every problem has a code, the place in the source and, where possible, a suggestion:
 
 ```text
-error[WGX0302]: unknown option `space-befor` for `\p`
- --> report.wgx:14:4
+error[RDX0302]: unknown option `space-befor` for `\p`
+ --> report.rdx:14:4
    |
 14 | \p[space-befor=12pt]{Text}
    |    ^^^^^^^^^^^^^^^^ did you mean `space-before`?
@@ -131,6 +131,6 @@ error[WGX0302]: unknown option `space-befor` for `\p`
    = help: \p[style=..., id=..., drop-cap, <paragraph properties>]{...}
 ```
 
-Errors stop the build; warnings do not. `wordgenx check` reports both without writing anything, and `wordgenx fmt`
-rewrites files in the canonical layout. `wordgenx explain NAME` says what a command, property or macro takes, and
-with `--in FILE.wgx` it finds the macros a document defines or loads, with the `%` comment above each definition.
+Errors stop the build; warnings do not. `redocx check` reports both without writing anything, and `redocx fmt`
+rewrites files in the canonical layout. `redocx explain NAME` says what a command, property or macro takes, and
+with `--in FILE.rdx` it finds the macros a document defines or loads, with the `%` comment above each definition.

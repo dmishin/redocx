@@ -6,14 +6,14 @@ from zipfile import ZipFile
 
 import pytest
 
+from redocx import ir
+from redocx.cli import main
+from redocx.ooxml import Package
+from redocx.ooxml.reader import ImportReport, NotADocxError, read_docx
+from redocx.ooxml.writer import to_docx_bytes
+from redocx.props import para_props
+from redocx.values import Border, Color, Length
 from tests.golden.cases import example_tables, metadata, minimal, styled
-from wordgenx import ir
-from wordgenx.cli import main
-from wordgenx.ooxml import Package
-from wordgenx.ooxml.reader import ImportReport, NotADocxError, read_docx
-from wordgenx.ooxml.writer import to_docx_bytes
-from wordgenx.props import para_props
-from wordgenx.values import Border, Color, Length
 
 
 def _read(document: ir.Document) -> tuple[ir.Document, ImportReport]:
@@ -26,7 +26,7 @@ def _read(document: ir.Document) -> tuple[ir.Document, ImportReport]:
 
 def test_reads_a_minimal_document() -> None:
     document, report = _read(minimal())
-    assert [paragraph.text() for paragraph in document.all_paragraphs()] == ["Hello, wordgenx."]
+    assert [paragraph.text() for paragraph in document.all_paragraphs()] == ["Hello, redocx."]
     assert report.paragraphs == 1
     assert report.unsupported == ()
 
@@ -111,7 +111,7 @@ def test_reads_a_hand_written_package(hello_package: Callable[[], Package]) -> N
     document = read_docx(hello_package().to_bytes()).document
     paragraphs = list(document.all_paragraphs())
     assert [paragraph.text() for paragraph in paragraphs] == [
-        "Hello, wordgenx",
+        "Hello, redocx",
         "Written by the OPC package writer. See example.com",
     ]
     assert paragraphs[0].style == "heading 1"

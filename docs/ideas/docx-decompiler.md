@@ -1,4 +1,4 @@
-# Musings: a `docx → wordgenx` decompiler
+# Musings: a `docx → redocx` decompiler
 
 > Status: thinking out loud. This is not a plan or a commitment. The roadmap lists a "best-effort importer" for
 > later (`06-roadmap.md`); this note asks how far "best effort" could realistically go and what makes it hard.
@@ -7,9 +7,9 @@
 
 The analogy with binary decompilation holds up well:
 
-| Binary world                       | wordgenx world                                                          |
+| Binary world                       | redocx world                                                          |
 | ---------------------------------- | ----------------------------------------------------------------------- |
-| Source → compiler → machine code   | `.wgx` → expand → lower → resolve → emit → `.docx`                      |
+| Source → compiler → machine code   | `.rdx` → expand → lower → resolve → emit → `.docx`                      |
 | Compilation is many-to-one         | Macros, `\let`, sugar and includes all expand away                      |
 | Disassembly (mechanical)           | OOXML → IR (mechanical, since the IR mirrors WordprocessingML)          |
 | Decompilation to C (structuring)   | IR → canonical commands (`\p[style=…]{…}`)                              |
@@ -22,7 +22,7 @@ real question is how good that source is.
 
 Two inputs make very different problems, and they should be kept apart:
 
-- **A.** The `.docx` was produced by wordgenx (possibly edited in Word afterwards). This is tractable, and possibly the
+- **A.** The `.docx` was produced by redocx (possibly edited in Word afterwards). This is tractable, and possibly the
   most valuable case (see §6).
 - **B.** The `.docx` was authored in Word by people. This is the "real" decompiler problem. A faithful result is
   achievable; an idiomatic one is heuristic.
@@ -40,8 +40,8 @@ Two existing design decisions make this much easier than a generic converter lik
 The pipeline would roughly be the compiler run backwards:
 
 ```
-.docx ──read──▶ raw IR ──normalize──▶ clean IR ──lift──▶ canonical AST ──resugar / abstract──▶ AST ──print + fmt──▶ .wgx
-                (lossless)  (merge runs,      (styles, sections,   (headings, lists, pipe     (wordgenx fmt
+.docx ──read──▶ raw IR ──normalize──▶ clean IR ──lift──▶ canonical AST ──resugar / abstract──▶ AST ──print + fmt──▶ .rdx
+                (lossless)  (merge runs,      (styles, sections,   (headings, lists, pipe     (redocx fmt
                             drop rsid noise)   fields, labels)      tables, macros, \let)      for layout)
 ```
 
@@ -108,7 +108,7 @@ leaving manually typed "1." as text.
   derived from the target's text. Unreferenced ones are dropped.
 
 ### 4.6 Sections
-WordprocessingML puts `sectPr` at the *end* of the last paragraph of a section; wordgenx puts `\section` at the
+WordprocessingML puts `sectPr` at the *end* of the last paragraph of a section; redocx puts `\section` at the
 start. Headers and footers are inherited across sections ("link to previous" means "absent"). Inverting both is
 straightforward but fiddly.
 
@@ -137,12 +137,12 @@ This is the most interesting property of the whole idea. **We own the compiler, 
 verified**:
 
 ```
-D (original .docx) ──decompile──▶ S (.wgx) ──compile──▶ D' (.docx)          check: D ≈ D'
+D (original .docx) ──decompile──▶ S (.rdx) ──compile──▶ D' (.docx)          check: D ≈ D'
 ```
 
 Equivalence can be defined at several strengths:
 
-1. Byte-identical (only possible for wordgenx-produced input).
+1. Byte-identical (only possible for redocx-produced input).
 2. Canonical XML-equivalent (ignoring `rsid`, run boundaries and ID numbering).
 3. Effective-formatting-equivalent: same text, same structure, same resolved properties per character. This is
    probably the right default.
@@ -154,7 +154,7 @@ Consequences:
 - **Abstraction becomes a search with a checker.** Try a more idiomatic rewrite (use a heading sugar, extract a
   macro, use `fr` widths); keep it only if the recompile is still equivalent. Decompilers for binaries cannot do this
   cheaply, but we can.
-- **A free test corpus for the compiler.** Every golden test can be run round-trip: `wgx → docx → wgx' → docx''`
+- **A free test corpus for the compiler.** Every golden test can be run round-trip: `rdx → docx → rdx' → docx''`
   and `docx'' ≈ docx`. It is effectively a fuzzer for both directions.
 - **LLMs become safe to use.** Naming styles, labels and macros, or deciding "is this bold paragraph a heading", are
   judgement calls an LLM is good at. Any rewrite it proposes is checked by the oracle, so it can make the source
@@ -166,7 +166,7 @@ The vision (`01-vision-and-scope.md` §1.2) promises that "a colleague who opens
 it". Then what? Today, those edits are stranded in the `.docx`.
 
 If the compiler embedded provenance in its output (a custom XML part holding a source hash and a map from
-`w14:paraId` to source spans), then for a `.docx` that started as wordgenx output:
+`w14:paraId` to source spans), then for a `.docx` that started as redocx output:
 
 ```
 S (source) ──compile──▶ D ──colleague edits in Word──▶ D'
@@ -194,8 +194,8 @@ code, but reviewers stay in Word" would be a strong story.
 
 | Input                                                     | Realistic outcome                                         | Effort     |
 | --------------------------------------------------------- | --------------------------------------------------------- | ---------- |
-| wordgenx output, unedited                                 | L2 source, recompiles byte-identical                      | Small      |
-| wordgenx output, edited in Word (with provenance)         | Patch back to the original source                         | Medium     |
+| redocx output, unedited                                 | L2 source, recompiles byte-identical                      | Small      |
+| redocx output, edited in Word (with provenance)         | Patch back to the original source                         | Medium     |
 | Disciplined Word docs (styles and template used properly) | Good L2 source with fields, captions and refs             | Medium     |
 | Typical real-world docs (formatting soup, pasted content) | Faithful L1, idiomatic only with heuristics or a style map| Open-ended |
 | SmartArt, OLE, drawing canvases                           | Local raw blobs or warnings                               | n/a        |
@@ -205,11 +205,11 @@ what turns the asymptote into steady, measurable progress instead of a pile of h
 
 ## 9. Side benefits
 
-- **Adoption.** Nobody starts from a blank page. "Point it at your last spec, get a `.wgx` you can build" is the most
+- **Adoption.** Nobody starts from a blank page. "Point it at your last spec, get a `.rdx` you can build" is the most
   convincing demo the project could have.
 - **A feature-gap detector.** Run the decompiler over a corpus of real documents and count each fallback to raw
   OOXML by type. The result is a frequency-ranked list of missing language features: a data-driven roadmap.
-- **Learning tool.** "Build the thing in Word, decompile it, see how wordgenx spells it." This is the
+- **Learning tool.** "Build the thing in Word, decompile it, see how redocx spells it." This is the
   `tools/word-probe/` workflow turned into a user feature.
 
 ## 10. A cheap first experiment (if ever)

@@ -5,9 +5,9 @@ import zipfile
 
 from lxml import etree
 
+from redocx import ir
+from redocx.compiler import build, compile_source
 from tests.support.xsd import validate_package
-from wordgenx import ir
-from wordgenx.compiler import build, compile_source
 
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 
@@ -111,7 +111,7 @@ def test_note_settings() -> None:
 
 def test_invalid_note_settings() -> None:
     assert errors("\\settings[endnotes=(restart=each-page)]") == [
-        "WGX0302 `endnotes`: unknown value `each-page`"
+        "RDX0302 `endnotes`: unknown value `each-page`"
     ]
 
 
@@ -137,10 +137,10 @@ def test_note_references_print_the_number() -> None:
 
 def test_notes_not_allowed_in_headers_or_notes() -> None:
     assert errors("\\header{Text\\footnote{x}}\n\nBody") == [
-        "WGX0303 a footnote cannot be inside a header"
+        "RDX0303 a footnote cannot be inside a header"
     ]
     assert errors("Text\\footnote{a\\endnote{b}}") == [
-        "WGX0303 an endnote cannot be inside another note"
+        "RDX0303 an endnote cannot be inside another note"
     ]
 
 

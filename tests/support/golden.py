@@ -4,7 +4,7 @@ Snapshots live in tests/golden/expected/<case>/<entry>. XML entries are stored a
 canonical XML (C14N 2.0: sorted attributes, no insignificant whitespace), then
 indented for readable diffs; other entries as their SHA-256.
 
-To accept new output: set WORDGENX_UPDATE_GOLDEN=1 and run the golden tests,
+To accept new output: set REDOCX_UPDATE_GOLDEN=1 and run the golden tests,
 then review the snapshot diff with git before committing.
 """
 
@@ -19,7 +19,7 @@ from lxml import etree
 from tests.support.xsd import is_xml
 
 EXPECTED = Path(__file__).resolve().parents[1] / "golden" / "expected"
-UPDATE = os.environ.get("WORDGENX_UPDATE_GOLDEN") == "1"
+UPDATE = os.environ.get("REDOCX_UPDATE_GOLDEN") == "1"
 
 
 def canonical_xml(data: bytes) -> str:
@@ -75,5 +75,5 @@ def check(case: str, docx: bytes) -> list[str]:
                 f"snapshot differs: {entry}\n--- expected\n{expected}--- actual\n{actual[entry]}"
             )
     if problems:
-        problems.append("(set WORDGENX_UPDATE_GOLDEN=1 to accept the new output)")
+        problems.append("(set REDOCX_UPDATE_GOLDEN=1 to accept the new output)")
     return problems

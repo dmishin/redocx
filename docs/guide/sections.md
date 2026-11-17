@@ -6,7 +6,7 @@
 sets up the first section; after content it ends the current section and starts a new one with the same setup,
 changed by its options.
 
-```wgx
+```rdx
 \section[size=A4, margins=(top=2.5cm, bottom=2.5cm, inside=3cm, outside=2cm), mirror, title-page]
 \header[first]{}
 \header{Annual report \tab \tab \field{STYLEREF "Heading 1"}}
@@ -63,20 +63,20 @@ Header and footer paragraphs use Word's Header and Footer styles, with a centre 
 `\field` takes the field code as Word shows it (Alt+F9), with nested fields in braces, and optionally the
 `result` to show until Word updates it:
 
-```wgx
+```rdx
 \meta[title="Annual report", custom.client="Acme"]
 
 \field{TITLE}, for \field{DOCPROPERTY "client"}, has \field{= { NUMPAGES } - 1} pages after this one.
 Chapter: \field[result="Introduction"]{STYLEREF "Heading 1"}.
 ```
 
-Results wordgenx knows (document properties, page counts it can give) are filled in; others are left for Word,
+Results redocx knows (document properties, page counts it can give) are filled in; others are left for Word,
 which updates fields when the document opens. A field type Word does not know (`\field{PAGEREFF x}`) is a warning
 with the nearest name.
 
 ## Document properties and settings
 
-```wgx
+```rdx
 \meta[title="Annual report", author="Jane Doe", keywords=(finance, 2025), custom.project-code="WX-001"]
 \settings[even-odd-headers, update-fields-on-open, default-tab-stop=1cm, hyphenation=auto]
 

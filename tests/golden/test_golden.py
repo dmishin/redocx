@@ -1,9 +1,9 @@
 import pytest
 
+from redocx.ooxml.writer import to_docx_bytes
 from tests.golden.cases import CASES
 from tests.support import golden
 from tests.support.xsd import validate_package
-from wordgenx.ooxml.writer import to_docx_bytes
 
 
 @pytest.mark.parametrize("case", sorted(CASES))

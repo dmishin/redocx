@@ -10,10 +10,10 @@ import pytest
 from lxml import etree
 from PIL import Image as PILImage
 
+from redocx import ir
+from redocx.compiler import build, compile_source
+from redocx.values import Border, Color, Length
 from tests.support.xsd import validate_package
-from wordgenx import ir
-from wordgenx.compiler import build, compile_source
-from wordgenx.values import Border, Color, Length
 
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 WP = "{http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing}"

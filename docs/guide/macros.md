@@ -1,14 +1,14 @@
 # Macros and the standard library
 
-wordgenx has simple macros: named snippets with parameters, expanded where they are used. They save repetition
+redocx has simple macros: named snippets with parameters, expanded where they are used. They save repetition
 and give house conventions a name. They are deliberately not a programming language: there are no conditionals,
 loops or arithmetic, so any source can be compiled safely. For generated documents, write the source from a program
 (a template engine such as Jinja works well) or build the document with the Python API.
 
 ## Constants
 
-```wgx
-\let{product}{wordgenx Compiler}
+```rdx
+\let{product}{redocx Compiler}
 \let{client}{\b{Acme Ltd}}
 
 The \product was built for \client. The \product{}'s output is a Word file.
@@ -19,7 +19,7 @@ space; `\product{}` ends the name where text follows directly.
 
 ## Macros
 
-```wgx
+```rdx
 \define{term}[see]{\style[Strong]{#body}\ix[see=#see]{#body}}
 
 \define{box}[title="Note", color=#E8F0FA]{
@@ -49,8 +49,8 @@ A \term{queue} forms when arrivals outpace service.
 ## Files
 
 ```text
-\include{chapters/02-design.wgx}    the content of another file, here
-\use{macros/house.wgx}             the definitions of a macro file (its content is ignored)
+\include{chapters/02-design.rdx}    the content of another file, here
+\use{macros/house.rdx}             the definitions of a macro file (its content is ignored)
 \use{std:callout}                  a module of the standard library
 ```
 
@@ -59,13 +59,13 @@ A file is loaded once, however often it is used. Paths are relative to the file 
 ## The standard library
 
 The library holds conveniences Word has no concept of, built only from Word's own parts so that the result stays
-editable. The modules are ordinary `.wgx` files in `src/wordgenx/std/`: read them, or copy one and change it.
+editable. The modules are ordinary `.rdx` files in `src/redocx/std/`: read them, or copy one and change it.
 
 ### `std:callout`
 
 Highlighted boxes: a borderless one-cell table with a shaded background and a bold title.
 
-```wgx
+```rdx
 \use{std:callout}
 
 \note{Plain information.}
@@ -85,7 +85,7 @@ Highlighted boxes: a borderless one-cell table with a shaded background and a bo
 Signature blocks for approvals and contracts: underlined tabs in a borderless table, the way they are built by hand
 in Word.
 
-```wgx
+```rdx
 \use{std:signature}
 
 \signature-block[party="the Customer", name="Jane Doe", role="Director"]
@@ -109,4 +109,4 @@ in Word.
 | keep a house library in a file | use a macro inside a text option (`title={\product}` is an error) |
 
 When you need more, generate the source. Because every short form has a command form and options are named, a
-generated `.wgx` file is easy to write and to read back.
+generated `.rdx` file is easy to write and to read back.

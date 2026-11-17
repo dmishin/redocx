@@ -11,10 +11,10 @@ import pytest
 from lxml import etree
 from PIL import Image as PILImage
 
+from redocx import ir
+from redocx.compiler import build, compile_source
+from redocx.values import Length
 from tests.support.xsd import validate_package
-from wordgenx import ir
-from wordgenx.compiler import build, compile_source
-from wordgenx.values import Length
 
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 W14 = "{http://schemas.microsoft.com/office/word/2010/wordml}"

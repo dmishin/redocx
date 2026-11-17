@@ -6,9 +6,9 @@ from functools import cache
 import pytest
 from lxml import etree
 
+from redocx.ooxml import schema_order
+from redocx.props import REGISTRY, Target
 from tests.support.xsd import SCHEMAS
-from wordgenx.ooxml import schema_order
-from wordgenx.props import REGISTRY, Target
 
 XS = "{http://www.w3.org/2001/XMLSchema}"
 
@@ -52,8 +52,8 @@ def test_order_matches_schema(ours: Sequence[str], kind: str, name: str) -> None
 
 def test_registry_elements_are_known() -> None:
     """Every element the registry emits appears in its container's order list."""
-    from wordgenx.ooxml.parts.theme import Theme
-    from wordgenx.values import Color
+    from redocx.ooxml.parts.theme import Theme
+    from redocx.values import Color
 
     samples: dict[str, object] = {"color": Color(rgb="000000"), "shading": Color(rgb="F2F2F2")}
     containers = (
@@ -72,7 +72,7 @@ def test_registry_elements_are_known() -> None:
 
 
 def _sample(name: str, target: Target) -> object:
-    from wordgenx.values import LineSpacing
+    from redocx.values import LineSpacing
 
     special: dict[str, object] = {
         "font": "Arial",

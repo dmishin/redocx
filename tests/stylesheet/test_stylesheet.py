@@ -3,16 +3,16 @@ from pathlib import Path
 
 import pytest
 
-from wordgenx import ir
-from wordgenx.lower.builtins import BUILTIN_STYLES
-from wordgenx.ooxml.writer import to_docx_bytes
-from wordgenx.props import cell_props, para_props, run_props
-from wordgenx.stylesheet import CompiledStyles, compile_stylesheets, parse_stylesheet
-from wordgenx.stylesheet.collect import document_styles
-from wordgenx.stylesheet.syntax import Block, Declaration, StyleRule
-from wordgenx.syntax import Source, parse
-from wordgenx.syntax.diagnostics import Code
-from wordgenx.values import Border, Color, Length, LineSpacing
+from redocx import ir
+from redocx.lower.builtins import BUILTIN_STYLES
+from redocx.ooxml.writer import to_docx_bytes
+from redocx.props import cell_props, para_props, run_props
+from redocx.stylesheet import CompiledStyles, compile_stylesheets, parse_stylesheet
+from redocx.stylesheet.collect import document_styles
+from redocx.stylesheet.syntax import Block, Declaration, StyleRule
+from redocx.syntax import Source, parse
+from redocx.syntax.diagnostics import Code
+from redocx.values import Border, Color, Length, LineSpacing
 
 EXAMPLES = Path(__file__).resolve().parents[2] / "examples"
 
@@ -20,7 +20,7 @@ EXAMPLES = Path(__file__).resolve().parents[2] / "examples"
 def compile_text(
     text: str, builtins: Mapping[str, Callable[[], ir.Style]] | None = None
 ) -> CompiledStyles:
-    return compile_stylesheets([parse_stylesheet(Source("t.wgxs", text))], builtins)
+    return compile_stylesheets([parse_stylesheet(Source("t.rdxs", text))], builtins)
 
 
 def compiled_ok(text: str) -> CompiledStyles:
@@ -257,13 +257,13 @@ def test_table_style_errors(text: str, message: str) -> None:
 
 
 def test_styles_body_in_a_document(tmp_path: Path) -> None:
-    (tmp_path / "extra.wgxs").write_text("character Term { italic; }", encoding="utf-8")
+    (tmp_path / "extra.rdxs").write_text("character Term { italic; }", encoding="utf-8")
     text = (
-        "\\use{extra.wgxs}\n"
+        "\\use{extra.rdxs}\n"
         '\\styles{\n  paragraph "Body Text" { justify; }  % inline sheet\n  modify character Term { bold; }\n}\n\n'
         "Some text."
     )
-    result = parse(text, name=str(tmp_path / "doc.wgx"))
+    result = parse(text, name=str(tmp_path / "doc.rdx"))
     assert result.ok, result.render_diagnostics()
     compiled = document_styles(result)
     assert compiled.ok, compiled.render_diagnostics()
@@ -272,22 +272,22 @@ def test_styles_body_in_a_document(tmp_path: Path) -> None:
 
 
 def test_style_sheet_errors_point_into_the_document(tmp_path: Path) -> None:
-    text = "Intro.\n\n\\styles{ paragraph X { siez: 1pt; } }\n\\use{missing.wgxs}"
-    result = parse(text, name=str(tmp_path / "doc.wgx"))
+    text = "Intro.\n\n\\styles{ paragraph X { siez: 1pt; } }\n\\use{missing.rdxs}"
+    result = parse(text, name=str(tmp_path / "doc.rdx"))
     compiled = document_styles(result)
     codes = {d.code: (s, d) for s, d in compiled.diagnostics}
     source, unknown = codes[Code.UNKNOWN_PROPERTY]
     assert source.slice(unknown.span) == "siez"
     assert source.position(unknown.span.start).line == 3
     source, missing = codes[Code.STYLESHEET_NOT_FOUND]
-    assert source.slice(missing.span) == "\\use{missing.wgxs}"
+    assert source.slice(missing.span) == "\\use{missing.rdxs}"
 
 
 def test_house_style_sheet_builds_a_valid_document() -> None:
     from tests.support.xsd import validate_package
 
     compiled = compile_stylesheets(
-        [parse_stylesheet(Source.from_path(EXAMPLES / "styles" / "house.wgxs"))]
+        [parse_stylesheet(Source.from_path(EXAMPLES / "styles" / "house.rdxs"))]
     )
     assert compiled.ok, compiled.render_diagnostics()
     document = compiled.apply(ir.Document(body=(ir.paragraph("Title", style="Heading 1"),)))

@@ -10,10 +10,10 @@ from pathlib import Path
 
 import pytest
 
+from redocx import ir
+from redocx.ooxml.reader import ImportResult, read_docx
+from redocx.ooxml.writer import to_docx_bytes
 from tests.support.xsd import validate_package
-from wordgenx import ir
-from wordgenx.ooxml.reader import ImportResult, read_docx
-from wordgenx.ooxml.writer import to_docx_bytes
 
 CORPUS = Path(__file__).resolve().parents[1] / "corpus"
 DOCUMENTS = sorted(p.name for p in CORPUS.glob("*.docx"))

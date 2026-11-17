@@ -1,4 +1,4 @@
-"""`wordgenx explain`: commands, properties, macros and std: modules."""
+"""`redocx explain`: commands, properties, macros and std: modules."""
 
 from __future__ import annotations
 
@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pytest
 
-from wordgenx.cli import main
-from wordgenx.commands.builtin import COMMANDS
-from wordgenx.explain import explain, overview
+from redocx.cli import main
+from redocx.commands.builtin import COMMANDS
+from redocx.explain import explain, overview
 
 
 def test_a_command() -> None:
@@ -17,7 +17,7 @@ def test_a_command() -> None:
     assert text.startswith("\\table: A table of pipe rows and/or \\row commands.")
     assert "  Where:  a block of its own" in text
     assert "    header-rows  rows repeated on each page" in text
-    assert "(wordgenx explain --properties table)" in text
+    assert "(redocx explain --properties table)" in text
     assert "More: docs/reference.md#cmd-table" in text
 
 
@@ -54,10 +54,10 @@ def test_a_standard_library_macro_and_module() -> None:
 
 
 def test_the_macros_of_a_document(tmp_path: Path) -> None:
-    (tmp_path / "lib.wgx").write_text("\\let{product}{Widget}\n", encoding="utf-8")
-    document = tmp_path / "doc.wgx"
+    (tmp_path / "lib.rdx").write_text("\\let{product}{Widget}\n", encoding="utf-8")
+    document = tmp_path / "doc.rdx"
     document.write_text(
-        "\\use{lib.wgx}\n\n"
+        "\\use{lib.rdx}\n\n"
         "% A shaded box.\n% The title is bold.\n"
         '\\define{box}[title="Note", id]{\\b{#title} #body}\n\n'
         "Text.\n",
@@ -79,7 +79,7 @@ def test_an_unknown_name_suggests() -> None:
     text, found = explain("tabel")
     assert not found
     assert "did you mean `table`" in text
-    assert "--in FILE.wgx" in text
+    assert "--in FILE.rdx" in text
 
 
 def test_the_overview_lists_every_command() -> None:
@@ -94,4 +94,4 @@ def test_the_command_line(capsys: pytest.CaptureFixture[str]) -> None:
     assert "  valign" in capsys.readouterr().out
     assert main(["explain", "nosuch"]) == 1
     assert "`nosuch` is not a command, property or macro" in capsys.readouterr().err
-    assert main(["explain", "x", "--in", "missing.wgx"]) == 1
+    assert main(["explain", "x", "--in", "missing.rdx"]) == 1

@@ -11,9 +11,9 @@ from pathlib import Path
 
 import pytest
 
+from redocx.bibliography import BUNDLED_STYLES, Bibliography, Cite, load_sources, load_style
+from redocx.compiler import build
 from tests.support.xsd import validate_package
-from wordgenx.bibliography import BUNDLED_STYLES, Bibliography, Cite, load_sources, load_style
-from wordgenx.compiler import build
 
 BIBTEX = r"""
 @book{daganzo2005,

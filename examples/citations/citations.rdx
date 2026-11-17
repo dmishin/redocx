@@ -1,0 +1,17 @@
+% Citations and a bibliography, rendered with a CSL style (design 3.19).
+%   redocx build examples/citations/citations.rdx
+
+\document[lang=en-GB]
+\meta[title="Citations"]
+\bibliography[file=(refs.bib, refs.json), style=harvard]
+
+= Introduction
+
+Traffic flow is well described by kinematic wave models \cite{daganzo2005}. Shrinkage
+estimators were popularised by \textcite{tibshirani1996}; the proof of consistency is in
+\cite[page=214, prefix="see", suffix="Lemma 2"]{tibshirani1996}.
+
+Several textbooks agree \cite{ortuzar2011, daganzo2005}, and the typesetting tradition
+goes back to \textcite[page=12]{knuth1984}.
+
+\printbibliography[title="References"]

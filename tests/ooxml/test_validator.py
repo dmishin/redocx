@@ -7,17 +7,17 @@ from pathlib import Path
 
 import pytest
 
+from redocx.compiler import build
+from redocx.ooxml import Package
+from redocx.ooxml.writer import write_docx
+from redocx.syntax import Source
 from tests.golden.cases import CASES
-from wordgenx.compiler import build
-from wordgenx.ooxml import Package
-from wordgenx.ooxml.writer import write_docx
-from wordgenx.syntax import Source
 
 ROOT = Path(__file__).resolve().parents[2]
 PROJECT = ROOT / "tools" / "ooxml-validate"
 EXAMPLES = sorted(
     p
-    for p in [*(ROOT / "examples").rglob("*.wgx"), *(ROOT / "docs" / "book").glob("*.wgx")]
+    for p in [*(ROOT / "examples").rglob("*.rdx"), *(ROOT / "docs" / "book").glob("*.rdx")]
     if "spike" not in p.parts and p.parent.name != "chapters"
 )
 

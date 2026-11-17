@@ -2,7 +2,7 @@
 
 The check for every document: the printed source compiles without errors and has the
 original's text. Documents come from the Word-built corpus, from the examples (built by
-wordgenx, then imported), and from small IR documents for the details of printing.
+redocx, then imported), and from small IR documents for the details of printing.
 """
 
 from __future__ import annotations
@@ -12,28 +12,28 @@ from pathlib import Path
 
 import pytest
 
-from wordgenx import ir
-from wordgenx.cli import main
-from wordgenx.compiler import build, compile_file
-from wordgenx.importer import import_docx, visible_text
-from wordgenx.importer.check import Comparison, compare
-from wordgenx.importer.printer import display_name, print_document
-from wordgenx.importer.values import length, line_spacing
-from wordgenx.lower.builtins import BUILTIN_STYLES
-from wordgenx.ooxml.writer import to_docx_bytes
-from wordgenx.props import para_props, run_props
-from wordgenx.syntax import Source
-from wordgenx.values import Border, Color, Length, LineSpacing
+from redocx import ir
+from redocx.cli import main
+from redocx.compiler import build, compile_file
+from redocx.importer import import_docx, visible_text
+from redocx.importer.check import Comparison, compare
+from redocx.importer.printer import display_name, print_document
+from redocx.importer.values import length, line_spacing
+from redocx.lower.builtins import BUILTIN_STYLES
+from redocx.ooxml.writer import to_docx_bytes
+from redocx.props import para_props, run_props
+from redocx.syntax import Source
+from redocx.values import Border, Color, Length, LineSpacing
 
 ROOT = Path(__file__).resolve().parents[2]
 CORPUS_DIR = ROOT / "tests" / "corpus"
 CORPUS = sorted(CORPUS_DIR.glob("*.docx"))
 EXAMPLES = [
-    "examples/tables.wgx",
-    "examples/index.wgx",
-    "examples/citations/citations.wgx",
-    "examples/forms/onboarding.wgx",
-    "examples/magazine/magazine.wgx",
+    "examples/tables.rdx",
+    "examples/index.rdx",
+    "examples/citations/citations.rdx",
+    "examples/forms/onboarding.rdx",
+    "examples/magazine/magazine.rdx",
 ]
 
 
@@ -164,7 +164,7 @@ def test_values_are_written_in_round_units() -> None:
 def test_word_names_of_built_in_styles_are_shown_capitalised() -> None:
     assert display_name("heading 1") == "Heading 1"
     assert display_name("toc 2") == "TOC 2"
-    assert display_name("annotation text") == "annotation text"  # wordgenx's own spelling
+    assert display_name("annotation text") == "annotation text"  # redocx's own spelling
     assert display_name("My Style") == "My Style"
 
 
@@ -177,8 +177,8 @@ def test_the_import_command_writes_the_folder(
     )
     assert sorted(p.name for p in folder.iterdir()) == [
         "drawings.import.txt",
-        "drawings.wgx",
-        "drawings.wgxs",
+        "drawings.rdx",
+        "drawings.rdxs",
         "media",
     ]
     assert "The printed source compiles." in capsys.readouterr().out
@@ -186,7 +186,7 @@ def test_the_import_command_writes_the_folder(
 
 def test_what_cannot_be_printed_is_counted() -> None:
     first = ir.Section(headers=(("first", (ir.paragraph("unused"),)),))
-    printed = print_document(ir.Document(body=(ir.paragraph("x  y"),), section=first), "s.wgxs")
+    printed = print_document(ir.Document(body=(ir.paragraph("x  y"),), section=first), "s.rdxs")
     assert printed.lost == {
         "first-page header of a section without a different first page": 1,
         "repeated spaces (collapsed to one)": 1,
@@ -222,7 +222,7 @@ def test_custom_properties_round_trip(tmp_path: Path) -> None:
 def test_the_theme_is_printed_where_it_differs(tmp_path: Path) -> None:
     theme = ir.ThemeChoice("Coastal", (("accent1", "0B7A75"),), "Georgia", None)
     _, compiled = imported(ir.Document(body=(ir.paragraph("x"),), theme=theme), tmp_path)
-    sheet = (tmp_path / "out" / "doc.wgxs").read_text("utf-8")
+    sheet = (tmp_path / "out" / "doc.rdxs").read_text("utf-8")
     assert 'theme "Coastal" {\n  accent1: #0B7A75;\n  major-font: "Georgia";\n}' in sheet
     assert compiled.theme is not None
     assert ("accent1", "0B7A75") in compiled.theme.colors
@@ -237,7 +237,7 @@ def test_built_in_styles_print_only_their_differences(tmp_path: Path) -> None:
     char = ir.Style(ir.StyleKind.CHARACTER, "Heading 1 Char", run=changed.run, link="Heading 1")
     body = (ir.Paragraph((ir.Run("Title"),), "Heading 1"),)
     _, compiled = imported(ir.Document(body=body, styles=(changed, char)), tmp_path)
-    sheet = (tmp_path / "out" / "doc.wgxs").read_text("utf-8")
+    sheet = (tmp_path / "out" / "doc.rdxs").read_text("utf-8")
     assert 'modify linked "Heading 1" {\n  color: #C00000;\n}' in sheet
     back = next(s for s in compiled.styles if s.name == "Heading 1")
     assert back.run == changed.run
@@ -245,9 +245,9 @@ def test_built_in_styles_print_only_their_differences(tmp_path: Path) -> None:
 
 
 def test_word_legacy_defaults_are_written_out() -> None:
-    """Without a font or size in the defaults Word uses Times New Roman 10pt, while wordgenx
+    """Without a font or size in the defaults Word uses Times New Roman 10pt, while redocx
     would fill in its own: the style sheet says what Word does."""
-    sheet = print_document(ir.Document(body=(ir.paragraph("x"),)), "s.wgxs").stylesheet
+    sheet = print_document(ir.Document(body=(ir.paragraph("x"),)), "s.rdxs").stylesheet
     assert 'defaults {\n  font: "Times New Roman";\n  size: 10pt;\n}' in sheet
 
 
@@ -257,12 +257,12 @@ def test_keep_styles_compiles_into_the_original(docx: Path, tmp_path: Path) -> N
     assert (result.errors, result.difference) == (0, None)
     source = result.source.read_text("utf-8")
     assert source.startswith(f'\\document[template="{docx.stem}.template.docx"')
-    assert not (tmp_path / f"{docx.stem}.wgxs").exists()  # the template has the styles and lists
+    assert not (tmp_path / f"{docx.stem}.rdxs").exists()  # the template has the styles and lists
 
 
 ALL_EXAMPLES = sorted(
     str(p.relative_to(ROOT)).replace("\\", "/")
-    for p in (ROOT / "examples").rglob("*.wgx")
+    for p in (ROOT / "examples").rglob("*.rdx")
     if "spike" not in p.parts and p.parent.name != "chapters"
 )
 MODES = pytest.mark.parametrize("keep_styles", [False, True], ids=["style-sheet", "keep-styles"])
@@ -287,7 +287,7 @@ def test_the_corpus_compiles_to_what_it_was(docx: Path, keep_styles: bool, tmp_p
 def test_examples_compile_to_what_they_were(
     example: str, keep_styles: bool, tmp_path: Path
 ) -> None:
-    """.wgx -> .docx -> import -> .docx: the oracle on documents wordgenx wrote."""
+    """.rdx -> .docx -> import -> .docx: the oracle on documents redocx wrote."""
     data, _ = build(Source.from_path(ROOT / example))
     assert data is not None
     docx = tmp_path / "original.docx"
@@ -325,7 +325,7 @@ def test_the_import_command_checks_the_result(tmp_path: Path) -> None:
 
 
 def test_a_link_without_the_hyperlink_look_stays_plain(tmp_path: Path) -> None:
-    """wordgenx's own citations link to their entries without the Hyperlink style."""
+    """redocx's own citations link to their entries without the Hyperlink style."""
     body = (
         ir.Paragraph((ir.BookmarkStart("entry"), ir.Run("Entry"), ir.BookmarkEnd("entry"))),
         ir.Paragraph((ir.Hyperlink("", (ir.Run("(Smith, 2020)"),), anchor="entry"),)),

@@ -8,16 +8,16 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
-from wordgenx import ir
-from wordgenx.compiler import compile_file
-from wordgenx.props import para_props, run_props
-from wordgenx.stylesheet import compile_stylesheets, parse_stylesheet
-from wordgenx.syntax import Source
-from wordgenx.values import Length, LineSpacing
+from redocx import ir
+from redocx.compiler import compile_file
+from redocx.props import para_props, run_props
+from redocx.stylesheet import compile_stylesheets, parse_stylesheet
+from redocx.syntax import Source
+from redocx.values import Length, LineSpacing
 
 
 def minimal() -> ir.Document:
-    return ir.Document(body=(ir.paragraph("Hello, wordgenx."),))
+    return ir.Document(body=(ir.paragraph("Hello, redocx."),))
 
 
 def styled() -> ir.Document:
@@ -104,7 +104,7 @@ def metadata() -> ir.Document:
             author="Finance Team",
             keywords=("report", "quarterly"),
             description="Golden test for document properties.",
-            last_modified_by="wordgenx tests",
+            last_modified_by="redocx tests",
             created=datetime(2026, 10, 1, 9, 30, tzinfo=UTC),
             modified=datetime(2026, 10, 15, 17, 0, tzinfo=UTC),
             language="en-US",
@@ -126,8 +126,8 @@ def metadata() -> ir.Document:
 
 
 def stylesheet() -> ir.Document:
-    """examples/styles/house.wgxs: defaults, styles, linked style, heading and list numbering."""
-    path = Path(__file__).resolve().parents[2] / "examples" / "styles" / "house.wgxs"
+    """examples/styles/house.rdxs: defaults, styles, linked style, heading and list numbering."""
+    path = Path(__file__).resolve().parents[2] / "examples" / "styles" / "house.rdxs"
     compiled = compile_stylesheets([parse_stylesheet(Source.from_path(path))])
     assert compiled.ok, compiled.render_diagnostics()
     body = (
@@ -149,52 +149,52 @@ def stylesheet() -> ir.Document:
 
 
 def example_hello() -> ir.Document:
-    """examples/hello.wgx through the full pipeline: parse, style sheets, macros, lowering."""
-    result = compile_file(Path(__file__).resolve().parents[2] / "examples" / "hello.wgx")
+    """examples/hello.rdx through the full pipeline: parse, style sheets, macros, lowering."""
+    result = compile_file(Path(__file__).resolve().parents[2] / "examples" / "hello.rdx")
     assert result.document is not None, result.render_diagnostics()
     return result.document
 
 
 def example_tables() -> ir.Document:
-    """examples/tables.wgx: pipe and block tables, merges, shading, nested table, images."""
-    result = compile_file(Path(__file__).resolve().parents[2] / "examples" / "tables.wgx")
+    """examples/tables.rdx: pipe and block tables, merges, shading, nested table, images."""
+    result = compile_file(Path(__file__).resolve().parents[2] / "examples" / "tables.rdx")
     assert result.document is not None, result.render_diagnostics()
     return result.document
 
 
 def example_design_spec() -> ir.Document:
     """examples/design-spec: the ported spike sample (M1 trial document)."""
-    path = Path(__file__).resolve().parents[2] / "examples" / "design-spec" / "design-spec.wgx"
+    path = Path(__file__).resolve().parents[2] / "examples" / "design-spec" / "design-spec.rdx"
     result = compile_file(path)
     assert result.document is not None, result.render_diagnostics()
     return result.document
 
 
 def example_math() -> ir.Document:
-    """examples/math.wgx: inline and display math, numbered equations and references."""
-    result = compile_file(Path(__file__).resolve().parents[2] / "examples" / "math.wgx")
+    """examples/math.rdx: inline and display math, numbered equations and references."""
+    result = compile_file(Path(__file__).resolve().parents[2] / "examples" / "math.rdx")
     assert result.document is not None, result.render_diagnostics()
     return result.document
 
 
 def example_citations() -> ir.Document:
     """examples/citations: citations, a narrative citation, a CSL bibliography with links."""
-    path = Path(__file__).resolve().parents[2] / "examples" / "citations" / "citations.wgx"
+    path = Path(__file__).resolve().parents[2] / "examples" / "citations" / "citations.rdx"
     result = compile_file(path)
     assert result.document is not None, result.render_diagnostics()
     return result.document
 
 
 def example_index() -> ir.Document:
-    """examples/index.wgx: XE marks with subentries, bold and cross-references; an index."""
-    result = compile_file(Path(__file__).resolve().parents[2] / "examples" / "index.wgx")
+    """examples/index.rdx: XE marks with subentries, bold and cross-references; an index."""
+    result = compile_file(Path(__file__).resolve().parents[2] / "examples" / "index.rdx")
     assert result.document is not None, result.render_diagnostics()
     return result.document
 
 
 def example_media() -> ir.Document:
     """examples/media: an SVG with its placeholder fallback; an embedded .docx (altChunk)."""
-    path = Path(__file__).resolve().parents[2] / "examples" / "media" / "media.wgx"
+    path = Path(__file__).resolve().parents[2] / "examples" / "media" / "media.rdx"
     result = compile_file(path)
     assert result.document is not None, result.render_diagnostics()
     return result.document
@@ -202,7 +202,7 @@ def example_media() -> ir.Document:
 
 def example_thesis() -> ir.Document:
     """examples/thesis: the M3 exit sample; chapters, math, citations, code, figures, index."""
-    path = Path(__file__).resolve().parents[2] / "examples" / "thesis" / "thesis.wgx"
+    path = Path(__file__).resolve().parents[2] / "examples" / "thesis" / "thesis.rdx"
     result = compile_file(path)
     assert result.document is not None, result.render_diagnostics()
     return result.document
@@ -210,7 +210,7 @@ def example_thesis() -> ir.Document:
 
 def example_magazine() -> ir.Document:
     """examples/magazine: the M4 exit sample; cover, floats, text boxes, watermark, theme."""
-    path = Path(__file__).resolve().parents[2] / "examples" / "magazine" / "magazine.wgx"
+    path = Path(__file__).resolve().parents[2] / "examples" / "magazine" / "magazine.rdx"
     result = compile_file(path)
     assert result.document is not None, result.render_diagnostics()
     return result.document
@@ -218,7 +218,7 @@ def example_magazine() -> ir.Document:
 
 def example_onboarding() -> ir.Document:
     """examples/forms: the M5 exit sample; content controls, comments, protection."""
-    path = Path(__file__).resolve().parents[2] / "examples" / "forms" / "onboarding.wgx"
+    path = Path(__file__).resolve().parents[2] / "examples" / "forms" / "onboarding.rdx"
     result = compile_file(path)
     assert result.document is not None, result.render_diagnostics()
     return result.document

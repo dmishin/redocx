@@ -5,7 +5,7 @@
 Content controls are the fields of a Word form: places a reader fills in, which programs can read back by their
 tag.
 
-```wgx
+```rdx
 Name: \control[tag=name, title="Full name", placeholder="Enter your name"]
 
 Status: \control[dropdown, tag=status, items=("Draft", "Final")]{Draft}
@@ -32,7 +32,7 @@ being deleted, or both. Controls hold text, not whole paragraphs.
 
 To let readers edit only the controls, protect the document:
 
-```wgx
+```rdx
 \settings[protection=(mode=forms, enforce)]
 
 Name: \control[tag=name]
@@ -43,7 +43,7 @@ than stopping them.
 
 ## Comments
 
-```wgx
+```rdx
 \meta[author="R. Patel"]
 
 The payment term is \comment[text="Please confirm the commercial position."]{thirty (30) days}.

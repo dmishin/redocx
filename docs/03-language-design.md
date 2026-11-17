@@ -2,11 +2,11 @@
 
 > **Status:** draft v0.2. It includes the decisions from the M0 syntax spike
 > ([findings](../examples/spike/FINDINGS.md), referenced below as F-n). The exact grammar is fixed in M1.
-> File extensions: `.wgx` (documents and macro files), `.wgxs` (style sheets). Encoding: UTF-8.
+> File extensions: `.rdx` (documents and macro files), `.rdxs` (style sheets). Encoding: UTF-8.
 
 ## 3.1 Design goals for the syntax
 
-0. **DOCX is the only target.** wordgenx is not a universal, output-neutral markup language. Every construct exists
+0. **DOCX is the only target.** redocx is not a universal, output-neutral markup language. Every construct exists
    because Word has a matching concept, and it is named and shaped after that concept. We do not add abstractions to
    make documents portable to HTML or PDF. When "the obvious markup design" and "how Word models it" disagree, Word wins.
    Conveniences without a Word counterpart (theorems, callouts, subfigures) live in the standard macro library (§3.18),
@@ -74,17 +74,17 @@ Length-plus-rule values use tuples: `height=(1.5cm, at-least)`, `line-spacing=(1
 
 `#RRGGBB`, CSS-like named colors (`navy`), `auto`, and **theme colors** with tint and shade:
 `theme.accent1`, `theme.text1.lighter(40%)`, `theme.accent2.darker(25%)`. These emit `w:themeColor`, `w:themeTint`
-and `w:themeShade`, so they follow theme changes in Word. The theme is the template's, or wordgenx's own, with the
+and `w:themeShade`, so they follow theme changes in Word. The theme is the template's, or redocx's own, with the
 colours and fonts of a `theme` rule on top (§3.5). The RGB value written alongside is the one Word shows (it scales
 the HSL luminance), so other readers show the same colour.
 
 ## 3.3 Document skeleton
 
-```wgx
+```rdx
 \document[template="templates/corporate.dotx", lang=en-US, smart-quotes=on]
 
 \meta[
-  title    = "wordgenx Architecture Specification",
+  title    = "redocx Architecture Specification",
   author   = "Jane Doe",
   subject  = "Compiler design",
   keywords = (docx, compiler),
@@ -94,15 +94,15 @@ the HSL luminance), so other readers show the same colour.
 
 \settings[even-odd-headers, update-fields-on-open=on]
 
-\use{styles/house.wgxs}             % style sheet (§3.5)
-\use{macros/house.wgx}              % macro library (§3.17)
+\use{styles/house.rdxs}             % style sheet (§3.5)
+\use{macros/house.rdx}              % macro library (§3.17)
 
 \section[size=A4, margins=(top=2.5cm, bottom=2.5cm, inside=3cm, outside=2cm), mirror, title-page]
 \header[first]{}                    % empty first-page header
 \header{\field{STYLEREF "Heading 1"} \tab \field{TITLE}}
 \footer{\align[center]{Page \pagenum of \numpages}}
 
-\p[style="Title"]{wordgenx Architecture Specification}
+\p[style="Title"]{redocx Architecture Specification}
 \pagebreak
 
 \toc[levels=1-3, title="Contents"]
@@ -114,11 +114,11 @@ the HSL luminance), so other readers show the same colour.
 Everything before the first content is the *preamble*. `\document`, `\meta`, `\settings`, `\use` and `\styles` are
 preamble-only. In the preamble, `\section` configures the first section. After content, it starts a new one (§3.10).
 
-`\document[template="corp.dotx"]` (or `wordgenx build --template corp.dotx`) compiles into a Word template or
+`\document[template="corp.dotx"]` (or `redocx build --template corp.dotx`) compiles into a Word template or
 document. The output takes the template's styles, theme, page setup, headers and footers, and body content (a cover
 page). Style sheets modify its styles. A built-in the markup needs is the template's own when it has one. Details:
-architecture §4.6. `wordgenx build corp.wgx -o corp.dotx` writes a template;
-[examples/templates/corporate.wgx](../examples/templates/corporate.wgx) is one.
+architecture §4.6. `redocx build corp.rdx -o corp.dotx` writes a template;
+[examples/templates/corporate.rdx](../examples/templates/corporate.rdx) is one.
 
 `\document[page-color=#FDF6E3]` colours every page (Word's Design > Page Color; `w:background`). Word shows it on
 screen and in PDF export, but prints it only when *Print background colors and images* is on.
@@ -150,7 +150,7 @@ punctuation and only when followed by a label character, so `jane@example.com` i
 Sugar maps to **semantic character styles**, which are created if the template lacks them, giving idiomatic Word output.
 Direct formatting is always available:
 
-```wgx
+```rdx
 \font[font="Consolas", size=10pt, color=theme.accent1, caps, character-spacing=0.5pt]{text}
 \font[border=(single, 0.5pt, #C00000, space=1pt), shading=#FFF2CC]{boxed}   % a character border and shading
 \b{bold} \i{italic} \u[double]{underlined} \s{struck} \sup{2} \sub{i} \hl[yellow]{highlight}
@@ -160,7 +160,7 @@ Direct formatting is always available:
 ```
 
 **Right-to-left and complex scripts** (M4). Arabic, Hebrew and other right-to-left letters run right to left by
-themselves (Word applies the Unicode bidirectional algorithm). What wordgenx adds:
+themselves (Word applies the Unicode bidirectional algorithm). What redocx adds:
 
 - `rtl` on a paragraph (`\p[rtl]`, or in a paragraph style) makes it a right-to-left paragraph (`w:bidi`): it starts
   at the right margin, and neutral characters and numbers follow its direction. On a table (`\table[rtl]`) the first
@@ -175,10 +175,10 @@ themselves (Word applies the Unicode bidirectional algorithm). What wordgenx add
 
 ## 3.5 Styles and style sheets
 
-Styles are the center of the design. A style sheet (`.wgxs`, or inline in `\styles{…}`) uses a CSS-like block syntax
+Styles are the center of the design. A style sheet (`.rdxs`, or inline in `\styles{…}`) uses a CSS-like block syntax
 with Word's property names:
 
-```wgxs
+```rdxs
 defaults {
   font: theme.minor; size: 11pt; lang: en-US;
   space-after: 8pt; line-spacing: 1.08;
@@ -222,9 +222,9 @@ table "Data Grid" : "Table Grid" {
 The full property vocabulary is in the [feature matrix](05-feature-matrix.md). It is generated from one
 **property registry** in code, which also drives docs, LSP completion and validation.
 
-### Style-sheet details (implemented in M1, `wordgenx.stylesheet`)
+### Style-sheet details (implemented in M1, `redocx.stylesheet`)
 
-Style sheets come from `.wgxs` files loaded with `\use{file.wgxs}`, or from `\styles{…}` bodies in a document. Paths are
+Style sheets come from `.rdxs` files loaded with `\use{file.rdxs}`, or from `\styles{…}` bodies in a document. Paths are
 relative to the document. Sheets apply in document order.
 
 - **Rules:** `defaults { … }`, `[modify|replace] paragraph|character|linked|table NAME [: BASE] { … }`, and
@@ -270,18 +270,18 @@ relative to the document. Sheets apply in document order.
 - **Themes** (M4): `theme [NAME] { accent1: #0B7A75; dark2: #1B2A41; major-font: "Georgia"; minor-font: "Segoe UI"; }`
   sets the document's theme colours (`dark1`, `light1`, `dark2`, `light2`, `accent1`–`accent6`, `hyperlink`,
   `followed-hyperlink`; `text1`/`background1`/`text2`/`background2` name the first four) and its heading and body
-  fonts. wordgenx writes them into the theme part: its own, or the template's, whose effects and other settings stay.
+  fonts. redocx writes them into the theme part: its own, or the template's, whose effects and other settings stay.
   Entries left out keep the base theme's values, a later rule adds to an earlier one, and `NAME` names the colour and
   font schemes in Word's Design tab. Every `theme.accent1…` and `theme.major`/`theme.minor` follows. Not done: fonts
   for East Asian and complex scripts, and effect or fill styles.
 - **Not yet:** the `ooxml.*` escape hatch. Unlike documents, style sheets are parsed straight to an AST, not a lossless CST.
-  A formatter for `.wgxs` will need one.
-- **Diagnostics:** `WGX02xx`. Unknown properties suggest the nearest name. Unresolved style and numbering references are
+  A formatter for `.rdxs` will need one.
+- **Diagnostics:** `RDX02xx`. Unknown properties suggest the nearest name. Unresolved style and numbering references are
   reported where they occur.
 
 ## 3.6 Paragraph-level formatting
 
-```wgx
+```rdx
 \p[style="Body Text", align=center, space-before=12pt, keep-with-next, id=par:key]{A paragraph with options.}
 
 \align[right]{Short form for alignment.}
@@ -299,7 +299,7 @@ start with text. General text frames are not supported; text boxes (§3.16) do t
 
 ## 3.7 Headings, lists and numbered paragraphs
 
-```wgx
+```rdx
 = Heading 1 {#sec:intro}   % maps to style "Heading 1"
 == Heading 2
 === Heading 3
@@ -318,7 +318,7 @@ start with text. General text frames are not supported; text boxes (§3.16) do t
 Lists use **Word multilevel numbering definitions** (`abstractNum` / `num`) declared in style sheets. A level can be
 **linked to a paragraph style**, as in Word:
 
-```wgxs
+```rdxs
 numbering Headings {
   level 1 { format: decimal; text: "%1";       style: "Heading 1"; }
   level 2 { format: decimal; text: "%1.%2";    style: "Heading 2"; }
@@ -337,7 +337,7 @@ numbering Checklist { level 1 { bullet: "☐"; font: "Segoe UI Symbol"; } }
 **Clause-numbered documents (F-9).** `\list[Name]{…}` uses list sugar for any numbering. When the levels are style-linked, each item
 gets that level's paragraph style automatically. A whole contract is one list, and **items can carry labels**:
 
-```wgx
+```rdx
 \list[MSA]{
 1. {#cl:term} Term
    1. This Agreement commences on the Effective Date …
@@ -360,7 +360,7 @@ gets that level's paragraph style automatically. A whole contract is one list, a
 
 Pipe tables cover simple cases. The full command covers everything else.
 
-```wgx
+```rdx
 \caption[Table, id=tbl:rev]{Quarterly revenue}
 \table[style="Data Grid", header-rows=1, widths=(4cm, 1fr, 1fr), columns=(left, decimal, decimal), align=center]{
   | Item     | Q1    | Q2    |
@@ -378,7 +378,7 @@ optionally `(decimal, tab=1.8cm)`. Decimal alignment emits a decimal tab stop in
 
 Cells can hold any block content (paragraphs, lists, nested tables) using the block form:
 
-```wgx
+```rdx
 \table[widths=(1fr, 2fr)]{
   \row[header, height=(1cm, exact)]{ \cell{Name} \cell{Description} }
   \row{
@@ -408,9 +408,9 @@ As in Word, **a caption is a paragraph**: style `Caption`, containing a label an
 (`Figure {SEQ Figure \* ARABIC}`). **The caption owns the label.** A cross-reference to a figure or table points at a
 bookmark around the caption, as Word's Insert Cross-reference does.
 
-```wgx
+```rdx
 \caption[Table, id=tbl:income]{Condensed income statement}   % above the table
-\include{generated/q3-income-statement.wgx}
+\include{generated/q3-income-statement.rdx}
 
 \figure[id=fig:arch, width=12cm, align=center]{               % sugar: image paragraph + caption, kept together
   \image{img/architecture.png}
@@ -435,7 +435,7 @@ bookmark around the caption, as Word's Insert Cross-reference does.
 
 `\section[…]` is **Word's section**. It sets the page layout and, after content, inserts a section break. It is not a heading.
 
-```wgx
+```rdx
 \section[orientation=landscape, break=next-page]
 \header{Landscape appendix header}        % headers belong to the current section
 …wide table…
@@ -478,7 +478,7 @@ errors. References resolve across `\include`d files.
 | `\seq` counter (§3.13) | its number | `REF` |
 | Footnote / endnote | the note number | `NOTEREF` |
 
-```wgx
+```rdx
 As shown in @fig:arch (page \pageref{fig:arch}), see clause @cl:invoice.
 \ref[form=full]{fig:arch}         % "Figure 3: Overall architecture"
 \ref[form=number]{fig:arch}       % "3"
@@ -512,7 +512,7 @@ the paragraph's own number), and the "Table Table 3" lint.
 
 ## 3.12 Fields and generated content
 
-```wgx
+```rdx
 \toc[levels=1-3, hyperlinks, title="Contents"]
 \listof[Figure]   \listof[Table]
 \index[columns=2]                 % from \ix{term} / \ix{term!subterm} entries (XE fields)
@@ -546,7 +546,7 @@ known name; the rest of the instruction (switches, arguments) is not checked.
 
 ## 3.13 Custom counters (F-12)
 
-```wgx
+```rdx
 \seq[Req]                                    % SEQ Req, cached result computed by the compiler
 \seq[Req, format=decimal, restart=heading-1] % restart at each Heading 1 (SEQ \s 1)
 \seq[Req, id=req:auth]                       % labelled: @req:auth prints its number
@@ -557,7 +557,7 @@ known name; the rest of the instruction (switches, arguments) is not checked.
 LaTeX-style math, compiled **directly to OMML** (Office Math). It is native and editable in Word's equation editor.
 `$` is **not** a math delimiter (F-3).
 
-```wgx
+```rdx
 Inline \m{e^{i\pi} + 1 = 0} and display:
 
 $$ \int_0^\infty e^{-x^2}\,dx = \frac{\sqrt{\pi}}{2} $$ {#eq:gauss}
@@ -577,10 +577,10 @@ $$\begin{aligned}
   `@eq:gauss` prints "(1.1)": a `REF` to a bookmark around the number, with the parentheses outside the field, so
   Word's own update gives the same text. `\ref[form=number]{eq:gauss}` prints "1.1".
 - Custom operators: `\operatorname{argmin}` (`\operatorname*` for limits underneath) or `\mathop{argmin}`.
-- Unsupported commands are errors at their position in the document (`WGX0311`), with the nearest known command as a
+- Unsupported commands are errors at their position in the document (`RDX0311`), with the nearest known command as a
   suggestion.
 
-**The supported subset** (`wordgenx.math`):
+**The supported subset** (`redocx.math`):
 
 | Kind | Commands |
 |------|----------|
@@ -597,7 +597,7 @@ $$\begin{aligned}
 
 ## 3.15 Code blocks
 
-````wgx
+````rdx
 ```python {#lst:hello, caption="Hello world", line-numbers}
 def hello():
     print("hi")
@@ -608,8 +608,8 @@ Highlighted with Pygments into runs with character styles (`Code Keyword`, `Code
 style sheet and themeable. The block uses a `Code Block` paragraph style. A `caption` creates a `Listing` caption that owns
 the label.
 
-- **Languages:** any Pygments lexer name or alias (`python`, `json`, `cpp`, `sql`, `yaml`, …), plus `wgx` and `wgxs`
-  for wordgenx itself. An unknown language is a warning with the nearest name; the code is shown plain. No language, or
+- **Languages:** any Pygments lexer name or alias (`python`, `json`, `cpp`, `sql`, `yaml`, …), plus `rdx` and `rdxs`
+  for redocx itself. An unknown language is a warning with the nearest name; the code is shown plain. No language, or
   `highlight=off`, means plain code.
 - **Styles:** each token kind has a character style: `Code Keyword`, `Code Type`, `Code Constant`, `Code Builtin`,
   `Code Function`, `Code Decorator`, `Code Attribute`, `Code Label`, `Code Variable`, `Code String`, `Code Escape`,
@@ -622,7 +622,7 @@ the label.
 
 ## 3.16 Images, drawings, boxes
 
-```wgx
+```rdx
 \image[width=8cm, alt="Logo"]{img/logo.png}                     % inline; the body is a string (path)
 \image[width=5cm, wrap=square, x=(right, from=margin), y=(1cm, from=paragraph)]{img/photo.jpg}   % floating
 \image[width=21cm, height=29.7cm, wrap=behind, x=(0cm, from=page), y=(0cm, from=page)]{cover.jpg}  % full bleed
@@ -671,7 +671,7 @@ a border as for paragraphs; single, dotted, dashed and double lines).
 
 `\image` takes PNG, JPEG, GIF, BMP and SVG. An SVG is stored the way Word stores one: a picture whose blip carries an
 `asvg:svgBlip` extension that points at the SVG part. Word 2016 and later show the SVG, and older readers show the
-fallback picture. `fallback=chart.png` names that picture; without it, wordgenx writes a plain grey PNG with the SVG's
+fallback picture. `fallback=chart.png` names that picture; without it, redocx writes a plain grey PNG with the SVG's
 proportions, because it does not rasterise SVG itself. The size comes from the SVG's `width` and `height` (CSS units,
 96 px to the inch), else from its `viewBox`, else a browser's 300 × 150 px; `width=` and `height=` override it as for
 other images.
@@ -680,13 +680,13 @@ other images.
 unchanged and Word merges its body in when it opens the document. Its paragraphs, lists, tables and pictures come
 along; where its styles have the same names as the document's, the document's styles win; its headers, footers and
 page setup are dropped. Only Word does this merge: other readers show nothing there until the file has been saved in
-Word. wordgenx does not look inside the embedded file, so the table of contents lists its headings only after Word
+Word. redocx does not look inside the embedded file, so the table of contents lists its headings only after Word
 updates the field, and `@label` references cannot point into it. It is a body block (not in tables, notes, headers or
 figures) and takes a .docx only, not a macro-enabled document or a template.
 
 ## 3.17 Collaboration and forms
 
-```wgx
+```rdx
 \comment[author="R. Patel", date=2026-10-13, text="Please confirm the commercial position."]{thirty (30) days}
 \comment[author="R. Patel", text={Rich comment with *markup*.}]{commented range}
 
@@ -723,16 +723,16 @@ text, a reference mark in the "annotation reference" style, and the comment in `
 (Word's Comment Text). Comments are in the body and in table cells, not in headers, notes or text boxes. Replies and
 the resolved state are not written.
 
-Tracked revisions written in the source (`\ins`, `\del`) and the `wordgenx diff` redline are postponed indefinitely
+Tracked revisions written in the source (`\ins`, `\del`) and the `redocx diff` redline are postponed indefinitely
 (see [Postponed features](09-postponed.md)): `\ins` keeps its text and `\del` drops it, each with a warning.
 
 ## 3.18 Macros, includes, constants (F-8)
 
-```wgx
-\include{chapters/02-design.wgx}          % splice another source file here
-\use{macros/house.wgx}                    % load macro definitions only (no content)
+```rdx
+\include{chapters/02-design.rdx}          % splice another source file here
+\use{macros/house.rdx}                    % load macro definitions only (no content)
 
-\let{product}{wordgenx Compiler}          % zero-parameter constant
+\let{product}{redocx Compiler}          % zero-parameter constant
 The \product is great.
 
 \define{field}[label, tag, type=text, placeholder="Click to enter"]{
@@ -757,11 +757,11 @@ The \product is great.
 - An `id` option can be forwarded with `id=#id`. An empty optional `id` is dropped.
 - Macros are **hygienic and declarative**. They substitute at the AST level, not through token-level expansion as in TeX.
 - **There is no scripting in the language.** There are no conditionals, loops or expressions. Programmability comes from the
-  **Python API**: build the IR directly, or render `.wgx` from Jinja. Untrusted sources can then be compiled safely.
+  **Python API**: build the IR directly, or render `.rdx` from Jinja. Untrusted sources can then be compiled safely.
 
 ### Standard macro library (prelude) (F-13)
 
-Conveniences that Word has no native concept for ship as a readable `.wgx` library, loaded with `\use{std:…}`, built only
+Conveniences that Word has no native concept for ship as a readable `.rdx` library, loaded with `\use{std:…}`, built only
 from Word primitives:
 
 | Module | Provides | Built from | Status |
@@ -771,14 +771,14 @@ from Word primitives:
 | `std:theorem` | `\theorem`, `\lemma`, `\definition`, `\proof` | Styled paragraphs + `SEQ Theorem` | M2 (needs `\seq`) |
 | `std:subfigure` | `\subfigures{…}` | Borderless layout table with images and letter-format `SEQ` captions | M2 (needs captions) |
 
-The modules live in `src/wordgenx/std/` as ordinary macro files. Users can copy and override any of them. A module is
+The modules live in `src/redocx/std/` as ordinary macro files. Users can copy and override any of them. A module is
 loaded once even if `\use`d repeatedly. Because the language has no conditionals, a variant such as the callout kind
 is a separate macro (`\warning`), not a `kind=` option. Writing the library confirmed that macros calling macros,
 `#body` forwarding and parameters in option values are expressive enough.
 
 ## 3.19 Citations and bibliography (F-11)
 
-```wgx
+```rdx
 \bibliography[file="refs.bib", style="apa"]       % preamble: data (BibTeX/CSL-JSON) and CSL style
 … as shown by \cite{daganzo2005} …                % (Daganzo, 2005)
 \cite[page=214]{daganzo2005}                      % (Daganzo, 2005, p. 214)
@@ -796,11 +796,11 @@ uses a `Bibliography` paragraph style. Native Word citations (`CITATION` fields,
 - **Styles:** `style=harvard` (Cite Them Right, bundled with citeproc-py) is the default. Also bundled: `apa` (APA
   7th edition), `ieee` (IEEE Reference Guide) and `chicago` or `chicago-author-date` (Chicago 18th edition,
   author-date). They come unchanged from the CSL styles repository and are under CC BY-SA 3.0; the source commit and
-  the licence are in `src/wordgenx/data/csl/README.md`. Any other style is a path to a `.csl` file (the extension may
+  the licence are in `src/redocx/data/csl/README.md`. Any other style is a path to a `.csl` file (the extension may
   be left out), relative to the document. The document's `lang` picks the CSL locale when citeproc-py has it (`en-GB`
   gives British quotation marks).
 - **Rendering:** all citations are rendered together once the document has been read, so numbering by first citation
-  (numeric styles) is right. Multi-key citations are sorted and joined by the style. wordgenx fixes four things
+  (numeric styles) is right. Multi-key citations are sorted and joined by the style. redocx fixes four things
   citeproc-py gets wrong, for every style: year suffixes when the style asks for them ("Smith, 2020a", "2020b", in
   title order), the entry's own page range even when a citation had a locator, a period or comma moved inside a
   closing quote when the locale says so (American English), and `initialize="false"` (full given names in Chicago).
@@ -814,13 +814,13 @@ uses a `Bibliography` paragraph style. Native Word citations (`CITATION` fields,
   (`title="References"`, `title=none`, `level=1..9`). Each entry is bookmarked, and citations link to the entry of their
   first key. URLs and DOIs in entries are links. A numeric style's label (`[3]`) is followed by a tab to the hanging
   indent.
-- Unknown keys are errors with the nearest key as a suggestion (`WGX0312`).
+- Unknown keys are errors with the nearest key as a suggestion (`RDX0312`).
 
 ## 3.20 Escape hatches (in order of preference)
 
 1. `\style{Name}{…}`: use any style that exists in the template.
 2. Option or style-sheet key `ooxml.rPr` / `ooxml.pPr` / `ooxml.tblPr` / `ooxml.tcPr`: raw property XML for the
-   generated element (`\p[ooxml.pPr="<w:snapToGrid w:val='0'/>"]{…}`). Each element replaces the one wordgenx would
+   generated element (`\p[ooxml.pPr="<w:snapToGrid w:val='0'/>"]{…}`). Each element replaces the one redocx would
    write under the same name; the elements must be ones that container holds.
 3. `\raw[ooxml]{<w:r>…</w:r>}`: raw run- or block-level WordprocessingML. The body is raw. A body of `w:p`, `w:tbl`
    (or a `w:sdt` holding them) is a block of its own; anything else goes inline. Run-level and block-level elements
@@ -838,11 +838,11 @@ notes, drawings) are checked with the written document (§3.21).
 
 ## 3.21 Diagnostics and lints
 
-Every error has a code (`WGX1203`), a span, a message and, where possible, a suggestion:
+Every error has a code (`RDX1203`), a span, a message and, where possible, a suggestion:
 
 ```
-error[WGX1203]: unknown paragraph property `space-befor`
-  --> chapters/02-design.wgx:14:22
+error[RDX1203]: unknown paragraph property `space-befor`
+  --> chapters/02-design.rdx:14:22
    |
 14 | \p[style=Body, space-befor=12pt]{…}
    |                ^^^^^^^^^^^ did you mean `space-before`?
@@ -851,22 +851,22 @@ error[WGX1203]: unknown paragraph property `space-befor`
 Planned lints: a repeated label word before `@label` (§3.11); an unused label; for contracts, a defined term that is
 never used, or a capitalised term used but never defined.
 
-Syntax errors use the codes `WGX01xx` (`wordgenx.syntax.diagnostics.Code`). Later stages use other ranges.
+Syntax errors use the codes `RDX01xx` (`redocx.syntax.diagnostics.Code`). Later stages use other ranges.
 
 **The written document is checked.** After writing, `build` (and `check`) reads the finished parts back and checks
 what the schemas cannot see: every relationship id names a relationship of its part; each bookmark id is opened
 once and closed once; bookmark names and drawing ids are unique; links within the document go to a bookmark that
 exists; note, comment, style and list references name
-something that exists. Problems are one warning, `WGX0401`, with a note each. The writer is meant to get all of
+something that exists. Problems are one warning, `RDX0401`, with a note each. The writer is meant to get all of
 this right, so the warning points at raw XML and template content first, and otherwise asks for a bug report.
-`wordgenx build --validate` also checks every part against the ECMA-376 schemas (about half a second more) and fails
-without writing when one does not match. The schemas ship with the package (`wordgenx/data/schemas`).
+`redocx build --validate` also checks every part against the ECMA-376 schemas (about half a second more) and fails
+without writing when one does not match. The schemas ship with the package (`redocx/data/schemas`).
 
 An error in text a macro brought in points into the file that defines the macro, with a note for each call it came
-through (`= note: in \logo, called at report.wgx:12:5`). Problems with command-line options, such as a `--template`
+through (`= note: in \logo, called at report.rdx:12:5`). Problems with command-line options, such as a `--template`
 that is not a Word file, are reported as plain `error: --template: …` lines, since no source line is involved.
 
-**Formatting.** `wordgenx fmt FILE…` rewrites documents in a canonical layout, working on the lossless CST so comments,
+**Formatting.** `redocx fmt FILE…` rewrites documents in a canonical layout, working on the lossless CST so comments,
 escapes and the author's line breaks stay. It removes trailing spaces and tabs, keeps at most one blank line between
 blocks, removes blank lines at the start, ends the file with exactly one newline and uses the file's first line
 ending throughout. It writes option lists that fit on one line as `[a=1, b=(x, y)]` and puts one space after a
@@ -875,11 +875,11 @@ neither is an option list written over several lines. Paragraphs are not re-wrap
 `--check` changes nothing and fails if a file would change (for CI); `--diff` prints the changes. A file with syntax
 errors, or with carriage returns that are not followed by a line feed, is left alone. The formatter checks its own
 output: the result must parse to the same document, or it reports an internal error and writes nothing. Style
-sheets (`.wgxs`) are not formatted yet.
+sheets (`.rdxs`) are not formatted yet.
 
 ## 3.22 Parsing rules (settled in M1)
 
-The parser (`wordgenx.syntax`) fixes these details that the sections above leave open:
+The parser (`redocx.syntax`) fixes these details that the sections above leave open:
 
 - **Command names** are letters and digits with inner hyphens (`\embed-docx`) and are read greedily: `\product-based`
   is the command `product-based`. Write `\product{}-based` instead.
@@ -905,18 +905,18 @@ The parser (`wordgenx.syntax`) fixes these details that the sections above leave
   last `|` is ignored.
 - **Whitespace** is kept as written in the AST. Collapsing runs of spaces, line breaks into spaces, and smart punctuation
   (`--`, `---`, quotes) happen at lowering.
-- **Limits:** nesting deeper than 64 levels is an error (`WGX0116`). To avoid exponential backtracking, the parser bounds
+- **Limits:** nesting deeper than 64 levels is an error (`RDX0116`). To avoid exponential backtracking, the parser bounds
   the work it spends on unclosed `*`, `_` and `[` openers. Ordinary documents never reach the bound; adversarial input
   degrades to literal text.
 
 ## 3.23 Lowering rules (settled in M1)
 
-Lowering (`wordgenx.lower`) turns the AST into the document IR. It fixes these behaviours:
+Lowering (`redocx.lower`) turns the AST into the document IR. It fixes these behaviours:
 
 - **Block vs inline commands.** Block commands (`\p`, `\align`, `\list`, `\include`, `\section`, the preamble commands,
   and later `\table`, `\figure`, …) must stand alone. A paragraph made only of block commands (and blank lines or
   comments between them) is a sequence of blocks. Mixing a block command with text in one paragraph is an error
-  (`WGX0303`); separate them with a blank line. `\pagebreak` and `\columnbreak` work inline, and alone they form their
+  (`RDX0303`); separate them with a blank line. `\pagebreak` and `\columnbreak` work inline, and alone they form their
   own paragraph.
 - **Text.** Runs of spaces and line breaks collapse to one space. Spaces at paragraph edges and around `\tab` / `\br` /
   breaks are dropped. Smart punctuation (`--` → –, `---` → —, curly quotes) applies to text, not to code or URLs, and
@@ -926,8 +926,8 @@ Lowering (`wordgenx.lower`) turns the AST into the document IR. It fixes these b
   formatting.
 - **Built-in styles on demand.** Styles the markup relies on (`Heading 1`–`9`, `Title`, `Subtitle`, `List Paragraph`,
   `Strong`, `Emphasis`, `Hyperlink`, `Code`, `Code Block`) are created with neutral formatting only when used and not
-  defined by a style sheet. Any other undefined style is an error with a suggestion (`WGX0307`).
-- **Style sheets apply document-wide.** `\styles` and `\use{*.wgxs}` may appear anywhere, including in included files.
+  defined by a style sheet. Any other undefined style is an error with a suggestion (`RDX0307`).
+- **Style sheets apply document-wide.** `\styles` and `\use{*.rdxs}` may appear anywhere, including in included files.
   Style references are checked after the whole document is read.
 - **Lists.** `-` lists use the `Bullets` numbering and `1.` lists use `Numbers`. Both are created unless a style sheet
   defines them. Each separate list counts from its start (a new Word list instance). A nested list of the same kind is
@@ -979,12 +979,12 @@ Lowering (`wordgenx.lower`) turns the AST into the document IR. It fixes these b
 - **Text options** (`title`, `alt`, `style`, …) take a word, a `"string"` (which ends on its line), or plain text in
   braces, which may span lines: `alt={a long description …}`. In option values, `#` plus six hex digits is always a
   colour, even inside `\define`.
-- **Options** are checked against each command's declaration (`wordgenx.commands`), the same way for every command.
+- **Options** are checked against each command's declaration (`redocx.commands`), the same way for every command.
   A bare word is a switch (`\section[mirror]`), else the command's positional value (`\list[Legal]` is
   `numbering=Legal`). Every switch also takes `on|off|true|false|yes|no` (`\section[mirror=off]`,
   `\settings[update-fields-on-open]`). An unknown option, a misspelt value or a repeated option is an error
-  (`WGX0302`) with a suggestion where one is close. Options the language plans but does not implement yet are a
-  warning (`WGX0304`).
+  (`RDX0302`) with a suggestion where one is close. Options the language plans but does not implement yet are a
+  warning (`RDX0304`).
 - **Commands not implemented yet** (figures, fields, notes, references, math, …) produce a warning
-  (`WGX0304`) naming the milestone, and the document still builds. For `\comment`, `\ins` and `\control` the body text is
+  (`RDX0304`) naming the milestone, and the document still builds. For `\comment`, `\ins` and `\control` the body text is
   kept; for the others the command is dropped.

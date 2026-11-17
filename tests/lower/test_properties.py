@@ -8,11 +8,11 @@ from pathlib import Path
 
 from lxml import etree
 
+from redocx import ir
+from redocx.compiler import build, compile_source
+from redocx.props import para_props
+from redocx.values import Border, Color, Length
 from tests.support.xsd import validate_package
-from wordgenx import ir
-from wordgenx.compiler import build, compile_source
-from wordgenx.props import para_props
-from wordgenx.values import Border, Color, Length
 
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 CUSTOM = "{http://schemas.openxmlformats.org/officeDocument/2006/custom-properties}"

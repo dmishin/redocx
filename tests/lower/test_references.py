@@ -4,10 +4,10 @@ from pathlib import Path
 
 import pytest
 
+from redocx import ir
+from redocx.compiler import build, compile_source
+from redocx.values import Length, TabStop
 from tests.support.xsd import validate_package
-from wordgenx import ir
-from wordgenx.compiler import build, compile_source
-from wordgenx.values import Length, TabStop
 
 HEADINGS = (
     '\\styles{ paragraph "Heading 1" { outline-level: 1; } paragraph "Heading 2" { outline-level: 2; }\n'
@@ -91,13 +91,13 @@ def test_forward_reference_and_below() -> None:
 
 
 def test_undefined_and_duplicate_labels_are_errors() -> None:
-    assert errors("= A {#sec:intro}\n\nSee @sec:intr.") == ["WGX0308 unknown label `sec:intr`"]
-    assert errors("= A {#x}\n\n= B {#x}") == ["WGX0309 label `x` is defined twice"]
+    assert errors("= A {#sec:intro}\n\nSee @sec:intr.") == ["RDX0308 unknown label `sec:intr`"]
+    assert errors("= A {#x}\n\n= B {#x}") == ["RDX0309 label `x` is defined twice"]
 
 
 def test_invalid_ref_form() -> None:
     assert errors("= A {#a}\n\n\\ref[form=sideways]{a}") == [
-        "WGX0302 `form`: unknown value `sideways`"
+        "RDX0302 `form`: unknown value `sideways`"
     ]
 
 
@@ -192,7 +192,7 @@ def test_block_command_on_its_own_line_ends_the_paragraph() -> None:
         "Text after",
     ]
     assert errors("Text \\caption{inline} more") == [
-        "WGX0303 `\\caption` is a block command and cannot appear inside a paragraph"
+        "RDX0303 `\\caption` is a block command and cannot appear inside a paragraph"
     ]
 
 
@@ -218,7 +218,7 @@ def test_seq_counters_with_labels_formats_and_restarts() -> None:
 
 
 def test_seq_needs_a_name() -> None:
-    assert errors("\\seq") == ["WGX0302 `\\seq` needs `name`"]
+    assert errors("\\seq") == ["RDX0302 `\\seq` needs `name`"]
 
 
 # --- tables of contents --------------------------------------------------------------------------
@@ -279,7 +279,7 @@ def test_empty_toc_says_how_to_fill_it() -> None:
 
 def test_toc_only_in_the_body() -> None:
     assert errors("\\table{\\row{\\cell{\\toc}}}") == [
-        "WGX0303 `\\toc` must be in the document body"
+        "RDX0303 `\\toc` must be in the document body"
     ]
 
 

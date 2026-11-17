@@ -1,0 +1,53 @@
+% ============================================================================
+% The redocx design documents as one book, built by redocx (the M2 exit).
+%   python tools/md2rdx.py docs/0*.md --out docs/book/chapters
+%   redocx build docs/book/template.rdx -o docs/book/redocx.dotx
+%   redocx build docs/book/design.rdx
+% ============================================================================
+
+\document[template="redocx.dotx", lang=en-GB]
+
+\meta[
+  title    = "redocx: Design",
+  subject  = "A markup language that compiles to Word documents",
+  author   = "redocx contributors",
+  keywords = (redocx, docx, design),
+  custom.version = "M2",
+]
+
+\settings[update-fields-on-open=on]
+
+% Front matter: roman page numbers, the title in the header (the cover keeps the
+% template's logo header).
+\section[page-numbers=lower-roman]
+\header{\field{TITLE}}
+
+% --- title page ----------------------------------------------------------------
+
+\p[style=Title]{redocx}
+
+\p[style=Subtitle]{Design: vision, language, architecture and roadmap}
+
+\p[style="Title Meta"]{Version \field{DOCPROPERTY "version"} · \date[format="d MMMM yyyy"]}
+
+\p[style="Title Meta"]{Written in Markdown, converted to redocx, and typeset by redocx itself.}
+
+\pagebreak
+
+\toc[levels=1-2, title="Contents"]
+
+% --- the chapters ----------------------------------------------------------------
+% A new section: pages from 1, and the current chapter in the header.
+
+\section[page-numbers=(format=decimal, start=1)]
+\header{\field{TITLE} \tab \tab \field{STYLEREF "Heading 1" \n} \field{STYLEREF "Heading 1"}}
+
+\include{chapters/01-vision-and-scope.rdx}
+\include{chapters/02-adr-implementation-language.rdx}
+\include{chapters/03-language-design.rdx}
+\include{chapters/04-architecture.rdx}
+\include{chapters/05-feature-matrix.rdx}
+\include{chapters/06-roadmap.rdx}
+\include{chapters/07-testing-strategy.rdx}
+\include{chapters/08-open-questions.rdx}
+\include{chapters/09-postponed.rdx}

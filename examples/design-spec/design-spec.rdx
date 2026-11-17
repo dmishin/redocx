@@ -1,0 +1,169 @@
+% ============================================================================
+% Payment Gateway Integration - Software Design Specification
+% The spike sample examples/spike/01-design-spec.rdx, ported to language v0.2.
+% Build: redocx build examples/design-spec/design-spec.rdx
+% ============================================================================
+
+\document[lang=en-GB]
+\meta[
+  title    = "Payment Gateway Integration: Software Design Specification",
+  author   = "Platform Team",
+  subject  = "PGI-SDS",
+  keywords = (payments, design, specification),
+]
+\settings[update-fields-on-open=on]
+\use{acme-spec.rdxs}
+\use{std:callout}
+\use{std:signature}
+
+\let{docid}{ACME-PGI-SDS-004}
+\let{gateway}{PayFlow}
+
+% Front matter: no header on the title page, roman page numbers.
+\section[size=A4, margins=(top=2.5cm, bottom=2.5cm, left=2.5cm, right=2cm), title-page,
+         page-numbers=lower-roman]
+\header{\field{TITLE} \tab \docid}
+\footer{Internal \tab Page \pagenum}
+
+% Requirements: \req{...} -> "REQ-n [Must] text". The Requirement style is linked to
+% the REQ-%1 list level in acme-spec.rdxs, so Word numbers these paragraphs itself,
+% continuously through the document, exactly as if the style were applied by hand.
+\define{req}[priority="Must"]{\p[style=Requirement]{\b{[#priority]} #body}}
+
+% ---------------------------------------------------------------------------- title page
+\p[style=Title]{Payment Gateway Integration}
+\p[style=Subtitle]{Software Design Specification}
+
+\p[style="Title Meta"]{Document ID: \docid}
+\p[style="Title Meta"]{Revision: 1.3}
+\p[style="Title Meta"]{Status: Approved for implementation}
+
+\pagebreak
+
+=* Revision History
+
+\table[style="Spec Table", widths=(1.5cm, 2.5cm, 3.5cm, 1fr)]{
+  | Rev | Date       | Author       | Changes                                   |
+  | 1.0 | 2026-06-02 | J. Okafor    | Initial release                           |
+  | 1.1 | 2026-07-19 | M. Lindqvist | Added the refund flow                     |
+  | 1.2 | 2026-09-01 | J. Okafor    | Updated the retry policy after review     |
+  | 1.3 | 2026-10-14 | J. Okafor    | Webhook signature verification            |
+}
+
+\toc[levels=1-3, title="Contents"]
+
+\listof[Figure, title="Figures"]
+
+\listof[Table, title="Tables"]
+
+% ---------------------------------------------------------------------------- body
+% A new section: page numbers restart at 1, and the header shows the current chapter.
+\section[page-numbers=(format=decimal, start=1)]
+\header{\field{STYLEREF "Heading 1" \n} \field{STYLEREF "Heading 1"} \tab \docid}
+\footer{Internal \tab Page \pagenum{} of \numpages}
+= Introduction {#sec:intro}
+
+== Purpose
+
+This document specifies the design of the integration between the ACME checkout
+service and the \gateway payment gateway.\footnote{\gateway API version 2024-11 is
+assumed throughout.} It is intended for developers, testers and the security
+review board. The vendor documentation is at <https://docs.payflow.example/v2024-11>.
+
+== Scope
+
+The integration covers card authorisation, capture, refunds (@sec:refunds) and
+asynchronous notifications (@sec:webhooks). Recurring billing is _out of scope_
+and will be addressed in a separate specification.
+
+== Definitions
+
+@tbl:terms lists the terms used in this specification.
+
+\caption[id=tbl:terms]{Terms and definitions}
+\table[style="Spec Table", widths=(4cm, 1fr)]{
+  | Term            | Definition                                                     |
+  | Authorisation   | A hold placed on the cardholder's funds.                        |
+  | Capture         | Settlement of a previously authorised amount.                   |
+  | Idempotency key | A client-generated UUID that makes a request safe to retry.     |
+}
+
+= Architecture {#sec:arch}
+
+\figure[id=fig:context, width=15cm]{
+  \image[alt={System context: the web shop sends orders to the checkout API, which calls
+    PayFlow through the payment adapter; PayFlow sends webhooks to the webhook
+    receiver.}]{img/context-diagram.png}
+  \caption{System context}
+}
+
+@fig:context shows how the payment adapter sits between ACME and the gateway.
+
+The checkout service never handles raw card numbers: card data is tokenised in the
+browser by the \gateway SDK, and only tokens reach ACME systems.
+
+== Components
+
+- *Checkout API*: receives orders from the web shop and owns the order state.
+- *Payment Adapter*: translates domain commands into \gateway API calls.
+  It is the only component holding gateway credentials.
+- *Webhook Receiver*: verifies and persists gateway events.
+
+== Error Handling
+
+Gateway errors are mapped to adapter behaviour in the appendix (@app:errors).
+
+= Functional Requirements {#sec:reqs}
+
+== Authorisation
+
+\req{The adapter shall send amounts in minor currency units.}
+
+\req{Every authorisation request shall carry an idempotency key.}
+
+\req[priority=Should]{The adapter should time out after 10~s and retry at most twice,
+reusing the idempotency key.}
+
+== Refunds {#sec:refunds}
+
+\req{Partial refunds shall be supported up to the captured amount.}
+
+\warning{Refunds older than 180 days are rejected by \gateway and must be handled
+manually by Finance.}
+
+== Webhooks {#sec:webhooks}
+
+Events are signed with HMAC-SHA256. The receiver verifies the signature before
+parsing the body (@lst:verify):
+
+```python {#lst:verify, caption="Webhook signature verification"}
+def verify(payload: bytes, header: str, secret: bytes) -> bool:
+    expected = hmac.new(secret, payload, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, header)
+```
+
+\req{The receiver shall reject events whose signature does not verify, and log them.}
+
+\tip[title="Testing"]{\gateway's sandbox can replay any event from its dashboard,
+which makes signature failures easy to reproduce.}
+
+% ---------------------------------------------------------------------------- appendix
+% A landscape section for the wide table; headers and footers carry on.
+\section[orientation=landscape]
+
+=* Appendix A: Error Mapping {#app:errors}
+
+\table[style="Spec Table", widths=(5cm, 1.6cm, 1fr, 1fr, 2cm, 1fr), columns=(left, center, left, left, center, left)]{
+  | Gateway code       | HTTP | Meaning                 | Adapter action       | Retry | Logged as        |
+  | `card_declined`    | 402  | Issuer declined         | Show decline message | No    | `payment.declined` |
+  | `rate_limited`     | 429  | Too many requests       | Back off             | Yes   | `gateway.throttled` |
+  | `processing_error` | 500  | Gateway internal error  | Retry with same key  | Yes   | `gateway.error`  |
+}
+
+\section[orientation=portrait]
+
+=* Approval
+
+\approval[role="Approved by"]
+
+\approval[role="Reviewed by"]

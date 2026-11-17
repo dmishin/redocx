@@ -143,7 +143,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Comment replies and resolved state | Postponed | ●● |
 | Tracked insertions/deletions | Postponed (§9.1) | ●● |
 | Tracked formatting changes | Postponed (§9.1) | ●●● |
-| `wordgenx diff` → redline docx | Postponed (§9.1) | ●●● |
+| `redocx diff` → redline docx | Postponed (§9.1) | ●●● |
 | Content controls (text, rich text, dropdown, combo, date, checkbox) | M5 ✓ | ●● |
 | Picture content controls | M5 ✓ | ●● |
 | Repeating-section content controls | Postponed | ●● |

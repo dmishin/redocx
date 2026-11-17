@@ -4,7 +4,7 @@
   <dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">Finance Team</dc:creator>
   <cp:keywords>report, quarterly</cp:keywords>
   <dc:description xmlns:dc="http://purl.org/dc/elements/1.1/">Golden test for document properties.</dc:description>
-  <cp:lastModifiedBy>wordgenx tests</cp:lastModifiedBy>
+  <cp:lastModifiedBy>redocx tests</cp:lastModifiedBy>
   <dcterms:created xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="dcterms:W3CDTF">2026-10-01T09:30:00Z</dcterms:created>
   <dcterms:modified xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="dcterms:W3CDTF">2026-10-15T17:00:00Z</dcterms:modified>
   <dc:language xmlns:dc="http://purl.org/dc/elements/1.1/">en-US</dc:language>

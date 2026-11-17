@@ -10,12 +10,12 @@ import pytest
 from lxml import etree
 from PIL import Image as PILImage
 
+from redocx import ir
+from redocx.compiler import build, compile_source
+from redocx.lower.media import svg_size
+from redocx.ooxml.reader import read_docx
+from redocx.values import Length
 from tests.support.xsd import validate_package
-from wordgenx import ir
-from wordgenx.compiler import build, compile_source
-from wordgenx.lower.media import svg_size
-from wordgenx.ooxml.reader import read_docx
-from wordgenx.values import Length
 
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"

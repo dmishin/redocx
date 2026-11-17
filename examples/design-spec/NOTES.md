@@ -1,6 +1,6 @@
 # M1 trial: porting the design specification
 
-`design-spec.wgx` is the spike sample [01-design-spec.wgx](../spike/01-design-spec.wgx) rewritten in language v0.2
+`design-spec.rdx` is the spike sample [01-design-spec.rdx](../spike/01-design-spec.rdx) rewritten in language v0.2
 and built with the M1 compiler. It built with no errors and 7 warnings, all for features planned for M2 (after M2
 step 3, none are left). Word opens
 the result with numbered headings, continuously numbered requirements (REQ-1 … REQ-5), tables, the diagram,

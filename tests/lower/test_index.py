@@ -8,11 +8,11 @@ from typing import cast
 
 from lxml import etree
 
+from redocx import ir
+from redocx.compiler import build, compile_source
+from redocx.lower.index import IndexMark, xe_instruction
+from redocx.values import TabStop
 from tests.support.xsd import validate_package
-from wordgenx import ir
-from wordgenx.compiler import build, compile_source
-from wordgenx.lower.index import IndexMark, xe_instruction
-from wordgenx.values import TabStop
 
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 

@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from pygments.token import Comment, Keyword, Name, Operator, String, Text
 
-from wordgenx import ir
-from wordgenx.compiler import compile_source
-from wordgenx.highlight import code_style, highlight, style_name
-from wordgenx.values import Color, Length
+from redocx import ir
+from redocx.compiler import compile_source
+from redocx.highlight import code_style, highlight, style_name
+from redocx.values import Color, Length
 
 PYTHON = "```python\ndef f(x):\n    # note\n    return x + 1\n```"
 
@@ -46,13 +46,13 @@ def test_highlight_keeps_lines() -> None:
 
 
 def test_own_languages() -> None:
-    lines = highlight('\\p[style="Body"]{x} % note\n= Title {#sec:a}', "wgx")
+    lines = highlight('\\p[style="Body"]{x} % note\n= Title {#sec:a}', "rdx")
     assert lines is not None
     assert lines[0][0] == ("\\p", "Code Keyword")
     assert ('"Body"', "Code String") in lines[0]
     assert ("% note", "Code Comment") in lines[0]
     assert lines[1][-1] == ("{#sec:a}", "Code Label")
-    sheet = highlight("paragraph X { space-after: 6pt; color: #FF0000; }", "wgxs")
+    sheet = highlight("paragraph X { space-after: 6pt; color: #FF0000; }", "rdxs")
     assert sheet is not None
     assert ("paragraph", "Code Keyword") in sheet[0]
     assert ("space-after", "Code Attribute") in sheet[0]

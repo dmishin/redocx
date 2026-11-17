@@ -1,15 +1,15 @@
 # Styles, templates and themes
 
-Word documents are easiest to edit when their formatting lives in styles. wordgenx makes that the natural way:
+Word documents are easiest to edit when their formatting lives in styles. redocx makes that the natural way:
 a style sheet defines paragraph, character, table and list styles with Word's own names and properties, and the
 document refers to them.
 
 ## Style sheets
 
-A style sheet is a `.wgxs` file loaded with `\use{house.wgxs}`, or the body of `\styles{…}` in the document. Sheets
+A style sheet is a `.rdxs` file loaded with `\use{house.rdxs}`, or the body of `\styles{…}` in the document. Sheets
 apply to the whole document, in the order they appear.
 
-```wgx
+```rdx
 \styles{
   defaults { font: theme.minor; size: 11pt; space-after: 8pt; line-spacing: 1.08; }
 
@@ -63,7 +63,7 @@ Useful values:
 | `shading` | `#F2F2F2`, `theme.accent1.lighter(80%)` |
 | `tabs` | `tabs: 8cm center, 16cm right leader=dot;` |
 
-**Built-in styles** (Heading 1–9, Title, Strong, Hyperlink, Caption, Table Grid, …) need no definition: wordgenx
+**Built-in styles** (Heading 1–9, Title, Strong, Hyperlink, Caption, Table Grid, …) need no definition: redocx
 adds them as Word defines them when the document uses them. Any other undefined style is an error.
 
 ## Lists and numbering
@@ -71,7 +71,7 @@ adds them as Word defines them when the document uses them. Any other undefined 
 A numbering definition is a Word multilevel list. Levels can be linked to paragraph styles, which is how Word
 numbers headings and contract clauses.
 
-```wgx
+```rdx
 \styles{
   numbering Headings {
     level 1 { format: decimal; text: "%1";    style: "Heading 1"; }
@@ -110,7 +110,7 @@ numbers headings and contract clauses.
 
 ## Table styles
 
-```wgx
+```rdx
 \styles{
   table "Data Grid" : "Table Grid" {
     borders: (all=(single, 0.5pt, #BFBFBF));
@@ -137,7 +137,7 @@ table's `look` option chooses which parts apply. See [tables](tables.md).
 Colours written `theme.accent1` and fonts written `theme.major`/`theme.minor` follow the document theme, so Word's
 Design tab can change them later. A `theme` rule sets the theme:
 
-```wgx
+```rdx
 \styles{
   theme Harbour {
     accent1: #0B7A75; accent2: #D9822B; dark2: #1B2A41;
@@ -152,15 +152,15 @@ Body text in Segoe UI, with \font[color=theme.accent2]{an accent}.
 
 ## Templates
 
-`\document[template="corporate.dotx"]` (or `wordgenx build --template corporate.dotx`) compiles into an existing
+`\document[template="corporate.dotx"]` (or `redocx build --template corporate.dotx`) compiles into an existing
 Word template or document. The output takes the template's styles, theme, page setup, headers and footers, and any
 cover-page content; your style sheets modify its styles, and built-in styles the markup needs come from the
 template when it has them.
 
-- `wordgenx build house.wgx -o house.dotx` writes a template of your own; see
-  [examples/templates/corporate.wgx](../../examples/templates/corporate.wgx).
+- `redocx build house.rdx -o house.dotx` writes a template of your own; see
+  [examples/templates/corporate.rdx](../../examples/templates/corporate.rdx).
 - `\style[Name]{…}` and `\p[style=Name]` use any style the template has.
-- `wordgenx import report.docx --keep-styles` turns a Word document into source that compiles into the original's
+- `redocx import report.docx --keep-styles` turns a Word document into source that compiles into the original's
   styles (see [import](import.md)).
 
 ## Direct formatting
@@ -168,7 +168,7 @@ template when it has them.
 When a style is overkill, format directly: `\font[…]{…}` for text, `\p[…]{…}` for a paragraph, and options of
 `\table` and `\cell`. They take the same property names as style sheets:
 
-```wgx
+```rdx
 \p[align=center, space-before=12pt, border-bottom=(single, 1pt, theme.accent1)]{A centred, underlined title}
 
 \font[font="Consolas", size=10pt, color=#C00000, caps]{a warning} and \hl[yellow]{highlighted} text.

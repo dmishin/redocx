@@ -2,7 +2,7 @@ from collections.abc import Callable
 
 import pytest
 
-from wordgenx.ooxml import CT, NS, RT, Package
+from redocx.ooxml import CT, NS, RT, Package
 
 # Hand-written minimal WordprocessingML parts. They stand in for the real part
 # writers until those exist, and exercise the package writer end to end.
@@ -19,14 +19,14 @@ STYLES_XML = f"""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 
 CORE_XML = f"""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <cp:coreProperties xmlns:cp="{NS.CP}" xmlns:dc="{NS.DC}">
-<dc:title>Hello &amp; welcome</dc:title><dc:creator>wordgenx tests</dc:creator>
+<dc:title>Hello &amp; welcome</dc:title><dc:creator>redocx tests</dc:creator>
 </cp:coreProperties>""".encode()
 
 
 def document_xml(link_rel_id: str) -> bytes:
     return f"""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="{NS.W}" xmlns:r="{NS.R}"><w:body>
-<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Hello, wordgenx</w:t></w:r></w:p>
+<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Hello, redocx</w:t></w:r></w:p>
 <w:p><w:r><w:t xml:space="preserve">Written by the OPC package writer. See </w:t></w:r>
 <w:hyperlink r:id="{link_rel_id}"><w:r><w:t>example.com</w:t></w:r></w:hyperlink></w:p>
 <w:sectPr><w:pgSz w:w="11906" w:h="16838"/>

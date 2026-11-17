@@ -1,11 +1,11 @@
 [project]
-name = "wordgenx"
+name = "redocx"
 version = "0.0.1"
 description = "A document markup language that compiles to native, fully formatted Word (.docx) documents."
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
-authors = [{ name = "wordgenx contributors" }]
+authors = [{ name = "redocx contributors" }]
 requires-python = ">=3.12"
 dependencies = [
     "citeproc-py>=0.6",
@@ -26,7 +26,7 @@ classifiers = [
 ]
 
 [project.scripts]
-wordgenx = "wordgenx.cli:main"
+redocx = "redocx.cli:main"
 
 [dependency-groups]
 dev = [
@@ -53,8 +53,8 @@ ignore = ["SIM905"]  # word lists written as "a b c".split() read better
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["E501"]  # test data tables read better unwrapped
-"src/wordgenx/lower/typography.py" = ["RUF001"]  # typographic characters are the point
-"src/wordgenx/math/**" = ["RUF001"]  # math symbols are the point
+"src/redocx/lower/typography.py" = ["RUF001"]  # typographic characters are the point
+"src/redocx/math/**" = ["RUF001"]  # math symbols are the point
 "tests/math/**" = ["RUF001", "E501"]
 
 [tool.pyright]

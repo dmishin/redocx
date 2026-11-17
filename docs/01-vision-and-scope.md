@@ -31,7 +31,7 @@ A plain-text language and compiler where:
 
 ## 1.3 Design principles
 
-1. **Designed for DOCX, and only DOCX.** wordgenx is not a general-purpose or output-neutral markup language. Its
+1. **Designed for DOCX, and only DOCX.** redocx is not a general-purpose or output-neutral markup language. Its
    concepts are named after Word (paragraph style, character style, section, field, tab stop), not HTML or CSS, and
    are shaped the way WordprocessingML models them. We add no abstractions to make sources portable to other formats.
    Users who know Word should recognise everything.
@@ -55,7 +55,7 @@ A plain-text language and compiler where:
   This is the biggest conceptual difference from TeX. See §1.6.
 - We are not a WYSIWYG editor.
 - We do not imitate TeX syntax or semantics. There are no catcodes and no expansion-order puzzles.
-- We do not convert *from* arbitrary DOCX with full fidelity. A `docx → wordgenx` importer is a later, best-effort tool.
+- We do not convert *from* arbitrary DOCX with full fidelity. A `docx → redocx` importer is a later, best-effort tool.
 - We do not support legacy `.doc`, ODT output or PDF typesetting. PDF comes from Word or LibreOffice converting our DOCX.
 - We do not support SmartArt, OLE embedding, VBA or macros.
 
@@ -96,14 +96,14 @@ protection settings, compatibility settings and embedded fonts.
 **Hard, deferred:**
 - Native charts (DrawingML chart parts plus embedded workbook). This is a lot of work, so charts start as images.
 - Bibliography through Word's own `sources.xml` and `CITATION` fields. We first render citations ourselves with CSL.
-- Reading arbitrary DOCX back into wordgenx.
+- Reading arbitrary DOCX back into redocx.
 
 **Out of scope:** SmartArt, OLE objects, VBA and ActiveX.
 
 ## 1.7 Target users and first use cases
 
 1. **Engineers writing specifications or design documents** that must be delivered as Word with a corporate template. This is the
-   primary dogfooding case: wordgenx's own docs will be written in wordgenx.
+   primary dogfooding case: redocx's own docs will be written in redocx.
 2. **Automated report generation** from data through the Python API, with macros and includes.
 3. **Academic and technical writing** that needs math, citations and cross-references, delivered as DOCX for journals or
    reviewers.

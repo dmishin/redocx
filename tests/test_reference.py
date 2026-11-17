@@ -12,8 +12,8 @@ from types import ModuleType
 
 import pytest
 
-from wordgenx.commands.builtin import COMMANDS
-from wordgenx.compiler import build
+from redocx.commands.builtin import COMMANDS
+from redocx.compiler import build
 
 ROOT = Path(__file__).resolve().parents[1]
 GUIDES = sorted((ROOT / "docs" / "guide").glob("*.md"))
@@ -52,7 +52,7 @@ def test_every_option_is_described() -> None:
     assert missing == []
 
 
-EXAMPLE = re.compile(r"^(`{3,})wgx\n(.*?)^\1$", re.MULTILINE | re.DOTALL)
+EXAMPLE = re.compile(r"^(`{3,})rdx\n(.*?)^\1$", re.MULTILINE | re.DOTALL)
 
 
 def _examples() -> list[tuple[str, str]]:
@@ -66,7 +66,7 @@ def _examples() -> list[tuple[str, str]]:
 
 @pytest.mark.parametrize(("name", "source"), _examples(), ids=[n for n, _ in _examples()])
 def test_guide_examples_compile(name: str, source: str) -> None:
-    """Every ```wgx block of the guides compiles without errors or warnings (blocks that are
+    """Every ```rdx block of the guides compiles without errors or warnings (blocks that are
     fragments, or show a mistake, are written ```text)."""
     data, result = build(source, ROOT / "examples")
     assert data is not None, result.render_diagnostics()

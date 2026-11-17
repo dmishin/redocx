@@ -5,11 +5,11 @@ from pathlib import Path
 import pytest
 from PIL import Image as PILImage
 
+from redocx import ir
+from redocx.compiler import build, compile_source
+from redocx.props import cell_props, para_props
+from redocx.values import Border, Color, Length
 from tests.support.xsd import validate_package
-from wordgenx import ir
-from wordgenx.compiler import build, compile_source
-from wordgenx.props import cell_props, para_props
-from wordgenx.values import Border, Color, Length
 
 A4_TEXT_WIDTH = Length.mm(210).emu - 2 * Length.cm("2.54").emu
 

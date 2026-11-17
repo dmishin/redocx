@@ -5,7 +5,7 @@
 Formulas are written in LaTeX notation and compiled to Word's own equations (OMML), which Word users can edit in its
 equation editor.
 
-```wgx
+```rdx
 Inline, \m{e^{i\pi} + 1 = 0}, and on a line of its own:
 
 $$ \int_0^\infty e^{-x^2}\,dx = \frac{\sqrt{\pi}}{2} $$ {#eq:gauss}
@@ -43,7 +43,7 @@ A command outside this list is an error at its place in the formula, with the ne
 
 ## Code blocks
 
-````wgx
+````rdx
 ```python {#lst:hello, caption="Saying hello", line-numbers}
 def hello(name):
     print(f"Hello, {name}")
@@ -52,7 +52,7 @@ def hello(name):
 @lst:hello prints a greeting.
 ````
 
-- The language is any Pygments name (`python`, `json`, `cpp`, `sql`, `yaml`, …) or `wgx` and `wgxs`. An unknown
+- The language is any Pygments name (`python`, `json`, `cpp`, `sql`, `yaml`, …) or `rdx` and `rdxs`. An unknown
   language is a warning, and the code is shown plain; so is code without a language, or with `highlight=off`.
 - The block uses the *Code Block* paragraph style; each kind of token has a character style (*Code Keyword*,
   *Code String*, *Code Comment*, …) coloured from a Pygments theme, `vs` unless

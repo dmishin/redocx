@@ -2,7 +2,7 @@
 
 ## Labels and cross-references
 
-```wgx
+```rdx
 = Results {#sec:results}
 
 == Throughput {#sec:throughput}
@@ -12,7 +12,7 @@ The heading text is "\ref[form=text]{sec:throughput}".
 ```
 
 A label (`{#name}` or `id=name`) becomes a Word bookmark, and `@name` a `REF` field to it, so the reference stays
-right when the document changes and Word updates its fields. wordgenx fills in each result in advance, so the
+right when the document changes and Word updates its fields. redocx fills in each result in advance, so the
 document reads correctly before any update.
 
 What `@label` prints depends on what it points at, as Word's Insert Cross-reference does:
@@ -36,7 +36,7 @@ one that does not exist, is an error.
 
 ## Captions
 
-```wgx
+```rdx
 \caption[id=tbl:income]{Condensed income statement}
 | Item    | 2025 |
 | Revenue | 412  |
@@ -57,7 +57,7 @@ See @tbl:income and @fig:logo.
 
 ## Tables of contents, figures and indexes
 
-```wgx
+```rdx
 \toc[levels=1-3, title="Contents"]
 \listof[Figure, title="Figures"]
 
@@ -76,7 +76,7 @@ See also \ix[see="queueing"]{waiting lines}.
 
 ## Footnotes and endnotes
 
-```wgx
+```rdx
 \settings[footnotes=(format=lower-roman, restart=each-section)]
 
 A claim.\footnote[id=fn:source]{From the 2025 survey, which had *412* replies.}
@@ -92,7 +92,7 @@ Numbering is set for the document with `\settings[footnotes=(…), endnotes=(…
 
 `\seq[Req]` is a counter of your own, a Word `SEQ` field; give it an `id` to refer to it:
 
-```wgx
+```rdx
 Requirement \seq[Req, id=req:login]: users log in. Requirement \seq[Req]: users log out.
 Requirement @req:login comes first.
 ```
@@ -101,7 +101,7 @@ Requirement @req:login comes first.
 
 ## Citations and bibliographies
 
-```wgx
+```rdx
 \bibliography[file="citations/refs.bib", style=apa]
 
 Queues were studied by \textcite{daganzo2005} and others \cite[page=214]{daganzo2005}.

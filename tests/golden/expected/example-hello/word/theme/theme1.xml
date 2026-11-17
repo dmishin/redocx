@@ -1,6 +1,6 @@
-<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="wordgenx">
+<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="redocx">
   <a:themeElements>
-    <a:clrScheme name="wordgenx">
+    <a:clrScheme name="redocx">
       <a:dk1>
         <a:srgbClr val="000000"/>
       </a:dk1>
@@ -38,7 +38,7 @@
         <a:srgbClr val="954F72"/>
       </a:folHlink>
     </a:clrScheme>
-    <a:fontScheme name="wordgenx">
+    <a:fontScheme name="redocx">
       <a:majorFont>
         <a:latin typeface="Calibri Light"/>
         <a:ea typeface=""/>
@@ -50,7 +50,7 @@
         <a:cs typeface=""/>
       </a:minorFont>
     </a:fontScheme>
-    <a:fmtScheme name="wordgenx">
+    <a:fmtScheme name="redocx">
       <a:fillStyleLst>
         <a:solidFill>
           <a:schemeClr val="phClr"/>

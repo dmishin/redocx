@@ -1,7 +1,7 @@
 import pytest
 
-from wordgenx.ooxml.parts.theme import Theme
-from wordgenx.props import (
+from redocx.ooxml.parts.theme import Theme
+from redocx.props import (
     REGISTRY,
     PropertySet,
     Target,
@@ -9,7 +9,7 @@ from wordgenx.props import (
     para_props,
     run_props,
 )
-from wordgenx.values import InvalidValueError, Length
+from redocx.values import InvalidValueError, Length
 
 
 def test_unknown_property_suggests_nearest_name() -> None:

@@ -1,6 +1,6 @@
-"""The design documents rebuilt in wordgenx (docs/book): the M2 exit criterion.
+"""The design documents rebuilt in redocx (docs/book): the M2 exit criterion.
 
-The chapters are generated from docs/*.md by tools/md2wgx.py, and the templates from
+The chapters are generated from docs/*.md by tools/md2rdx.py, and the templates from
 their sources; these tests keep the committed files in step and the book building.
 """
 
@@ -13,38 +13,38 @@ from types import ModuleType
 
 import pytest
 
+from redocx.compiler import build, compile_file
+from redocx.syntax import Source
 from tests.support.xsd import validate_package
-from wordgenx.compiler import build, compile_file
-from wordgenx.syntax import Source
 
 ROOT = Path(__file__).resolve().parents[1]
 BOOK = ROOT / "docs" / "book"
-REGENERATE = "python tools/md2wgx.py docs/0*.md --out docs/book/chapters"
+REGENERATE = "python tools/md2rdx.py docs/0*.md --out docs/book/chapters"
 
 
-def md2wgx() -> ModuleType:
-    spec = importlib.util.spec_from_file_location("md2wgx", ROOT / "tools" / "md2wgx.py")
+def md2rdx() -> ModuleType:
+    spec = importlib.util.spec_from_file_location("md2rdx", ROOT / "tools" / "md2rdx.py")
     assert spec is not None and spec.loader is not None  # noqa: PT018
     module = importlib.util.module_from_spec(spec)
-    sys.modules["md2wgx"] = module
+    sys.modules["md2rdx"] = module
     spec.loader.exec_module(module)
     return module
 
 
 @pytest.mark.parametrize("markdown", sorted((ROOT / "docs").glob("0*.md")), ids=lambda p: p.stem)
 def test_chapters_are_up_to_date(markdown: Path) -> None:
-    chapter = BOOK / "chapters" / markdown.with_suffix(".wgx").name
-    header = f"% Generated from docs/{markdown.name} by tools/md2wgx.py; do not edit.\n\n"
-    expected = header + md2wgx().convert(markdown.read_text(encoding="utf-8"))
+    chapter = BOOK / "chapters" / markdown.with_suffix(".rdx").name
+    header = f"% Generated from docs/{markdown.name} by tools/md2rdx.py; do not edit.\n\n"
+    expected = header + md2rdx().convert(markdown.read_text(encoding="utf-8"))
     assert chapter.read_text(encoding="utf-8") == expected, f"run: {REGENERATE}"
 
 
 @pytest.mark.parametrize(
     ("source", "template"),
     [
-        (BOOK / "template.wgx", BOOK / "wordgenx.dotx"),
+        (BOOK / "template.rdx", BOOK / "redocx.dotx"),
         (
-            ROOT / "examples" / "templates" / "corporate.wgx",
+            ROOT / "examples" / "templates" / "corporate.rdx",
             ROOT / "examples" / "templates" / "corporate.dotx",
         ),
     ],
@@ -53,20 +53,20 @@ def test_chapters_are_up_to_date(markdown: Path) -> None:
 def test_templates_are_up_to_date(source: Path, template: Path) -> None:
     data, result = build(Source.from_path(source), source.parent, as_template=True)
     assert data is not None, result.render_diagnostics()
-    assert data == template.read_bytes(), f"run: wordgenx build {source} -o {template}"
+    assert data == template.read_bytes(), f"run: redocx build {source} -o {template}"
 
 
 def test_the_book_builds_cleanly() -> None:
-    result = compile_file(BOOK / "design.wgx")
+    result = compile_file(BOOK / "design.rdx")
     assert result.document is not None, result.render_diagnostics()
     assert not result.diagnostics, result.render_diagnostics()
-    data, _ = build(Source.from_path(BOOK / "design.wgx"), BOOK)
+    data, _ = build(Source.from_path(BOOK / "design.rdx"), BOOK)
     assert data is not None
     assert validate_package(data) == {}
 
 
 @pytest.mark.parametrize(
-    ("markdown", "wgx"),
+    ("markdown", "rdx"),
     [
         ("# 3. Language Design", "= Language Design\n"),
         (
@@ -83,12 +83,12 @@ def test_the_book_builds_cleanly() -> None:
         ("100% {x} @y #z ~w", "100\\% \\{x\\} \\@y \\#z \\~w\n"),
     ],
 )
-def test_conversion(markdown: str, wgx: str) -> None:
-    assert md2wgx().convert(markdown) == wgx
+def test_conversion(markdown: str, rdx: str) -> None:
+    assert md2rdx().convert(markdown) == rdx
 
 
 def test_tables_and_code() -> None:
-    converted = md2wgx().convert(
+    converted = md2rdx().convert(
         "| Name | Value |\n|------|------:|\n| `a\\|b` | 1 |\n\n```python {#x}\nprint(1)\n```"
     )
     assert '\\table[style="Book Table", header-rows=1, widths=(' in converted

@@ -1,9 +1,9 @@
 """The command table and the lowering agree."""
 
-from wordgenx.commands.builtin import COMMANDS, body_kind
-from wordgenx.commands.spec import Placement
-from wordgenx.lower.lowering import BLOCK_HANDLERS, INLINE_HANDLERS
-from wordgenx.syntax.commands import ArgKind
+from redocx.commands.builtin import COMMANDS, body_kind
+from redocx.commands.spec import Placement
+from redocx.lower.lowering import BLOCK_HANDLERS, INLINE_HANDLERS
+from redocx.syntax.commands import ArgKind
 
 
 def test_every_command_has_a_handler() -> None:

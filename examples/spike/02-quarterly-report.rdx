@@ -1,0 +1,133 @@
+% ============================================================================
+% Spike sample 2: Business report (partly generated from data)
+% Exercises: currency and percentages in prose, KPI tables with numeric
+% alignment, generated includes, chart images, callout macro, two-column
+% section, footnotes for sources, inline styles, theme colours.
+% ============================================================================
+
+\document[lang=en-US, smart-quotes=on]
+
+\meta[
+  title   = "Q3 2026 Operations Report",
+  author  = "Finance & Operations",
+  company = "Northwind Logistics",
+]
+
+\styles{
+  defaults { font: "Aptos"; size: 10.5pt; space-after: 6pt; line-spacing: 1.1; }
+
+  modify paragraph "Heading 1" { color: theme.accent1; size: 18pt; space-before: 18pt; }
+  modify paragraph "Heading 2" { color: theme.accent1.darker(25%); size: 13pt; }
+
+  paragraph "KPI Value" : Normal { size: 28pt; bold; color: theme.accent1; space-after: 0; align: center; }
+  paragraph "KPI Label" : Normal { size: 9pt; color: theme.text1.lighter(35%); caps; align: center; }
+
+  character "Positive" { color: #2E7D32; }
+  character "Negative" { color: #C62828; }
+
+  table "Fin Table" {
+    borders: (top = single 1pt theme.text1, bottom = single 1pt theme.text1,
+              inside-h = single 0.25pt #D0D0D0);
+    cell-margins: (left=0.12cm, right=0.12cm, top=0.05cm, bottom=0.05cm);
+    header-row { bold; border-bottom: single 0.75pt theme.text1; repeat; }
+    last-row   { bold; border-top: single 0.75pt theme.text1; }
+    banded-rows { odd { shading: theme.accent1.lighter(90%); } }
+  }
+
+  table "KPI Tiles" { borders: none; cell-margins: (all = 0.2cm); }
+}
+
+\define{callout}[title="Key takeaway"]{body}{
+  \table[style="Callout", widths=(1fr), look=(no-banding)]{
+    \row{\cell[shade=theme.accent1.lighter(85%), border-left=single 4pt theme.accent1]{
+      \p[style="Callout Title"]{\title}
+      \body
+    }}
+  }
+}
+
+\let{up}{\style{Positive}{▲}}
+\let{down}{\style{Negative}{▼}}
+
+\page[size=Letter, margins=(all=0.9in)]
+\footer{Northwind Logistics · Q3 2026 Operations Report \tab \tab \pagenum}
+
+\p[style="Title"]{Q3 2026 Operations Report}
+\p[style="Subtitle"]{Prepared for the Board of Directors · October 2026}
+
+% --- KPI tiles: a borderless 4-column layout table ---------------------------
+\table[style="KPI Tiles", widths=(1fr, 1fr, 1fr, 1fr), align=center]{
+  \row{
+    \cell{\p[style="KPI Value"]{\$48.2M} \p[style="KPI Label"]{Revenue}}
+    \cell{\p[style="KPI Value"]{94.1\%}  \p[style="KPI Label"]{On-time delivery}}
+    \cell{\p[style="KPI Value"]{3.2\%}   \p[style="KPI Label"]{Damage rate}}
+    \cell{\p[style="KPI Value"]{+12\%}   \p[style="KPI Label"]{Volume YoY}}
+  }
+}
+
+= Executive Summary
+
+Revenue reached \$48.2 million in Q3, up 9.4\% year over year \up, driven
+by the new Rotterdam hub.\footnote{Revenue figures are unaudited and reported
+in USD at the average quarterly exchange rate.} Operating margin declined to
+11.8\% \down as fuel costs rose 22\% against Q2.
+
+\callout{
+  Volume growth is outpacing hub capacity. Without the Phase 2 expansion
+  (@sec:capex), on-time delivery is projected to fall below the 92\% SLA
+  threshold by Q1 2027.
+}
+
+= Financial Results {#sec:fin}
+
+% The table below is generated nightly from the warehouse by
+% scripts/export_financials.py using the Python API's .rdx writer.
+\include{generated/q3-income-statement.rdx}
+
+\caption[@tbl:income, above]{Condensed income statement (USD thousands)}
+
+For comparison, the hand-maintained version of the same table:
+
+\table[style="Fin Table", header-rows=1, last-row,
+       widths=(1fr, 2.6cm, 2.6cm, 2.2cm),
+       columns=(left, decimal, decimal, right), id=tbl:income-manual]{
+  | Line item          | Q3 2026  | Q3 2025  | Change  |
+  | Revenue            | 48,210   | 44,067   | +9.4\%  |
+  | Cost of services   | (35,980) | (31,950) | +12.6\% |
+  | Gross profit       | 12,230   | 12,117   | +0.9\%  |
+  | SG&A               | (6,540)  | (6,010)  | +8.8\%  |
+  | Operating income   | 5,690    | 6,107    | −6.8\%  |
+}
+
+\figure[id=fig:rev, width=100%]{
+  \image{generated/charts/revenue-by-region.png}
+  \caption{Revenue by region, last eight quarters}
+}
+
+= Operations
+
+\page[break=continuous, columns=(count=2, gap=0.8cm)]
+
+== Hubs
+
+The Rotterdam hub processed 1.4 million parcels in its first full quarter.
+Throughput per labour hour is 18\% above the network average, largely due to
+the automated sorter commissioned in July.
+
+Lyon and Milan remain at 97\% and 101\% of rated capacity respectively; Milan
+has operated above capacity for six consecutive weeks.
+
+== Fleet
+
+Average fleet age is 4.1 years. Twenty-two electric vans entered service in
+September; their cost per kilometre is 31\% lower than diesel equivalents on
+urban routes.\footnote{Includes charging infrastructure depreciation; excludes
+the one-off grant of \$0.4M.}
+
+\page[break=continuous, columns=1]
+
+= Capital Expenditure {#sec:capex}
+
+The Board is asked to approve *\$6.5M* for Phase 2 of the Rotterdam expansion
+(see @fig:rev for regional growth). Payback is estimated at 3.1 years at
+current volume growth.

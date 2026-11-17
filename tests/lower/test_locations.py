@@ -6,12 +6,12 @@ from pathlib import Path
 
 import pytest
 
-from wordgenx import compiler
-from wordgenx.cli import main
-from wordgenx.compiler import CompileResult, compile_source
-from wordgenx.ooxml.parts.styles import StyleError
-from wordgenx.syntax.diagnostics import Code
-from wordgenx.syntax.source import Source
+from redocx import compiler
+from redocx.cli import main
+from redocx.compiler import CompileResult, compile_source
+from redocx.ooxml.parts.styles import StyleError
+from redocx.syntax.diagnostics import Code
+from redocx.syntax.source import Source
 
 
 def located(result: CompileResult) -> list[tuple[str, int, str, tuple[str, ...]]]:
@@ -24,30 +24,30 @@ def located(result: CompileResult) -> list[tuple[str, int, str, tuple[str, ...]]
 
 
 def compile_in(folder: Path, text: str) -> CompileResult:
-    path = folder / "doc.wgx"
+    path = folder / "doc.rdx"
     path.write_text(text, encoding="utf-8")
     return compile_source(Source.from_path(path), folder)
 
 
 def test_errors_in_a_macro_library_point_into_it(tmp_path: Path) -> None:
-    (tmp_path / "lib.wgx").write_text(
+    (tmp_path / "lib.rdx").write_text(
         "% library\n\n\\define{logo}{\\image{missing.png}}\n", encoding="utf-8"
     )
-    result = compile_in(tmp_path, "\\use{lib.wgx}\n\nText \\logo here.\n")
+    result = compile_in(tmp_path, "\\use{lib.rdx}\n\nText \\logo here.\n")
     [(file, line, message, notes)] = located(result)
-    assert (file, line) == ("lib.wgx", 3)
+    assert (file, line) == ("lib.rdx", 3)
     assert message.startswith("cannot read image `missing.png`")
-    assert notes == (f"in `\\logo`, called at {tmp_path / 'doc.wgx'}:3:6",)
+    assert notes == (f"in `\\logo`, called at {tmp_path / 'doc.rdx'}:3:6",)
 
 
 def test_nested_calls_are_all_noted(tmp_path: Path) -> None:
-    (tmp_path / "lib.wgx").write_text(
+    (tmp_path / "lib.rdx").write_text(
         "\\define{inner}{\\b[x]{y}}\n\\define{outer}{\\inner}\n", encoding="utf-8"
     )
-    [(file, line, message, notes)] = located(compile_in(tmp_path, "\\use{lib.wgx}\n\\outer\n"))
-    assert (file, line, message) == ("lib.wgx", 1, "unknown option `x` for `\\b`")
+    [(file, line, message, notes)] = located(compile_in(tmp_path, "\\use{lib.rdx}\n\\outer\n"))
+    assert (file, line, message) == ("lib.rdx", 1, "unknown option `x` for `\\b`")
     assert [n.split(", called at ")[0] for n in notes] == ["in `\\inner`", "in `\\outer`"]
-    assert notes[0].endswith("lib.wgx:2:16")
+    assert notes[0].endswith("lib.rdx:2:16")
 
 
 def test_a_misspelt_parameter_is_suggested() -> None:
@@ -103,9 +103,9 @@ def test_an_unclosed_verbatim_body_causes_no_further_errors() -> None:
 
 
 def test_files_are_listed_in_the_order_they_were_reported(tmp_path: Path) -> None:
-    (tmp_path / "part.wgx").write_text("\\bogus", encoding="utf-8")
-    result = compile_in(tmp_path, "\\include{part.wgx}\n\n\\alsobogus\n")
-    assert [file for file, *_ in located(result)] == ["doc.wgx", "part.wgx"]
+    (tmp_path / "part.rdx").write_text("\\bogus", encoding="utf-8")
+    result = compile_in(tmp_path, "\\include{part.rdx}\n\n\\alsobogus\n")
+    assert [file for file, *_ in located(result)] == ["doc.rdx", "part.rdx"]
 
 
 def run(*argv: str) -> tuple[int, str]:
@@ -116,7 +116,7 @@ def run(*argv: str) -> tuple[int, str]:
 
 
 def test_a_bad_template_option_is_a_command_line_error(tmp_path: Path) -> None:
-    doc = tmp_path / "doc.wgx"
+    doc = tmp_path / "doc.rdx"
     doc.write_text("Hello", encoding="utf-8")
     (tmp_path / "fake.dotx").write_text("x", encoding="utf-8")
     code, err = run("build", str(doc), "--template", str(tmp_path / "fake.dotx"))
@@ -132,7 +132,7 @@ def test_internal_errors_are_reported_without_a_traceback(
         raise StyleError("something the lowering missed")
 
     monkeypatch.setattr(compiler, "build_package", fail)
-    doc = tmp_path / "doc.wgx"
+    doc = tmp_path / "doc.rdx"
     doc.write_text("Hello", encoding="utf-8")
     for command in ("build", "check"):
         code, err = run(command, str(doc))

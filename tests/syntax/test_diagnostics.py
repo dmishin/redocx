@@ -1,8 +1,8 @@
 import pytest
 
-from wordgenx.syntax import Source, ast, parse
-from wordgenx.syntax.diagnostics import Code, Diagnostic, Severity, error, render
-from wordgenx.syntax.source import Span
+from redocx.syntax import Source, ast, parse
+from redocx.syntax.diagnostics import Code, Diagnostic, Severity, error, render
+from redocx.syntax.source import Span
 
 CASES = [
     ("\\b{never closed", Code.UNCLOSED_BRACE, "{"),
@@ -49,7 +49,7 @@ def test_errors_recover_and_continue() -> None:
 
 
 def test_render_format() -> None:
-    source = Source("chapter.wgx", "Intro.\n\\p[style=Body, space-befor=12pt]{x}\n")
+    source = Source("chapter.rdx", "Intro.\n\\p[style=Body, space-befor=12pt]{x}\n")
     diagnostic = error(
         Code.INVALID_OPTION,
         "unknown paragraph property `space-befor`",
@@ -57,8 +57,8 @@ def test_render_format() -> None:
         "did you mean `space-before`?",
     )
     assert render(diagnostic, source) == (
-        "error[WGX0104]: unknown paragraph property `space-befor`\n"
-        " --> chapter.wgx:2:16\n"
+        "error[RDX0104]: unknown paragraph property `space-befor`\n"
+        " --> chapter.rdx:2:16\n"
         "  |\n"
         "2 | \\p[style=Body, space-befor=12pt]{x}\n"
         "  |                ^^^^^^^^^^^ did you mean `space-before`?\n"
@@ -66,11 +66,11 @@ def test_render_format() -> None:
 
 
 def test_render_with_help_tabs_and_multiline_span() -> None:
-    source = Source("t.wgx", "\tx = {\nnext line\n")
+    source = Source("t.rdx", "\tx = {\nnext line\n")
     diagnostic = Diagnostic(Severity.WARNING, Code.UNCLOSED_GROUP, "msg", Span(5, 12), help="do X")
     assert render(diagnostic, source) == (
-        "warning[WGX0115]: msg\n"
-        " --> t.wgx:1:6\n"
+        "warning[RDX0115]: msg\n"
+        " --> t.rdx:1:6\n"
         "  |\n"
         "1 |     x = {\n"
         "  |         ^\n"

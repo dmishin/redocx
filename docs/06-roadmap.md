@@ -10,7 +10,7 @@ with no repair prompt, pass both validators, and match their golden snapshots.
 - [x] OPC package writer: content types, relationships, deterministic zip.
 - [x] Minimal part writers: document, styles (docDefaults, the four default styles, user styles), settings, core and app
   props, fontTable, theme (own default theme).
-- [x] Validation pipeline: lxml + ECMA-376 Transitional XSDs (now `src/wordgenx/data/schemas/`); `tools/ooxml-validate` (.NET OpenXmlValidator).
+- [x] Validation pipeline: lxml + ECMA-376 Transitional XSDs (now `src/redocx/data/schemas/`); `tools/ooxml-validate` (.NET OpenXmlValidator).
 - [x] Golden-test harness (canonical XML snapshots in `tests/golden/expected/`).
 - [x] First version of the property registry: 15 run and 14 paragraph properties, with schema-order tables checked against `wml.xsd`.
 - [x] **Spike:** 5 representative documents in the proposed syntax. See the [findings](../examples/spike/FINDINGS.md).
@@ -19,12 +19,12 @@ with no repair prompt, pass both validators, and match their golden snapshots.
 
 ## M1: Core language (roughly "Pandoc parity")
 
-- [x] Parser for all modes, lossless CST, typed AST, source spans, diagnostics renderer (`wordgenx.syntax`; rules in
-  design §3.22). Checked by property-based fuzzing (Hypothesis) and a syntax tour (`examples/syntax-tour.wgx`).
-- [x] CLI `wordgenx check` and `wordgenx parse` (`--tree ast|cst`).
-- [x] Lowering AST -> IR (`wordgenx.lower`, design §3.23): inline sugar, formatting commands, `\p`, `\align`, option
+- [x] Parser for all modes, lossless CST, typed AST, source spans, diagnostics renderer (`redocx.syntax`; rules in
+  design §3.22). Checked by property-based fuzzing (Hypothesis) and a syntax tour (`examples/syntax-tour.rdx`).
+- [x] CLI `redocx check` and `redocx parse` (`--tree ast|cst`).
+- [x] Lowering AST -> IR (`redocx.lower`, design §3.23): inline sugar, formatting commands, `\p`, `\align`, option
   type-checking, units and colours (incl. theme `lighter`/`darker`), smart punctuation.
-- [x] Style sheets (`.wgxs` and `\styles{}`): defaults, paragraph, character and linked styles, theme references,
+- [x] Style sheets (`.rdxs` and `\styles{}`): defaults, paragraph, character and linked styles, theme references,
   modify/replace, multilevel numbering definitions with style-linked levels (`numbering.xml`). Table styles are parsed
   but deferred to M2.
 - [x] Headings, paragraphs, lists with real multilevel numbering (separate lists restart; `\list[Name, continue]`,
@@ -37,13 +37,13 @@ with no repair prompt, pass both validators, and match their golden snapshots.
 - [x] Command registry with argument kinds (markup, string, raw, math); the comment, whitespace and flanking rules from the spike.
 - [x] Standard macro library (`std:callout`, `std:signature`), packaged with the compiler.
 - [x] Trial: the spike's design specification ported to v0.2 (`examples/design-spec/`, findings in its `NOTES.md`).
-- [x] CLI: `wordgenx build` (and `check` runs the full compile).
-- **Exit:** a real 20-page document can be authored entirely in wordgenx. Language grammar v0.1 is frozen.
+- [x] CLI: `redocx build` (and `check` runs the full compile).
+- **Exit:** a real 20-page document can be authored entirely in redocx. Language grammar v0.1 is frozen.
   *Status:* the 4-page specification trial builds cleanly, and its remaining gaps (headers and footers, TOC,
   cross-references, captions, footnotes, sections) are M2 items. The grammar has been stable through M1 (v0.2 plus the
   §3.22–3.23 rules); freezing it is the last step.
 
-## M2: Word structure (where wordgenx goes beyond Pandoc)
+## M2: Word structure (where redocx goes beyond Pandoc)
 
 - [x] Multiple sections (orientation, size, margins, columns, break types); headers and footers (first, even, linked
   or not); page-number formats and restarts; fields (`\pagenum`, `\numpages`, `\field`, `\date`); tab stops.
@@ -63,18 +63,18 @@ with no repair prompt, pass both validators, and match their golden snapshots.
   paragraph properties (scale, kerning, emboss, imprint, outline, shadow, suppress line numbers and hyphenation),
   and the escape hatches (`\raw[ooxml]`, `ooxml.*` properties). Moved out of M2: list (numbering) styles (later),
   columns of different widths (M4).
-- **Exit:** wordgenx's own design docs are rebuilt in wordgenx with a corporate-style template and look professionally typeset in Word.
-  *Status: met.* `docs/book/design.wgx` builds the eight design documents into one 38-page book with the
-  `docs/book/wordgenx.dotx` template (itself written in wordgenx): cover page, contents, numbered chapters with
+- **Exit:** redocx's own design docs are rebuilt in redocx with a corporate-style template and look professionally typeset in Word.
+  *Status: met.* `docs/book/design.rdx` builds the eight design documents into one 38-page book with the
+  `docs/book/redocx.dotx` template (itself written in redocx): cover page, contents, numbered chapters with
   running heads, styled tables with repeated header rows, boxed code, notes, front matter with roman page numbers.
   It builds without diagnostics, passes both validators and opens cleanly in Word. The chapters are converted from
-  the Markdown sources by `tools/md2wgx.py`, and the test suite keeps them in step.
+  the Markdown sources by `tools/md2rdx.py`, and the test suite keeps them in step.
 
 ## M3: Technical writing
 
 Steps, in order:
 
-1. [x] **Math** (LaTeX subset to OMML, `wordgenx.math`). Inline `\m{…}`, display `$$…$$` and `\math[…]{…}`. Fractions,
+1. [x] **Math** (LaTeX subset to OMML, `redocx.math`). Inline `\m{…}`, display `$$…$$` and `\math[…]{…}`. Fractions,
    roots, scripts, big operators with limits, delimiters (`\left…\right`), functions and `\lim`, accents and bars,
    matrices and `cases`, `aligned` rows with `&` alignment, text and font styles (`\mathbf`, `\mathbb`, …), Greek
    letters and the common symbol set. Unsupported macros are errors at their position. OMML is written the way Word
@@ -88,11 +88,11 @@ Steps, in order:
 4. [x] **Index**: `\ix{term!sub}` as `XE` fields, `\index[columns=2]` as an `INDEX` field with pre-rendered entries.
 5. [x] **Images and embedding**: SVG (with a PNG fallback, as Word stores it: `fallback=` or a grey
    placeholder), `\embed-docx` (altChunk, merged by Word on open).
-6. [x] **Tooling**: `wordgenx fmt` (CST-based formatter, `--check`, `--diff`; §3.21), `--emit-ir` (the IR as
+6. [x] **Tooling**: `redocx fmt` (CST-based formatter, `--check`, `--diff`; §3.21), `--emit-ir` (the IR as
    JSON, one-way).
 
 - **Exit:** a thesis-style document with math, citations, code and figures.
-  *Status: met.* `examples/thesis/thesis.wgx` is a 13-page MSc thesis in five included chapter files with its own
+  *Status: met.* `examples/thesis/thesis.rdx` is a 13-page MSc thesis in five included chapter files with its own
   style sheet: title page, abstract, contents, lists of figures, tables and listings, front matter with roman page
   numbers, chapters with running heads, numbered equations referenced per chapter ("(2–1)"), APA citations and
   references, highlighted code listings, an SVG and a PNG figure, tables with repeated header rows, footnotes and a
@@ -108,7 +108,7 @@ Steps, in order (the small ones first; the drawing steps share one positioning m
 1. [x] **Page decoration**: page borders on sections (`borders=`), the page colour
    (`\document[page-color=…]`), borders and shading on runs.
 2. [x] **Custom themes**: `theme [Name] { accent1: …; major-font: …; }` in a style sheet sets the theme's colours
-   and fonts (wordgenx's theme part or the template's), so `theme.accent1` and `theme.major` mean the document's
+   and fonts (redocx's theme part or the template's), so `theme.accent1` and `theme.major` mean the document's
    own choices. Tints and shades are computed as Word computes them (HSL luminance).
 3. [x] **Floating images**: `\image[wrap=…, x=…, y=…]` as `wp:anchor` (square, tight, top-and-bottom, behind,
    in front), positioned against the page, margin, column or paragraph; crop, rotation and a border on any image.
@@ -124,7 +124,7 @@ Basic shapes (lines, arrows, rectangles) come only if they stay small; see [Post
 
 - **Exit:** a magazine-style report: a cover page with a full-bleed picture, floating figures with text around them,
   a pull quote in a text box, a drop cap, a "DRAFT" watermark and its own theme.
-  *Status: met.* `examples/magazine/magazine.wgx` is a three-page review: a full-bleed cover behind white Georgia
+  *Status: met.* `examples/magazine/magazine.rdx` is a three-page review: a full-bleed cover behind white Georgia
   titles; a two-column feature with a page-wide picture at the top, a drop cap in the heading font, a pull quote
   floating across the columns, a tightly wrapped picture, a floating table, a sidebar box and an SVG figure; a running
   head, a page frame and a DRAFT watermark, all in its own Harbour theme. It builds without diagnostics, passes both
@@ -147,21 +147,21 @@ over the writer) goes to [Postponed features](09-postponed.md) instead.
    markup and a section that repeats are more than they give).
 
 - **Exit:** a fillable onboarding form: every field type, form protection, a reviewer's comments, Track Changes on.
-  *Status: met.* `examples/forms/onboarding.wgx` is a one-page form protected for filling in: text, dropdown, combo,
+  *Status: met.* `examples/forms/onboarding.rdx` is a one-page form protected for filling in: text, dropdown, combo,
   date, picture, rich-text and checkbox fields with placeholders, a locked field, a reviewer's comments (one with
   markup) and Track Changes on. It builds without diagnostics and passes both validators; in Word all fourteen
   controls read back with their types, filling a field, a dropdown and a checkbox works under protection, the
   comments show in the margin, and once unprotected, edits are tracked.
 
-Tracked revisions in the source and `wordgenx diff` redlines are [postponed](09-postponed.md); data binding stays
+Tracked revisions in the source and `redocx diff` redlines are [postponed](09-postponed.md); data binding stays
 "Later".
 
-## M6: Import (`docx → wordgenx`)
+## M6: Import (`docx → redocx`)
 
 The goal is a **reliable import of the significant part of a document and its formatting**, not a round trip: some
-data is inevitably stripped or approximated, and the import says what (no silent loss). `wordgenx import doc.docx`
-writes a folder: `doc.wgx`, a style sheet, the pictures, and a report. The reader (`.docx` → IR, behind
-`wordgenx inspect`) exists since M1; the work is mostly the other half, printing IR as readable source, plus filling
+data is inevitably stripped or approximated, and the import says what (no silent loss). `redocx import doc.docx`
+writes a folder: `doc.rdx`, a style sheet, the pictures, and a report. The reader (`.docx` → IR, behind
+`redocx inspect`) exists since M1; the work is mostly the other half, printing IR as readable source, plus filling
 the reader's gaps. The thinking behind it is in [the decompiler note](ideas/docx-decompiler.md).
 
 Steps, in order. Each stays simple; what turns out intrusive is reported as lost and listed in
@@ -180,12 +180,12 @@ Steps, in order. Each stays simple; what turns out intrusive is reported as lost
    EMF/WMF previews of embedded objects, page borders and section columns. On the private test document the
    fallbacks went from 557 to 48 (text effects, orphan bookmark ends, emphasis marks, one embedded object), and what
    is read writes a package both validators accept.
-2. [x] **Print canonical source (L1).** IR → `.wgx` with commands only: `\p[style=…]`, direct formatting as
+2. [x] **Print canonical source (L1).** IR → `.rdx` with commands only: `\p[style=…]`, direct formatting as
    `\font[…]`, `\table`/`\row`/`\cell`, `\section`, `\header`/`\footer`, `\footnote`, `\image` (pictures extracted),
    fields as their commands or `\field`. Escaping, and units snapped to what a person writes (1cm, 12pt). Anything
    not printable becomes a line in the report. The check: the printed source compiles without errors and has the
    original's text.
-   *Status:* `wordgenx import doc.docx [-o DIR]` (`wordgenx.importer`) writes `doc.wgx`, `doc.wgxs`, `media/` and
+   *Status:* `redocx import doc.docx [-o DIR]` (`redocx.importer`) writes `doc.rdx`, `doc.rdxs`, `media/` and
    `doc.import.txt`, then compiles the printed source and compares its text with the original's (every run, notes,
    comments, text boxes, headers and footers; whitespace, field results and the TOC's entries left out). Lists
    become `\list[Name]{1. …}` with `continue` and `restart=`, comments `\comment[text={…}]{…}`, drop caps
@@ -197,17 +197,17 @@ Steps, in order. Each stays simple; what turns out intrusive is reported as lost
    in field results (`LINK`, `INCLUDEPICTURE`), theme colours of borders, two lists of one name. The six corpus
    documents and 13 examples (built, then imported) compile with the same text; so does the private test document
    (locally: no errors, the same text, the same tables, pictures and sections in Word; 19 pages instead of 17, since
-   it now has wordgenx's theme and settings rather than its own).
-3. [x] **Styles.** The style sheet from step 2, made readable: printing only what differs from wordgenx's
+   it now has redocx's theme and settings rather than its own).
+3. [x] **Styles.** The style sheet from step 2, made readable: printing only what differs from redocx's
    built-ins, linked styles as `linked`, the theme's colours and fonts. Alternative mode: keep the original's
    styles, theme, numbering and headers exactly by writing them as a body-less template the source compiles into
    (`\document[template=…]`).
    *Status:* the reader reads the theme, and the style sheet has a `theme` rule with the colours and fonts that
-   differ from wordgenx's. A style wordgenx has built in becomes `modify paragraph "Heading 1" { … }` with only
+   differ from redocx's. A style redocx has built in becomes `modify paragraph "Heading 1" { … }` with only
    what differs, when its own definition can be extended to it (a style sheet cannot take a property away);
    a paragraph style whose "… Char" style formats text the same way becomes one `linked` rule. Where the original's
-   defaults leave out the font or size, the sheet writes Word's legacy Times New Roman 10pt, since wordgenx would
-   fill in its own (this was the private document's two extra pages). `wordgenx import --keep-styles` writes the
+   defaults leave out the font or size, the sheet writes Word's legacy Times New Roman 10pt, since redocx would
+   fill in its own (this was the private document's two extra pages). `redocx import --keep-styles` writes the
    original without its body (and without the final section's header references) as `doc.template.docx`, and the
    source compiles into it with no style sheet: templates now know unnamed lists by the names the reader gives
    them ("List 3"). The private test document comes back at its 17 pages either way.
@@ -227,15 +227,15 @@ Steps, in order. Each stays simple; what turns out intrusive is reported as lost
    Lists were already `\list[Name]{1. …}`, the TOC `\toc`. Each form is used only where it compiles to the same
    thing: the tests compare, for the corpus and the examples, every paragraph's style, formatting and list level,
    every table's spans and header rows, and the effective formatting of every run. They found two step-2 bugs,
-   now fixed: links without the Hyperlink style (wordgenx's citations) came back blue, so `\link` takes
+   now fixed: links without the Hyperlink style (redocx's citations) came back blue, so `\link` takes
    `style=none`; and paragraphs in tables in headers and footers took the Header and Footer styles. The private
    test document: the same structure (300 blocks) and look (every body paragraph); 30 headings are `=` lines, and
    `\font[…]` goes from 125 to 74.
-5. [x] **The oracle.** `wordgenx import --check` compiles the imported source and compares it with the original:
+5. [x] **The oracle.** `redocx import --check` compiles the imported source and compares it with the original:
    text, block structure, paragraph styles and effective character formatting, reported as a share of paragraphs
-   that match and a list of differences. Round-trip tests on the examples (`.wgx → .docx → import → .docx`) keep it
+   that match and a list of differences. Round-trip tests on the examples (`.rdx → .docx → import → .docx`) keep it
    honest.
-   *Status:* `wordgenx.importer.check` (moved out of step 4's tests) compares the text, the blocks (each
+   *Status:* `redocx.importer.check` (moved out of step 4's tests) compares the text, the blocks (each
    paragraph's style, formatting and list level, each table's spans and header rows), the effective run formatting
    of each body paragraph (resolved with the original's styles when the source compiles into it with
    `--keep-styles`) and the counts of sections, notes, comments, pictures and text boxes. Every import reports
@@ -264,7 +264,7 @@ from its documentation.*
 2. [x] **Escape hatches checked against the schemas.** `\raw` and `ooxml.*` XML must fit where it goes; the schemas
    ship with the package and load only when raw XML is used.
 3. [x] **The written document checked.** Relationship ids, bookmark pairs, unique bookmark names and drawing ids,
-   links to bookmarks that exist, and note, comment, style and list references, as one warning (`WGX0401`);
+   links to bookmarks that exist, and note, comment, style and list references, as one warning (`RDX0401`);
    `build --validate` for the full schema check. It found that `[text](#label)` linked to the label's name rather
    than its bookmark; such links now go to the bookmark.
 4. [x] **Unknown field names** in `\field` (and its nested fields) are a warning, with the closest known name.
@@ -273,11 +273,11 @@ from its documentation.*
    date and every command in a topic.
 6. [x] **Guides** ([docs/guide](guide/README.md)): a one-page guide; topic guides for syntax, styles and templates,
    tables, pictures, references, sections and fields, math and code, macros and the standard library, forms, and
-   import; and a guide for TeX users. Every `wgx` example in them compiles without a warning (tested). Writing them
+   import; and a guide for TeX users. Every `rdx` example in them compiles without a warning (tested). Writing them
    corrected two option names in the design document (`\font[font=…]`, `character-spacing`).
 
-7. [x] **`wordgenx explain NAME`:** a command, formatting property, macro or `std:` module from the same tables
-   as the reference (the catalogue is shared with `tools/make_reference.py`); `--in FILE.wgx` adds the macros a
+7. [x] **`redocx explain NAME`:** a command, formatting property, macro or `std:` module from the same tables
+   as the reference (the catalogue is shared with `tools/make_reference.py`); `--in FILE.rdx` adds the macros a
    document defines or loads, found by parsing and following `\use` and `\include`, with the `%` comment above each
    definition; `--properties KIND` lists one kind of property.
 

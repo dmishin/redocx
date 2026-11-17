@@ -2,7 +2,7 @@
 
 ## Pictures
 
-```wgx
+```rdx
 Our logo \image[width=2cm, alt="The Acme logo"]{img/logo.png} sits in the text.
 
 \image[width=50%]{img/logo.png}
@@ -23,7 +23,7 @@ Our logo \image[width=2cm, alt="The Acme logo"]{img/logo.png} sits in the text.
 
 A figure is a picture with a numbered caption, kept together on one page:
 
-```wgx
+```rdx
 \figure[id=fig:logo, width=6cm]{
   \image{img/logo.png}
   \caption{The company logo}
@@ -41,7 +41,7 @@ centring.
 
 A picture floats, with text flowing around it, when it has `float`, `wrap`, `x` or `y`:
 
-```wgx
+```rdx
 \image[width=4cm, wrap=square, x=(right, from=margin), y=(0cm, from=paragraph)]{img/logo.png}
 This paragraph flows around the picture on its right. Text wraps on the left side, and continues below
 it once the picture ends. Floating pictures belong to the paragraph they are written in.
@@ -62,7 +62,7 @@ y=(0cm, from=page)]{cover.jpg}`.
 A text box holds blocks (paragraphs, lists, tables) in a frame, inline or floating, with the same position options
 as a picture:
 
-```wgx
+```rdx
 \textbox[width=6cm, border=(single, 1pt, theme.accent1), fill=theme.accent1.lighter(80%), x=right, padding=0.3cm]{
   *Key figure*
 
@@ -76,7 +76,7 @@ Its own options: `width` (default: the text width), `height` (default: as tall a
 
 ## Watermarks
 
-```wgx
+```rdx
 \section[size=A4]
 \watermark[DRAFT]
 

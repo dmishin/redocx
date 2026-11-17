@@ -1,9 +1,9 @@
-from wordgenx import ir
-from wordgenx.compiler import compile_source
-from wordgenx.lower.preamble import std_modules
-from wordgenx.syntax import ast, parse
-from wordgenx.syntax.diagnostics import Code
-from wordgenx.values import Color
+from redocx import ir
+from redocx.compiler import compile_source
+from redocx.lower.preamble import std_modules
+from redocx.syntax import ast, parse
+from redocx.syntax.diagnostics import Code
+from redocx.values import Color
 
 
 def compiled(text: str) -> ir.Document:

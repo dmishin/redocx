@@ -17,12 +17,12 @@ $logo = [System.IO.Path]::GetFullPath((Join-Path $root "examples/img/logo.png"))
 $photo = [System.IO.Path]::GetFullPath((Join-Path $root "examples/thesis/img/speed-field.png"))
 
 # A new document from Documents.Add() can block on a hidden prompt when it is first saved
-# (sensitivity labels, for one), so each document starts from a blank one wordgenx builds.
-$blank = Join-Path $env:TEMP "wordgenx-corpus-blank.docx"
-$source = Join-Path $env:TEMP "wordgenx-corpus-blank.wgx"
+# (sensitivity labels, for one), so each document starts from a blank one redocx builds.
+$blank = Join-Path $env:TEMP "redocx-corpus-blank.docx"
+$source = Join-Path $env:TEMP "redocx-corpus-blank.rdx"
 Set-Content -Path $source -Value "\document[lang=en-US]" -Encoding utf8
-$ErrorActionPreference = "Continue"  # wordgenx reports on stderr, which 5.1 would treat as an error
-& (Join-Path $root ".venv/Scripts/wordgenx.exe") build $source -o $blank 2>&1 | Out-Null
+$ErrorActionPreference = "Continue"  # redocx reports on stderr, which 5.1 would treat as an error
+& (Join-Path $root ".venv/Scripts/redocx.exe") build $source -o $blank 2>&1 | Out-Null
 $ErrorActionPreference = "Stop"
 if (-not (Test-Path $blank)) { throw "could not build $blank" }
 

@@ -9,10 +9,10 @@ import zipfile
 import pytest
 from lxml import etree
 
+from redocx import ir
+from redocx.compiler import build, compile_source
+from redocx.values import Length, TabStop
 from tests.support.xsd import validate_package
-from wordgenx import ir
-from wordgenx.compiler import build, compile_source
-from wordgenx.values import Length, TabStop
 
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 

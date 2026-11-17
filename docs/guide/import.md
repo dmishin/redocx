@@ -1,22 +1,22 @@
 # Importing Word documents, and checking builds
 
-## `wordgenx import`
+## `redocx import`
 
-`wordgenx import` turns a `.docx` into wordgenx source: a folder with the `.wgx` document, a `.wgxs` style sheet, the
+`redocx import` turns a `.docx` into redocx source: a folder with the `.rdx` document, a `.rdxs` style sheet, the
 pictures, and a report of what could not be expressed.
 
 ```bash
-wordgenx import report.docx                  # writes report/report.wgx, report.wgxs, media/, report.import.txt
-wordgenx import report.docx -o src           # into the folder src
-wordgenx import report.docx --keep-styles    # compile into the original's styles instead of a style sheet
-wordgenx import report.docx --commands-only  # commands only: \p[style="Heading 1"]{…} rather than = …
-wordgenx import report.docx --check          # fail unless the source compiles back to the original
+redocx import report.docx                  # writes report/report.rdx, report.rdxs, media/, report.import.txt
+redocx import report.docx -o src           # into the folder src
+redocx import report.docx --keep-styles    # compile into the original's styles instead of a style sheet
+redocx import report.docx --commands-only  # commands only: \p[style="Heading 1"]{…} rather than = …
+redocx import report.docx --check          # fail unless the source compiles back to the original
 ```
 
-The source reads like hand-written wordgenx: headings, lists, labels and `@references`, captions, pipe tables,
+The source reads like hand-written redocx: headings, lists, labels and `@references`, captions, pipe tables,
 `*strong*` and `_emphasis_`, with direct formatting only where the original had it. Two ways to handle styles:
 
-- **A style sheet** (the default): the original's styles, lists and theme become a `.wgxs`, printing only what
+- **A style sheet** (the default): the original's styles, lists and theme become a `.rdxs`, printing only what
   differs from Word's built-ins.
 - **`--keep-styles`:** the original, emptied of its body, becomes `report.template.docx`, and the source compiles
   into it with `\document[template=…]`. Styles, theme and lists stay exactly as they were.
@@ -39,7 +39,7 @@ embedded objects kept as their pictures. Page layout is Word's and is not compar
 
 ## How a build is checked
 
-A document that compiles without errors should open in Word without complaint. wordgenx checks at three levels:
+A document that compiles without errors should open in Word without complaint. redocx checks at three levels:
 
 1. **The source.** Every command is checked against its declaration: where it may stand (`\cell` only in `\row`,
    block commands not inside text), its options and their values, its body. Labels must be defined once and exist
@@ -48,11 +48,11 @@ A document that compiles without errors should open in Word without complaint. w
 2. **The escape hatches.** XML written by hand, in `\raw[ooxml]{…}` or `ooxml.pPr="…"`, must be well-formed and is
    checked against the ECMA-376 schemas for the place it goes, so a misplaced element or a bad value is an error,
    not a damaged file. Elements of Word's extension namespaces (`w14:`, …) are not checked.
-3. **The written document.** After writing, wordgenx reads the parts back and checks what no schema sees: every
+3. **The written document.** After writing, redocx reads the parts back and checks what no schema sees: every
    relationship exists, every bookmark is opened once and closed, bookmark names and drawing ids are unique, links
    go to bookmarks that exist, and notes, comments, styles and lists that are referred to exist. A problem is a
-   warning, `WGX0401`, listing each one.
+   warning, `RDX0401`, listing each one.
 
-For a full check, `wordgenx build --validate` also validates every part of the written document against the
+For a full check, `redocx build --validate` also validates every part of the written document against the
 schemas (about half a second more) and writes nothing if one fails. The test suite does this, and runs Microsoft's
 Open XML SDK validator, on every example.

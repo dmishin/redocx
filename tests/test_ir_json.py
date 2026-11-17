@@ -1,11 +1,11 @@
-"""The IR as JSON (wordgenx build --emit-ir)."""
+"""The IR as JSON (redocx build --emit-ir)."""
 
 import json
 
-from wordgenx import ir
-from wordgenx.compiler import compile_source
-from wordgenx.ir_json import encode, length, to_json
-from wordgenx.values import Color, Length
+from redocx import ir
+from redocx.compiler import compile_source
+from redocx.ir_json import encode, length, to_json
+from redocx.values import Color, Length
 
 
 def test_values_read_as_in_the_language() -> None:

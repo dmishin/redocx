@@ -2,14 +2,14 @@
 
 from decimal import Decimal
 
-from wordgenx.commands.bind import Args, Problem, bind
-from wordgenx.commands.builtin import CODE_BLOCK, COMMANDS
-from wordgenx.commands.spec import CommandSpec, OptionSpec, Placement
-from wordgenx.commands.types import Bool, ColumnWidth, Int, Levels, Percent, Text
-from wordgenx.props import Target
-from wordgenx.syntax import ast, parse
-from wordgenx.syntax.diagnostics import Code, Severity
-from wordgenx.values import Length, TabStop
+from redocx.commands.bind import Args, Problem, bind
+from redocx.commands.builtin import CODE_BLOCK, COMMANDS
+from redocx.commands.spec import CommandSpec, OptionSpec, Placement
+from redocx.commands.types import Bool, ColumnWidth, Int, Levels, Percent, Text
+from redocx.props import Target
+from redocx.syntax import ast, parse
+from redocx.syntax.diagnostics import Code, Severity
+from redocx.values import Length, TabStop
 
 
 def command(text: str) -> ast.Command:

@@ -2,7 +2,7 @@ from decimal import Decimal
 
 import pytest
 
-from wordgenx.values import Color, InvalidValueError, Length, LineSpacing, apply_tint_shade
+from redocx.values import Color, InvalidValueError, Length, LineSpacing, apply_tint_shade
 
 
 @pytest.mark.parametrize(

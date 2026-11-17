@@ -1,11 +1,11 @@
 # Tables
 
-wordgenx writes real Word tables: Word users can edit them, restyle them with table styles, and repeat their header
+redocx writes real Word tables: Word users can edit them, restyle them with table styles, and repeat their header
 rows. Simple tables are pipe rows; anything more takes the `\table` command, which accepts pipe rows too.
 
 ## Pipe tables
 
-```wgx
+```rdx
 | Region | Q1  | Q2  |
 | North  | 120 | 135 |
 | South  | 98  | 101 |
@@ -17,7 +17,7 @@ width, and a fixed layout. Cells hold text and inline markup. `\|` is a literal 
 
 ## The `\table` command
 
-```wgx
+```rdx
 \table[header-rows=1, widths=(4cm, 1fr, 1fr), columns=(left, decimal, decimal), align=center]{
   | Item    | Q1   | Q2    |
   | Revenue | 10.5 | 12.25 |
@@ -44,7 +44,7 @@ All options, and every table and cell property, are in the [reference](../refere
 A cell written as a single `\cell[…]{…}` takes options. In a pipe row, `colspan=N` covers the next N−1 cells, which
 are left empty:
 
-```wgx
+```rdx
 \table[header-rows=1]{
   | Item    | Q1                        | Q2  |
   | Revenue | 10                        | 12  |
@@ -61,7 +61,7 @@ Cell options: `colspan`, `rowspan`, `shade` (background), `valign=top|center|bot
 For cells with several paragraphs, lists or nested tables, write rows with `\row` and `\cell`. Pipe rows and
 `\row` mix freely.
 
-```wgx
+```rdx
 \table[widths=(1fr, 2fr)]{
   \row[header]{ \cell{Name} \cell{Description} }
   \row{
@@ -84,7 +84,7 @@ page), `cant-split` (keep the row on one page), `height=1cm` or `height=(1cm, ex
 
 Define a table style once and use it everywhere: see [table styles](styles.md#table-styles).
 
-```wgx
+```rdx
 \styles{
   table Ledger : "Table Grid" {
     borders: (outer=(single, 1pt, theme.accent1), inner=(single, 0.5pt, #D9D9D9));
@@ -104,7 +104,7 @@ Define a table style once and use it everywhere: see [table styles](styles.md#ta
 
 A caption is a paragraph before (or after) the table. Its kind, *Table*, comes from the table next to it:
 
-```wgx
+```rdx
 \caption[id=tbl:revenue]{Revenue by region}
 | Region | Q1  |
 | North  | 120 |
@@ -119,10 +119,10 @@ See [references and captions](references.md).
 A table can float with text around it, like a picture: `\table[x=(right, from=margin), y=1cm,
 distance=(left=0.5cm)]{…}`. Word anchors floating tables to the text, margin or page, with text on both sides.
 
-Borderless tables are the usual way to lay things out side by side in Word, and wordgenx uses them too
+Borderless tables are the usual way to lay things out side by side in Word, and redocx uses them too
 (`std:callout`, `std:signature`):
 
-```wgx
+```rdx
 \table[style=none, widths=(1fr, 1fr)]{
   \row{
     \cell{\image[width=4cm]{img/logo.png}}

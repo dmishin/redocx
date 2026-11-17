@@ -8,10 +8,10 @@ import zipfile
 
 from lxml import etree
 
+from redocx.compiler import build, compile_source
+from redocx.ooxml.parts.theme import Theme
+from redocx.props import para_props, run_props
 from tests.support.xsd import validate_package
-from wordgenx.compiler import build, compile_source
-from wordgenx.ooxml.parts.theme import Theme
-from wordgenx.props import para_props, run_props
 
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 

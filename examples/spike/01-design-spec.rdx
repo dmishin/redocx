@@ -1,0 +1,167 @@
+% ============================================================================
+% Spike sample 1: Software design specification
+% Exercises: template, title page, revision table, TOC, numbered headings,
+% requirement IDs, cross-references, footnotes, code listing, figure,
+% landscape section, STYLEREF header, different first page.
+% ============================================================================
+
+\document[template="templates/acme-corporate.dotx", lang=en-GB]
+
+\meta[
+  title    = "Payment Gateway Integration: Software Design Specification",
+  author   = "Platform Team",
+  subject  = "PGI-SDS",
+  custom.doc-id   = "ACME-PGI-SDS-004",
+  custom.revision = "1.3",
+  custom.classification = "Internal",
+]
+
+\use{styles/acme-spec.rdxs}
+
+\let{docid}{ACME-PGI-SDS-004}
+\let{gateway}{PayFlow}
+
+% Requirement macro: a numbered requirement paragraph with a bookmark.
+% \seq is a custom SEQ counter (see findings F-12).
+\define{req}[id, priority=Must]{text}{
+  \p[style="Requirement"]{\b{REQ-\seq[Req]} [\priority] \text}
+}
+
+% ----------------------------------------------------------------------------
+% First section: title page + front matter (roman page numbers)
+% ----------------------------------------------------------------------------
+\page[size=A4, margins=(top=2.5cm, bottom=2.5cm, left=2.5cm, right=2cm),
+      title-page, page-numbers=(format=lower-roman, start=1)]
+
+\header[first]{}
+\footer[first]{\style{Classification}{\field{DOCPROPERTY classification}}}
+\header{\field{TITLE} \tab \docid}
+\footer{\style{Classification}{\field{DOCPROPERTY classification}} \tab Page \pagenum}
+
+\p[style="Title"]{Payment Gateway Integration}
+\p[style="Subtitle"]{Software Design Specification}
+
+\p[style="Title Meta"]{
+  Document ID: \docid \br
+  Revision: \field{DOCPROPERTY revision} \br
+  Date: \date[format="d MMMM yyyy"]
+}
+
+\pagebreak
+
+=* Revision History
+
+\table[style="Acme Grid", header-rows=1, widths=(2cm, 3cm, 4cm, 1fr)]{
+  | Rev | Date       | Author       | Changes                              |
+  | 1.0 | 2026-06-02 | J. Okafor    | Initial release                      |
+  | 1.1 | 2026-07-19 | M. Lindqvist | Added refund flow (@sec:refunds)      |
+  | 1.2 | 2026-09-01 | J. Okafor    | Updated retry policy per review       |
+  | 1.3 | 2026-10-14 | J. Okafor    | Webhook signature verification       |
+}
+
+\toc[levels=1-3, title="Contents"]
+\listof[figures, title="Figures"]
+\listof[tables, title="Tables"]
+
+% ----------------------------------------------------------------------------
+% Main body: arabic numbering restarts at 1, headers continue
+% ----------------------------------------------------------------------------
+\page[break=next-page, page-numbers=(format=decimal, start=1)]
+\header{\field{STYLEREF "Heading 1" \n} \field{STYLEREF "Heading 1"} \tab \docid}
+
+= Introduction {#sec:intro}
+
+== Purpose
+
+This document specifies the design of the integration between the ACME
+checkout service and the \gateway{} payment gateway.\footnote{\gateway{} API
+version 2024-11 is assumed throughout; see \link[https://docs.payflow.example/v2024-11]{the
+vendor documentation}.} It is intended for developers, testers and the
+security review board.
+
+== Scope
+
+The integration covers card authorisation, capture, refunds (@sec:refunds)
+and asynchronous notifications (@sec:webhooks). Recurring billing is _out of
+scope_ and will be addressed in a separate specification.
+
+== Definitions
+
+\table[style="Acme Grid", header-rows=1, widths=(4cm, 1fr), id=tbl:defs]{
+  | Term          | Definition                                                     |
+  | Authorisation | A hold placed on the cardholder's funds.                        |
+  | Capture       | Settlement of a previously authorised amount.                    |
+  | Idempotency key | A client-generated UUID that makes a request safe to retry.    |
+}
+\caption[@tbl:defs, above]{Definitions}
+
+= Architecture {#sec:arch}
+
+\figure[id=fig:context, width=15cm, align=center]{
+  \image{img/context-diagram.png}
+  \caption{System context}
+}
+
+As shown in @fig:context, the checkout service never handles raw card
+numbers: card data is tokenised in the browser by the \gateway{} SDK.
+
+== Components
+
+- *Checkout API*: receives orders from the web shop.
+- *Payment Adapter*: translates domain commands into \gateway{} API calls.
+  It is the only component holding gateway credentials.
+- *Webhook Receiver*: verifies and persists gateway events (@sec:webhooks).
+
+= Functional Requirements {#sec:reqs}
+
+== Authorisation
+
+\req[id=req:auth-amount]{The adapter shall send amounts in minor currency units.}
+\req[id=req:auth-idem]{Every authorisation request shall carry an idempotency key.}
+\req[id=req:auth-timeout, priority=Should]{The adapter should time out after 10~s
+and retry at most twice, reusing the idempotency key (see \ref{req:auth-idem}).}
+
+== Refunds {#sec:refunds}
+
+\req[id=req:refund-partial]{Partial refunds shall be supported up to the captured amount.}
+
+\note[kind=warning]{Refunds older than 180 days are rejected by \gateway{} and must
+be handled manually by Finance.}
+
+== Webhooks {#sec:webhooks}
+
+Events are signed with HMAC-SHA256. The receiver verifies the signature
+before parsing the body:
+
+```python {#lst:verify, caption="Webhook signature verification"}
+def verify(payload: bytes, header: str, secret: bytes) -> bool:
+    expected = hmac.new(secret, payload, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, header)
+```
+
+Listing \ref[form=number]{lst:verify} uses a constant-time comparison.
+
+% ----------------------------------------------------------------------------
+% Landscape appendix for the wide error-code table
+% ----------------------------------------------------------------------------
+\page[orientation=landscape, break=next-page]
+
+= Appendix: Error Mapping {#app:errors}
+
+\table[style="Acme Grid", header-rows=1, repeat-header,
+       widths=(3cm, 4cm, 1fr, 4cm, 3cm), id=tbl:errors]{
+  | Gateway code | HTTP | Meaning                       | Adapter action       | Retry |
+  | `card_declined` | 402 | Issuer declined             | Show decline message | No    |
+  | `rate_limited`  | 429 | Too many requests           | Back off             | Yes   |
+  | `processing_error` | 500 | Gateway internal error   | Retry with same key  | Yes   |
+}
+\caption[@tbl:errors, above]{Gateway error codes and adapter behaviour}
+
+\page[orientation=portrait, break=next-page]
+
+=* Approval
+
+\tabs[(9cm, left, leader=underscore), (16cm, left, leader=underscore)]{
+  Approved by:\tab\tab \br
+  Name / Date:\tab\tab
+}

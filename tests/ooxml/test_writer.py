@@ -4,12 +4,12 @@ from typing import Any
 import docx  # python-docx, for read-back
 import pytest
 
+from redocx import ir
+from redocx.ooxml.parts.styles import StyleError
+from redocx.ooxml.style_names import stored_name, style_id
+from redocx.ooxml.writer import to_docx_bytes, write_docx
+from redocx.props import para_props
 from tests.golden.cases import styled
-from wordgenx import ir
-from wordgenx.ooxml.parts.styles import StyleError
-from wordgenx.ooxml.style_names import stored_name, style_id
-from wordgenx.ooxml.writer import to_docx_bytes, write_docx
-from wordgenx.props import para_props
 
 
 @pytest.mark.parametrize(

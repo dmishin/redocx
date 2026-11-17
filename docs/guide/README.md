@@ -1,18 +1,18 @@
-# wordgenx in one page
+# redocx in one page
 
-wordgenx is a markup language that compiles to Word documents. You write plain text with a few marks and
-commands; `wordgenx build` turns it into a `.docx` with real Word styles, numbering, fields and cross-references,
+redocx is a markup language that compiles to Word documents. You write plain text with a few marks and
+commands; `redocx build` turns it into a `.docx` with real Word styles, numbering, fields and cross-references,
 which anyone can keep editing in Word.
 
 This page covers what most documents need. The [topic guides](#topic-guides) go further, and the
 [command reference](../reference.md) lists every command and option. From the command line,
-`wordgenx explain NAME` says what a command, formatting property or macro is and takes:
-`wordgenx explain table`, `wordgenx explain space-before`, `wordgenx explain std:callout`, or
-`wordgenx explain mymacro --in report.wgx` for the macros a document defines.
+`redocx explain NAME` says what a command, formatting property or macro is and takes:
+`redocx explain table`, `redocx explain space-before`, `redocx explain std:callout`, or
+`redocx explain mymacro --in report.rdx` for the macros a document defines.
 
 ## A first document
 
-```wgx
+```rdx
 \meta[title="Quarterly report", author="Jane Doe"]
 \section[size=A4, margins=2.5cm]
 
@@ -30,11 +30,11 @@ See @sec:details for the numbers.
   - Especially in the north.
 ```
 
-Save it as `report.wgx` and build it:
+Save it as `report.rdx` and build it:
 
 ```bash
-wordgenx build report.wgx            # writes report.docx
-wordgenx check report.wgx            # only reports problems
+redocx build report.rdx            # writes report.docx
+redocx check report.rdx            # only reports problems
 ```
 
 ## Text
@@ -59,7 +59,7 @@ it: `\*`, `\_`, `\{`, `\%`, `\@`.
 
 ## Headings and lists
 
-```wgx
+```rdx
 = Chapter
 == Section
 === Subsection
@@ -81,7 +81,7 @@ own numbering, so Word users can continue them.
 
 Everything else is a command: `\name[options]{body}`.
 
-```wgx
+```rdx
 \p[align=justify, space-after=6pt, keep-with-next]{A paragraph with options.}
 
 \align[center]{Centred text.}
@@ -95,7 +95,7 @@ values are errors, with a suggestion when one is close.
 
 ## Links, references and notes
 
-```wgx
+```rdx
 = Results {#sec:results}
 
 See [the website](https://example.com), <https://example.org>, and @sec:results.
@@ -108,7 +108,7 @@ A reference to a label that does not exist is an error.
 
 ## Tables and pictures
 
-```wgx
+```rdx
 | Region | Q1  | Q2  |
 | North  | 120 | 135 |
 | South  | 98  | 101 |
@@ -126,10 +126,10 @@ See [tables](tables.md) and [pictures](images.md).
 
 ## Styles
 
-Formatting belongs in styles. A style sheet (`.wgxs`, or inline in `\styles{…}`) uses Word's style names and a
+Formatting belongs in styles. A style sheet (`.rdxs`, or inline in `\styles{…}`) uses Word's style names and a
 CSS-like syntax:
 
-```wgx
+```rdx
 \styles{
   paragraph "Body Text" : Normal { space-after: 6pt; justify; }
   modify paragraph "Heading 1" { color: theme.accent1; space-before: 18pt; }
@@ -145,7 +145,7 @@ To use a company template, compile into it: `\document[template="corporate.dotx"
 
 ## Page setup, headers and footers
 
-```wgx
+```rdx
 \section[size=A4, margins=(top=2.5cm, bottom=2.5cm, left=3cm, right=2cm)]
 \header{Quarterly report \tab \tab \field{TITLE}}
 \footer{\align[center]{Page \pagenum of \numpages}}
@@ -169,5 +169,5 @@ Text.
 - [Math and code](math-and-code.md): equations in LaTeX notation, highlighted code blocks.
 - [Macros and the standard library](macros.md): `\define`, `\let`, `\include`, `std:callout`, `std:signature`.
 - [Forms and review](forms.md): content controls, comments, protection.
-- [Importing Word documents](import.md): `wordgenx import`, and how a build is checked.
-- [For TeX users](tex.md): LaTeX constructs and their nearest wordgenx equivalents.
+- [Importing Word documents](import.md): `redocx import`, and how a build is checked.
+- [For TeX users](tex.md): LaTeX constructs and their nearest redocx equivalents.

@@ -5,7 +5,7 @@
 | # | Question | Decision | Notes |
 |---|----------|----------|-------|
 | Q1 | Implementation language | **Python 3.12+** with our own lxml-based OOXML writer | [ADR-0001](02-adr-implementation-language.md). .NET SDK is used only for the CI validator tool. |
-| Q2 | Project name | **wordgenx** | Python package and CLI: `wordgenx`. Source files: `.wgx`; style sheets: `.wgxs`; diagnostic codes: `WGX####`. The name was free on PyPI and as a GitHub org on 2026-10-15. |
+| Q2 | Project name | **redocx** | Python package and CLI: `redocx`. Source files: `.rdx`; style sheets: `.rdxs`; diagnostic codes: `RDX####`. The name was free on PyPI and as a GitHub org on 2026-10-15. |
 | Q3 | License | **Apache-2.0** | The patent grant matters in an Office-format space |
 | Q4 | Command sigil | **`\cmd`** | Familiar from TeX. `#` and `@` are frequent in prose. |
 | Q5 | Comment syntax | **`%` to end of line, as in TeX**; literal `\%` | Refined by spike F-2: `%` starts a comment only at line start or after whitespace, so `12%` is literal. There are no block comments. |

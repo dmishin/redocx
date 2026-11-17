@@ -7,8 +7,8 @@ import docx  # python-docx, used only to read our output back
 import pytest
 from lxml import etree
 
-from wordgenx.ooxml import CT, NS, RT, Package, PartNameError
-from wordgenx.ooxml.opc import rels_part_name, validate_part_name
+from redocx.ooxml import CT, NS, RT, Package, PartNameError
+from redocx.ooxml.opc import rels_part_name, validate_part_name
 
 HelloFactory = Callable[[], Package]
 
@@ -161,7 +161,7 @@ def test_python_docx_reads_the_package(hello_package: HelloFactory, tmp_path: Pa
     hello_package().save(path)
     document = docx.Document(str(path))
     assert [p.text for p in document.paragraphs] == [
-        "Hello, wordgenx",
+        "Hello, redocx",
         "Written by the OPC package writer. See example.com",
     ]
     assert document.paragraphs[0].style is not None

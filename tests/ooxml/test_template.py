@@ -11,15 +11,15 @@ from pathlib import Path
 import pytest
 from lxml import etree
 
+from redocx import ir
+from redocx.cli import main
+from redocx.compiler import build, compile_source
+from redocx.ooxml.constants import CT
+from redocx.ooxml.parts.theme import Theme, theme_from_xml, theme_xml
+from redocx.ooxml.template import load_template
+from redocx.ooxml.writer import to_docx_bytes
+from redocx.values import Length
 from tests.support.xsd import validate_package
-from wordgenx import ir
-from wordgenx.cli import main
-from wordgenx.compiler import build, compile_source
-from wordgenx.ooxml.constants import CT
-from wordgenx.ooxml.parts.theme import Theme, theme_from_xml, theme_xml
-from wordgenx.ooxml.template import load_template
-from wordgenx.ooxml.writer import to_docx_bytes
-from wordgenx.values import Length
 
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 R = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}"
@@ -134,10 +134,10 @@ def test_builtins_the_template_defines_are_the_templates(tmp_path: Path) -> None
     rpr = strong.find(f"{W}rPr")
     assert rpr is not None
     assert rpr.find(f"{W}u") is not None
-    assert rpr.find(f"{W}b") is None  # wordgenx's own Strong (bold) is not merged in
+    assert rpr.find(f"{W}b") is None  # redocx's own Strong (bold) is not merged in
 
 
-def test_template_defaults_replace_wordgenx_defaults(tmp_path: Path) -> None:
+def test_template_defaults_replace_redocx_defaults(tmp_path: Path) -> None:
     template = make_template(tmp_path, "\\styles{ defaults { size: 9pt; } }")
     package = build_with(template, "Text.")
     size = xml(package, "word/styles.xml").find(f"{W}docDefaults/{W}rPrDefault/{W}rPr/{W}sz")
@@ -272,7 +272,7 @@ def test_template_body_with_notes_is_dropped_with_a_warning(tmp_path: Path) -> N
     result = compile_source("Ours.", tmp_path, template)
     assert result.document is not None
     assert result.diagnostics == ()  # there is no source line for it: the CLI reports it
-    doc = tmp_path / "doc.wgx"
+    doc = tmp_path / "doc.rdx"
     doc.write_text("Ours.", encoding="utf-8")
     capture = io.StringIO()
     with contextlib.redirect_stderr(capture):
@@ -354,7 +354,7 @@ def test_document_option_and_errors(tmp_path: Path) -> None:
     assert result.document is not None
     assert result.document.template is not None
     missing = compile_source('\\document[template="nope.dotx"]\n\nText.', tmp_path)
-    assert [d.code.value for _, d in missing.diagnostics] == ["WGX0310"]
+    assert [d.code.value for _, d in missing.diagnostics] == ["RDX0310"]
     (tmp_path / "bad.dotx").write_bytes(b"not a zip")
     bad = compile_source('\\document[template="bad.dotx"]', tmp_path)
     assert "not a Word document or template" in bad.render_diagnostics()
@@ -363,10 +363,10 @@ def test_document_option_and_errors(tmp_path: Path) -> None:
 
 
 def test_cli_template_and_dotx_output(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    source = tmp_path / "corp.wgx"
+    source = tmp_path / "corp.rdx"
     source.write_text(TEMPLATE_SOURCE, encoding="utf-8")
     assert main(["build", str(source), "-o", str(tmp_path / "corp.dotx")]) == 0
-    doc = tmp_path / "doc.wgx"
+    doc = tmp_path / "doc.rdx"
     doc.write_text("= Hello\n\nWorld.", encoding="utf-8")
     assert main(["build", str(doc), "--template", str(tmp_path / "corp.dotx")]) == 0
     out = zipfile.ZipFile(tmp_path / "doc.docx")
@@ -397,7 +397,7 @@ def test_template_is_kept_on_the_document(tmp_path: Path) -> None:
 
 
 def test_unnamed_lists_are_known_by_the_names_the_reader_gives(tmp_path: Path) -> None:
-    """An imported document compiles into its original (wordgenx import --keep-styles) and
+    """An imported document compiles into its original (redocx import --keep-styles) and
     uses its lists, which Word often leaves without a w:name, as "List 1", "List 2", ..."""
     numbering = ir.Numbering("Steps", (ir.NumberingLevel(1),))
     item = ir.Paragraph((ir.Run("x"),), list_item=ir.ListItemRef("Steps", 1))

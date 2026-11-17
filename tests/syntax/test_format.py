@@ -1,4 +1,4 @@
-"""The formatter: canonical whitespace, the same document, idempotent (``wordgenx fmt``)."""
+"""The formatter: canonical whitespace, the same document, idempotent (``redocx fmt``)."""
 
 import json
 from pathlib import Path
@@ -6,9 +6,9 @@ from pathlib import Path
 import pytest
 from hypothesis import given, settings
 
+from redocx.cli import main
+from redocx.syntax.format import format_source
 from tests.syntax.test_lossless import markup
-from wordgenx.cli import main
-from wordgenx.syntax.format import format_source
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -67,7 +67,7 @@ def test_errors_are_not_formatted() -> None:
 
 
 def test_examples_are_formatted() -> None:
-    paths = [*ROOT.glob("examples/**/*.wgx"), *ROOT.glob("docs/book/**/*.wgx")]
+    paths = [*ROOT.glob("examples/**/*.rdx"), *ROOT.glob("docs/book/**/*.rdx")]
     for path in paths:
         if "spike" in path.parts:
             continue  # samples written before the language was settled
@@ -84,9 +84,9 @@ def test_formatting_keeps_the_document_and_is_idempotent(text: str) -> None:
 
 
 def test_cli_fmt(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
-    messy = tmp_path / "messy.wgx"
+    messy = tmp_path / "messy.rdx"
     messy.write_bytes(b"\xef\xbb\xbf=   Title  \r\n\r\n\r\nText.\r\n")
-    tidy = tmp_path / "tidy.wgx"
+    tidy = tmp_path / "tidy.rdx"
     tidy.write_text("= Tidy\n", encoding="utf-8")
     assert main(["fmt", "--check", str(messy), str(tidy)]) == 1
     assert "1 file would be reformatted, 1 unchanged" in capsys.readouterr().err
@@ -98,19 +98,19 @@ def test_cli_fmt(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
 
 
 def test_cli_fmt_leaves_broken_files(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
-    broken = tmp_path / "broken.wgx"
+    broken = tmp_path / "broken.rdx"
     broken.write_text("Text  \n\\b{open\n", encoding="utf-8")
     assert main(["fmt", str(broken)]) == 1
     assert "not formatted: 1 syntax error" in capsys.readouterr().err
     assert broken.read_text(encoding="utf-8") == "Text  \n\\b{open\n"
-    sheet = tmp_path / "house.wgxs"
+    sheet = tmp_path / "house.rdxs"
     sheet.write_text("", encoding="utf-8")
     assert main(["fmt", str(sheet)]) == 0
     assert "style sheets are not formatted yet" in capsys.readouterr().err
 
 
 def test_cli_emit_ir(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
-    source = tmp_path / "doc.wgx"
+    source = tmp_path / "doc.rdx"
     source.write_text("= Hi\n\nText.\n", encoding="utf-8")
     out = tmp_path / "doc.json"
     assert main(["build", str(source), "--emit-ir", str(out)]) == 0

@@ -5,7 +5,7 @@
         <w:pStyle w:val="Title"/>
       </w:pPr>
       <w:r>
-        <w:t>Hello, wordgenx</w:t>
+        <w:t>Hello, redocx</w:t>
       </w:r>
     </w:p>
     <w:p>
@@ -18,7 +18,7 @@
     </w:p>
     <w:p>
       <w:r>
-        <w:t xml:space="preserve">wordgenx compiles plain text to “idiomatic” Word documents — with real styles, real list numbering, and </w:t>
+        <w:t xml:space="preserve">redocx compiles plain text to “idiomatic” Word documents — with real styles, real list numbering, and </w:t>
       </w:r>
       <w:r>
         <w:rPr>
