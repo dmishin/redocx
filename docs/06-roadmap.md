@@ -15,7 +15,8 @@ with no repair prompt, pass both validators, and match their golden snapshots.
 - [x] First version of the property registry: 15 run and 14 paragraph properties, with schema-order tables checked against `wml.xsd`.
 - [x] **Spike:** 5 representative documents in the proposed syntax. See the [findings](../examples/spike/FINDINGS.md).
 - **Exit:** the Python API produces a valid document with styled paragraphs. This is met locally: the golden cases pass both validators
-  and open in Word 365 with the expected formatting. CI has not run yet because the repository has no GitHub remote.
+  and open in Word 365 with the expected formatting. CI (`.github/workflows/ci.yml`) has not run yet because the
+  repository has no GitHub remote; note that it runs on pushes to `main`.
 
 ## M1: Core language (roughly "Pandoc parity")
 
@@ -41,7 +42,7 @@ with no repair prompt, pass both validators, and match their golden snapshots.
 - **Exit:** a real 20-page document can be authored entirely in redocx. Language grammar v0.1 is frozen.
   *Status:* the 4-page specification trial builds cleanly, and its remaining gaps (headers and footers, TOC,
   cross-references, captions, footnotes, sections) are M2 items. The grammar has been stable through M1 (v0.2 plus the
-  §3.22–3.23 rules); freezing it is the last step.
+  §3.22–3.23 rules) and through M2–M7; freezing it formally is still to do.
 
 ## M2: Word structure (where redocx goes beyond Pandoc)
 
@@ -293,9 +294,14 @@ settled: see [tooling ideas](ideas/tooling.md).
 Native charts, native Word bibliography, content-control data binding, embedded fonts,
 building blocks. Postponed indefinitely: see [Postponed features](09-postponed.md).
 
-## Suggested immediate next steps
+## Still to do
 
-1. ~~Confirm the open questions.~~ Done: see the [decision log](08-open-questions.md).
-2. ~~Write the 5 sample documents (M0 spike) and review them together.~~ Done: see the [findings](../examples/spike/FINDINGS.md), all accepted.
-3. Collect reference XML: build each M1–M2 feature in Word, save, and archive the unzipped XML under `tests/reference/` with notes.
-4. Start M0.
+M0–M7 are done. What is left from them:
+
+1. Freeze the language grammar (M1 exit).
+2. CONTRIBUTING (M0), and a GitHub remote so CI runs.
+3. The public Python API sketched in [architecture §4.8](04-architecture.md) is not built; the IR (`redocx.ir`) and
+   the compiler (`redocx.compiler`) are the only programmatic entry points so far.
+
+After that, the [tooling ideas](ideas/tooling.md), the "Later" candidates above, and the
+[known gaps](09-postponed.md) as documents need them.

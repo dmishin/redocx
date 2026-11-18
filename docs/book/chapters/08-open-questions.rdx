@@ -7,7 +7,7 @@
 \table[style="Book Table", header-rows=1, widths=(5fr, 24fr, 48fr, 48fr)]{
 | \# | Question | Decision | Notes |
 | Q1 | Implementation language | *Python 3.12+* with our own lxml-based OOXML writer | ADR-0001. .NET SDK is used only for the CI validator tool. |
-| Q2 | Project name | *redocx* | Python package and CLI: `redocx`. Source files: `.rdx`; style sheets: `.rdxs`; diagnostic codes: `RDX####`. The name was free on PyPI and as a GitHub org on 2026-10-15. |
+| Q2 | Project name | *redocx* (ReDocx) | Python package and CLI: `redocx`. Source files: `.rdx`; style sheets: `.rdxs`; diagnostic codes: `RDX####`. The project started as _wordgenx_ (`.wgx`, `.wgxs`, `WGX####`) and was renamed on 2026-11-18. |
 | Q3 | License | *Apache-2.0* | The patent grant matters in an Office-format space |
 | Q4 | Command sigil | *`\cmd`* | Familiar from TeX. `#` and `@` are frequent in prose. |
 | Q5 | Comment syntax | *`%` to end of line, as in TeX*; literal `\%` | Refined by spike F-2: `%` starts a comment only at line start or after whitespace, so `12%` is literal. There are no block comments. |
@@ -22,7 +22,7 @@
 
 == Decided by the M0 syntax spike (2026-10-15)
 
-All recommendations in the spike findings were accepted and are now in the language design (draft v0.2):
+All recommendations in the spike findings were accepted and are now in the language design:
 
 \table[style="Book Table", header-rows=1, widths=(6fr, 48fr)]{
 | \# | Decision |
@@ -44,9 +44,13 @@ All recommendations in the spike findings were accepted and are now in the langu
 | F-16 | `\date[kind=…]` defaults to fixed text; tuple syntax for length+rule; repeating content controls move to M5 |
 }
 
-== Still open
+== Decided later
 
 \table[style="Book Table", header-rows=1, widths=(4fr, 25fr, 48fr, 48fr)]{
-| \# | Question | Options | Plan |
-| Q9 | Equation numbering layout | 3-column borderless table / OMML `#` alignment / tab stops | *Decided (M3):* OMML `#` alignment, which is what Word itself writes for `#(1)` (an `m:eqArr` row ending in `#` and the number); see design §3.14 |
+| \# | Question | Options | Decision |
+| Q9 | Equation numbering layout | 3-column borderless table / OMML `#` alignment / tab stops | *Decided in M3:* OMML `#` alignment, which is what Word itself writes for `#(1)` (an `m:eqArr` row ending in `#` and the number); see design §3.14 |
 }
+
+== Still open
+
+Nothing is open. The language grammar has been stable since M1 but is not formally frozen yet (see the roadmap, M1 exit).

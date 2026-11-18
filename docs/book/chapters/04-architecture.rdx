@@ -28,48 +28,55 @@
  │ 5. Emit      │   footnotes, endnotes, comments, headers/footers, rels,
  └──────┬───────┘   content types, core/app/custom props, media, theme, fontTable
         ▼  OPC package (deterministic zip)
- ┌──────────────┐   XSD validation (always in tests; opt-in --validate on CLI)
- │ 6. Validate  │   optional: finalize (update fields via Word COM / LibreOffice)
+ ┌──────────────┐   XSD validation (always in tests; opt-in build --validate)
+ │ 6. Validate  │   integrity check of the written parts (RDX0401, always)
  └──────────────┘
 ```
 
-Each stage is a pure function from input to output plus diagnostics. Stages communicate only through data structures. Each can be tested on its own and is accessible from the Python API.
+Each stage is a pure function from input to output plus diagnostics. Stages communicate only through data structures. Each can be tested on its own. The stages are logical rather than one package each: expansion (macros, includes, sugar) happens inside lowering (`lower/lowering.py`, `lower/macros.py`), the resolve passes live in `lower/` (references, citations, index) and `ooxml/` (template merge, ID allocation), and `compiler.py` drives the whole pipeline (`compile_file`, `build`).
 
-== Package layout (partly proposed)
-
-`syntax/`, `commands/`, `lower/`, `props/`, `std/`, `stylesheet/`, `ooxml/` and `math/` exist; the others are the plan.
+== Package layout
 
 *Commands.* Each command is declared once, in `commands/builtin.py`: where it may appear (block, inline, either, or only inside another command), its options with their value types, and how its body is read. The parser takes body kinds from it. Lowering binds each command against its spec before it gives the command meaning (`bind`), so every command reads options the same way and reports the same errors. A handler receives typed, checked arguments and does only the semantic part. The schema does not depend on lowering, so documents can later be checked without compiling them, and documentation and editor completion can be generated from it.
 
 ```
 src/redocx/
-  syntax/        lexer, parser, CST, AST, source map, pretty-printer (formatter)
+  cli.py         `redocx build | check | fmt | parse | inspect | import | explain`
+  compiler.py    the pipeline: compile_source, compile_file, build
+  syntax/        source, lexer/parser, CST, AST, diagnostics (codes, rendering), formatter (format.py)
   commands/      COMMAND SCHEMA: every command's placement, options (typed) and body kind (builtin.py);
                  value types (types.py); binding a parsed command to typed arguments (bind.py)
-  lower/         AST → IR: the core pass (lowering.py: blocks, macros, dispatch, run assembly) and one
-                 module per command family (text, code, preamble, sections, tables, fields, xrefs,
-                 media, equations, citations, index); resolve passes (references, citations, index)
-  std/           standard macro library (.rdx files: theorem, callout, subfigure, signature)
+  lower/         AST → IR: the core pass (lowering.py: blocks, dispatch, run assembly), macros, and one
+                 module per command family (text, code, preamble, sections, tables, fields, xrefs, media,
+                 equations, citations, index, comments, controls, watermarks); resolve passes
+                 (references, citations, index)
+  stylesheet/    .rdxs and \styles{}: syntax, collection, compilation to IR styles, numbering and theme
   props/         PROPERTY REGISTRY: name, type, units, OOXML target, docs — single source of truth
-  ir/            IR node dataclasses, JSON (de)serialization
-  resolve/       styles, numbering, references, fields, sections, ids
-  ooxml/         package (OPC) writer, namespaces, element builders, part writers
-    parts/       document.py, styles.py, numbering.py, settings.py, notes.py, comments.py, …
-  template/      read .dotx/.docx; extract & merge styles, numbering, theme, settings, headers
+  ir.py          IR node dataclasses; ir_json.py: the one-way JSON dump (--emit-ir)
+  values.py      units and colours
   math/          LaTeX-subset parser → OMML
-  highlight/     Pygments → runs + generated code styles
-  diagnostics/   error codes, rendering
-  cli/           `redocx build`, `redocx watch`, `redocx check`, `redocx fmt`, `redocx finalize`
-  api/           public Python builder API over the IR
+  highlight.py   Pygments → runs + generated code styles
+  bibliography.py  BibTeX / CSL-JSON and citeproc-py
+  std/           standard macro library (.rdx files: callout, signature)
+  explain.py     `redocx explain` (shares its catalogue with tools/make_reference.py)
+  ooxml/         package (OPC) writer, namespaces, schema order, the writer and its part writers (parts/);
+                 template.py + merge.py (compile into a .dotx/.docx); reader.py (.docx → IR, for
+                 inspect and import); integrity.py (RDX0401 checks); validate.py (XSD validation)
+  importer/      .docx → .rdx: printer.py (IR → source, L1 and sugar), labels.py, check.py (the oracle)
+  data/          schemas/ (ECMA-376 Transitional XSDs), csl/ (bundled citation styles)
 tests/
   golden/        .rdx input → canonicalized XML snapshots
-  features/      one gallery doc per feature, for manual Word review
+  corpus/        Word-built documents for the reader and the importer
+  importer/, ooxml/, lower/, …   unit and round-trip tests per package
 tools/
-  ooxml-validate/   tiny .NET console app wrapping OpenXmlValidator (CI only)
-  word-probe/       scripts to create a feature in Word and diff its XML (reverse-engineering aid)
-src/redocx/data/schemas/  ECMA-376 Transitional XSDs (lxml validation: tests, raw XML, build --validate)
-docs/            design docs → later: user manual written in redocx
+  ooxml-validate/   tiny .NET console app wrapping OpenXmlValidator
+  corpus/           make-corpus.ps1: builds tests/corpus through Word
+  make_reference.py docs/reference.md from the command table and the property registry
+  md2rdx.py         docs/*.md → docs/book/chapters/*.rdx
+docs/            design docs (also built as a book in redocx: docs/book), guides, command reference
 ```
+
+Not built yet: a public Python API (§4.8) and plugins (§4.9).
 
 == The IR
 
@@ -146,9 +153,11 @@ Rules:
 
 Not yet: a template's own footnote separators.
 
-== Finalize step (optional)
+== Finalize step (not built)
 
-Word computes page numbers, TOC pages and `PAGEREF`. `redocx finalize out.docx` (or `redocx build --finalize`) can:
+_Not implemented; see the tooling ideas. Today the output sets `w:updateFields` and Word refreshes on open._
+
+Word computes page numbers, TOC pages and `PAGEREF`. `redocx finalize out.docx` (or `redocx build --finalize`) could:
 
 - *Windows + Word installed:* COM automation: open, `Fields.Update`, update TOCs, save. Gives the most faithful result.
 - *LibreOffice headless:* a UNO macro that updates indexes and fields. Portable, slightly less faithful.
@@ -156,7 +165,9 @@ Word computes page numbers, TOC pages and `PAGEREF`. `redocx finalize out.docx` 
 
 The same mechanism gives `--pdf` export.
 
-== Public Python API (sketch)
+== Public Python API (sketch, not built)
+
+_Not implemented. What exists is `redocx.compiler` (`compile_file`, `build`) and the IR dataclasses in `redocx.ir`, which the golden tests use directly._
 
 ```python
 from redocx import Document, para, table, styles as S
@@ -171,8 +182,14 @@ doc.save("report.docx")
 
 The API builds the *same IR* the language produces. The language is a frontend to the API, not a separate path.
 
-== Extensibility
+== Extensibility (planned)
+
+Plugins and hooks are not built yet. Sources are already restricted: there is no scripting.
 
 - *Command plugins:* Python entry points register new commands with an option schema and an IR builder.
 - *Post-IR transforms:* hooks run between Resolve and Emit (for example, auto-linking glossary terms).
-- Plugins are trusted Python code. Untrusted `.rdx` sources cannot run code: there is no scripting, and `\include` and `\image` are restricted to the project root by default.
+- Plugins are trusted Python code. Untrusted `.rdx` sources cannot run code: there is no scripting. Restricting `\include` and `\image` to the project root is planned; today they read any path.
+
+== Reader and importer
+
+`ooxml/reader.py` reads a `.docx` into the same IR the compiler builds (best effort; what it cannot read is counted as a fallback). `redocx inspect` reports that structure and coverage. `redocx import` (M6) prints the IR as source (`importer/printer.py`: commands only with `--commands-only`, otherwise with sugar; labels from bookmarks and `REF` fields in `importer/labels.py`), writes a style sheet or, with `--keep-styles`, a body-less template, then compiles the result and compares it with the original (`importer/check.py`, the oracle; `--check` fails on any difference). See the import guide.

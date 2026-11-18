@@ -8,18 +8,18 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 
 | Feature | OOXML | Tier | Diff. |
 |---------|-------|------|-------|
-| Font family (ascii / hAnsi / eastAsia / cs), theme fonts | `w:rFonts` | M1 | ● |
-| Size, complex-script size | `w:sz`, `w:szCs` | M1 | ● |
-| Bold, italic, (cs variants) | `w:b`, `w:i` | M1 | ● |
-| Underline (17 styles + color) | `w:u` | M1 | ● |
-| Strike, double strike | `w:strike`, `w:dstrike` | M1 | ● |
-| Caps, small caps | `w:caps`, `w:smallCaps` | M1 | ● |
+| Font family (ascii / hAnsi / eastAsia / cs), theme fonts | `w:rFonts` | M1 ✓ | ● |
+| Size, complex-script size | `w:sz`, `w:szCs` | M1 ✓ | ● |
+| Bold, italic, (cs variants) | `w:b`, `w:i` | M1 ✓ | ● |
+| Underline (17 styles + color) | `w:u` | M1 ✓ | ● |
+| Strike, double strike | `w:strike`, `w:dstrike` | M1 ✓ | ● |
+| Caps, small caps | `w:caps`, `w:smallCaps` | M1 ✓ | ● |
 | Super/subscript, raised/lowered position | `w:vertAlign`, `w:position` | M1 ✓ (`position`: M4) | ● |
-| Color (rgb, theme + tint/shade) | `w:color` | M1 | ● |
-| Highlight, shading | `w:highlight`, `w:shd` | M1 | ● |
+| Color (rgb, theme + tint/shade) | `w:color` | M1 ✓ | ● |
+| Highlight, shading | `w:highlight`, `w:shd` | M1 ✓ | ● |
 | Character spacing, scale, kerning | `w:spacing`, `w:w`, `w:kern` | M2 ✓ | ● |
 | Hidden, emboss, imprint, outline, shadow | `w:vanish`, … | M2 ✓ | ● |
-| Language (spell-check, hyphenation) | `w:lang` | M1 | ● |
+| Language (spell-check, hyphenation) | `w:lang` | M1 ✓ | ● |
 | Run border | `w:bdr` | M4 ✓ | ● |
 | RTL, complex script | `w:rtl`, `w:cs` | M4 ✓ | ●● |
 | East Asian layout, emphasis marks, ruby | `w:eastAsianLayout`, `w:em`, `w:ruby` | Later | ●● |
@@ -29,12 +29,12 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 
 | Feature | Tier | Diff. |
 |---------|------|-------|
-| Alignment (left/center/right/justify/distribute) | M1 | ● |
-| Indents (left, right, first-line, hanging; mirror) | M1 | ● |
-| Spacing before/after, auto spacing, contextual spacing | M1 | ● |
-| Line spacing (multiple, at-least, exact) | M1 | ● |
-| Keep with next, keep lines, page break before, widow control | M1 | ● |
-| Outline level | M1 | ● |
+| Alignment (left/center/right/justify/distribute) | M1 ✓ | ● |
+| Indents (left, right, first-line, hanging) | M1 ✓ (mirror indents: Later / Esc) | ● |
+| Spacing before/after, contextual spacing | M1 ✓ (auto spacing: Later / Esc) | ● |
+| Line spacing (multiple, at-least, exact) | M1 ✓ | ● |
+| Keep with next, keep lines, page break before, widow control | M1 ✓ | ● |
+| Outline level | M1 ✓ | ● |
 | Tab stops (alignment, leaders, clear) | M2 ✓ | ● |
 | Paragraph borders (incl. between, bar), shading | M2 ✓ | ● |
 | Suppress line numbers, suppress auto-hyphens | M2 ✓ | ● |
@@ -47,14 +47,14 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 
 | Feature | Tier | Diff. |
 |---------|------|-------|
-| Doc defaults (rPrDefault/pPrDefault) | M1 | ● |
+| Doc defaults (rPrDefault/pPrDefault) | M1 ✓ | ● |
 | Paragraph & character styles, basedOn, next | M1 ✓ | ● |
 | Linked styles | M2 ✓ | ● |
 | Table styles with conditional formatting (tblStylePr: firstRow, lastRow, bands, corners…) | M2 ✓ | ●●● |
 | Numbering (list) styles | Later (template list styles work) | ●● |
 | Latent styles, quick-style gallery flags, priorities | M2 (partly: priority and gallery flag; latent styles come from templates) | ● |
 | Modify/replace template styles; localized built-in style names | M2 ✓ (`replace` acts as `modify` on template styles) | ●● |
-| Theme colors/fonts references | M1 | ● |
+| Theme colors/fonts references | M1 ✓ | ● |
 | Custom theme (generate theme1.xml) | M4 ✓ | ●● |
 
 ## 5.4 Lists & numbering
@@ -72,7 +72,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 
 | Feature | Tier | Diff. |
 |---------|------|-------|
-| Page size, orientation, margins | M1 | ● |
+| Page size, orientation, margins | M1 ✓ | ● |
 | Multiple sections, break types | M2 ✓ | ●● |
 | Gutter, mirror margins | M2 ✓ | ● |
 | Columns (equal / custom, separator) | M2 (equal widths, separator) ✓; custom widths M4 ✓ | ● |
@@ -105,7 +105,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 
 | Feature | Tier | Diff. |
 |---------|------|-------|
-| Hyperlinks (external, internal anchor) | M1 (partly: external done) | ● |
+| Hyperlinks (external, internal anchor) | M1 ✓ (internal: M6, `\link[to="#…"]`, `[text](#label)`) | ● |
 | Bookmarks | M2 ✓ | ● |
 | Cross-references (REF, PAGEREF, with pre-computed cached text) | M2 ✓ | ●●● |
 | Captions (SEQ, chapter numbering) | M2 ✓ | ●● |
@@ -133,7 +133,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Equation numbering & references | M3 ✓ | ●● |
 | Code blocks with syntax highlighting | M3 ✓ | ●● |
 | Native charts (chart parts + embedded xlsx) | Later | ●●● |
-| Charts as images (matplotlib, via API) | M3 | ● |
+| Charts as images (any picture works; matplotlib through a Python API) | Later (needs the API) | ● |
 
 ## 5.9 Collaboration, forms, protection
 
@@ -149,20 +149,34 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Repeating-section content controls | Postponed | ●● |
 | Content-control data binding to custom XML | Later | ●●● |
 | Legacy form fields | Later | ●● |
-| Document protection (read-only, forms, comments, tracked changes; no password) | M2 ✓ (password: M5) | ● |
+| Document protection (read-only, forms, comments, tracked changes; no password) | M2 ✓ (password: Later) | ● |
 
 ## 5.10 Document-level
 
 | Feature | Tier | Diff. |
 |---------|------|-------|
 | Templates (.dotx/.docx base); writing .dotx | M2 ✓ | ●●● |
-| Compatibility mode settings | M1 | ● |
+| Compatibility mode settings | M1 ✓ | ● |
 | updateFields on open | M2 ✓ | ● |
 | Embedded fonts | Later | ●● |
 | altChunk (embed docx) | M3 ✓ | ● |
 | Glossary / building blocks | Later | ●● |
 | Finalize (update fields via Word / LibreOffice), PDF export | Later ([tooling ideas](ideas/tooling.md)) | ●● |
 
-## 5.11 Will not do
+## 5.11 Import and tooling
+
+| Feature | Tier | Diff. |
+|---------|------|-------|
+| `redocx import`: .docx → source, style sheet, pictures and a loss report | M6 ✓ | ●●● |
+| Import with sugar (headings, lists, pipe tables, labels, captions) or commands only | M6 ✓ | ●● |
+| `--keep-styles` (compile into the original's styles as a template) | M6 ✓ | ●● |
+| Import oracle (`--check`: compare the recompiled document with the original) | M6 ✓ | ●● |
+| `redocx fmt` (canonical layout; `--check`, `--diff`) | M3 ✓ | ●● |
+| `--emit-ir` (IR as JSON, one-way) | M3 ✓ | ● |
+| Raw XML checked against the schemas; written-document integrity check (`RDX0401`); `build --validate` | M7 ✓ | ●● |
+| Command reference, guides, `redocx explain` | M7 ✓ | ● |
+| Language server, editor support, `watch` | Later ([tooling ideas](ideas/tooling.md)) | ●●● |
+
+## 5.12 Will not do
 
 SmartArt, OLE objects, ActiveX, VBA/macros, legacy `.doc` output, ink annotations.

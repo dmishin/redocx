@@ -75,3 +75,9 @@ choice if, by the end of M1, we find ourselves fighting the schema more than exp
   want to run it locally need the **.NET 8+ SDK** (only the runtime is needed to run a prebuilt validator). End users never
   need .NET.
 - The IR has a defined JSON serialisation. This keeps the door open for other frontends or backends.
+
+## Update (after M7)
+
+The decision held: no milestone needed a change of language. Two consequences turned out differently:
+`citeproc-py` became a required dependency (citations are core, M3), and there is no `matplotlib` extra, since the
+Python API it was for is not built yet. The JSON serialisation of the IR is one-way (`--emit-ir`).

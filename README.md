@@ -1,24 +1,31 @@
-# redocx
+# ReDocx
 
-> A typed document markup language that compiles to **native, fully formatted Word (.docx) documents**.
+ReDocx is a language (and its implementation) that compiles to **native, fully formatted Word (.docx) documents**.
 
-Formerly *wordgenx*; source files were `.wgx` and style sheets `.wgxs`.
+Its primary purpose is to facilitate automated generation of fully formatted DOCX documents. With it, you don't need complex libraries or fragile template-based generators; just write plain text using any template engine and compile it!
 
-redocx is to Word what TeX is to typesetting: a plain-text source language you can version, diff, review,
-generate and include, with a compiler that produces the final document. Unlike Markdown-to-DOCX
-converters, redocx aims to expose *Word's own document model*: styles, multilevel numbering, sections, headers and footers,
-fields, cross-references, footnotes, content controls, tracked changes, and the rest. The output should be a
-document a Word user can keep editing as if a careful human had built it.
+The syntax of ReDocx is inspired by TeX, but is a separate language tailored to reflect the structure and features of the DOCX format.
 
-**Status:** milestones M0–M6 are done (see the [roadmap](docs/06-roadmap.md)): styles and style sheets, lists with
-real Word numbering, tables, pictures, captions and cross-references, fields, notes, math, code, citations, sections,
-text boxes, forms, comments, templates, and importing Word documents back to source.
+ReDocx aims to support the majority of its features, including math, graphics, complex layouts and only missing certain technical features such as editing history and data connection.
 
-## Learning the language
+Despite its primary purpose being automated document generation, ReDocx is designed to be human-readable and writable (although decompiler could produce rather messy sources). It, in fact, provides certain advantages over the GUI editors, such as:
+
+ - Writing math formulas using LaTeX
+ - Code blocks with syntax highlighting
+ - And even BibTeX bibliographies
+
+At its current state, ReDocx is functionally complete.
+
+## AI use disclaimer
+
+ReDocx is a vibeware. The only text mostly written by human is this readme file. It is useful for the author, hope it could be useful for someone else.
+
+
+## The ReDocx language
 
 - [redocx in one page](docs/guide/README.md): the short guide, with links to the topic guides (tables, pictures,
   styles, references, sections, math and code, macros, forms, import).
-- [For TeX users](docs/guide/tex.md): LaTeX constructs and their nearest redocx equivalents.
+- [For TeX users](docs/guide/tex.md): some LaTeX constructs and their nearest redocx equivalents.
 - [Command reference](docs/reference.md): every command, option and formatting property, generated from the
   compiler's own tables (`python tools/make_reference.py`).
 
@@ -34,6 +41,13 @@ text boxes, forms, comments, templates, and importing Word documents back to sou
 | 6 | [Roadmap](docs/06-roadmap.md) | Milestones M0–M6 and exit criteria |
 | 7 | [Testing strategy](docs/07-testing-strategy.md) | How we know the output is correct |
 | 8 | [Decisions & open questions](docs/08-open-questions.md) | Decision log and what is still open |
+
+## Development status
+
+Milestones M0–M7 are done (see the [roadmap](docs/06-roadmap.md)): styles and style sheets, lists with
+real Word numbering, tables, pictures, captions and cross-references, fields, notes, math, code, citations, sections,
+text boxes, forms, comments, templates, importing Word documents back to source, and (M7) checks that what compiles
+opens in Word, a command reference, guides and `redocx explain`.
 
 ## Development
 

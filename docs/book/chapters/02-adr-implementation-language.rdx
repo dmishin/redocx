@@ -58,3 +58,7 @@ Mitigations for Python's weaknesses:
 - Runtime dependencies kept small: `lxml`, `Pillow`, `pygments`. Optional extras: `citeproc-py` (bibliography), `matplotlib` (charts).
 - A small `tools/ooxml-validate/` .NET project in the repository, used in CI and optionally by developers. Contributors who want to run it locally need the *.NET 8+ SDK* (only the runtime is needed to run a prebuilt validator). End users never need .NET.
 - The IR has a defined JSON serialisation. This keeps the door open for other frontends or backends.
+
+== Update (after M7)
+
+The decision held: no milestone needed a change of language. Two consequences turned out differently: `citeproc-py` became a required dependency (citations are core, M3), and there is no `matplotlib` extra, since the Python API it was for is not built yet. The JSON serialisation of the IR is one-way (`--emit-ir`).

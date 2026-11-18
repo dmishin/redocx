@@ -1,7 +1,9 @@
 # 3. Language Design
 
-> **Status:** draft v0.2. It includes the decisions from the M0 syntax spike
-> ([findings](../examples/spike/FINDINGS.md), referenced below as F-n). The exact grammar is fixed in M1.
+> **Status:** v0.2, implemented through M7. It includes the decisions from the M0 syntax spike
+> ([findings](../examples/spike/FINDINGS.md), referenced below as F-n). The grammar was settled in M1 (§3.22–3.23)
+> and has been stable since, but is not formally frozen. For every command and option, see the generated
+> [command reference](reference.md).
 > File extensions: `.rdx` (documents and macro files), `.rdxs` (style sheets). Encoding: UTF-8.
 
 ## 3.1 Design goals for the syntax
@@ -768,8 +770,8 @@ from Word primitives:
 |--------|----------|------------|--------|
 | `std:callout` | `\callout[title, shade]`, `\note`, `\tip`, `\warning`, `\caution` (each with `title`) | A borderless one-cell table with a shaded cell and a bold title | M1 ✓ |
 | `std:signature` | `\signature-block[party, name, role]`, `\approval[role]` | Borderless tables with underlined tabs as signature lines | M1 ✓ |
-| `std:theorem` | `\theorem`, `\lemma`, `\definition`, `\proof` | Styled paragraphs + `SEQ Theorem` | M2 (needs `\seq`) |
-| `std:subfigure` | `\subfigures{…}` | Borderless layout table with images and letter-format `SEQ` captions | M2 (needs captions) |
+| `std:theorem` | `\theorem`, `\lemma`, `\definition`, `\proof` | Styled paragraphs + `SEQ Theorem` | Not built ([§9.2](09-postponed.md)) |
+| `std:subfigure` | `\subfigures{…}` | Borderless layout table with images and letter-format `SEQ` captions | Not built ([§9.2](09-postponed.md)) |
 
 The modules live in `src/redocx/std/` as ordinary macro files. Users can copy and override any of them. A module is
 loaded once even if `\use`d repeatedly. Because the language has no conditionals, a variant such as the callout kind

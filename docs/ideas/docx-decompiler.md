@@ -1,5 +1,8 @@
 # Musings: a `docx → redocx` decompiler
 
+> **Update:** implemented as M6, `redocx import` (see the [roadmap](../06-roadmap.md) and the
+> [import guide](../guide/import.md)). This note is kept as the background to that work.
+>
 > Status: thinking out loud. This is not a plan or a commitment. The roadmap lists a "best-effort importer" for
 > later (`06-roadmap.md`); this note asks how far "best effort" could realistically go and what makes it hard.
 

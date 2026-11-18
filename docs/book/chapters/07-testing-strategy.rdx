@@ -4,25 +4,27 @@
 
 The main risk is producing files that are _valid XML but wrong in Word_. This shows up as a repair prompt, a silently ignored property, or a layout different from what was intended. So testing has several layers.
 
-\table[style="Book Table", header-rows=1, widths=(20fr, 48fr, 29fr)]{
+\table[style="Book Table", header-rows=1, widths=(17fr, 48fr, 13fr)]{
 | Layer | What | Runs |
 | *Unit* | Parser (incl. property-based tests with Hypothesis: parse ∘ print = id), unit conversion, option validation, counters, LaTeX→OMML | every commit |
-| *Golden snapshots* | Document → canonicalized XML of each part (C14N 2.0: sorted attributes, no insignificant whitespace; indented), diffed against committed snapshots in `tests/golden/expected/`. Inputs are Python API cases (`tests/golden/cases.py`) until the parser exists, then `.rdx` files. | every commit |
-| *Schema validation* | Every test output validated against ECMA-376 Transitional XSDs (lxml) *and* OpenXmlValidator (.NET, Office 2019+ file format) | every commit |
-| *Structural read-back* | Open output with python-docx and assert high-level facts (style of paragraph N, table cell count) | every commit |
-| *Rendering smoke* | LibreOffice headless → PDF → PNG; check it renders without crash; optional perceptual diff against baselines | nightly |
-| *Word fidelity* | Windows runner (self-hosted or manual) opens each gallery doc in Word through COM: check no repair prompt, update fields, export PDF, compare | per milestone / release |
-| *Reference XML* | For every feature: create it in Word, save, store unzipped XML in `tests/reference/feature-x/`. Our emitter is compared structurally against Word's output | when a feature is implemented |
+| *Golden snapshots* | Document → canonicalized XML of each part (C14N 2.0: sorted attributes, no insignificant whitespace; indented), diffed against committed snapshots in `tests/golden/expected/`. Inputs are IR cases built in Python and `.rdx` files (`tests/golden/cases.py`). | every commit |
+| *Schema validation* | Test output, every example and the book validated against ECMA-376 Transitional XSDs (lxml) *and* OpenXmlValidator (.NET, Office 2019+ file format; skipped when `dotnet` is missing) | every commit |
+| *Integrity* | Every build checks the written parts for what the schemas cannot see (relationship ids, bookmark pairs, unique ids, references; `RDX0401`) | every build |
+| *Read-back* | redocx's own reader (`ooxml/reader.py`) reads output back into the IR: the Word-built corpus in `tests/corpus` (made by `tools/corpus/make-corpus.ps1`) and the round trip `.rdx → .docx → import → .docx` on the corpus and every example, compared by the import oracle (`importer/check.py`): text, blocks, styles, effective run formatting | every commit |
+| *Documentation* | The command reference is up to date with the command table; every `rdx` example in the guides compiles without a warning; the book chapters are in step with `docs/*.md` | every commit |
+| *Word fidelity* | Each milestone's exit document opened in Word (by hand, or through COM scripts run locally) and checked: no repair prompt, fields update, the layout is as intended | per milestone |
 }
 
-== Gallery documents
+Not set up yet: rendering smoke tests through LibreOffice (headless PDF, perceptual diffs) and a Windows runner that opens documents in Word automatically.
 
-`tests/features/*.rdx` holds one document per feature area. Each shows all variants side by side with expected results described in the text. These documents are for humans reviewing in Word, and they are the release checklist.
+== Example documents
+
+`examples/` holds the documents that show each area (the syntax tour, tables, math, citations, media, styles, templates, the thesis, the magazine, the forms), and each milestone's exit document. They are built and validated in the tests and serve as the checklist when a release is reviewed in Word.
 
 == Determinism
 
-The test suite builds every document twice and asserts the outputs are byte-identical.
+The golden cases and the package writer are built twice and the outputs compared byte for byte.
 
 == Error messages
 
-Diagnostics have their own snapshot tests. Each error code has at least one test and a docs entry.
+Diagnostics have snapshot tests (`tests/syntax/test_diagnostics.py` and the tests of each stage). A reference page for the error codes is not written yet.
