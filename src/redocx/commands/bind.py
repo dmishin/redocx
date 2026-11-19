@@ -17,6 +17,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 
+from redocx.commands.latex import LATEX, latex_note
 from redocx.commands.spec import CommandSpec
 from redocx.commands.types import Fields, OptionError, ValueType, suggestion, value_text
 from redocx.props import REGISTRY, SHORTHANDS, PropertySet, Target, UnknownPropertyError
@@ -39,6 +40,7 @@ class Problem:
     label: str = ""
     help: str | None = None
     severity: Severity = Severity.ERROR
+    notes: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -226,11 +228,23 @@ class _Binder:
 
     # --- body ----------------------------------------------------------------------------
 
+    def no_body(self, span: Span) -> None:
+        """Reports a body on a command that takes none; for a LaTeX name (`\\section{Intro}`)
+        with the redocx form."""
+        message = f"`\\{self.spec.name}` takes no body"
+        hint = LATEX.get(self.spec.name)
+        if hint is None:
+            self.error(message, span)
+            return
+        note = latex_note(hint, self.spec.name)
+        problem = Problem(Code.INVALID_ARGUMENT, message, span, help=hint.use, notes=(note,))
+        self.problems.append(problem)
+
     def check_body(self) -> None:
         body, spec = self.command.body, self.spec
         if spec.body is None:
             if body is not None and not (isinstance(body, ast.MarkupBody) and not body.blocks):
-                self.error(f"`\\{spec.name}` takes no body", body.span)
+                self.no_body(body.span)
             return
         if not spec.body_required:
             return

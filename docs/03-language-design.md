@@ -850,6 +850,12 @@ error[RDX1203]: unknown paragraph property `space-befor`
    |                ^^^^^^^^^^^ did you mean `space-before`?
 ```
 
+LaTeX written from habit gets a hint instead of a near name. An unknown command that LaTeX knows (`\textbf`,
+`\label`, `\begin{itemize}`), or `\section{…}` and `\index{…}` with a LaTeX-style body, is reported as LaTeX, with
+the redocx form as help and a note pointing to the section of the TeX guide (`docs/guide/tex.md`) and to
+`redocx explain NAME`. The names come from a table, `redocx.commands.latex`, and match exactly; a macro of the same
+name is used as usual.
+
 Planned lints: a repeated label word before `@label` (§3.11); an unused label; for contracts, a defined term that is
 never used, or a capitalised term used but never defined.
 

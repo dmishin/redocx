@@ -28,6 +28,7 @@ from redocx import ir
 from redocx.bibliography import Bibliography
 from redocx.commands.bind import Args, bind
 from redocx.commands.builtin import COMMANDS, is_block
+from redocx.commands.latex import LATEX, latex_hint, latex_note
 from redocx.commands.spec import POSTPONED, CommandSpec, Placement
 from redocx.highlight import DEFAULT_THEME
 from redocx.lower import (
@@ -177,8 +178,9 @@ class Lowering:
         label: str = "",
         help: str | None = None,
         severity: Severity = Severity.ERROR,
+        notes: tuple[str, ...] = (),
     ) -> None:
-        notes = expansion_notes(span)
+        notes = (*notes, *expansion_notes(span))
         diagnostic = Diagnostic(severity, code, message, span, label, help, notes)
         self.diagnostics.append((self.source_of(span), diagnostic))
 
@@ -200,10 +202,23 @@ class Lowering:
         self.warn(Code.NOT_SUPPORTED_YET, message, command.span, help=help)
 
     def unknown_command(self, command: ast.Command) -> None:
+        message = f"unknown command `\\{command.name}`"
+        hint = latex_hint(command)
+        if hint is not None:
+            explain = None if command.name in ("begin", "end") else command.name
+            self.report(
+                Code.UNKNOWN_COMMAND,
+                message,
+                command.span,
+                "this is LaTeX, not redocx",
+                help=hint.use,
+                notes=(latex_note(hint, explain),),
+            )
+            return
         close = difflib.get_close_matches(command.name, [*COMMANDS, *self.macros], n=1)
         self.report(
             Code.UNKNOWN_COMMAND,
-            f"unknown command `\\{command.name}`",
+            message,
             command.span,
             f"did you mean `\\{close[0]}`?" if close else "",
             help="define it with \\define, or escape the backslash as \\\\",
@@ -213,7 +228,7 @@ class Lowering:
         """The command's options checked against its spec; problems are reported."""
         args, problems = bind(command, spec or COMMANDS[command.name])
         for p in problems:
-            self.report(p.code, p.message, p.span, p.label, p.help, p.severity)
+            self.report(p.code, p.message, p.span, p.label, p.help, p.severity, p.notes)
         return args
 
     def in_body(self, command: ast.Command) -> bool:
@@ -552,11 +567,15 @@ class Lowering:
                 help="call it on a line of its own",
             )
         elif isinstance(item, ast.Command):
+            # `\section{Intro}` in a line of text is LaTeX habit more likely than a misplaced
+            # page setup.
+            hint = LATEX.get(item.name) if item.body is not None else None
             self.report(
                 Code.MISPLACED,
                 f"{what} is a block command and cannot appear inside a paragraph",
                 item.span,
-                help="put it on its own line",
+                help=hint.use if hint else "put it on its own line",
+                notes=(latex_note(hint, item.name),) if hint else (),
             )
         else:
             self.report(Code.MISPLACED, f"{what} cannot appear inside a paragraph", item.span)

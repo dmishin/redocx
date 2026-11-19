@@ -183,6 +183,19 @@ def test_bodies() -> None:
     assert messages(r"\footnote{}") == []
 
 
+def test_a_latex_body_gets_the_redocx_form() -> None:
+    (problem,) = bound(r"\section{Intro}")[1]
+    assert problem.help is not None
+    assert "`= Title`" in problem.help
+    assert problem.notes == (
+        'redocx is not LaTeX; see "Document structure" in docs/guide/tex.md, '
+        "or run `redocx explain section`",
+    )
+    (plain,) = bound(r"\br{x}")[1]
+    assert plain.help is None
+    assert plain.notes == ()
+
+
 def test_a_spec_of_its_own() -> None:
     spec = CommandSpec(
         "demo",

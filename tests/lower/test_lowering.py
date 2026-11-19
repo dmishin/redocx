@@ -294,6 +294,51 @@ def test_errors(text: str, code: Code, message: str) -> None:
     )
 
 
+@pytest.mark.parametrize(
+    ("text", "help", "note"),
+    [
+        (
+            r"\textbf{x}",
+            "write `*x*` (Strong style) or `\\b{x}`",
+            '"Text" in docs/guide/tex.md, or run `redocx explain textbf`',
+        ),
+        (r"\begin{itemize}", "with `- `", '"Lists" in docs/guide/tex.md'),
+        (
+            r"\begin{nosuch}",
+            "there are no environments",
+            '"Document structure" in docs/guide/tex.md',
+        ),
+        (
+            r"\end{enumerate}",
+            "see the error on `\\begin{enumerate}`",
+            '"Lists" in docs/guide/tex.md',
+        ),
+        # A block command with a body inside text: the LaTeX heading.
+        (r"Text \section{Intro}", "write a heading line: `= Title`", "redocx explain section"),
+    ],
+)
+def test_latex_commands_get_the_redocx_form(text: str, help: str, note: str) -> None:
+    ((_, d),) = diagnostics(text).diagnostics
+    assert d.label in ("this is LaTeX, not redocx", "")
+    assert d.help is not None
+    assert help in d.help
+    (shown,) = d.notes
+    assert shown.startswith("redocx is not LaTeX; see ")
+    assert note in shown
+
+
+def test_latex_hint_replaces_the_suggestion() -> None:
+    # Without the hint, `\textbf` would be "did you mean `\textbox`?".
+    ((_, d),) = diagnostics(r"\textbf{x}").diagnostics
+    assert d.code is Code.UNKNOWN_COMMAND
+    assert "did you mean" not in d.label
+
+
+def test_a_macro_named_like_latex_is_used() -> None:
+    result = diagnostics("\\define{textbf}{*#body*}\n\n\\textbf{x}")
+    assert not result.diagnostics, result.render_diagnostics()
+
+
 def test_suggestions() -> None:
     result = diagnostics(r"\p[keep-with-nxt]{x}")
     ((_, d),) = result.diagnostics

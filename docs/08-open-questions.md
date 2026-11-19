@@ -46,6 +46,7 @@ All recommendations in the [spike findings](../examples/spike/FINDINGS.md) were 
 | # | Question | Options | Decision |
 |---|----------|---------|----------|
 | Q9 | Equation numbering layout | 3-column borderless table / OMML `#` alignment / tab stops | **Decided in M3:** OMML `#` alignment, which is what Word itself writes for `#(1)` (an `m:eqArr` row ending in `#` and the number); see design §3.14 |
+| Q10 | LaTeX commands written from habit | generic "unknown command" with a near name / fuzzy match against LaTeX names / exact-name hint table | **Exact-name table** (`redocx.commands.latex`): the near-name guess pointed LaTeX users the wrong way (`\textbf` -> `\textbox`), and fuzzy LaTeX matching would turn typos of redocx commands into LaTeX advice. Each hint names a section of `docs/guide/tex.md`; a test keeps table and guide in sync. Same codes (`RDX0301`, `RDX0302`, `RDX0303`); see design §3.21 |
 
 ## 8.4 Still open
 

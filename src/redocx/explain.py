@@ -19,6 +19,7 @@ from importlib import resources
 from pathlib import Path
 
 from redocx.commands.builtin import CODE_BLOCK, COMMANDS
+from redocx.commands.latex import GUIDE, LATEX, LATEX_ENVIRONMENTS, LatexHint
 from redocx.commands.spec import POSTPONED, CommandSpec, Placement
 from redocx.props.registry import REGISTRY, PropSpec, Target
 from redocx.syntax import Source, ast, parse
@@ -343,6 +344,17 @@ def explain_module(module: str) -> str | None:
     return "\n".join(lines) + "\n"
 
 
+def explain_latex(name: str, hint: LatexHint) -> str:
+    """What to write in redocx instead of the LaTeX command `name`."""
+    what = "means something else in LaTeX" if name in COMMANDS else "is LaTeX, not redocx"
+    text = f"\\{name} {what}. {sentence(hint.use)}\n"
+    if name == "begin":
+        text += "".join(
+            f"  {{{env}}}: {sentence(h.use)}\n" for env, h in LATEX_ENVIRONMENTS.items()
+        )
+    return text + f'  See "{hint.topic}" in {GUIDE} (redocx for TeX users).\n'
+
+
 # --- lookup --------------------------------------------------------------------------------
 
 
@@ -367,6 +379,8 @@ def explain(name: str, document: Path | None = None) -> tuple[str, bool]:
     if name in ("code-block", "code block", "```"):
         parts.append(explain_command(CODE_BLOCK))
     parts += [explain_property(REGISTRY[t][name]) for t in Target if name in REGISTRY[t]]
+    if name in LATEX:
+        parts.append(explain_latex(name, LATEX[name]))
     if parts:
         return "\n".join(parts), True
     known = {*COMMANDS, *macros, *(n for t in Target for n in REGISTRY[t])}

@@ -19,7 +19,9 @@ counterpart in Word, or a different one.
 - **`$` is a dollar sign.** Inline math is `\m{…}`; display math is `$$ … $$`.
 - **One body per command.** `\frac`-style several arguments exist only in math; elsewhere extra arguments are named
   options: `\link[to="https://…"]{text}` rather than `\href{url}{text}`.
-- **Unknown commands and options are errors**, with suggestions, rather than silently ignored.
+- **Unknown commands and options are errors**, with suggestions, rather than silently ignored. A LaTeX command
+  such as `\textbf` or `\begin{itemize}` is named as LaTeX, with the redocx form to write and the section of this
+  page to read. `redocx explain textbf` shows the same.
 
 ## Document structure
 
@@ -30,7 +32,7 @@ counterpart in Word, or a different one.
 | `\begin{document}` … `\end{document}` | nothing | the content starts after the preamble |
 | `\title`, `\author`, `\date` | `\meta[title=…, author=…]` | document properties (File > Info) |
 | `\maketitle` | `\p[style=Title]{…}`, `\p[style=Subtitle]{…}` | Word's Title and Subtitle styles |
-| `\chapter`, `\section`, `\subsection` | `=`, `==`, `===` | Heading 1, 2, 3 … up to 9 |
+| `\chapter`, `\section`, `\subsection`, `\subsubsection` | `=`, `==`, `===` | Heading 1, 2, 3 … up to 9; `\section` in redocx sets the page layout |
 | `\section*{…}` | `=* …` | a heading without a number |
 | `\paragraph{…}` | `====` or a style of your own | |
 | `\input{f}`, `\include{f}` | `\include{f.rdx}` | |
@@ -47,20 +49,21 @@ counterpart in Word, or a different one.
 | blank line, `\par` | blank line | |
 | `\\`, `\newline` | `\br` | |
 | `\emph{x}` | `_x_` or `\emph{x}` | the Emphasis character style |
-| `\textbf{x}` | `*x*` (Strong style) or `\b{x}` | |
-| `\textit{x}`, `\underline{x}` | `\i{x}`, `\u{x}` | |
-| `\texttt{x}`, `\verb\|x\|` | `` `x` `` | the Code character style |
+| `\textbf{x}`, `{\bfseries x}` | `*x*` (Strong style) or `\b{x}` | |
+| `\textit{x}`, `{\itshape x}`, `\underline{x}` | `\i{x}`, `\u{x}` | |
+| `\texttt{x}`, `{\ttfamily x}`, `\verb\|x\|` | `` `x` `` | the Code character style |
 | `\textsc{x}` | `\font[small-caps]{x}` | |
 | `\textsuperscript{x}`, `\textsubscript{x}` | `\sup{x}`, `\sub{x}` | |
-| `{\large x}`, `\fontsize` | `\font[size=14pt]{x}` | better: a character style |
-| `\textcolor{red}{x}` | `\font[color=#C00000]{x}` | `theme.accent1` follows the theme |
+| `{\large x}`, `\tiny`, `\small`, `\normalsize`, `\Large`, `\huge`, `\fontsize` | `\font[size=14pt]{x}` | better: a character style |
+| `\textcolor{red}{x}`, `\color{red}` | `\font[color=#C00000]{x}` | `theme.accent1` follows the theme |
 | `\colorbox{yellow}{x}` | `\hl[yellow]{x}`, `\font[shading=#FFF2CC]{x}` | |
 | `\foreignlanguage{german}{x}` | `\lang[de-DE]{x}` | spelling and hyphenation |
 | `babel` main language | `\document[lang=en-GB]` | |
 | ` ``x'' ` | `"x"` | curly quotes come by themselves |
 | `--`, `---`, `~`, `%` | the same | |
 | `\%`, `\{`, `\_`, `\#` | the same | `\$` too, though `$` alone is already text |
-| `\ldots` | `…` (type it; the source is UTF-8) | |
+| `\ldots`, `\dots` | `…` (type it; the source is UTF-8) | |
+| `\today` | `\date` | |
 | `\noindent` | `\p[first-line-indent=0]{…}` | |
 | `\vspace{12pt}` | `\p[space-before=12pt]{…}` | or `space-after` in a style |
 | `\hfill`, `\hspace` | `\tab`, with `\tabs[(16cm, right)]{…}` | |
@@ -91,7 +94,7 @@ counterpart in Word, or a different one.
 |-------|----------|-------|
 | `\label{sec:x}` | `= Title {#sec:x}`, or `id=sec:x` on a command | a Word bookmark |
 | `\ref{x}` | `\ref[form=number]{x}` | just the number |
-| `\autoref{x}`, `\cref{x}` | `@x` | "Figure 3", "2.1", "(4)": the kind comes with it |
+| `\autoref{x}`, `\cref{x}`, `\Cref{x}` | `@x` | "Figure 3", "2.1", "(4)": the kind comes with it |
 | `\nameref{x}` | `\ref[form=text]{x}` | the heading or caption text |
 | `\pageref{x}` | `\pageref{x}` | filled in by Word |
 | `\eqref{x}` | `@x` | "(3)" |
@@ -131,7 +134,7 @@ counterpart in Word, or a different one.
 | `a & b \\` | `\| a \| b \|` | one line per row |
 | `p{3cm}`, `tabularx` `X` | `widths=(3cm, 1fr)` | |
 | `S` column (siunitx) | `columns=(decimal)` | aligned on the decimal point |
-| `\hline`, `booktabs` rules | a table style, or `borders=…` | |
+| `\hline`, `booktabs` `\toprule`, `\midrule`, `\bottomrule` | a table style, or `borders=…` | |
 | `\multicolumn{3}{c}{x}` | `\cell[colspan=3, align=center]{x}` then two empty cells | |
 | `\multirow{2}{*}{x}` | `\cell[rowspan=2]{x}` | |
 | `longtable` with `\endhead` | `header-rows=1` | every Word table can break across pages |
@@ -145,7 +148,7 @@ counterpart in Word, or a different one.
 | `$x^2$`, `\(x^2\)` | `\m{x^2}` |
 | `\[ … \]`, `equation*` | `$$ … $$` |
 | `equation` with `\label{eq:x}` | `$$ … $$ {#eq:x}` |
-| `align` | `$$\begin{aligned} … \end{aligned}$$ {#eq:x}` (one number for the block) |
+| `align`, `align*` | `$$\begin{aligned} … \end{aligned}$$ {#eq:x}` (one number for the block) |
 | `\DeclareMathOperator` | `\operatorname{argmin}` |
 | `amsmath` environments | `matrix`, `pmatrix`, `bmatrix`, `cases`, `aligned`, `gathered`, `split`, `array` |
 
@@ -180,7 +183,7 @@ The math is converted to Word's own equations, so it stays editable in Word. The
 
 | LaTeX | redocx |
 |-------|----------|
-| `\newcommand{\product}{Widget}` | `\let{product}{Widget}` |
+| `\newcommand{\product}{Widget}`, `\def\product{Widget}` | `\let{product}{Widget}` |
 | `\newcommand{\term}[1]{\emph{#1}}` | `\define{term}{_#body_}` |
 | `\newcommand{\note}[2][Note]{…#1…#2…}` | `\define{note}[title="Note"]{…#title…#body…}` |
 | `\newenvironment{box}{…}{…}` | a macro whose `#body` is blocks |

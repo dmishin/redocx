@@ -21,6 +21,26 @@ def test_a_command() -> None:
     assert "More: docs/reference.md#cmd-table" in text
 
 
+def test_a_latex_command() -> None:
+    text, found = explain("textbf")
+    assert found
+    assert text.startswith("\\textbf is LaTeX, not redocx. Write `*x*` (Strong style) or `\\b{x}`.")
+    assert 'See "Text" in docs/guide/tex.md' in text
+
+
+def test_a_latex_environment_list() -> None:
+    text, found = explain("begin")
+    assert found
+    assert "  {itemize}: Start each item on its own line with `- `." in text
+
+
+def test_a_command_that_means_something_else_in_latex() -> None:
+    text, found = explain("section")
+    assert found
+    assert text.startswith("\\section: ")
+    assert "\\section means something else in LaTeX." in text
+
+
 def test_a_part_and_a_leading_backslash() -> None:
     text, found = explain("\\cell")
     assert found
