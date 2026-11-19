@@ -158,6 +158,8 @@ class Printer:
         self.styles_used: set[str] = set()
         self.numbering_used: set[str] = set()
         self.bookmarks: dict[str, int] = {}
+        self.in_parentheses: set[int] = set()
+        """id() of REF fields to equations printed as `@eq:x` (the parentheses taken off)."""
         self.lists_seen: dict[str, list[tuple[int, int | None]]] = {}
         self.styles = {s.name.lower(): s for s in document.styles}
         self.numbering = {n.name: n for n in document.numbering}
@@ -250,6 +252,11 @@ class Printer:
             opts.append("track-changes")
         if settings.auto_hyphenation:
             opts.append("hyphenation=auto")
+        if (separator := _chapter_separator(doc)) is not None:
+            opts.append(
+                "captions=(chapter-numbers"
+                + (f", separator={quote(separator)})" if separator != "." else ")")
+            )
         if opts:
             out.append(f"\\settings{_opts(opts)}")
         if uses_sheet:
@@ -475,18 +482,25 @@ class Printer:
     def math(self, math: ir.Math) -> str:
         r"""An equation as \m{...} (inline) or $$ ... $$ (display); objects LaTeX cannot say
         as \ooxml{...}, and the whole equation as \raw when even that does not print it."""
-        if math.numbered:
-            self.lost["equation number"] += 1
         text = to_latex(math.expr)
         if text is None:
             self.lost["equation (kept as OMML)"] += 1
+            if math.numbered:
+                self.lost["equation number"] += 1
             return f"\\raw[ooxml]{{{raw_equation(math.expr, display=math.display)}}}"
         kept = text.count("\\ooxml{") - sum(isinstance(n, MathRaw) for n in walk(math.expr))
         if kept:
             self.lost["math object with no LaTeX form (kept as OMML)"] += kept
         if not math.display:
             return f"\\m{{{text}}}"
-        return f"$$ {text} $$" if "$$" not in text else f"\\math{{{text}}}"
+        label = self.labels.equations.get(math.bookmark or "") if math.numbered else None
+        bookmark = math.bookmark or "_"
+        if math.numbered and label is None and not bookmark.startswith("_"):
+            self.lost["bookmark around an equation number"] += 1
+        if "$$" not in text and (label is not None or not math.numbered):
+            return f"$$ {text} $$" + (f" {{#{label}}}" if label else "")
+        opts = f"[id={label}]" if label else "[numbered]" if math.numbered else ""
+        return f"\\math{opts}{{{text}}}"
 
     def list(self, items: Sequence[ir.Paragraph]) -> str:
         first = items[0].list_item
@@ -665,9 +679,35 @@ class Printer:
         text = self.inline(caption.text, self._run_base("Caption"))
         return f"\\caption{_opts(opts)}{{{line_start(text)}}}"
 
+    def _equation_references(self, items: list[ir.Inline]) -> list[ir.Inline]:
+        """The items with "(" and ")" taken off plain text around a REF to an equation's
+        number: `@eq:x` prints "(3.2)" with them (the REF itself prints the number)."""
+        equations = set(self.labels.equations.values())
+        out = list(items)
+        for i in range(1, len(out) - 1):
+            item, before, after = out[i], out[i - 1], out[i + 1]
+            ref = self.labels.is_label_field(item) if isinstance(item, ir.Field) else None
+            if (
+                ref is None
+                or ref[0] != "REF"
+                or ref[1] not in equations
+                or not (isinstance(before, ir.Run) and isinstance(after, ir.Run))
+                or before.props
+                or before.style
+                or after.props
+                or after.style
+                or not before.text.endswith("(")
+                or not after.text.startswith(")")
+            ):
+                continue
+            out[i - 1] = replace(before, text=before.text[:-1])
+            out[i + 1] = replace(after, text=after.text[1:])
+            self.in_parentheses.add(id(item))
+        return [i for i in out if not (isinstance(i, ir.Run) and not i.text)]
+
     def tokens(self, items: Sequence[ir.Inline]) -> list[_Tok]:
         out: list[_Tok] = []
-        items = _merge_runs(items)
+        items = self._equation_references(_merge_runs(items))
         i = 0
         while i < len(items):
             item = items[i]
@@ -722,6 +762,8 @@ class Printer:
             return [_Tok(f"\\link[{opts}]{{{line_start(inner)}}}")]
         if isinstance(item, ir.Field):
             if (ref := self.labels.is_label_field(item)) is not None:
+                if id(item) in self.in_parentheses:
+                    ref = (ref[0], ref[1], "default")
                 return [self._reference(*ref)]
             return [_Tok(self.field(item))]
         if isinstance(item, ir.BookmarkStart | ir.BookmarkEnd):
@@ -1253,6 +1295,24 @@ def _simple_formatting(props: PropertySet) -> tuple[PropertySet, list[str]]:
     commands = [cmd for name, value, cmd in _SIMPLE_COMMANDS if props.get(name) == value]
     names = {name for name, value, _ in _SIMPLE_COMMANDS if props.get(name) == value}
     return props.without(names), commands
+
+
+_CHAPTER_NUMBER_RE = re.compile(r"\d+(\D{1,3})\d+")
+
+
+def _chapter_separator(document: ir.Document) -> str | None:
+    """The separator when every numbered equation has a number per chapter ("2.1", "2-1"):
+    the document numbers equations per chapter (`captions=(chapter-numbers)`)."""
+    numbers = [
+        item.number
+        for p in document.all_paragraphs()
+        for item in p.content
+        if isinstance(item, ir.Math) and item.numbered and item.number is not None
+    ]
+    separators = {m.group(1) if (m := _CHAPTER_NUMBER_RE.fullmatch(n)) else None for n in numbers}
+    if len(separators) != 1:
+        return None
+    return next(iter(separators))
 
 
 def _merge_runs(items: Sequence[ir.Inline]) -> list[ir.Inline]:

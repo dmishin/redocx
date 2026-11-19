@@ -587,6 +587,9 @@ $$\begin{aligned}
   `RDX0311` error at the command. Write `{`, `}` and `\` in its text as `&#x7B;`, `&#x7D;` and `&#x5C;`, so the
   formula's braces stay balanced. A whole equation can also be raw: `\raw[ooxml]{<m:oMath>…</m:oMath>}`
   (inline) or `<m:oMathPara>` (display, in a paragraph of its own).
+- **Import** prints equations in this subset (`redocx.math.latex`), each object checked by parsing it back; an
+  object with no form here is printed as `\ooxml{…}`. Word's numbered equations come back numbered, labelled
+  `{#eq:…}` when a REF points at them.
 
 **The supported subset** (`redocx.math`):
 

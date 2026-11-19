@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from typing import cast
 
 from redocx import ir
+from redocx.math.nodes import canonical
 from redocx.ooxml.style_names import stored_name
 from redocx.props import PropertySet, Target
 from redocx.values import Length, TabStop
@@ -86,9 +87,9 @@ Block = tuple[object, ...]
 
 
 def blocks_of(document: ir.Document) -> list[Block]:
-    """Each paragraph's style, formatting and list level, and each table's spans and header
-    rows, in order: the body (with notes and text boxes where they are anchored), then the
-    headers and footers Word shows."""
+    """Each paragraph's style, formatting, list level and equations, and each table's spans
+    and header rows, in order: the body (with notes and text boxes where they are anchored),
+    then the headers and footers Word shows."""
     out: list[Block] = []
 
     def walk(items: tuple[ir.Block, ...]) -> None:
@@ -105,7 +106,12 @@ def blocks_of(document: ir.Document) -> list[Block]:
             elif isinstance(block, ir.Paragraph) and block.drop_cap is None:
                 style = stored_name(block.style or "Normal").lower()
                 level = block.list_item.level if block.list_item else None
-                out.append(("paragraph", style, in_twips(block.props), level))
+                equations = tuple(
+                    (canonical(i.expr), i.display, i.number)
+                    for i in block.content
+                    if isinstance(i, ir.Math)
+                )
+                out.append(("paragraph", style, in_twips(block.props), level, equations))
                 for item in block.content:
                     if isinstance(item, ir.Note | ir.TextBox):
                         walk(item.content)
@@ -156,6 +162,8 @@ def _describe_block(a: Block | None, b: Block | None) -> str:
             parts.append("formatting differs: " + ", ".join(changed))
         if a[3] != b[3]:
             parts.append(f"list level {a[3]} became {b[3]}")
+        if a[4] != b[4]:
+            parts.append("an equation differs")
         return f"paragraph ({a[1]}): " + "; ".join(parts)
     return "table: " + ("its spans differ" if a[1] != b[1] else "its header rows differ")
 

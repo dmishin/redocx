@@ -25,7 +25,6 @@ EXPECTED_LOSSES = {
     "math.docx": {
         "m:box in an equation (kept as OMML)",
         "m:d in an equation (kept as OMML)",  # with a separator: (a|b)
-        "m:eqArr in an equation (kept as OMML)",  # the numbered one, E=mc^2#(1)
     },
     "review.docx": {"w:del (tracked deletion)"},
 }
@@ -158,7 +157,7 @@ def test_math() -> None:
     arrays = [m.expr[0] for m in equations if isinstance(m.expr[0], EqArr)]
     aligned = [a for a in arrays if any(isinstance(n, Align) for r in a.rows for n in r)]
     assert len(aligned) == 1  # Word's & marks read as alignment points
-    assert [to_latex(m.expr) for m in equations if "\\ooxml" in (to_latex(m.expr) or "")] == [
-        to_latex(equations[-2].expr),
-        to_latex(equations[-1].expr),
-    ]  # only the numbered equation, the box and (a|b) are kept as OMML
+    raw = [m for m in equations if "\\ooxml" in (to_latex(m.expr) or "")]
+    assert raw == [equations[-1]]  # only the box and (a|b) are kept as OMML
+    (numbered,) = [m for m in equations if m.numbered]
+    assert (to_latex(numbered.expr), numbered.number, numbered.bookmark) == ("E=mc^2", "1", None)

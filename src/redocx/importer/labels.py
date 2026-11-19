@@ -47,6 +47,8 @@ class Labels:
     """id() of a caption paragraph -> how to print it."""
     dropped: set[str] = field(default_factory=lambda: set[str]())
     """Bookmarks not to print: labels now, or hidden ones nothing refers to."""
+    equations: dict[str, str] = field(default_factory=lambda: {})
+    """The bookmark around a numbered equation's number -> the equation's label."""
 
     def is_label_field(self, item: ir.Field) -> tuple[str, str, str] | None:
         """(REF or PAGEREF, label, form) for a field that points at a label."""
@@ -73,6 +75,8 @@ def analyse(document: ir.Document) -> Labels:
             _caption(block, following, targets, labels, taken)
     for paragraph in document.all_paragraphs():
         for item in paragraph.content:
+            if isinstance(item, ir.Math) and item.bookmark in targets:
+                _equation(item, labels, taken)
             if not isinstance(item, ir.BookmarkStart | ir.BookmarkEnd):
                 continue
             if item.name.startswith("_Ref") and item.name not in targets:
@@ -209,6 +213,23 @@ def _caption(
     labels.captions[id(paragraph)] = Caption(kind, tuple(rest), label)
     # Bookmarks in a caption that nothing refers to are Word's own: the caption makes its own.
     labels.dropped.update(name for name in spans if name not in targets and name[:1] == "_")
+
+
+def _equation(math: ir.Math, labels: Labels, taken: set[str]) -> None:
+    """A numbered equation that a REF points at: `{#eq:…}`, named after redocx's own bookmark
+    name (`_Ref_eq_gauss`: eq:gauss) or else after the number. A REF to it prints the number
+    alone, as Word's does (the text around it has the parentheses)."""
+    bookmark = math.bookmark
+    if bookmark is None or bookmark in labels.equations:
+        return
+    own = re.fullmatch(r"_Ref_eq_(.+)", bookmark)
+    name = _slug(own.group(1)) if own else ""
+    label = _unique(
+        f"eq:{name or 'equation-' + _slug(math.number or '').removeprefix('x-')}", taken
+    )
+    labels.equations[bookmark] = label
+    labels.references[bookmark] = (label, "number")
+    labels.dropped.add(bookmark)
 
 
 def _plain(item: ir.Inline) -> bool:

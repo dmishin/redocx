@@ -54,6 +54,9 @@ The XML is checked when the document compiles: it must be `m:` elements that are
 equation, or the build stops with an error pointing at the `\ooxml`. Write `{`, `}` and `\` in its text as `&#x7B;`,
 `&#x7D;` and `&#x5C;`. A whole equation can be raw too, with `\raw[ooxml]{<m:oMath>…</m:oMath>}`.
 
+`redocx import` writes `\ooxml{…}` for the parts of an equation that it cannot print as LaTeX (see
+[Import](import.md)).
+
 ## Code blocks
 
 ````rdx

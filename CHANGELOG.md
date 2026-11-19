@@ -7,7 +7,8 @@ anything that would change it is listed here first as a deprecation warning.
 ## Unreleased
 
 - **Import:** equations come back as LaTeX (`\m{…}`, `$$ … $$`). What the LaTeX subset cannot say is kept as
-  `\ooxml{…}` inside the formula, or the whole equation as `\raw[ooxml]{<m:oMath>…}`.
+  `\ooxml{…}` inside the formula, or the whole equation as `\raw[ooxml]{<m:oMath>…}`. Numbered equations come
+  back numbered, labelled `{#eq:…}` when a cross-reference points at them; `--check` compares every equation.
 - **Math:** `\ooxml{…}` in a formula holds raw OMML; `\raw[ooxml]` accepts whole equations.
 - **Math (fix):** the rows of `aligned` and other equation arrays now align at `&` in Word. They were written with
   `m:aln`, which Word ignores; now `&` goes in the math text, as Word writes it.

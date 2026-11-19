@@ -132,9 +132,9 @@ class Raw:
     m:sPre or m:box that the LaTeX subset has no form for."""
 
     xml: str
-    start: int = field(default=0, compare=False)
+    start: int = field(default=0, compare=False, repr=False)
     """Offsets of the command in the formula, for messages."""
-    end: int = field(default=0, compare=False)
+    end: int = field(default=0, compare=False, repr=False)
 
 
 Node = (

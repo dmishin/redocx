@@ -34,7 +34,7 @@ from redocx.math.nodes import (
 )
 from redocx.math.omml import omml
 from redocx.math.parser import parse_math
-from redocx.math.read import MathReader, raw_xml
+from redocx.math.read import MathReader, raw_xml, split_number
 from redocx.ooxml.reader import read_docx
 from redocx.ooxml.validate import fragment_problems
 from redocx.ooxml.xml import parse_fragment
@@ -247,6 +247,22 @@ def test_alignment_marks_are_words_ampersands() -> None:
     written = etree.tostring(omml(parse_math(r"\begin{aligned}a&=b\end{aligned}"), display=False))
     assert b"&amp;=b" in written
     assert b"aln" not in written
+
+
+def test_the_number_of_a_numbered_equation() -> None:
+    written = omml(parse_math("x=1"), display=False, number="2.1", bookmark="_Ref_eq_x")
+    split = split_number(written)
+    assert split is not None
+    rest, number, bookmark = split
+    assert (number, bookmark) == ("2.1", "_Ref_eq_x")
+    assert MathReader().equation(rest) == canonical(parse_math("x=1"))
+    rows = omml(parse_math(r"\begin{aligned}a&=b \\ &=c\end{aligned}"), display=False, number="3")
+    split = split_number(rows)
+    assert split is not None
+    assert MathReader().equation(split[0]) == (
+        EqArr(((Run("a"), Align(), Run("=b")), (Align(), Run("=c")))),
+    )
+    assert split_number(omml(parse_math("a#(1)"), display=False)) is None  # not in an array
 
 
 def test_raw_xml_uses_the_usual_prefixes() -> None:

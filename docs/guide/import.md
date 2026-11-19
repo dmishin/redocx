@@ -32,7 +32,9 @@ $$ \frac{-b\pm\sqrt{b^2-4ac}}{2a} $$
 The isotope \m{\ooxml{<m:sPre><m:sub><m:r><m:t>6</m:t></m:r></m:sub><m:sup><m:r><m:t>14</m:t></m:r></m:sup><m:e><m:r><m:t>C</m:t></m:r></m:e></m:sPre>}} decays.
 ```
 
-The report counts each of these under "Not printed as source".
+The report counts each of these under "Not printed as source". Word's numbered equations (typed with `#(1)`) come
+back numbered: `\math[numbered]{…}`, or `$$ … $$ {#eq:…}` when a cross-reference points at the number, and the
+cross-reference becomes `@eq:…`. Numbers per chapter ("2.1") set `captions=(chapter-numbers)`.
 
 ### The check
 

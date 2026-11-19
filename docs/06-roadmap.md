@@ -306,6 +306,25 @@ settled: see [tooling ideas](ideas/tooling.md).
   diagnostic reaches a program as JSON.
   *Status: met.*
 
+## M9: Import of math
+
+*Goal: equations in a `.docx` come back as LaTeX that compiles to the same equation, and nothing is dropped.*
+
+1. [x] **Raw OMML** in the language: `\ooxml{…}` inside a formula, whole equations in `\raw[ooxml]`, both checked
+   against the schemas ([Q15](08-open-questions.md)).
+2. [x] **Reader** (`math/read.py`): OMML into the math tree. What the tree cannot hold (`m:box`, `m:sPre`, a
+   delimiter with separators, a run with colour) is kept as OMML, one object at a time.
+3. [x] **Printer** (`math/latex.py`): the math tree as LaTeX. Each object is parsed back and compared, and written
+   as `\ooxml{…}` when it does not come back the same.
+4. [x] **Corpus**: `tests/corpus/math.docx`, equations Word built from its linear format.
+5. [x] **Numbers and labels**: Word's numbered equation (`#(1)` in an equation array) reads as a numbered
+   equation; one a REF points at gets `{#eq:…}`, the REF `@eq:…`. Numbers per chapter set
+   `captions=(chapter-numbers)`. The oracle compares every equation.
+
+- **Exit:** the math example and the Word corpus import with every equation the same as the original's.
+  *Status: met.* Building them found two writer bugs, both fixed: aligned rows were marked with `m:aln`, which
+  Word ignores (they never aligned), and equations had no `m:` prefix in the written XML.
+
 ## Later / candidates
 
 Native charts, native Word bibliography, content-control data binding, embedded fonts,
@@ -313,7 +332,7 @@ building blocks. Postponed indefinitely: see [Postponed features](09-postponed.m
 
 ## Still to do
 
-M0–M8 are done. What is left from them: the public Python API sketched in
+M0–M9 are done. What is left from them: the public Python API sketched in
 [architecture §4.8](04-architecture.md) is not built. Programs write source (see M8), or use the IR (`redocx.ir`) and
 the compiler (`redocx.compiler`) directly.
 

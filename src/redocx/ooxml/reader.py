@@ -28,7 +28,7 @@ from pathlib import Path
 from lxml import etree
 
 from redocx import ir
-from redocx.math.read import MathReader, raw_xml
+from redocx.math.read import MathReader, raw_xml, split_number
 from redocx.ooxml.constants import NS, RT
 from redocx.ooxml.parts.theme import theme_from_xml
 from redocx.ooxml.xml import Element
@@ -1210,6 +1210,9 @@ def _read_math(element: Element, ctx: _Ctx) -> ir.Math | ir.RawXml:
         jc = element.find(f"{{{_M}}}oMathParaPr/{{{_M}}}jc")
         centred = jc is None or jc.get(f"{{{_M}}}val", "centerGroup") in _CENTRED
         omath = zones[0] if len(zones) == 1 and centred else None
+    number = bookmark = None
+    if omath is not None and element.tag == _MATH_PARA and (split := split_number(omath)):
+        omath, number, bookmark = split
     reader = MathReader()
     row = reader.equation(omath) if omath is not None else None
     for name, count in reader.kept.items():
@@ -1218,7 +1221,8 @@ def _read_math(element: Element, ctx: _Ctx) -> ir.Math | ir.RawXml:
     if row is None:
         ctx.stats.note("equation (kept as OMML)")
         return ir.RawXml(raw_xml(element))
-    return ir.Math(row, display=element.tag == _MATH_PARA)
+    display = element.tag == _MATH_PARA
+    return ir.Math(row, display, number is not None, number, bookmark)
 
 
 # --- paragraphs, tables and blocks --------------------------------------------------------

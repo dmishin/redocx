@@ -171,6 +171,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Import with sugar (headings, lists, pipe tables, labels, captions) or commands only | M6 ✓ | ●● |
 | `--keep-styles` (compile into the original's styles as a template) | M6 ✓ | ●● |
 | Import oracle (`--check`: compare the recompiled document with the original) | M6 ✓ | ●● |
+| Import of equations as LaTeX, with numbers and labels; raw OMML for the rest | M9 ✓ | ●●● |
 | `redocx fmt` (canonical layout; `--check`, `--diff`) | M3 ✓ | ●● |
 | `--emit-ir` (IR as JSON, one-way) | M3 ✓ | ● |
 | `redocx.escape`, standard input and output, `--warnings-as-errors`, `--diagnostics json` | M8 ✓ | ● |

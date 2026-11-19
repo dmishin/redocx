@@ -429,6 +429,31 @@ def test_equations_print_as_latex(tmp_path: Path) -> None:
     assert [m.display for m in after] == [False, True, True, False]
 
 
+def test_numbered_and_labelled_equations(tmp_path: Path) -> None:
+    source = (
+        '\\settings[captions=(chapter-numbers, separator="-")]\n\n'
+        "= One\n\n"
+        "$$ a^2+b^2=c^2 $$ {#eq:pythagoras}\n\n"
+        "\\math[numbered]{E=mc^2}\n\n"
+        "$$\\begin{aligned}x&=1 \\\\ y&=2\\end{aligned}$$ {#eq:two_rows}\n\n"
+        "See @eq:pythagoras and \\ref[form=number]{eq:two_rows}; (@eq:pythagoras).\n"
+    )
+    (tmp_path / "doc.rdx").write_text(source, "utf-8")
+    data, _ = build(Source.from_path(tmp_path / "doc.rdx"))
+    assert data is not None
+    (tmp_path / "doc.docx").write_bytes(data)
+    result = import_docx(tmp_path / "doc.docx", tmp_path / "out")
+    assert (result.errors, result.difference) == (0, None)
+    assert result.comparison is not None
+    assert result.comparison.same, result.comparison.render()
+    printed = result.source.read_text("utf-8")
+    assert "\\settings[captions=(chapter-numbers, separator=-)]" in printed
+    assert "$$ a^2+b^2=c^2 $$ {#eq:pythagoras}" in printed
+    assert "\\math[numbered]{E=mc^2}" in printed
+    assert "$$ \\begin{aligned}x&=1 \\\\ y&=2\\end{aligned} $$ {#eq:two-rows}" in printed
+    assert "See @eq:pythagoras and \\ref[form=number]{eq:two-rows}; (@eq:pythagoras)." in printed
+
+
 def test_an_equation_with_no_latex_form_is_raw(tmp_path: Path) -> None:
     # An alignment mark outside an equation array has no LaTeX form (read from Word it is
     # an `&` in the text, so this comes only from a tree built by hand).

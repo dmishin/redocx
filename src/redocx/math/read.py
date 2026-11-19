@@ -341,6 +341,53 @@ _DECLARATION_RE = re.compile(r'\s+xmlns:(\w+)="([^"]*)"')
 _BRACES = {"{": "&#x7B;", "}": "&#x7D;", "\\": "&#x5C;"}
 
 
+def split_number(omath: Element) -> tuple[Element, str, str | None] | None:
+    """Word's numbered display equation, an equation array whose last row ends with `#` and
+    the number in parentheses (math/omml.py `numbered`): a copy of the equation without the
+    number, the number, and the bookmark around it. None for any other equation."""
+    omath = copy.deepcopy(omath)
+    parts = [c for c in omath if c.tag != _m("ctrlPr")]
+    if len(parts) != 1 or parts[0].tag != _m("eqArr"):
+        return None
+    array = parts[0]
+    rows = array.findall(_m("e"))
+    tail = [c for c in rows[-1] if c.tag != _m("ctrlPr")] if rows else []
+    if len(tail) < 2 or tail[-1].tag != _m("d") or tail[-2].tag != _m("r"):
+        return None
+    mark, delim = tail[-2], tail[-1]
+    text = mark.find(_m("t"))
+    if text is None or not (text.text or "").endswith("#"):
+        return None
+    props = delim.find(_m("dPr"))
+    if props is not None and any(
+        p.tag != _m("ctrlPr")
+        and not (_local(p) in ("begChr", "endChr") and p.get(_m("val")) in ("(", ")"))
+        for p in props
+    ):
+        return None
+    (inside, *more) = delim.findall(_m("e")) or [None]
+    allowed = {_m("r"), _m("ctrlPr"), f"{{{W}}}bookmarkStart", f"{{{W}}}bookmarkEnd"}
+    if inside is None or more or any(c.tag not in allowed for c in inside):
+        return None
+    number = "".join(t.text or "" for t in inside.iter(_m("t"))).strip()
+    if not number:
+        return None
+    start = inside.find(f"{{{W}}}bookmarkStart")
+    bookmark = start.get(f"{{{W}}}name") if start is not None else None
+    rows[-1].remove(delim)
+    text.text = (text.text or "")[:-1]
+    if not text.text:
+        rows[-1].remove(mark)
+    for distance in array.findall(f"{_m('eqArrPr')}/{_m('maxDist')}"):
+        distance.getparent().remove(distance)  # type: ignore[union-attr]
+    if len(rows) == 1:  # one row: the array only held the number
+        index = list(omath).index(array)
+        omath.remove(array)
+        for offset, child in enumerate(c for c in rows[0] if c.tag != _m("ctrlPr")):
+            omath.insert(index + offset, child)
+    return omath, number, bookmark
+
+
 def raw_xml(element: Element) -> str:
     """An element as source XML: the usual prefixes (m:, w:, ...) whatever the document used,
     undeclared (raw XML may use them as they are), the Cambria Math font and empty control
