@@ -6,7 +6,7 @@ There are no dates. Each milestone has *exit criteria*. A milestone is done when
 
 == M0: Foundations
 
-- \[x\] Repository setup: `uv`, `ruff`, `pyright --strict`, `pytest`, GitHub Actions (Windows, Linux, macOS), license. CONTRIBUTING is still to do.
+- \[x\] Repository setup: `uv`, `ruff`, `pyright --strict`, `pytest`, GitHub Actions (Windows, Linux, macOS), license, CONTRIBUTING.
 - \[x\] OPC package writer: content types, relationships, deterministic zip.
 - \[x\] Minimal part writers: document, styles (docDefaults, the four default styles, user styles), settings, core and app props, fontTable, theme (own default theme).
 - \[x\] Validation pipeline: lxml + ECMA-376 Transitional XSDs (now `src/redocx/data/schemas/`); `tools/ooxml-validate` (.NET OpenXmlValidator).
@@ -29,7 +29,7 @@ There are no dates. Each milestone has *exit criteria*. A milestone is done when
 - \[x\] Standard macro library (`std:callout`, `std:signature`, `std:latex`), packaged with the compiler and loaded by default.
 - \[x\] Trial: the spike's design specification ported to v0.2 (`examples/design-spec/`, findings in its `NOTES.md`).
 - \[x\] CLI: `redocx build` (and `check` runs the full compile).
-- *Exit:* a real 20-page document can be authored entirely in redocx. Language grammar v0.1 is frozen. _Status:_ the 4-page specification trial builds cleanly, and its remaining gaps (headers and footers, TOC, cross-references, captions, footnotes, sections) are M2 items. The grammar has been stable through M1 (v0.2 plus the §3.22–3.23 rules) and through M2–M7; freezing it formally is still to do.
+- *Exit:* a real 20-page document can be authored entirely in redocx. Language grammar v0.1 is frozen. _Status:_ the 4-page specification trial builds cleanly, and its remaining gaps (headers and footers, TOC, cross-references, captions, footnotes, sections) are M2 items. The grammar has been stable through M1 (v0.2 plus the §3.22–3.23 rules) and through M2–M7, and was frozen at 0.1.0 (Q14).
 
 == M2: Word structure (where redocx goes beyond Pandoc)
 
@@ -126,10 +126,6 @@ Native charts, native Word bibliography, content-control data binding, embedded 
 
 == Still to do
 
-M0–M7 are done. What is left from them:
-
-1. Freeze the language grammar (M1 exit).
-2. CONTRIBUTING (M0).
-3. The public Python API sketched in architecture §4.8 is not built; the IR (`redocx.ir`) and the compiler (`redocx.compiler`) are the only programmatic entry points so far.
+M0–M8 are done. What is left from them: the public Python API sketched in architecture §4.8 is not built. Programs write source (see M8), or use the IR (`redocx.ir`) and the compiler (`redocx.compiler`) directly.
 
 After that, the tooling ideas, the "Later" candidates above, and the known gaps as documents need them.

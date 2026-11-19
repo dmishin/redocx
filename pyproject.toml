@@ -1,6 +1,6 @@
 [project]
 name = "redocx"
-version = "0.0.1"
+version = "0.1.0"
 description = "A document markup language that compiles to native, fully formatted Word (.docx) documents."
 readme = "README.md"
 license = "Apache-2.0"
@@ -14,7 +14,7 @@ dependencies = [
     "pygments>=2.18",
 ]
 classifiers = [
-    "Development Status :: 1 - Planning",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",

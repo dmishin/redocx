@@ -86,6 +86,8 @@ def forecast(y, alpha=0.3):
 
 - [redocx in one page](docs/guide/README.md): the short guide, with links to the topic guides (tables, pictures,
   styles, references, sections, math and code, macros, forms, import).
+- [Generating documents](docs/guide/generating.md): writing source from a program or Jinja, escaping data,
+  compiling from scripts.
 - [For TeX users](docs/guide/tex.md): some LaTeX constructs and their nearest redocx equivalents.
 - [Command reference](docs/reference.md): every command, option and formatting property, generated from the
   compiler's own tables (`python tools/make_reference.py`).
@@ -99,18 +101,23 @@ def forecast(y, alpha=0.3):
 | 3 | [Language design](docs/03-language-design.md) | Syntax, commands, styles, lists, tables, math, macros, escape hatches |
 | 4 | [Architecture](docs/04-architecture.md) | Compiler pipeline, intermediate representation, OOXML writer, templates |
 | 5 | [Feature matrix](docs/05-feature-matrix.md) | Word features × implementation tier |
-| 6 | [Roadmap](docs/06-roadmap.md) | Milestones M0–M6 and exit criteria |
+| 6 | [Roadmap](docs/06-roadmap.md) | Milestones M0–M8 and exit criteria |
 | 7 | [Testing strategy](docs/07-testing-strategy.md) | How we know the output is correct |
 | 8 | [Decisions & open questions](docs/08-open-questions.md) | Decision log and what is still open |
+| 9 | [Postponed features](docs/09-postponed.md) | What is left out on purpose, and known gaps |
 
 ## Development status
 
-Milestones M0–M7 are done (see the [roadmap](docs/06-roadmap.md)): styles and style sheets, lists with
+Milestones M0–M8 are done (see the [roadmap](docs/06-roadmap.md)): styles and style sheets, lists with
 real Word numbering, tables, pictures, captions and cross-references, fields, notes, math, code, citations, sections,
 text boxes, forms, comments, templates, importing Word documents back to source, and (M7) checks that what compiles
-opens in Word, a command reference, guides and `redocx explain`.
+opens in Word, a command reference, guides and `redocx explain`, and (M8) generation: `redocx.escape`, standard
+input and output, JSON diagnostics and `--root`. The grammar is frozen since 0.1.0; see the
+[changelog](CHANGELOG.md).
 
 ## Development
+
+See [CONTRIBUTING](CONTRIBUTING.md) for what a change includes and how it is checked.
 
 Requirements: [uv](https://docs.astral.sh/uv/) (it installs Python 3.12+ if needed) and, for the OOXML validator
 tests, the [.NET SDK](https://dotnet.microsoft.com/download) 8 or later.

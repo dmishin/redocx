@@ -1,9 +1,9 @@
 # 3. Language Design
 
-> **Status:** v0.2, implemented through M7. It includes the decisions from the M0 syntax spike
+> **Status:** v0.2, implemented through M8. It includes the decisions from the M0 syntax spike
 > ([findings](../examples/spike/FINDINGS.md), referenced below as F-n). The grammar was settled in M1 (§3.22–3.23)
-> and has been stable since, but is not formally frozen. For every command and option, see the generated
-> [command reference](reference.md).
+> and is frozen since 0.1.0: later changes keep the meaning of valid sources ([Q14](08-open-questions.md)). For
+> every command and option, see the generated [command reference](reference.md).
 > File extensions: `.rdx` (documents and macro files), `.rdxs` (style sheets). Encoding: UTF-8.
 
 ## 3.1 Design goals for the syntax

@@ -5,8 +5,8 @@ with no repair prompt, pass both validators, and match their golden snapshots.
 
 ## M0: Foundations
 
-- [x] Repository setup: `uv`, `ruff`, `pyright --strict`, `pytest`, GitHub Actions (Windows, Linux, macOS), license.
-  CONTRIBUTING is still to do.
+- [x] Repository setup: `uv`, `ruff`, `pyright --strict`, `pytest`, GitHub Actions (Windows, Linux, macOS), license,
+  CONTRIBUTING.
 - [x] OPC package writer: content types, relationships, deterministic zip.
 - [x] Minimal part writers: document, styles (docDefaults, the four default styles, user styles), settings, core and app
   props, fontTable, theme (own default theme).
@@ -42,7 +42,7 @@ with no repair prompt, pass both validators, and match their golden snapshots.
 - **Exit:** a real 20-page document can be authored entirely in redocx. Language grammar v0.1 is frozen.
   *Status:* the 4-page specification trial builds cleanly, and its remaining gaps (headers and footers, TOC,
   cross-references, captions, footnotes, sections) are M2 items. The grammar has been stable through M1 (v0.2 plus the
-  §3.22–3.23 rules) and through M2–M7; freezing it formally is still to do.
+  §3.22–3.23 rules) and through M2–M7, and was frozen at 0.1.0 ([Q14](08-open-questions.md)).
 
 ## M2: Word structure (where redocx goes beyond Pandoc)
 
@@ -313,12 +313,9 @@ building blocks. Postponed indefinitely: see [Postponed features](09-postponed.m
 
 ## Still to do
 
-M0–M7 are done. What is left from them:
-
-1. Freeze the language grammar (M1 exit).
-2. CONTRIBUTING (M0).
-3. The public Python API sketched in [architecture §4.8](04-architecture.md) is not built; the IR (`redocx.ir`) and
-   the compiler (`redocx.compiler`) are the only programmatic entry points so far.
+M0–M8 are done. What is left from them: the public Python API sketched in
+[architecture §4.8](04-architecture.md) is not built. Programs write source (see M8), or use the IR (`redocx.ir`) and
+the compiler (`redocx.compiler`) directly.
 
 After that, the [tooling ideas](ideas/tooling.md), the "Later" candidates above, and the
 [known gaps](09-postponed.md) as documents need them.
