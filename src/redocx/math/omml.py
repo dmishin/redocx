@@ -24,11 +24,12 @@ from redocx.math.nodes import (
     Nary,
     Node,
     Rad,
+    Raw,
     Row,
     Run,
     Scripts,
 )
-from redocx.ooxml.xml import E, Element
+from redocx.ooxml.xml import E, Element, parse_fragment
 
 MATH_FONT = "Cambria Math"
 DEFAULT_ACCENT = "̂"
@@ -72,6 +73,9 @@ class _Writer:
                 align = False
                 continue
             align = False
+            if isinstance(node, Raw):  # checked against the schemas when it was lowered
+                out.extend(parse_fragment(node.xml, math=True))
+                continue
             out.append(self.node(node))
         return out
 
@@ -200,6 +204,8 @@ class _Writer:
                 return E("m:eqArr", E("m:eqArrPr", _ctrl()), *(self.arg("m:e", r) for r in rows))
             case Align():
                 return self.run(Run(""), align=True)
+            case Raw():
+                raise TypeError("raw OMML is written by `row`")
         raise TypeError(f"unknown math node {node!r}")
 
     def numbered(self, row: Row, number: str, bookmark: str | None) -> Element:

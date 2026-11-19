@@ -6,7 +6,7 @@ import pytest
 from lxml import etree
 
 from redocx import ir
-from redocx.compiler import compile_source
+from redocx.compiler import build, compile_source
 from redocx.math.nodes import (
     Accent,
     Align,
@@ -18,12 +18,14 @@ from redocx.math.nodes import (
     Matrix,
     Nary,
     Rad,
+    Raw,
     Run,
     Scripts,
     linear_text,
 )
 from redocx.math.omml import omml
 from redocx.math.parser import MathError, parse_math
+from tests.support.xsd import validate_package
 
 M = "{http://schemas.openxmlformats.org/officeDocument/2006/math}"
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
@@ -220,3 +222,72 @@ def test_math_errors_point_into_the_document() -> None:
 def test_labelled_equations_must_be_numbered() -> None:
     result = compile_source("\\math[id=eq:x, nonumber]{x}")
     assert [d.message for _, d in result.diagnostics] == ["a labelled equation must be numbered"]
+
+
+# --- raw OMML: \ooxml{...} in a formula, whole equations in \raw -------------------------------------
+
+SPRE = (
+    "<m:sPre><m:sub><m:r><m:t>1</m:t></m:r></m:sub><m:sup><m:r><m:t>2</m:t></m:r></m:sup>"
+    "<m:e><m:r><m:t>X</m:t></m:r></m:e></m:sPre>"
+)
+
+
+def test_ooxml_parses_to_a_raw_node() -> None:
+    (a, plus, raw) = parse_math(f"a + \\ooxml{{ {SPRE} }}")
+    assert (a, plus) == (Run("a"), Run("+"))
+    assert raw == Raw(SPRE)
+    assert isinstance(raw, Raw)
+    assert (raw.start, raw.end) == (4, 4 + len("\\ooxml{ ") + len(SPRE) + len(" }"))
+    assert linear_text((raw,)) == "12X"
+
+
+def test_ooxml_is_written_as_it_is() -> None:
+    element = omml((Run("a"), Raw(SPRE)), display=False)
+    assert [str(c.tag).removeprefix(M) for c in element] == ["r", "sPre"]
+    data = build(f"Text \\m{{a + \\ooxml{{{SPRE}}}}} end.")[0]
+    assert data is not None
+    assert validate_package(data) == {}
+
+
+def test_braces_and_backslashes_in_ooxml_are_entities() -> None:
+    xml = "<m:r><m:t>&#x7B;&#x5C;&#x7D;</m:t></m:r>"
+    assert linear_text(parse_math(f"\\ooxml{{{xml}}}")) == "{\\}"
+    compiled(f"\\m{{\\ooxml{{{xml}}}}}")
+
+
+@pytest.mark.parametrize(
+    ("formula", "message"),
+    [
+        (
+            "\\ooxml{<m:sPre><m:e/></m:sPre>}",
+            "OMML that Word would reject: `m:e` is not allowed here",
+        ),
+        ("\\ooxml{<w:r/>}", "OMML must be math (m:) elements, got w:r"),
+        ("\\ooxml{<m:r>}", "not well-formed XML"),
+        ("\\ooxml{ }", "`\\ooxml` needs OMML elements"),
+    ],
+)
+def test_ooxml_errors_point_at_the_command(formula: str, message: str) -> None:
+    text = f"Text \\m{{x + {formula}}} end."
+    result = compile_source(text)
+    ((source, diagnostic),) = result.diagnostics
+    assert diagnostic.code.value == "RDX0311"
+    assert diagnostic.message.startswith(message), diagnostic.message
+    assert source.text[diagnostic.span.start : diagnostic.span.end] == formula
+
+
+def test_whole_equations_in_raw() -> None:
+    doc = compiled(
+        "\\raw[ooxml]{<m:oMathPara><m:oMath><m:r><m:t>E</m:t></m:r></m:oMath></m:oMathPara>}\n\n"
+        "Inline \\raw[ooxml]{<m:oMath><m:r><m:t>x</m:t></m:r></m:oMath>} here."
+    )
+    assert len(list(doc.all_paragraphs())) == 2
+    result = compile_source("\\raw[ooxml]{<m:f/>}")
+    messages = [d.message for _, d in result.diagnostics]
+    assert any("whole equations (m:oMath, m:oMathPara), got m:f" in m for m in messages)
+
+
+def test_ir_json_leaves_out_source_offsets() -> None:
+    from redocx.ir_json import encode
+
+    assert encode(Raw(SPRE, 3, 9)) == {"type": "Raw", "xml": SPRE}

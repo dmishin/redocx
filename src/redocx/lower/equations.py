@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from redocx import ir
 from redocx.commands.bind import Args
 from redocx.lower.common import BlockHandler, Format, InlineHandler, Piece
+from redocx.math.nodes import Raw, walk
 from redocx.math.nodes import Row as MathRow
 from redocx.math.parser import MathError, parse_math
 from redocx.syntax import ast
@@ -77,11 +78,40 @@ def _parse(lw: Lowering, text: str, start: int, span: Span) -> MathRow | None:
     if not text.strip():
         return None
     try:
-        return parse_math(text)
+        expr = parse_math(text)
     except MathError as e:
         where = replace(span, start=start + e.start, end=start + e.end) if start >= 0 else span
         lw.report(Code.MATH, e.message, where, e.hint)
         return None
+    ok = True
+    for node in walk(expr):
+        if isinstance(node, Raw) and (problem := _raw_problem(node.xml)) is not None:
+            where = replace(span, start=start + node.start, end=start + node.end)
+            lw.report(Code.MATH, problem, where if start >= 0 else span, help=RAW_HELP)
+            ok = False
+    return expr if ok else None
+
+
+RAW_HELP = (
+    "\\ooxml holds OMML (m:) elements and is checked against the ECMA-376 schemas; "
+    "elements of other namespaces are not checked"
+)
+
+
+def _raw_problem(xml: str) -> str | None:
+    """Why the XML of `\\ooxml{...}` does not fit in an equation, or None."""
+    from redocx.ooxml.validate import fragment_problems  # loads the schemas: only when used
+    from redocx.ooxml.xml import parse_fragment
+
+    try:
+        parse_fragment(xml, math=True)
+    except ValueError as e:
+        return str(e)
+    problems = fragment_problems(xml, "math")
+    if not problems:
+        return None
+    more = f" (and {len(problems) - 1} more)" if len(problems) > 1 else ""
+    return f"OMML that Word would reject: {problems[0]}{more}"
 
 
 BLOCKS: dict[str, BlockHandler] = {"math": display_command}

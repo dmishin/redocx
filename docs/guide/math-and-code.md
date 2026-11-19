@@ -41,6 +41,19 @@ The supported LaTeX:
 
 A command outside this list is an error at its place in the formula, with the nearest supported command.
 
+### Raw OMML
+
+For what LaTeX notation cannot say, such as a pre-script or a boxed term, `\ooxml{…}` puts Word's own math XML
+(OMML) into a formula. The rest of the formula stays LaTeX:
+
+```rdx
+Carbon-14 is \m{\ooxml{<m:sPre><m:sub><m:r><m:t>6</m:t></m:r></m:sub><m:sup><m:r><m:t>14</m:t></m:r></m:sup><m:e><m:r><m:t>C</m:t></m:r></m:e></m:sPre>}}.
+```
+
+The XML is checked when the document compiles: it must be `m:` elements that are valid at that place in an
+equation, or the build stops with an error pointing at the `\ooxml`. Write `{`, `}` and `\` in its text as `&#x7B;`,
+`&#x7D;` and `&#x5C;`. A whole equation can be raw too, with `\raw[ooxml]{<m:oMath>…</m:oMath>}`.
+
 ## Code blocks
 
 ````rdx

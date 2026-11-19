@@ -53,21 +53,41 @@ RAW_NAMESPACES = {
 """Prefixes raw XML (\\raw, ooxml.* options) may use without declaring them."""
 
 
-def parse_fragment(text: str) -> list[Element]:
+_MATH = RAW_NAMESPACES["m"]
+_EQUATIONS = frozenset({f"{{{_MATH}}}oMath", f"{{{_MATH}}}oMathPara"})
+
+
+def parse_fragment(text: str, *, math: bool = False) -> list[Element]:
     """Parse raw WordprocessingML written by hand: elements with the usual prefixes (w:,
-    r:, a:, ...), which need not be declared. Raises ValueError with lxml's message."""
+    r:, a:, m:, ...), which need not be declared. The top-level elements are w: elements or
+    whole equations (m:oMath, m:oMathPara); with `math`, OMML elements (m:) for inside an
+    equation. Raises ValueError with lxml's message."""
     declarations = " ".join(f'xmlns:{p}="{u}"' for p, u in RAW_NAMESPACES.items())
     try:
         root = etree.fromstring(f"<rdx-raw {declarations}>{text}</rdx-raw>".encode())
     except etree.XMLSyntaxError as e:
         raise ValueError(f"not well-formed XML: {e.msg}") from None
+    inside = "m:t" if math else "w:t"
     if (root.text or "").strip() or any((child.tail or "").strip() for child in root):
-        raise ValueError("raw XML must be elements only (text belongs inside w:t)")
+        raise ValueError(f"raw XML must be elements only (text belongs inside {inside})")
     elements = [child for child in root if isinstance(child.tag, str)]
     for element in elements:
-        if not str(element.tag).startswith(f"{{{NS.W}}}"):
-            raise ValueError(f"raw XML must be WordprocessingML (w:) elements, got {element.tag}")
+        tag = str(element.tag)
+        if math and not tag.startswith(f"{{{_MATH}}}"):
+            raise ValueError(f"OMML must be math (m:) elements, got {_prefixed(tag)}")
+        if not math and not tag.startswith(f"{{{NS.W}}}") and tag not in _EQUATIONS:
+            raise ValueError(
+                "raw XML must be WordprocessingML (w:) elements or whole equations "
+                f"(m:oMath, m:oMathPara), got {_prefixed(tag)}"
+            )
     return elements
+
+
+def _prefixed(tag: str) -> str:
+    """`{uri}local` as `prefix:local` when the prefix is one raw XML may use."""
+    uri, _, local = tag[1:].partition("}")
+    prefix = next((p for p, u in RAW_NAMESPACES.items() if u == uri), None)
+    return f"{prefix}:{local}" if prefix else tag
 
 
 def qn(name: str) -> str:

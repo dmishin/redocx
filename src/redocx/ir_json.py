@@ -52,7 +52,7 @@ def encode(value: object) -> object:
         out: dict[str, object] = {"type": type(value).__name__}
         for f in dataclasses.fields(value):
             item = getattr(value, f.name)
-            if not _is_default(f, item):
+            if f.compare and not _is_default(f, item):  # compare=False: source offsets
                 out[f.name] = encode(item)
         return out
     return str(value)

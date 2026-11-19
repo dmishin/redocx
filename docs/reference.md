@@ -919,7 +919,7 @@ An inline formula.
 <a id="cmd-raw"></a>
 ### `\raw`
 
-Raw WordprocessingML (block or inline, by its elements).
+Raw WordprocessingML (block or inline, by its elements) or a whole equation.
 
 - **Where:** inside text, or alone as a block.
 - **Body:** XML, read as is (braces must balance).

@@ -24,7 +24,7 @@ SCHEMAS = Path(__file__).resolve().parents[1] / "data" / "schemas"
 MC = "http://schemas.openxmlformats.org/markup-compatibility/2006"
 XML = "http://www.w3.org/XML/1998/namespace"
 
-Context = Literal["block", "inline", "rPr", "pPr", "tblPr", "tcPr"]
+Context = Literal["block", "inline", "math", "rPr", "pPr", "tblPr", "tcPr"]
 """Where raw XML goes: block-level or run-level content, or a property container."""
 
 
@@ -127,7 +127,7 @@ def fragment_problems(text: str, context: Context) -> list[str]:
     where it goes, in short messages; empty when it does. Elements and attributes of
     namespaces the schemas do not define (w14:, w15:, ...) are not checked."""
     problems: list[str] = []
-    for element in parse_fragment(text):  # one at a time: property elements replace ours
+    for element in parse_fragment(text, math=context == "math"):  # one at a time
         problems += _check(element, context)
     return list(dict.fromkeys(problems))
 
@@ -139,6 +139,8 @@ def _check(element: Element, context: Context) -> list[str]:
             body = E("w:body", content)
         case "inline":
             body = E("w:body", E("w:p", content))
+        case "math":
+            body = E("w:body", E("w:p", E("m:oMath", content)))
         case "rPr":
             body = E("w:body", E("w:p", E("w:r", E("w:rPr", content))))
         case "pPr":

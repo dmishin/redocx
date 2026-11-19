@@ -6,7 +6,11 @@ is a sequence of nodes, the content of an OMML argument (m:e, m:num, m:sub, ...)
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import html
+import re
+from collections.abc import Iterator
+from dataclasses import dataclass, field, fields, is_dataclass
+from typing import cast
 
 Row = tuple["Node", ...]
 
@@ -122,6 +126,17 @@ class EqArr:
     rows: tuple[Row, ...]
 
 
+@dataclass(frozen=True)
+class Raw:
+    """OMML written as XML (`\\ooxml{...}` in a formula), kept as it is: m: elements such as
+    m:sPre or m:box that the LaTeX subset has no form for."""
+
+    xml: str
+    start: int = field(default=0, compare=False)
+    """Offsets of the command in the formula, for messages."""
+    end: int = field(default=0, compare=False)
+
+
 Node = (
     Run
     | Align
@@ -137,7 +152,29 @@ Node = (
     | GroupChr
     | Matrix
     | EqArr
+    | Raw
 )
+
+
+def walk(row: Row) -> Iterator[Node]:
+    """Every node of a formula, outer ones first."""
+    for node in row:
+        yield node
+        for f in fields(node):
+            yield from _walk_value(getattr(node, f.name))
+
+
+def _walk_value(value: object) -> Iterator[Node]:
+    """The nodes in a field: a node, a row, or rows of rows (a matrix)."""
+    if isinstance(value, tuple):
+        for item in cast("tuple[object, ...]", value):
+            if is_dataclass(item):
+                yield from walk((cast("Node", item),))
+            else:
+                yield from _walk_value(item)
+
+
+_TEXT_RE = re.compile(r"<m:t(?:\s[^>]*)?>([^<]*)</m:t>")
 
 
 def linear_text(row: Row) -> str:
@@ -184,4 +221,6 @@ def linear_text(row: Row) -> str:
                 out.append(" \\\\ ".join(linear_text(r) for r in rows))
             case Align():
                 pass
+            case Raw(xml=xml):
+                out.append("".join(html.unescape(t) for t in _TEXT_RE.findall(xml)))
     return "".join(out)

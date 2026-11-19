@@ -581,6 +581,12 @@ $$\begin{aligned}
 - Custom operators: `\operatorname{argmin}` (`\operatorname*` for limits underneath) or `\mathop{argmin}`.
 - Unsupported commands are errors at their position in the document (`RDX0311`), with the nearest known command as a
   suggestion.
+- **Raw OMML** for what the subset cannot say: `\ooxml{…}` inside a formula holds Office Math elements as they are,
+  `\m{a + \ooxml{<m:sPre><m:sub>…</m:sub><m:sup>…</m:sup><m:e>…</m:e></m:sPre>} = c}`. The XML is checked like other
+  raw XML (§3.20): `m:` elements only, well-formed, and valid where they go inside `m:oMath`; a problem is an
+  `RDX0311` error at the command. Write `{`, `}` and `\` in its text as `&#x7B;`, `&#x7D;` and `&#x5C;`, so the
+  formula's braces stay balanced. A whole equation can also be raw: `\raw[ooxml]{<m:oMath>…</m:oMath>}`
+  (inline) or `<m:oMathPara>` (display, in a paragraph of its own).
 
 **The supported subset** (`redocx.math`):
 
@@ -834,10 +840,12 @@ uses a `Bibliography` paragraph style. Native Word citations (`CITATION` fields,
    write under the same name; the elements must be ones that container holds.
 3. `\raw[ooxml]{<w:r>…</w:r>}`: raw run- or block-level WordprocessingML. The body is raw. A body of `w:p`, `w:tbl`
    (or a `w:sdt` holding them) is a block of its own; anything else goes inline. Run-level and block-level elements
-   cannot be mixed.
-4. `\embed-docx{part.docx}`: insert another document as `altChunk`. Word merges it on open (§3.16).
+   cannot be mixed. Whole equations (`m:oMath`, `m:oMathPara`) count as run-level.
+4. `\ooxml{…}` inside math: raw OMML elements in a formula (§3.14).
+5. `\embed-docx{part.docx}`: insert another document as `altChunk`. Word merges it on open (§3.16).
 
-Raw XML is checked when the document compiles: it must be well-formed WordprocessingML (`w:` elements; the usual
+Raw XML is checked when the document compiles: it must be well-formed WordprocessingML (`w:` elements or whole
+equations, and `m:` elements in `\ooxml`; the usual
 prefixes `w:`, `r:`, `a:`, `wp:`, `pic:`, `w14:`, `mc:`, `v:`, `o:`, `m:` need no declaration). A bad escape hatch is a
 compile error, not a corrupt file. It is also checked against the ECMA-376 schemas where it goes (block or run
 content, or the property container of an `ooxml.*` option), so an unknown element, a misplaced one or a bad value

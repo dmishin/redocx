@@ -26,6 +26,7 @@ from redocx.math.nodes import (
     Nary,
     Node,
     Rad,
+    Raw,
     Row,
     Run,
     Scripts,
@@ -37,9 +38,11 @@ KNOWN_COMMANDS = sorted(
         *S.SIZED, *S.IGNORED, *(k for k in S.SPACES if k.isalpha()),
         "frac", "dfrac", "tfrac", "cfrac", "binom", "dbinom", "tbinom", "sqrt", "operatorname",
         "mathop", "overline", "underline", "overbrace", "underbrace", "overset", "underset",
-        "stackrel", "left", "right", "begin", "end", "not",
+        "stackrel", "left", "right", "begin", "end", "not", "ooxml",
     }
 )  # fmt: skip
+
+OOXML_HINT = "write OMML elements, e.g. \\ooxml{<m:sPre>...</m:sPre>}; see design §3.14"
 
 
 class MathError(ValueError):
@@ -418,6 +421,11 @@ class _Parser:
                 }
                 return [Run(negated.get(nxt[0].text, nxt[0].text + "̸"))]
             raise self.error("`\\not` applies to a symbol", start, self.i)
+        if name == "ooxml":
+            xml = self.raw_group().strip()
+            if not xml:
+                raise self.error("`\\ooxml` needs OMML elements", start, self.i, OOXML_HINT)
+            return [Raw(xml, start, self.i)]
         if name in S.IGNORED and name not in ("left", "right"):
             return []
         close = difflib.get_close_matches(name, KNOWN_COMMANDS, n=1)
