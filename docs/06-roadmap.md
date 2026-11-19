@@ -15,8 +15,8 @@ with no repair prompt, pass both validators, and match their golden snapshots.
 - [x] First version of the property registry: 15 run and 14 paragraph properties, with schema-order tables checked against `wml.xsd`.
 - [x] **Spike:** 5 representative documents in the proposed syntax. See the [findings](../examples/spike/FINDINGS.md).
 - **Exit:** the Python API produces a valid document with styled paragraphs. This is met locally: the golden cases pass both validators
-  and open in Word 365 with the expected formatting. CI (`.github/workflows/ci.yml`) has not run yet because the
-  repository has no GitHub remote; note that it runs on pushes to `main`.
+  and open in Word 365 with the expected formatting. CI (`.github/workflows/ci.yml`) runs on pushes to `main` and
+  on pull requests.
 
 ## M1: Core language (roughly "Pandoc parity")
 
@@ -299,7 +299,7 @@ building blocks. Postponed indefinitely: see [Postponed features](09-postponed.m
 M0–M7 are done. What is left from them:
 
 1. Freeze the language grammar (M1 exit).
-2. CONTRIBUTING (M0), and a GitHub remote so CI runs.
+2. CONTRIBUTING (M0).
 3. The public Python API sketched in [architecture §4.8](04-architecture.md) is not built; the IR (`redocx.ir`) and
    the compiler (`redocx.compiler`) are the only programmatic entry points so far.
 
