@@ -20,6 +20,7 @@ from decimal import Decimal
 
 from redocx import ir
 from redocx.commands.builtin import NOTE_FORMATS, NOTE_POSITIONS, NOTE_RESTARTS, PAGE_SIZES
+from redocx.escape import inline, line_start
 from redocx.importer.labels import HIDDEN, Caption, Labels, analyse
 from redocx.importer.values import (
     border,
@@ -38,8 +39,6 @@ from redocx.stylesheet.compiler import BANDS, CONDITION_TARGETS, RUN_LAST, TABLE
 from redocx.values import Length
 
 INDENT = "  "
-_BLOCK_START_RE = re.compile(r"(-|\d{1,9}\.)(?=[ \t])")
-_AUTOLINK_RE = re.compile(r"<(?=[A-Za-z][A-Za-z0-9+.-]*:)")
 _SIMPLE_FIELDS = {"PAGE": "\\pagenum", "NUMPAGES": "\\numpages", "SECTIONPAGES": "\\sectionpages"}
 _MERGEFORMAT_RE = re.compile(r"\s*\\\*\s*MERGEFORMAT\s*", re.IGNORECASE)
 _TOC_LEVELS_RE = re.compile(r'\\o\s+"(\d)-(\d)"')
@@ -113,40 +112,6 @@ def _join(tokens: Sequence[_Tok]) -> str:
             if nxt.isalnum() or nxt in "-[":
                 out.append("{}")
     return "".join(out)
-
-
-def _escape(text: str) -> str:
-    """Plain text as markup: what would be read as markup is escaped."""
-    out: list[str] = []
-    for i, ch in enumerate(text):
-        prev = text[i - 1] if i else ""
-        nxt = text[i + 1] if i + 1 < len(text) else ""
-        if ch in "\\{}[]`~":
-            out.append("\\" + ch)
-        elif ch == "\u00a0":
-            out.append("~")
-        elif ch == "%" and (not prev or prev.isspace()):
-            out.append("\\%")
-        elif ch in "*_" and not prev.isalnum():
-            out.append("\\" + ch)
-        elif ch == "@" and nxt.isalpha() and not prev.isalnum():
-            out.append("\\@")
-        elif ch == "<" and _AUTOLINK_RE.match(text, i):
-            out.append("\\font{<}")
-        else:
-            out.append(ch)
-    return "".join(out)
-
-
-def _guard(text: str) -> str:
-    """`text` at the start of a line or body: block sugar there is made literal."""
-    stripped = text.lstrip(" ")
-    lead = text[: len(text) - len(stripped)]
-    if m := _BLOCK_START_RE.match(stripped):
-        return lead + "\\font{" + m.group(1) + "}" + stripped[m.end() :]
-    if stripped.startswith(("=", "|", "$$")):
-        return lead + "\\" + stripped
-    return text
 
 
 def _indent(text: str, prefix: str) -> str:
@@ -386,7 +351,7 @@ class Printer:
         if len(blocks) == 1 and isinstance(blocks[0], ir.Paragraph):
             only = blocks[0]
             if self._is_plain(only, default_style):
-                return _guard(self.inline(only.content))
+                return line_start(self.inline(only.content))
         if not blocks:
             return ""
         printed = "\n\n".join(self.blocks(blocks, default_style))
@@ -497,8 +462,8 @@ class Printer:
         if content and all(isinstance(i, ir.Break) for i in content) and not opts:
             return text
         if not opts and text.strip():
-            return _guard(text)
-        return f"\\p{_opts(opts)}{{{_guard(text)}}}"
+            return line_start(text)
+        return f"\\p{_opts(opts)}{{{line_start(text)}}}"
 
     def list(self, items: Sequence[ir.Paragraph]) -> str:
         first = items[0].list_item
@@ -531,7 +496,7 @@ class Printer:
             linked = level.style if level is not None and level.style else "List Paragraph"
             plain = replace(item, list_item=None)
             if self._is_plain(plain, linked):
-                text = _guard(self.inline(item.content))
+                text = line_start(self.inline(item.content))
             else:
                 text = self.paragraph(plain, linked)
             prefix = "   " * (depth - 1)
@@ -675,7 +640,7 @@ class Printer:
             opts.append(f"id={caption.label}")
         self.styles_used.add("caption")
         text = self.inline(caption.text, self._run_base("Caption"))
-        return f"\\caption{_opts(opts)}{{{_guard(text)}}}"
+        return f"\\caption{_opts(opts)}{{{line_start(text)}}}"
 
     def tokens(self, items: Sequence[ir.Inline]) -> list[_Tok]:
         out: list[_Tok] = []
@@ -713,7 +678,7 @@ class Printer:
             opts.append(f"initials={quote(comment.initials)}")
         if comment.date is not None:
             opts.append(f"date={_date(comment.date)}")
-        body = "" if inner is None else "{" + _guard(self.inline(inner)) + "}"
+        body = "" if inner is None else "{" + line_start(self.inline(inner)) + "}"
         return f"\\comment{_opts(opts)}{body}"
 
     def item(self, item: ir.Inline) -> list[_Tok]:
@@ -731,7 +696,7 @@ class Printer:
             runs = [r for r in item.content if isinstance(r, ir.Run)]
             plain = bool(runs) and all(r.style is None for r in runs)  # no Hyperlink look
             opts = f"to={_string(target)}" + (", style=none" if plain else "")
-            return [_Tok(f"\\link[{opts}]{{{_guard(inner)}}}")]
+            return [_Tok(f"\\link[{opts}]{{{line_start(inner)}}}")]
         if isinstance(item, ir.Field):
             if (ref := self.labels.is_label_field(item)) is not None:
                 return [self._reference(*ref)]
@@ -765,7 +730,7 @@ class Printer:
             elif piece == "\n":
                 tokens.append(_Tok("\\br", bare=True))
             elif piece:
-                tokens.append(_Tok(_escape(piece)))
+                tokens.append(_Tok(inline(piece)))
         props = run.props
         if self.run_base is not None and run.style is None:
             props = _differences(props, self.run_base)  # what the paragraph style already gives
@@ -781,13 +746,15 @@ class Printer:
         else:
             wrappers = []
         if props:
-            tokens = [_Tok(f"\\font{_opts(options(Target.RUN, props))}{{{_guard(_join(tokens))}}}")]
+            tokens = [
+                _Tok(f"\\font{_opts(options(Target.RUN, props))}{{{line_start(_join(tokens))}}}")
+            ]
         for command in wrappers:
-            tokens = [_Tok(f"\\{command}{{{_guard(_join(tokens))}}}")]
+            tokens = [_Tok(f"\\{command}{{{line_start(_join(tokens))}}}")]
         if style is not None:
             self.styles_used.add(style.lower())
             shown = display_name(style)
-            body = _guard(_join(tokens))
+            body = line_start(_join(tokens))
             marker = _EMPHASIS.get(shown) if self.sugar and not props and not wrappers else None
             if marker is not None:
                 command = {"*": "strong", "_": "emph"}[marker]
@@ -959,7 +926,7 @@ class Printer:
             for i in control.content
             if not (isinstance(i, ir.Run) and i.style and i.style.lower() == "placeholder text")
         ]
-        return f"\\control{_opts(opts)}{{{_guard(self.inline(content))}}}"
+        return f"\\control{_opts(opts)}{{{line_start(self.inline(content))}}}"
 
     # --- the style sheet --------------------------------------------------------------------
 

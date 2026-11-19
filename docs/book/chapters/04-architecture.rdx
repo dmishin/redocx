@@ -54,6 +54,7 @@ src/redocx/
   props/         PROPERTY REGISTRY: name, type, units, OOXML target, docs — single source of truth
   ir.py          IR node dataclasses; ir_json.py: the one-way JSON dump (--emit-ir)
   values.py      units and colours
+  escape.py      data escaped as markup, string bodies or option values, for generated source
   math/          LaTeX-subset parser → OMML
   highlight.py   Pygments → runs + generated code styles
   bibliography.py  BibTeX / CSL-JSON and citeproc-py

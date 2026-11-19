@@ -27,7 +27,7 @@ Old name wordgenx/.wgx; leftovers = bugs.
 - ir.py: IR dataclasses (Word-shaped). ir_json.py: --emit-ir.
 - ooxml/: writer + parts/, template merge, reader (.docx -> IR), integrity (RDX0401), XSD validate.
 - importer/: IR -> .rdx printer, labels, check.py (round-trip oracle).
-- math/ (LaTeX subset -> OMML), highlight.py (Pygments), bibliography.py (BibTeX/CSL), std/ (std: macro library, .rdx), explain.py.
+- escape.py: data -> safe .rdx text (public; importer uses it). math/ (LaTeX subset -> OMML), highlight.py (Pygments), bibliography.py (BibTeX/CSL), std/ (std: macro library, .rdx), explain.py.
 - data/: XSDs, CSL styles.
 - tests/: per package. golden/ = snapshots. corpus/ = Word-made .docx.
 - tools/: make_reference.py, md2rdx.py (docs/*.md -> docs/book), ooxml-validate/ (.NET validator), corpus/make-corpus.ps1 (Word COM).
