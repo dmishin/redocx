@@ -9,6 +9,7 @@ Word's own `#` and the number in a delimiter.
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
+from dataclasses import replace
 
 from redocx.math.nodes import (
     Accent,
@@ -60,18 +61,22 @@ class _Writer:
         self.bookmark_id: Callable[[str], int] = bookmark or _no_bookmarks
 
     def row(self, row: Row) -> list[Element]:
+        # Word marks an alignment point in an equation array with `&` in the math text (it
+        # ignores m:aln there), so an Align is written as & at the start of the next run.
         out: list[Element] = []
         align = False
         for node in _merge_runs(row):
             if isinstance(node, Align):
+                if align:
+                    out.append(self.run(Run("&")))
                 align = True
                 continue
-            if align and not isinstance(node, Run):
-                out.append(self.run(Run(""), align=True))
-            elif align:
-                out.append(self.run(node, align=True))  # type: ignore[arg-type]
+            if align and isinstance(node, Run) and not node.normal:
+                out.append(self.run(replace(node, text="&" + node.text)))
                 align = False
                 continue
+            if align:
+                out.append(self.run(Run("&")))
             align = False
             if isinstance(node, Raw):  # checked against the schemas when it was lowered
                 out.extend(parse_fragment(node.xml, math=True))
@@ -82,7 +87,7 @@ class _Writer:
     def arg(self, tag: str, row: Row | None) -> Element:
         return E(tag, *self.row(row or ()))
 
-    def run(self, run: Run, align: bool = False) -> Element:
+    def run(self, run: Run) -> Element:
         props: list[Element] = []
         if run.normal:
             props.append(E("m:nor"))
@@ -91,8 +96,6 @@ class _Writer:
                 props.append(_val("m:scr", run.script))
             if run.style:
                 props.append(_val("m:sty", run.style))
-        if align:
-            props.append(E("m:aln"))
         text_props = (
             E(
                 "w:rPr",
@@ -203,7 +206,7 @@ class _Writer:
             case EqArr(rows=rows):
                 return E("m:eqArr", E("m:eqArrPr", _ctrl()), *(self.arg("m:e", r) for r in rows))
             case Align():
-                return self.run(Run(""), align=True)
+                return self.run(Run("&"))
             case Raw():
                 raise TypeError("raw OMML is written by `row`")
         raise TypeError(f"unknown math node {node!r}")

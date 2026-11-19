@@ -1064,13 +1064,10 @@
                 </m:sup>
               </m:sSup>
               <m:r>
-                <m:rPr>
-                  <m:aln/>
-                </m:rPr>
                 <w:rPr>
                   <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
                 </w:rPr>
-                <m:t>=</m:t>
+                <m:t>&amp;=</m:t>
               </m:r>
               <m:sSup>
                 <m:sSupPr>
@@ -1133,13 +1130,10 @@
             </m:e>
             <m:e>
               <m:r>
-                <m:rPr>
-                  <m:aln/>
-                </m:rPr>
                 <w:rPr>
                   <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
                 </w:rPr>
-                <m:t>≥4ab</m:t>
+                <m:t>&amp;≥4ab</m:t>
               </m:r>
               <m:r>
                 <w:rPr>

@@ -3298,13 +3298,10 @@
                 </m:sub>
               </m:sSub>
               <m:r>
-                <m:rPr>
-                  <m:aln/>
-                </m:rPr>
                 <w:rPr>
                   <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
                 </w:rPr>
-                <m:t>=f(</m:t>
+                <m:t>&amp;=f(</m:t>
               </m:r>
               <m:sSub>
                 <m:sSubPr>
@@ -3377,13 +3374,10 @@
                 <m:t>,</m:t>
               </m:r>
               <m:r>
-                <m:rPr>
-                  <m:aln/>
-                </m:rPr>
                 <w:rPr>
                   <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
                 </w:rPr>
-                <m:t xml:space="preserve"/>
+                <m:t>&amp;</m:t>
               </m:r>
               <m:sSub>
                 <m:sSubPr>
@@ -3415,13 +3409,10 @@
                 </m:sub>
               </m:sSub>
               <m:r>
-                <m:rPr>
-                  <m:aln/>
-                </m:rPr>
                 <w:rPr>
                   <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
                 </w:rPr>
-                <m:t>∼</m:t>
+                <m:t>&amp;∼</m:t>
               </m:r>
               <m:r>
                 <m:rPr>
@@ -3471,13 +3462,10 @@
                 </m:sub>
               </m:sSub>
               <m:r>
-                <m:rPr>
-                  <m:aln/>
-                </m:rPr>
                 <w:rPr>
                   <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
                 </w:rPr>
-                <m:t>=h(</m:t>
+                <m:t>&amp;=h(</m:t>
               </m:r>
               <m:sSub>
                 <m:sSubPr>
@@ -3550,13 +3538,10 @@
                 <m:t>,</m:t>
               </m:r>
               <m:r>
-                <m:rPr>
-                  <m:aln/>
-                </m:rPr>
                 <w:rPr>
                   <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
                 </w:rPr>
-                <m:t xml:space="preserve"/>
+                <m:t>&amp;</m:t>
               </m:r>
               <m:sSub>
                 <m:sSubPr>
@@ -3588,13 +3573,10 @@
                 </m:sub>
               </m:sSub>
               <m:r>
-                <m:rPr>
-                  <m:aln/>
-                </m:rPr>
                 <w:rPr>
                   <w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/>
                 </w:rPr>
-                <m:t>∼</m:t>
+                <m:t>&amp;∼</m:t>
               </m:r>
               <m:r>
                 <m:rPr>

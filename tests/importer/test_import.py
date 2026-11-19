@@ -430,7 +430,14 @@ def test_equations_print_as_latex(tmp_path: Path) -> None:
 
 
 def test_an_equation_with_no_latex_form_is_raw(tmp_path: Path) -> None:
+    # An alignment mark outside an equation array has no LaTeX form (read from Word it is
+    # an `&` in the text, so this comes only from a tree built by hand).
     body = (ir.Paragraph((ir.Math((Run("a"), Align(), Run("b")), display=True),)),)
-    source, compiled = imported(ir.Document(body=body), tmp_path)
-    assert "\\raw[ooxml]{<m:oMathPara><m:oMath>" in source
+    printed = print_document(ir.Document(body=body), "s.rdxs")
+    assert "\\raw[ooxml]{<m:oMathPara><m:oMath><m:r><m:t>a</m:t></m:r>" in printed.source
+    assert printed.lost["equation (kept as OMML)"] == 1
+    (tmp_path / "s.rdxs").write_text(printed.stylesheet, "utf-8")
+    (tmp_path / "doc.rdx").write_text(printed.source, "utf-8")
+    compiled = compile_file(tmp_path / "doc.rdx").document
+    assert compiled is not None
     assert any(isinstance(i, ir.RawXml) for p in compiled.all_paragraphs() for i in p.content)

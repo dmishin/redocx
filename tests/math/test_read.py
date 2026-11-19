@@ -238,6 +238,17 @@ def test_raw_xml_is_safe_inside_braces() -> None:
     assert back.findtext(f"{{{M}}}t") == "{a\\b}"
 
 
+def test_alignment_marks_are_words_ampersands() -> None:
+    row, _ = read(
+        "<m:eqArr><m:e><m:r><m:t>a&amp;=b</m:t></m:r></m:e>"
+        "<m:e><m:r><m:rPr><m:aln/></m:rPr><m:t>=c</m:t></m:r></m:e></m:eqArr>"
+    )
+    assert row == (EqArr(((Run("a"), Align(), Run("=b")), (Align(), Run("=c")))),)
+    written = etree.tostring(omml(parse_math(r"\begin{aligned}a&=b\end{aligned}"), display=False))
+    assert b"&amp;=b" in written
+    assert b"aln" not in written
+
+
 def test_raw_xml_uses_the_usual_prefixes() -> None:
     element = etree.fromstring(f'<x:r xmlns:x="{M}" xmlns:y="{W}"><y:rPr><y:b/></y:rPr></x:r>')
     assert raw_xml(element) == "<m:r><w:rPr><w:b/></w:rPr></m:r>"

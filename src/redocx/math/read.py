@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import copy
 import re
+from dataclasses import replace
 
 from lxml import etree
 
@@ -297,7 +298,22 @@ def _matrix(r: MathReader, el: Element) -> Node:
 def _eq_arr(r: MathReader, el: Element) -> Node:
     _only(el, "e")
     _props(el, frozenset())
-    return EqArr(tuple(r.row(row) for row in el.findall(_m("e"))))
+    return EqArr(tuple(_alignments(r.row(row)) for row in el.findall(_m("e"))))
+
+
+def _alignments(row: Row) -> Row:
+    """An equation array row with Word's alignment marks, `&` in its math text, as Align."""
+    out: list[Node] = []
+    for node in row:
+        if not isinstance(node, Run) or node.normal or "&" not in node.text:
+            out.append(node)
+            continue
+        for i, part in enumerate(node.text.split("&")):
+            if i:
+                out.append(Align())
+            if part:
+                out.append(replace(node, text=part))
+    return tuple(out)
 
 
 _OBJECTS = {

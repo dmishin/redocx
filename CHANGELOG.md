@@ -9,6 +9,8 @@ anything that would change it is listed here first as a deprecation warning.
 - **Import:** equations come back as LaTeX (`\m{…}`, `$$ … $$`). What the LaTeX subset cannot say is kept as
   `\ooxml{…}` inside the formula, or the whole equation as `\raw[ooxml]{<m:oMath>…}`.
 - **Math:** `\ooxml{…}` in a formula holds raw OMML; `\raw[ooxml]` accepts whole equations.
+- **Math (fix):** the rows of `aligned` and other equation arrays now align at `&` in Word. They were written with
+  `m:aln`, which Word ignores; now `&` goes in the math text, as Word writes it.
 - **Math:** `{…}^2` and `{…}_i` put the script on the whole group, as LaTeX does. It looks the same in Word; in
   Word's equation editor the group is now the base.
 
