@@ -1,0 +1,2096 @@
+[
+  {
+    "id": "letters-numbers",
+    "category": "basics",
+    "title": "Letters and numbers",
+    "latex": "a + b = 3"
+  },
+  {
+    "id": "simple-ops",
+    "category": "basics",
+    "title": "Basic operators",
+    "latex": "a - b \\times c \\div d \\pm e \\mp f \\cdot g"
+  },
+  {
+    "id": "relations",
+    "category": "basics",
+    "title": "Relations",
+    "latex": "a < b \\le c \\leq d \\ge e > f \\neq g \\approx h \\equiv i \\sim j \\simeq k \\cong l \\propto m"
+  },
+  {
+    "id": "arrows-basic",
+    "category": "basics",
+    "title": "Basic arrows",
+    "latex": "a \\to b \\rightarrow c \\leftarrow d \\leftrightarrow e \\Rightarrow f \\Leftarrow g \\Leftrightarrow h"
+  },
+  {
+    "id": "greek-lower",
+    "category": "basics",
+    "title": "Lowercase Greek",
+    "latex": "\\alpha \\beta \\gamma \\delta \\epsilon \\zeta \\eta \\theta \\iota \\kappa \\lambda \\mu \\nu \\xi \\pi \\rho \\sigma \\tau \\upsilon \\phi \\chi \\psi \\omega"
+  },
+  {
+    "id": "greek-upper",
+    "category": "basics",
+    "title": "Uppercase Greek",
+    "latex": "\\Gamma \\Delta \\Theta \\Lambda \\Xi \\Pi \\Sigma \\Upsilon \\Phi \\Psi \\Omega"
+  },
+  {
+    "id": "greek-variants",
+    "category": "basics",
+    "title": "Greek variants",
+    "latex": "\\varepsilon \\vartheta \\varpi \\varrho \\varsigma \\varphi \\varkappa \\digamma"
+  },
+  {
+    "id": "greek-var-upper",
+    "category": "basics",
+    "title": "Italic uppercase Greek",
+    "latex": "\\varGamma \\varDelta \\varTheta \\varLambda \\varXi \\varPi \\varSigma \\varUpsilon \\varPhi \\varPsi \\varOmega"
+  },
+  {
+    "id": "subscript",
+    "category": "basics",
+    "title": "Simple subscript",
+    "latex": "x_1 + x_2 + x_n"
+  },
+  {
+    "id": "superscript",
+    "category": "basics",
+    "title": "Simple superscript",
+    "latex": "x^2 + y^3 = z^n"
+  },
+  {
+    "id": "sub-sup",
+    "category": "basics",
+    "title": "Subscript and superscript",
+    "latex": "x_i^2 + y^{2}_{j}"
+  },
+  {
+    "id": "multichar-scripts",
+    "category": "basics",
+    "title": "Multi-character scripts",
+    "latex": "a_{ij}^{kl} + e^{-x^2/2}"
+  },
+  {
+    "id": "nested-scripts",
+    "category": "basics",
+    "title": "Nested scripts",
+    "latex": "x_{i_{j_k}} + y^{a^{b^c}}"
+  },
+  {
+    "id": "primes",
+    "category": "basics",
+    "title": "Primes",
+    "latex": "f'(x) + f''(x) + f'''(x) + g^{\\prime}(x)"
+  },
+  {
+    "id": "prime-cmd",
+    "category": "basics",
+    "title": "Prime command",
+    "latex": "a^\\prime + b^{\\prime\\prime} + c'_1"
+  },
+  {
+    "id": "script-on-group",
+    "category": "basics",
+    "title": "Scripts on groups",
+    "latex": "(a+b)^2 = {(a+b)}^{2} \\ne {a+b}_{n}"
+  },
+  {
+    "id": "sup-sub-order",
+    "category": "basics",
+    "title": "Superscript before subscript",
+    "latex": "x^{2}_{i} = x_{i}^{2}"
+  },
+  {
+    "id": "unary-minus",
+    "category": "basics",
+    "title": "Negative numbers and decimals",
+    "latex": "-3.14 + (-2) = -5.14, \\quad 1{,}000"
+  },
+  {
+    "id": "ellipsis-sum",
+    "category": "basics",
+    "title": "Sum with ellipsis",
+    "latex": "1 + 2 + \\cdots + n = \\frac{n(n+1)}{2}"
+  },
+  {
+    "id": "percent-degrees",
+    "category": "basics",
+    "title": "Degrees and percent",
+    "latex": "90^\\circ, \\quad 45^{\\circ}\\mathrm{C}, \\quad 50\\%"
+  },
+  {
+    "id": "frac-simple",
+    "category": "fractions",
+    "title": "Simple fraction",
+    "latex": "\\frac{a}{b}"
+  },
+  {
+    "id": "frac-dfrac-tfrac",
+    "category": "fractions",
+    "title": "Display and text fractions",
+    "latex": "\\dfrac{1}{2} + \\tfrac{1}{2} + \\frac{1}{2}"
+  },
+  {
+    "id": "frac-nested",
+    "category": "fractions",
+    "title": "Nested fraction",
+    "latex": "\\frac{\\frac{a}{b}}{\\frac{c}{d}} = \\frac{ad}{bc}"
+  },
+  {
+    "id": "frac-complex",
+    "category": "fractions",
+    "title": "Fraction with sums",
+    "latex": "\\frac{x^2 + 2x + 1}{x^2 - 1} = \\frac{x+1}{x-1}"
+  },
+  {
+    "id": "cfrac",
+    "category": "fractions",
+    "title": "Continued fraction",
+    "latex": "x = a_0 + \\cfrac{1}{a_1 + \\cfrac{1}{a_2 + \\cfrac{1}{a_3 + \\cdots}}}"
+  },
+  {
+    "id": "cfrac-aligned",
+    "category": "fractions",
+    "title": "Continued fraction with alignment",
+    "latex": "\\cfrac[l]{1}{1 + \\cfrac[r]{2}{3 + \\cfrac{4}{5}}}"
+  },
+  {
+    "id": "binom",
+    "category": "fractions",
+    "title": "Binomial coefficients",
+    "latex": "\\binom{n}{k} = \\dbinom{n}{k} \\ne \\tbinom{n}{k}"
+  },
+  {
+    "id": "binom-formula",
+    "category": "fractions",
+    "title": "Binomial coefficient formula",
+    "latex": "\\binom{n}{k} = \\frac{n!}{k!\\,(n-k)!}"
+  },
+  {
+    "id": "genfrac",
+    "category": "fractions",
+    "title": "Generalized fraction",
+    "latex": "\\genfrac{[}{]}{0pt}{}{n}{k} + \\genfrac{}{}{2pt}{0}{a}{b} + \\genfrac{\\langle}{\\rangle}{0pt}{1}{n}{k}"
+  },
+  {
+    "id": "slash-frac",
+    "category": "fractions",
+    "title": "Slash fraction",
+    "latex": "a/b + (x+1)/(x-1)"
+  },
+  {
+    "id": "over-primitive",
+    "category": "fractions",
+    "title": "TeX \\over primitive",
+    "latex": "{a + b \\over c + d}"
+  },
+  {
+    "id": "choose-primitive",
+    "category": "fractions",
+    "title": "TeX \\choose primitive",
+    "latex": "{n \\choose k}"
+  },
+  {
+    "id": "frac-in-script",
+    "category": "fractions",
+    "title": "Fraction in exponent",
+    "latex": "e^{\\frac{-x^2}{2\\sigma^2}}"
+  },
+  {
+    "id": "sqrt",
+    "category": "roots",
+    "title": "Square root",
+    "latex": "\\sqrt{x}"
+  },
+  {
+    "id": "sqrt-n",
+    "category": "roots",
+    "title": "Nth root",
+    "latex": "\\sqrt[3]{x} + \\sqrt[n]{x^m}"
+  },
+  {
+    "id": "sqrt-nested",
+    "category": "roots",
+    "title": "Nested roots",
+    "latex": "\\sqrt{1 + \\sqrt{1 + \\sqrt{1 + \\sqrt{1 + x}}}}"
+  },
+  {
+    "id": "sqrt-tall",
+    "category": "roots",
+    "title": "Root of tall content",
+    "latex": "\\sqrt{\\frac{a^2 + b^2}{\\frac{c}{d} + 1}}"
+  },
+  {
+    "id": "sqrt-uproot",
+    "category": "roots",
+    "title": "Root with moved index",
+    "latex": "\\sqrt[\\leftroot{-2}\\uproot{2}3]{x}"
+  },
+  {
+    "id": "sqrt-quadratic",
+    "category": "roots",
+    "title": "Root in quadratic formula",
+    "latex": "\\sqrt{b^2 - 4ac}"
+  },
+  {
+    "id": "sqrt-long-index",
+    "category": "roots",
+    "title": "Root with long index",
+    "latex": "\\sqrt[n+1]{\\sum_{i=1}^n x_i^{n+1}}"
+  },
+  {
+    "id": "sum",
+    "category": "big-operators",
+    "title": "Sum with limits",
+    "latex": "\\sum_{i=1}^{n} i^2"
+  },
+  {
+    "id": "prod",
+    "category": "big-operators",
+    "title": "Product",
+    "latex": "\\prod_{k=1}^{\\infty} \\left(1 - \\frac{1}{p_k^s}\\right)"
+  },
+  {
+    "id": "int",
+    "category": "big-operators",
+    "title": "Definite integral",
+    "latex": "\\int_0^1 x^2 \\, dx = \\frac{1}{3}"
+  },
+  {
+    "id": "multi-int",
+    "category": "big-operators",
+    "title": "Double and triple integrals",
+    "latex": "\\iint_D f(x,y)\\,dx\\,dy + \\iiint_V g\\,dV + \\iiiint_W h"
+  },
+  {
+    "id": "idotsint",
+    "category": "big-operators",
+    "title": "Many integrals",
+    "latex": "\\idotsint_V f(x_1,\\dots,x_n)\\,dx_1\\cdots dx_n"
+  },
+  {
+    "id": "oint",
+    "category": "big-operators",
+    "title": "Contour integral",
+    "latex": "\\oint_C \\mathbf{F} \\cdot d\\mathbf{r}"
+  },
+  {
+    "id": "oiint",
+    "category": "big-operators",
+    "title": "Surface integral (esint)",
+    "latex": "\\oiint_S \\mathbf{E} \\cdot d\\mathbf{A} = \\frac{Q}{\\varepsilon_0}"
+  },
+  {
+    "id": "esint-misc",
+    "category": "big-operators",
+    "title": "Other esint integrals",
+    "latex": "\\ointctrclockwise_C f + \\varointclockwise_C g + \\sqint_S h + \\fint_a^b k"
+  },
+  {
+    "id": "big-set-ops",
+    "category": "big-operators",
+    "title": "Big set operators",
+    "latex": "\\bigcup_{i=1}^n A_i \\cap \\bigcap_{j} B_j \\quad \\bigsqcup_k C_k"
+  },
+  {
+    "id": "big-circ-ops",
+    "category": "big-operators",
+    "title": "Big circled operators",
+    "latex": "\\bigoplus_{i} V_i \\otimes \\bigotimes_{j} W_j \\quad \\bigodot_k U_k"
+  },
+  {
+    "id": "big-logic-ops",
+    "category": "big-operators",
+    "title": "Big logic and other operators",
+    "latex": "\\bigvee_{i} p_i \\wedge \\bigwedge_{j} q_j \\quad \\biguplus_k M_k \\quad \\coprod_{l} X_l"
+  },
+  {
+    "id": "limits-nolimits",
+    "category": "big-operators",
+    "title": "Limits and nolimits",
+    "latex": "\\sum\\nolimits_{i=1}^n a_i \\quad \\int\\limits_0^1 f(x)\\,dx"
+  },
+  {
+    "id": "substack",
+    "category": "big-operators",
+    "title": "Substack under sum",
+    "latex": "\\sum_{\\substack{0 \\le i \\le m \\\\ 0 < j < n}} P(i,j)"
+  },
+  {
+    "id": "subarray",
+    "category": "big-operators",
+    "title": "Subarray under sum",
+    "latex": "\\sum_{\\begin{subarray}{l} i \\in \\Lambda \\\\ 0 < j < n \\end{subarray}} P(i,j)"
+  },
+  {
+    "id": "sideset",
+    "category": "big-operators",
+    "title": "Sideset on sum",
+    "latex": "\\sideset{}{'}\\sum_{n<k} a_n"
+  },
+  {
+    "id": "int-spacing",
+    "category": "big-operators",
+    "title": "Integral with spaced differentials",
+    "latex": "\\int_{-\\infty}^{\\infty}\\!\\int_{-\\infty}^{\\infty} e^{-(x^2+y^2)}\\,\\mathrm{d}x\\,\\mathrm{d}y = \\pi"
+  },
+  {
+    "id": "int-limits-tall",
+    "category": "big-operators",
+    "title": "Integral with fraction limits",
+    "latex": "\\int_{\\frac{\\pi}{4}}^{\\frac{3\\pi}{4}} \\sin^2\\theta \\, d\\theta"
+  },
+  {
+    "id": "sum-text-limits",
+    "category": "big-operators",
+    "title": "Sum in inline style",
+    "latex": "\\textstyle\\sum_{i=1}^n x_i \\quad \\displaystyle\\sum_{i=1}^n x_i"
+  },
+  {
+    "id": "trig",
+    "category": "functions",
+    "title": "Trig functions",
+    "latex": "\\sin^2 x + \\cos^2 x = 1, \\quad \\tan\\theta = \\frac{\\sin\\theta}{\\cos\\theta}"
+  },
+  {
+    "id": "trig-all",
+    "category": "functions",
+    "title": "More function names",
+    "latex": "\\arcsin x, \\arccos x, \\arctan x, \\sinh x, \\cosh x, \\tanh x, \\coth x, \\sec x, \\csc x, \\cot x"
+  },
+  {
+    "id": "log-exp",
+    "category": "functions",
+    "title": "Log and exp",
+    "latex": "\\log_2 8 = 3, \\quad \\ln e = 1, \\quad \\exp(x) = e^x, \\quad \\lg 100 = 2"
+  },
+  {
+    "id": "lim",
+    "category": "functions",
+    "title": "Limit",
+    "latex": "\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1"
+  },
+  {
+    "id": "limsup",
+    "category": "functions",
+    "title": "Lim sup and lim inf",
+    "latex": "\\limsup_{n\\to\\infty} a_n \\ge \\liminf_{n\\to\\infty} a_n"
+  },
+  {
+    "id": "varlim",
+    "category": "functions",
+    "title": "Variant limits",
+    "latex": "\\varlimsup_{n\\to\\infty} a_n, \\quad \\varliminf_{n\\to\\infty} a_n, \\quad \\varinjlim_{i} A_i, \\quad \\varprojlim_{j} B_j"
+  },
+  {
+    "id": "injlim",
+    "category": "functions",
+    "title": "Direct and inverse limits",
+    "latex": "\\injlim_{i} A_i \\quad \\projlim_{j} B_j"
+  },
+  {
+    "id": "misc-ops",
+    "category": "functions",
+    "title": "max, min, sup, inf, det, gcd",
+    "latex": "\\max_{i} x_i, \\min_{j} y_j, \\sup S, \\inf T, \\det A, \\gcd(a,b), \\deg p, \\dim V, \\ker f, \\hom, \\arg z, \\Pr(A)"
+  },
+  {
+    "id": "operatorname",
+    "category": "functions",
+    "title": "Operatorname",
+    "latex": "\\operatorname{tr}(A) + \\operatorname{rank}(B) + \\operatorname{sgn}(x)"
+  },
+  {
+    "id": "operatorname-star",
+    "category": "functions",
+    "title": "Argmax via operatorname*",
+    "latex": "\\operatorname*{arg\\,max}_{\\theta \\in \\Theta} L(\\theta)"
+  },
+  {
+    "id": "bmod",
+    "category": "functions",
+    "title": "Binary mod",
+    "latex": "a \\bmod b = r"
+  },
+  {
+    "id": "pmod",
+    "category": "functions",
+    "title": "Parenthesized mod",
+    "latex": "a \\equiv b \\pmod{m}"
+  },
+  {
+    "id": "mod-pod",
+    "category": "functions",
+    "title": "mod and pod",
+    "latex": "a \\equiv b \\mod{m}, \\quad x \\equiv y \\pod{n}"
+  },
+  {
+    "id": "func-power-arg",
+    "category": "functions",
+    "title": "Function with power and argument",
+    "latex": "\\sin^{-1}(x) \\ne \\frac{1}{\\sin x}, \\quad \\log^2 n"
+  },
+  {
+    "id": "parens",
+    "category": "delimiters",
+    "title": "Parens, brackets, braces",
+    "latex": "(a) [b] \\{c\\} \\langle d \\rangle"
+  },
+  {
+    "id": "left-right",
+    "category": "delimiters",
+    "title": "Auto-sized parentheses",
+    "latex": "\\left( \\frac{a}{b} \\right)^2"
+  },
+  {
+    "id": "left-right-all",
+    "category": "delimiters",
+    "title": "Auto-sized delimiter kinds",
+    "latex": "\\left[ \\frac{a}{b} \\right] \\left\\{ \\frac{a}{b} \\right\\} \\left\\langle \\frac{a}{b} \\right\\rangle \\left| \\frac{a}{b} \\right| \\left\\| \\frac{a}{b} \\right\\|"
+  },
+  {
+    "id": "floor-ceil",
+    "category": "delimiters",
+    "title": "Floor and ceiling",
+    "latex": "\\left\\lfloor \\frac{n}{2} \\right\\rfloor + \\left\\lceil \\frac{n}{2} \\right\\rceil = n"
+  },
+  {
+    "id": "middle",
+    "category": "delimiters",
+    "title": "Middle bar",
+    "latex": "\\left\\{ x \\in \\mathbb{R} \\;\\middle|\\; x^2 < \\frac{1}{2} \\right\\}"
+  },
+  {
+    "id": "left-dot",
+    "category": "delimiters",
+    "title": "Invisible left delimiter",
+    "latex": "\\left. \\frac{df}{dx} \\right|_{x=0}"
+  },
+  {
+    "id": "right-dot",
+    "category": "delimiters",
+    "title": "Invisible right delimiter",
+    "latex": "\\left\\{ \\frac{a}{b} \\right."
+  },
+  {
+    "id": "big-sizes",
+    "category": "delimiters",
+    "title": "Manual delimiter sizes",
+    "latex": "\\Bigg( \\bigg( \\Big( \\big( x \\big) \\Big) \\bigg) \\Bigg)"
+  },
+  {
+    "id": "big-lr",
+    "category": "delimiters",
+    "title": "Manual l/r/m sizes",
+    "latex": "\\bigl( a \\bigm| b \\bigr) \\quad \\Bigl[ c \\Bigm\\| d \\Bigr] \\quad \\biggl\\{ e \\biggm/ f \\biggr\\} \\quad \\Biggl\\langle g \\Biggr\\rangle"
+  },
+  {
+    "id": "lvert-rvert",
+    "category": "delimiters",
+    "title": "Absolute value and norm",
+    "latex": "\\lvert x \\rvert + \\lVert \\mathbf{v} \\rVert_2"
+  },
+  {
+    "id": "mathopen-close",
+    "category": "delimiters",
+    "title": "mathopen and mathclose",
+    "latex": "\\mathopen{]} a, b \\mathclose{[}"
+  },
+  {
+    "id": "half-open",
+    "category": "delimiters",
+    "title": "Half-open interval",
+    "latex": "\\left[ a, b \\right) \\cup \\left( c, d \\right]"
+  },
+  {
+    "id": "nested-left-right",
+    "category": "delimiters",
+    "title": "Nested auto-sized",
+    "latex": "\\left( \\left[ \\left\\{ \\frac{1}{\\left( x + 1 \\right)} \\right\\} \\right] \\right)"
+  },
+  {
+    "id": "ulcorner",
+    "category": "delimiters",
+    "title": "Corners and odd delimiters",
+    "latex": "\\ulcorner x \\urcorner \\quad \\llcorner y \\lrcorner \\quad \\left\\lgroup z \\right\\rgroup \\quad \\left\\lmoustache w \\right\\rmoustache"
+  },
+  {
+    "id": "arrow-delims",
+    "category": "delimiters",
+    "title": "Arrows as delimiters",
+    "latex": "\\left\\uparrow \\frac{a}{b} \\right\\downarrow \\quad \\left\\Updownarrow \\frac{a}{b} \\right\\Uparrow"
+  },
+  {
+    "id": "slash-delims",
+    "category": "delimiters",
+    "title": "Slashes as delimiters",
+    "latex": "\\left/ \\frac{a}{b} \\right\\backslash"
+  },
+  {
+    "id": "bra-ket-delims",
+    "category": "delimiters",
+    "title": "Bra-ket with left/right",
+    "latex": "\\left\\langle \\psi \\middle| \\hat{A} \\middle| \\phi \\right\\rangle"
+  },
+  {
+    "id": "matrix",
+    "category": "matrices",
+    "title": "Plain matrix",
+    "latex": "\\begin{matrix} a & b \\\\ c & d \\end{matrix}"
+  },
+  {
+    "id": "pmatrix",
+    "category": "matrices",
+    "title": "pmatrix",
+    "latex": "\\begin{pmatrix} 1 & 2 \\\\ 3 & 4 \\end{pmatrix}"
+  },
+  {
+    "id": "bmatrix",
+    "category": "matrices",
+    "title": "bmatrix",
+    "latex": "\\begin{bmatrix} 1 & 0 & 0 \\\\ 0 & 1 & 0 \\\\ 0 & 0 & 1 \\end{bmatrix}"
+  },
+  {
+    "id": "Bmatrix",
+    "category": "matrices",
+    "title": "Bmatrix",
+    "latex": "\\begin{Bmatrix} x \\\\ y \\end{Bmatrix}"
+  },
+  {
+    "id": "vmatrix",
+    "category": "matrices",
+    "title": "Determinant",
+    "latex": "\\det A = \\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix} = ad - bc"
+  },
+  {
+    "id": "Vmatrix",
+    "category": "matrices",
+    "title": "Double-bar matrix",
+    "latex": "\\begin{Vmatrix} a & b \\\\ c & d \\end{Vmatrix}"
+  },
+  {
+    "id": "smallmatrix",
+    "category": "matrices",
+    "title": "Small inline matrix",
+    "latex": "\\left(\\begin{smallmatrix} a & b \\\\ c & d \\end{smallmatrix}\\right)"
+  },
+  {
+    "id": "matrix-star",
+    "category": "matrices",
+    "title": "matrix* with alignment",
+    "latex": "\\begin{pmatrix*}[r] -1 & 3 \\\\ 2 & -4 \\end{pmatrix*}"
+  },
+  {
+    "id": "bmatrix-star-l",
+    "category": "matrices",
+    "title": "bmatrix* left-aligned",
+    "latex": "\\begin{bmatrix*}[l] 100 & x \\\\ 1 & yyy \\end{bmatrix*}"
+  },
+  {
+    "id": "dots-matrix",
+    "category": "matrices",
+    "title": "Matrix with dots",
+    "latex": "A = \\begin{pmatrix}\n  a_{11} & a_{12} & \\cdots & a_{1n} \\\\\n  a_{21} & a_{22} & \\cdots & a_{2n} \\\\\n  \\vdots & \\vdots & \\ddots & \\vdots \\\\\n  a_{m1} & a_{m2} & \\cdots & a_{mn}\n\\end{pmatrix}"
+  },
+  {
+    "id": "hdotsfor",
+    "category": "matrices",
+    "title": "hdotsfor row",
+    "latex": "\\begin{pmatrix} a & b & c & d \\\\ \\hdotsfor{4} \\\\ e & f & g & h \\end{pmatrix}"
+  },
+  {
+    "id": "array-basic",
+    "category": "matrices",
+    "title": "Array with column spec",
+    "latex": "\\begin{array}{lcr} \\text{left} & \\text{center} & \\text{right} \\\\ 1 & 22 & 333 \\end{array}"
+  },
+  {
+    "id": "array-rules",
+    "category": "matrices",
+    "title": "Array with rules",
+    "latex": "\\begin{array}{|c|l|r|}\n\\hline\na & bb & ccc \\\\\n\\hline\n1 & 2 & 3 \\\\\n\\hline\n\\end{array}"
+  },
+  {
+    "id": "array-at",
+    "category": "matrices",
+    "title": "Array with @{} and p{}",
+    "latex": "\\begin{array}{@{}l@{\\;=\\;}r@{}p{2cm}} x & 1 & some text that wraps \\\\ y & 22 & more \\end{array}"
+  },
+  {
+    "id": "augmented",
+    "category": "matrices",
+    "title": "Augmented matrix",
+    "latex": "\\left[\\begin{array}{ccc|c} 1 & 2 & 3 & 4 \\\\ 5 & 6 & 7 & 8 \\end{array}\\right]"
+  },
+  {
+    "id": "block-matrix",
+    "category": "matrices",
+    "title": "Block matrix",
+    "latex": "M = \\begin{pmatrix} A & B \\\\ C & D \\end{pmatrix} = \\left(\\begin{array}{cc|cc} 1 & 0 & 2 & 3 \\\\ 0 & 1 & 4 & 5 \\\\ \\hline 6 & 7 & 1 & 0 \\\\ 8 & 9 & 0 & 1 \\end{array}\\right)"
+  },
+  {
+    "id": "matrix-in-frac",
+    "category": "matrices",
+    "title": "Matrix inside fraction",
+    "latex": "\\frac{1}{\\det A} \\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix} = \\frac{\\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}}{ad - bc}"
+  },
+  {
+    "id": "column-vector",
+    "category": "matrices",
+    "title": "Column vector",
+    "latex": "\\mathbf{v} = \\begin{bmatrix} v_1 \\\\ v_2 \\\\ \\vdots \\\\ v_n \\end{bmatrix}"
+  },
+  {
+    "id": "nested-matrix",
+    "category": "matrices",
+    "title": "Matrix of matrices",
+    "latex": "\\begin{pmatrix} \\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix} & 0 \\\\ 0 & \\begin{bmatrix} a \\end{bmatrix} \\end{pmatrix}"
+  },
+  {
+    "id": "array-cline",
+    "category": "matrices",
+    "title": "Array with cline",
+    "latex": "\\begin{array}{ccc} a & b & c \\\\ \\cline{2-3} d & e & f \\end{array}"
+  },
+  {
+    "id": "array-multicolumn",
+    "category": "matrices",
+    "title": "Array with multicolumn",
+    "latex": "\\begin{array}{|c|c|} \\hline \\multicolumn{2}{|c|}{\\text{header}} \\\\ \\hline a & b \\\\ \\hline \\end{array}"
+  },
+  {
+    "id": "matrix-ragged",
+    "category": "matrices",
+    "title": "Ragged matrix rows",
+    "latex": "\\begin{matrix} a & b & c \\\\ d \\\\ e & f \\end{matrix}"
+  },
+  {
+    "id": "aligned-simple",
+    "category": "multi-line",
+    "title": "Aligned equations",
+    "latex": "\\begin{aligned}\n  f(x) &= (x+1)^2 \\\\\n       &= x^2 + 2x + 1\n\\end{aligned}"
+  },
+  {
+    "id": "aligned-pairs",
+    "category": "multi-line",
+    "title": "Aligned with several column pairs",
+    "latex": "\\begin{aligned}\n  a &= b + c & d &= e + f & g &= h \\\\\n  i &= j     & k &= l     & m &= n + o + p\n\\end{aligned}"
+  },
+  {
+    "id": "alignedat",
+    "category": "multi-line",
+    "title": "alignedat",
+    "latex": "\\begin{alignedat}{2}\n  x &= y      &\\quad& \\text{by (1)} \\\\\n  y &= z + 1  &&      \\text{by (2)}\n\\end{alignedat}"
+  },
+  {
+    "id": "gathered",
+    "category": "multi-line",
+    "title": "Gathered",
+    "latex": "\\begin{gathered}\n  a + b = c \\\\\n  d = e + f + g\n\\end{gathered}"
+  },
+  {
+    "id": "split",
+    "category": "multi-line",
+    "title": "Split",
+    "latex": "\\begin{split}\n  (a+b)^3 &= (a+b)(a+b)^2 \\\\\n          &= a^3 + 3a^2b + 3ab^2 + b^3\n\\end{split}"
+  },
+  {
+    "id": "multlined",
+    "category": "multi-line",
+    "title": "Multlined",
+    "latex": "\\begin{multlined}\n  a + b + c + d + e + f \\\\\n  + g + h + i + j \\\\\n  + k + l + m\n\\end{multlined}"
+  },
+  {
+    "id": "multlined-width",
+    "category": "multi-line",
+    "title": "Multlined with width and position",
+    "latex": "\\begin{multlined}[t][8cm]\n  x = a + b + c \\\\\n  \\shoveleft{+ d + e} \\\\\n  + f + g\n\\end{multlined}"
+  },
+  {
+    "id": "cases",
+    "category": "multi-line",
+    "title": "Cases",
+    "latex": "|x| = \\begin{cases} x & \\text{if } x \\ge 0 \\\\ -x & \\text{otherwise} \\end{cases}"
+  },
+  {
+    "id": "cases-three",
+    "category": "multi-line",
+    "title": "Piecewise with three cases",
+    "latex": "f(n) = \\begin{cases}\n  n/2 & \\text{if $n$ is even} \\\\\n  3n+1 & \\text{if $n$ is odd} \\\\\n  1 & n = 1\n\\end{cases}"
+  },
+  {
+    "id": "dcases",
+    "category": "multi-line",
+    "title": "dcases",
+    "latex": "f(x) = \\begin{dcases} \\frac{1}{x} & x > 0 \\\\ \\int_0^1 t\\,dt & x \\le 0 \\end{dcases}"
+  },
+  {
+    "id": "dcases-star",
+    "category": "multi-line",
+    "title": "dcases* with text column",
+    "latex": "f(x) = \\begin{dcases*} x^2 & when $x$ is real \\\\ 0 & otherwise \\end{dcases*}"
+  },
+  {
+    "id": "rcases",
+    "category": "multi-line",
+    "title": "rcases",
+    "latex": "\\begin{rcases} a &= b \\\\ c &= d \\end{rcases} \\implies e = f"
+  },
+  {
+    "id": "cases-aligned",
+    "category": "multi-line",
+    "title": "Aligned inside cases",
+    "latex": "g(x) = \\begin{cases} \\begin{aligned} &x^2 \\\\ &\\quad + 1 \\end{aligned} & x > 0 \\\\ 0 & x = 0 \\end{cases}"
+  },
+  {
+    "id": "aligned-notag",
+    "category": "multi-line",
+    "title": "Aligned with spacing argument",
+    "latex": "\\begin{aligned}\n  a &= 1 \\\\[4pt]\n  b &= 2 \\\\[1ex]\n  c &= 3\n\\end{aligned}"
+  },
+  {
+    "id": "aligned-top",
+    "category": "multi-line",
+    "title": "Aligned with [t] and [b]",
+    "latex": "\\begin{aligned}[t] a &= 1 \\\\ b &= 2 \\end{aligned} \\quad \\begin{aligned}[b] c &= 3 \\\\ d &= 4 \\\\ e &= 5 \\end{aligned}"
+  },
+  {
+    "id": "system-equations",
+    "category": "multi-line",
+    "title": "System of equations",
+    "latex": "\\left\\{ \\begin{aligned} 2x + 3y &= 7 \\\\ x - y &= 1 \\end{aligned} \\right."
+  },
+  {
+    "id": "aligned-in-frac",
+    "category": "multi-line",
+    "title": "Gathered inside fraction",
+    "latex": "\\frac{\\begin{gathered} a + b \\\\ c \\end{gathered}}{d}"
+  },
+  {
+    "id": "long-derivation",
+    "category": "multi-line",
+    "title": "Long derivation",
+    "latex": "\\begin{aligned}\n  \\int_0^\\infty e^{-ax}\\,dx\n    &= \\lim_{b\\to\\infty} \\int_0^b e^{-ax}\\,dx \\\\\n    &= \\lim_{b\\to\\infty} \\left[ -\\frac{1}{a} e^{-ax} \\right]_0^b \\\\\n    &= \\frac{1}{a}\n\\end{aligned}"
+  },
+  {
+    "id": "aligned-leading-rel",
+    "category": "multi-line",
+    "title": "Aligned with leading relations",
+    "latex": "\\begin{aligned}\n  &\\phantom{=} x^2 + 2x \\\\\n  &= x(x+2) \\\\\n  &\\le 3x^2\n\\end{aligned}"
+  },
+  {
+    "id": "accents-basic",
+    "category": "accents",
+    "title": "Basic accents",
+    "latex": "\\hat{a} \\check{b} \\tilde{c} \\acute{d} \\grave{e} \\dot{f} \\ddot{g} \\breve{h} \\bar{i} \\vec{j} \\mathring{k}"
+  },
+  {
+    "id": "dot-accents",
+    "category": "accents",
+    "title": "Multiple dots",
+    "latex": "\\dot{x}, \\ddot{x}, \\dddot{x}, \\ddddot{x}"
+  },
+  {
+    "id": "wide-accents",
+    "category": "accents",
+    "title": "Wide accents",
+    "latex": "\\widehat{ABC} \\quad \\widetilde{xyz} \\quad \\widehat{a} \\quad \\widetilde{f(x)}"
+  },
+  {
+    "id": "overline",
+    "category": "accents",
+    "title": "Overline and underline",
+    "latex": "\\overline{z_1 + z_2} = \\overline{z_1} + \\overline{z_2}, \\quad \\underline{abc}"
+  },
+  {
+    "id": "over-arrows",
+    "category": "accents",
+    "title": "Over and under arrows",
+    "latex": "\\overrightarrow{AB} \\quad \\overleftarrow{CD} \\quad \\overleftrightarrow{EF} \\quad \\underrightarrow{GH} \\quad \\underleftarrow{IJ} \\quad \\underleftrightarrow{KL}"
+  },
+  {
+    "id": "double-accent",
+    "category": "accents",
+    "title": "Double accents",
+    "latex": "\\hat{\\hat{x}} \\quad \\bar{\\bar{y}} \\quad \\tilde{\\dot{z}} \\quad \\vec{\\hat{n}}"
+  },
+  {
+    "id": "accent-group",
+    "category": "accents",
+    "title": "Accents on groups",
+    "latex": "\\hat{x+y} \\quad \\bar{AB} \\quad \\vec{F_{net}} \\quad \\tilde{\\mathbf{x}}"
+  },
+  {
+    "id": "accent-i-j",
+    "category": "accents",
+    "title": "Accents on dotless i and j",
+    "latex": "\\hat{\\imath} + \\vec{\\jmath} + \\bar{\\imath}"
+  },
+  {
+    "id": "accent-scripts",
+    "category": "accents",
+    "title": "Accent with scripts",
+    "latex": "\\hat{x}_i^2 + \\bar{x}^{(k)} + \\dot{q}_j"
+  },
+  {
+    "id": "overline-nested",
+    "category": "accents",
+    "title": "Nested overlines",
+    "latex": "\\overline{\\overline{A} \\cup \\overline{B}} = A \\cap B"
+  },
+  {
+    "id": "overbrace",
+    "category": "over-under",
+    "title": "Overbrace with label",
+    "latex": "\\overbrace{a + b + c}^{\\text{sum}}"
+  },
+  {
+    "id": "underbrace",
+    "category": "over-under",
+    "title": "Underbrace with label",
+    "latex": "\\underbrace{1 + 2 + \\cdots + n}_{n \\text{ terms}}"
+  },
+  {
+    "id": "nested-braces",
+    "category": "over-under",
+    "title": "Nested braces",
+    "latex": "\\underbrace{a + \\overbrace{b + c}^{x} + d}_{y}"
+  },
+  {
+    "id": "brace-overlap",
+    "category": "over-under",
+    "title": "Overlapping braces",
+    "latex": "a + \\overbrace{b + \\underbrace{c + d}_{\\text{inner}} + e}^{\\text{outer}} + f"
+  },
+  {
+    "id": "overset",
+    "category": "over-under",
+    "title": "Overset",
+    "latex": "A \\overset{\\text{def}}{=} B, \\quad X \\overset{f}{\\longrightarrow} Y"
+  },
+  {
+    "id": "underset",
+    "category": "over-under",
+    "title": "Underset",
+    "latex": "\\underset{x \\to 0}{\\lim} f(x), \\quad a \\underset{n\\to\\infty}{\\sim} b"
+  },
+  {
+    "id": "stackrel",
+    "category": "over-under",
+    "title": "Stackrel",
+    "latex": "a \\stackrel{?}{=} b"
+  },
+  {
+    "id": "xrightarrow",
+    "category": "over-under",
+    "title": "Extensible arrows",
+    "latex": "A \\xrightarrow{f} B \\xrightarrow[\\text{below}]{\\text{above}} C \\xleftarrow[g]{} D"
+  },
+  {
+    "id": "x-arrows-mathtools",
+    "category": "over-under",
+    "title": "mathtools extensible arrows",
+    "latex": "A \\xLeftrightarrow{\\sim} B \\xRightarrow{h} C \\xleftrightarrow[u]{v} D \\xhookrightarrow{i} E \\xmapsto{m} F \\xLeftarrow{k} G"
+  },
+  {
+    "id": "x-harpoons",
+    "category": "over-under",
+    "title": "Extensible harpoons",
+    "latex": "A \\xrightharpoonup{a} B \\xleftharpoondown{b} C \\xrightleftharpoons[c]{d} D"
+  },
+  {
+    "id": "overbracket",
+    "category": "over-under",
+    "title": "Overbracket and underbracket",
+    "latex": "\\overbracket{a + b} + \\underbracket[1pt][3pt]{c + d}_{\\text{label}}"
+  },
+  {
+    "id": "mathclap-label",
+    "category": "over-under",
+    "title": "mathclap in underbrace",
+    "latex": "\\underbrace{x}_{\\mathclap{\\text{a very long label under a short thing}}} + y"
+  },
+  {
+    "id": "underbrace-sum",
+    "category": "over-under",
+    "title": "Underbrace under a sum",
+    "latex": "\\sum_{i=1}^n \\underbrace{\\left(x_i - \\bar{x}\\right)^2}_{\\text{squared deviation}}"
+  },
+  {
+    "id": "overunderset",
+    "category": "over-under",
+    "title": "Both overset and underset",
+    "latex": "\\overset{a}{\\underset{b}{X}} \\quad \\underset{\\text{min}}{\\overset{\\text{max}}{\\Sigma}}"
+  },
+  {
+    "id": "mathbb",
+    "category": "fonts",
+    "title": "Blackboard bold",
+    "latex": "\\mathbb{N} \\subset \\mathbb{Z} \\subset \\mathbb{Q} \\subset \\mathbb{R} \\subset \\mathbb{C}"
+  },
+  {
+    "id": "mathcal",
+    "category": "fonts",
+    "title": "Calligraphic",
+    "latex": "\\mathcal{A}, \\mathcal{B}, \\mathcal{F}, \\mathcal{L}, \\mathcal{O}(n)"
+  },
+  {
+    "id": "mathscr",
+    "category": "fonts",
+    "title": "Script",
+    "latex": "\\mathscr{A}, \\mathscr{F}, \\mathscr{L}, \\mathscr{P}"
+  },
+  {
+    "id": "mathfrak",
+    "category": "fonts",
+    "title": "Fraktur",
+    "latex": "\\mathfrak{g}, \\mathfrak{su}(2), \\mathfrak{A}, \\mathfrak{p}"
+  },
+  {
+    "id": "mathbf-etc",
+    "category": "fonts",
+    "title": "Bold, roman, italic, sans, mono",
+    "latex": "\\mathbf{x} \\mathrm{x} \\mathit{x} \\mathsf{x} \\mathtt{x} \\mathnormal{x}"
+  },
+  {
+    "id": "mathbf-words",
+    "category": "fonts",
+    "title": "Font commands on words",
+    "latex": "\\mathrm{Re} + \\mathit{diff} + \\mathsf{Sym} + \\mathtt{code} + \\mathbf{ABC123}"
+  },
+  {
+    "id": "bm",
+    "category": "fonts",
+    "title": "bm bold symbols",
+    "latex": "\\bm{\\alpha} + \\bm{x} + \\bm{\\nabla} + \\bm{\\Sigma}"
+  },
+  {
+    "id": "boldsymbol",
+    "category": "fonts",
+    "title": "boldsymbol",
+    "latex": "\\boldsymbol{\\beta}^\\top \\boldsymbol{x} + \\boldsymbol{\\epsilon}"
+  },
+  {
+    "id": "bm-mathcal",
+    "category": "fonts",
+    "title": "Bold calligraphic",
+    "latex": "\\bm{\\mathcal{A}} \\ne \\mathcal{A}, \\quad \\boldsymbol{\\mathcal{L}}"
+  },
+  {
+    "id": "mathbf-greek",
+    "category": "fonts",
+    "title": "mathbf on Greek",
+    "latex": "\\mathbf{\\Gamma} \\mathbf{\\Omega} \\mathbf{\\alpha}"
+  },
+  {
+    "id": "mathbb-digits",
+    "category": "fonts",
+    "title": "Blackboard bold misc",
+    "latex": "\\mathbb{1}_{A} + \\mathbb{E} + \\mathbb{P} + \\Bbbk"
+  },
+  {
+    "id": "font-nesting",
+    "category": "fonts",
+    "title": "Nested font commands",
+    "latex": "\\mathbf{\\mathit{x}} + \\mathrm{\\mathbf{y}} + \\mathsf{\\bm{z}}"
+  },
+  {
+    "id": "font-in-scripts",
+    "category": "fonts",
+    "title": "Fonts in scripts",
+    "latex": "x_{\\mathrm{max}} + y^{\\mathbf{T}} + z_{\\mathcal{S}}"
+  },
+  {
+    "id": "old-font-switches",
+    "category": "fonts",
+    "title": "Old font switches",
+    "latex": "{\\rm d}x + {\\bf v} + {\\cal L} + {\\it if} + {\\sf S} + {\\tt t}"
+  },
+  {
+    "id": "text-basic",
+    "category": "text",
+    "title": "Text in math",
+    "latex": "x = 1 \\text{ and } y = 2"
+  },
+  {
+    "id": "text-styles",
+    "category": "text",
+    "title": "Text styles",
+    "latex": "\\textbf{bold}, \\textit{italic}, \\textrm{roman}, \\textsf{sans}, \\texttt{mono}, \\emph{emph}"
+  },
+  {
+    "id": "mbox",
+    "category": "text",
+    "title": "mbox",
+    "latex": "a \\mbox{ if } b"
+  },
+  {
+    "id": "text-nested-math",
+    "category": "text",
+    "title": "Text with nested math",
+    "latex": "f(x) = 0 \\text{ for all $x$ with $|x| > 1$}"
+  },
+  {
+    "id": "text-special",
+    "category": "text",
+    "title": "Text with special characters",
+    "latex": "\\text{50\\% of \\$100 \\& more \\#1, a\\_b, \\{x\\}}"
+  },
+  {
+    "id": "text-quad",
+    "category": "text",
+    "title": "Text with quads",
+    "latex": "x^2 \\ge 0 \\quad \\text{for all } x \\in \\mathbb{R}"
+  },
+  {
+    "id": "text-in-subscript",
+    "category": "text",
+    "title": "Text in subscript",
+    "latex": "T_{\\text{max}} - T_{\\text{min}} = \\Delta T_{\\text{total range}}"
+  },
+  {
+    "id": "text-accents",
+    "category": "text",
+    "title": "Text with accents and dashes",
+    "latex": "\\text{na\\\"ive caf\\'e --- en--dash ``quoted''}"
+  },
+  {
+    "id": "text-unicode-free",
+    "category": "text",
+    "title": "Text with ligatures and punctuation",
+    "latex": "\\text{if, then; office: finally!}"
+  },
+  {
+    "id": "textnormal",
+    "category": "text",
+    "title": "textnormal and textup",
+    "latex": "\\textnormal{normal} + \\textup{up} + \\textsc{Small Caps}"
+  },
+  {
+    "id": "thin-med-thick",
+    "category": "spacing",
+    "title": "Thin, medium, thick spaces",
+    "latex": "a\\,b\\:c\\;d\\!e"
+  },
+  {
+    "id": "quads",
+    "category": "spacing",
+    "title": "quad and qqquad",
+    "latex": "a \\quad b \\qquad c"
+  },
+  {
+    "id": "hspace",
+    "category": "spacing",
+    "title": "hspace",
+    "latex": "a \\hspace{1cm} b \\hspace{-0.5em} c"
+  },
+  {
+    "id": "phantom",
+    "category": "spacing",
+    "title": "Phantoms",
+    "latex": "\\phantom{xxx}a, \\quad b\\vphantom{\\frac{1}{2}}, \\quad c\\hphantom{yyy}d"
+  },
+  {
+    "id": "smash",
+    "category": "spacing",
+    "title": "Smash",
+    "latex": "\\sqrt{\\smash[b]{y}} + \\sqrt{\\smash{\\frac{a}{b}}}"
+  },
+  {
+    "id": "mathstrut",
+    "category": "spacing",
+    "title": "mathstrut",
+    "latex": "\\sqrt{\\mathstrut a} + \\sqrt{\\mathstrut b}"
+  },
+  {
+    "id": "enspace",
+    "category": "spacing",
+    "title": "enspace and thinspace",
+    "latex": "a\\enspace b\\thinspace c\\ d~e"
+  },
+  {
+    "id": "named-spaces",
+    "category": "spacing",
+    "title": "Named spaces",
+    "latex": "a\\thickspace b\\medspace c\\negthinspace d\\negmedspace e\\negthickspace f"
+  },
+  {
+    "id": "mspace-kern",
+    "category": "spacing",
+    "title": "mkern and mspace",
+    "latex": "a\\mkern18mu b \\mspace{12mu} c \\kern2pt d"
+  },
+  {
+    "id": "space-before-differential",
+    "category": "spacing",
+    "title": "Spacing before differential",
+    "latex": "\\int f(x) \\, \\mathrm{d}x \\quad \\int f(x)\\mathrm{d}x"
+  },
+  {
+    "id": "boxed",
+    "category": "decorations",
+    "title": "Boxed formula",
+    "latex": "\\boxed{E = mc^2}"
+  },
+  {
+    "id": "cancel",
+    "category": "decorations",
+    "title": "Cancel variants",
+    "latex": "\\cancel{x} + \\bcancel{y} + \\xcancel{z}"
+  },
+  {
+    "id": "cancelto",
+    "category": "decorations",
+    "title": "Cancel to value",
+    "latex": "\\frac{\\cancelto{1}{x}}{\\cancel{x}} \\quad \\cancelto{0}{\\frac{dx}{dt}}"
+  },
+  {
+    "id": "color",
+    "category": "decorations",
+    "title": "Color switch",
+    "latex": "a + {\\color{red} b + c} + d"
+  },
+  {
+    "id": "textcolor",
+    "category": "decorations",
+    "title": "textcolor",
+    "latex": "\\textcolor{blue}{x^2} + \\textcolor{green!50!black}{y^2}"
+  },
+  {
+    "id": "colorbox",
+    "category": "decorations",
+    "title": "colorbox",
+    "latex": "\\colorbox{yellow}{$x + y$} = z"
+  },
+  {
+    "id": "fbox",
+    "category": "decorations",
+    "title": "fbox",
+    "latex": "\\fbox{$a$} + \\fbox{text}"
+  },
+  {
+    "id": "color-rgb",
+    "category": "decorations",
+    "title": "Color with model",
+    "latex": "\\color[rgb]{0.2,0.4,0.6} x + {\\color[HTML]{FF8800} y}"
+  },
+  {
+    "id": "boxed-aligned",
+    "category": "decorations",
+    "title": "Boxed aligned",
+    "latex": "\\boxed{\\begin{aligned} a &= b \\\\ c &= d \\end{aligned}}"
+  },
+  {
+    "id": "fcolorbox",
+    "category": "decorations",
+    "title": "fcolorbox",
+    "latex": "\\fcolorbox{red}{white}{$\\int f$}"
+  },
+  {
+    "id": "color-in-frac",
+    "category": "decorations",
+    "title": "Color inside fraction",
+    "latex": "\\frac{\\color{red} a}{\\textcolor{blue}{b}}"
+  },
+  {
+    "id": "sym-misc",
+    "category": "symbols",
+    "title": "Common symbols",
+    "latex": "\\infty, \\partial, \\nabla, \\hbar, \\hslash, \\ell, \\Re, \\Im, \\aleph, \\beth, \\wp"
+  },
+  {
+    "id": "sym-empty",
+    "category": "symbols",
+    "title": "Empty sets",
+    "latex": "\\emptyset \\ne \\varnothing"
+  },
+  {
+    "id": "sym-quantifiers",
+    "category": "symbols",
+    "title": "Quantifiers",
+    "latex": "\\forall x \\, \\exists y \\, \\nexists z"
+  },
+  {
+    "id": "sym-sets",
+    "category": "symbols",
+    "title": "Set operations",
+    "latex": "A \\cup B, A \\cap B, A \\setminus B, A \\subset B, A \\subseteq B, A \\supset B, A \\supseteq B, a \\in A, b \\ni B, A \\sqcup B, A \\triangle B, A^c"
+  },
+  {
+    "id": "sym-logic",
+    "category": "symbols",
+    "title": "Logic",
+    "latex": "p \\land q, p \\lor q, \\neg p, \\lnot q, p \\implies q, p \\iff q, p \\impliedby q, p \\wedge q \\vee r"
+  },
+  {
+    "id": "sym-turnstile",
+    "category": "symbols",
+    "title": "Turnstiles",
+    "latex": "\\Gamma \\vdash \\phi, \\quad M \\models \\psi, \\quad \\dashv, \\quad \\Vdash, \\quad \\vDash, \\quad \\nvdash"
+  },
+  {
+    "id": "sym-arrows",
+    "category": "symbols",
+    "title": "Arrows of all kinds",
+    "latex": "\\hookrightarrow \\hookleftarrow \\mapsto \\longmapsto \\rightleftharpoons \\leftrightharpoons \\leadsto \\rightsquigarrow \\longrightarrow \\Longrightarrow \\longleftrightarrow \\Longleftrightarrow"
+  },
+  {
+    "id": "sym-arrows2",
+    "category": "symbols",
+    "title": "More arrows",
+    "latex": "\\uparrow \\downarrow \\updownarrow \\Uparrow \\Downarrow \\nearrow \\searrow \\swarrow \\nwarrow \\twoheadrightarrow \\rightarrowtail \\curvearrowright \\circlearrowleft \\Lsh \\Rsh \\upharpoonright \\leftharpoonup"
+  },
+  {
+    "id": "sym-negated-arrows",
+    "category": "symbols",
+    "title": "Negated arrows",
+    "latex": "\\nrightarrow \\nleftarrow \\nRightarrow \\nLeftrightarrow \\nleftrightarrow"
+  },
+  {
+    "id": "sym-negations",
+    "category": "symbols",
+    "title": "Negated relations",
+    "latex": "\\not\\subset, \\nsubseteq, \\neq, \\notin, \\ncong, \\nmid, \\nparallel, \\not\\equiv, \\nleq, \\ngeq, \\nsim, \\nprec"
+  },
+  {
+    "id": "sym-relations-ams",
+    "category": "symbols",
+    "title": "AMS relations",
+    "latex": "\\lesssim \\gtrapprox \\succcurlyeq \\preccurlyeq \\triangleq \\doteq \\approxeq \\backsim \\eqsim \\lll \\ggg \\leqslant \\geqslant \\ll \\gg"
+  },
+  {
+    "id": "sym-coloneqq",
+    "category": "symbols",
+    "title": "Colon-equals (mathtools)",
+    "latex": "x \\coloneqq 5, \\quad y \\eqqcolon 6, \\quad f \\colon A \\to B, \\quad z \\Coloneqq w, \\quad a \\dblcolon b"
+  },
+  {
+    "id": "sym-therefore",
+    "category": "symbols",
+    "title": "Therefore and because",
+    "latex": "\\therefore a = b \\quad \\because c = d"
+  },
+  {
+    "id": "sym-dots",
+    "category": "symbols",
+    "title": "Dots",
+    "latex": "a_1, \\dots, a_n; \\quad a_1 + \\dotsb + a_n; \\quad a_1, \\ldots, a_n; \\quad a \\cdots b; \\quad x_1, \\dotsc, x_k; \\quad \\dotsm; \\quad \\dotsi"
+  },
+  {
+    "id": "sym-binops",
+    "category": "symbols",
+    "title": "Binary operators",
+    "latex": "a \\star b \\ast c \\dagger d \\ddagger e \\circ f \\bullet g \\oplus h \\otimes i \\odot j \\ominus k \\oslash l \\wr m \\amalg n"
+  },
+  {
+    "id": "sym-geometry",
+    "category": "symbols",
+    "title": "Geometry",
+    "latex": "\\top, \\bot, \\angle ABC, \\measuredangle A, \\sphericalangle B, \\triangle ABC, \\parallel, \\perp, \\cong, \\sim"
+  },
+  {
+    "id": "sym-squares",
+    "category": "symbols",
+    "title": "Squares and shapes",
+    "latex": "\\square, \\blacksquare, \\Box, \\Diamond, \\lozenge, \\blacklozenge, \\bigstar, \\blacktriangle, \\triangledown, \\bigcirc"
+  },
+  {
+    "id": "sym-checkmark",
+    "category": "symbols",
+    "title": "Checkmark and others",
+    "latex": "\\checkmark, \\maltese, \\circledR, \\yen, \\complement, \\eth, \\mho, \\Finv, \\Game"
+  },
+  {
+    "id": "sym-suits",
+    "category": "symbols",
+    "title": "Card suits and music",
+    "latex": "\\clubsuit \\diamondsuit \\heartsuit \\spadesuit \\flat \\natural \\sharp"
+  },
+  {
+    "id": "sym-misc2",
+    "category": "symbols",
+    "title": "Misc symbols",
+    "latex": "\\prime \\backprime \\surd \\neg \\flat \\S \\P \\dag \\ddag \\copyright \\pounds"
+  },
+  {
+    "id": "sym-order",
+    "category": "symbols",
+    "title": "Order relations",
+    "latex": "a \\prec b \\preceq c \\succ d \\succeq e \\sqsubset f \\sqsubseteq g \\sqsupseteq h \\vartriangleleft i \\trianglelefteq j"
+  },
+  {
+    "id": "sym-big-misc",
+    "category": "symbols",
+    "title": "Circled and boxed ops",
+    "latex": "\\boxplus \\boxminus \\boxtimes \\boxdot \\circledast \\circledcirc \\circleddash \\divideontimes \\ltimes \\rtimes \\bowtie \\Join"
+  },
+  {
+    "id": "sym-vert",
+    "category": "symbols",
+    "title": "Vertical bars",
+    "latex": "a \\mid b, \\quad a \\vert b, \\quad \\|x\\|, \\quad a \\parallel b, \\quad \\Vert v \\Vert"
+  },
+  {
+    "id": "sym-backslash",
+    "category": "symbols",
+    "title": "Backslash and set minus",
+    "latex": "A \\backslash B \\ne A \\setminus B \\smallsetminus C"
+  },
+  {
+    "id": "sym-colon",
+    "category": "symbols",
+    "title": "Colon spacing",
+    "latex": "f: A \\to B \\quad f \\colon A \\to B \\quad \\{x : x > 0\\}"
+  },
+  {
+    "id": "isotope",
+    "category": "prescripts",
+    "title": "Isotope notation",
+    "latex": "{}^{14}_{6}\\mathrm{C}"
+  },
+  {
+    "id": "prescript",
+    "category": "prescripts",
+    "title": "mathtools prescript",
+    "latex": "\\prescript{14}{6}{\\mathrm{C}} \\to \\prescript{14}{7}{\\mathrm{N}} + e^- + \\bar{\\nu}_e"
+  },
+  {
+    "id": "tensor-indices",
+    "category": "prescripts",
+    "title": "Tensor indices",
+    "latex": "R^{\\mu}{}_{\\nu\\rho\\sigma}"
+  },
+  {
+    "id": "tensor-mixed",
+    "category": "prescripts",
+    "title": "Mixed tensor",
+    "latex": "T^{\\alpha\\beta}{}_{\\gamma}{}^{\\delta} = g^{\\alpha\\mu} T_{\\mu}{}^{\\beta}{}_{\\gamma}{}^{\\delta}"
+  },
+  {
+    "id": "sideset-full",
+    "category": "prescripts",
+    "title": "Sideset with all corners",
+    "latex": "\\sideset{_a^b}{_c^d}\\sum"
+  },
+  {
+    "id": "sideset-prod",
+    "category": "prescripts",
+    "title": "Sideset on product",
+    "latex": "\\sideset{^*}{}\\prod_{p} \\quad \\sideset{_1}{^2}\\bigotimes"
+  },
+  {
+    "id": "christoffel",
+    "category": "prescripts",
+    "title": "Christoffel symbols",
+    "latex": "\\Gamma^{\\lambda}{}_{\\mu\\nu} = \\frac{1}{2} g^{\\lambda\\sigma} \\left( \\partial_\\mu g_{\\nu\\sigma} + \\partial_\\nu g_{\\mu\\sigma} - \\partial_\\sigma g_{\\mu\\nu} \\right)"
+  },
+  {
+    "id": "nuclear-reaction",
+    "category": "prescripts",
+    "title": "Nuclear reaction",
+    "latex": "{}^{235}_{92}\\mathrm{U} + {}^{1}_{0}\\mathrm{n} \\to {}^{141}_{56}\\mathrm{Ba} + {}^{92}_{36}\\mathrm{Kr} + 3\\,{}^{1}_{0}\\mathrm{n}"
+  },
+  {
+    "id": "tag-number",
+    "category": "tags",
+    "title": "Tag with number",
+    "latex": "E = mc^2 \\tag{1.2}"
+  },
+  {
+    "id": "tag-star",
+    "category": "tags",
+    "title": "Tag without parentheses",
+    "latex": "a^2 + b^2 = c^2 \\tag*{(Pythagoras)}"
+  },
+  {
+    "id": "tag-math",
+    "category": "tags",
+    "title": "Tag with math",
+    "latex": "x + y = z \\tag{$\\ast$}"
+  },
+  {
+    "id": "tag-aligned",
+    "category": "tags",
+    "title": "Tag on aligned block",
+    "latex": "\\begin{aligned} a &= b \\\\ c &= d \\end{aligned} \\tag{2}"
+  },
+  {
+    "id": "notag",
+    "category": "tags",
+    "title": "notag",
+    "latex": "x = 1 \\notag"
+  },
+  {
+    "id": "euler-identity",
+    "category": "famous",
+    "title": "Euler identity",
+    "latex": "e^{i\\pi} + 1 = 0"
+  },
+  {
+    "id": "quadratic-formula",
+    "category": "famous",
+    "title": "Quadratic formula",
+    "latex": "x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}"
+  },
+  {
+    "id": "pythagoras",
+    "category": "famous",
+    "title": "Pythagorean theorem",
+    "latex": "a^2 + b^2 = c^2"
+  },
+  {
+    "id": "maxwell",
+    "category": "famous",
+    "title": "Maxwell equations",
+    "latex": "\\begin{aligned}\n  \\nabla \\cdot \\mathbf{E} &= \\frac{\\rho}{\\varepsilon_0} \\\\\n  \\nabla \\cdot \\mathbf{B} &= 0 \\\\\n  \\nabla \\times \\mathbf{E} &= -\\frac{\\partial \\mathbf{B}}{\\partial t} \\\\\n  \\nabla \\times \\mathbf{B} &= \\mu_0 \\mathbf{J} + \\mu_0 \\varepsilon_0 \\frac{\\partial \\mathbf{E}}{\\partial t}\n\\end{aligned}"
+  },
+  {
+    "id": "schrodinger",
+    "category": "famous",
+    "title": "Schrödinger equation",
+    "latex": "i\\hbar \\frac{\\partial}{\\partial t} \\Psi(\\mathbf{r},t) = \\left[ -\\frac{\\hbar^2}{2m} \\nabla^2 + V(\\mathbf{r},t) \\right] \\Psi(\\mathbf{r},t)"
+  },
+  {
+    "id": "einstein-field",
+    "category": "famous",
+    "title": "Einstein field equations",
+    "latex": "R_{\\mu\\nu} - \\frac{1}{2} R \\, g_{\\mu\\nu} + \\Lambda g_{\\mu\\nu} = \\frac{8\\pi G}{c^4} T_{\\mu\\nu}"
+  },
+  {
+    "id": "gaussian-integral",
+    "category": "famous",
+    "title": "Gaussian integral",
+    "latex": "\\int_{-\\infty}^{\\infty} e^{-x^2} \\, dx = \\sqrt{\\pi}"
+  },
+  {
+    "id": "fourier",
+    "category": "famous",
+    "title": "Fourier transform",
+    "latex": "\\hat{f}(\\xi) = \\int_{-\\infty}^{\\infty} f(x)\\, e^{-2\\pi i x \\xi} \\, dx"
+  },
+  {
+    "id": "cauchy-integral",
+    "category": "famous",
+    "title": "Cauchy integral formula",
+    "latex": "f(a) = \\frac{1}{2\\pi i} \\oint_\\gamma \\frac{f(z)}{z - a} \\, dz"
+  },
+  {
+    "id": "stokes",
+    "category": "famous",
+    "title": "Stokes theorem",
+    "latex": "\\int_{\\partial\\Omega} \\omega = \\int_{\\Omega} d\\omega \\quad \\oint_{\\partial\\Sigma} \\mathbf{F} \\cdot d\\mathbf{r} = \\iint_{\\Sigma} (\\nabla \\times \\mathbf{F}) \\cdot d\\mathbf{\\Sigma}"
+  },
+  {
+    "id": "navier-stokes",
+    "category": "famous",
+    "title": "Navier-Stokes",
+    "latex": "\\rho \\left( \\frac{\\partial \\mathbf{u}}{\\partial t} + (\\mathbf{u} \\cdot \\nabla) \\mathbf{u} \\right) = -\\nabla p + \\mu \\nabla^2 \\mathbf{u} + \\mathbf{f}"
+  },
+  {
+    "id": "bayes",
+    "category": "famous",
+    "title": "Bayes theorem",
+    "latex": "P(A \\mid B) = \\frac{P(B \\mid A)\\, P(A)}{P(B)}"
+  },
+  {
+    "id": "normal-pdf",
+    "category": "famous",
+    "title": "Normal distribution pdf",
+    "latex": "f(x) = \\frac{1}{\\sigma\\sqrt{2\\pi}} \\exp\\left( -\\frac{(x-\\mu)^2}{2\\sigma^2} \\right)"
+  },
+  {
+    "id": "taylor",
+    "category": "famous",
+    "title": "Taylor series",
+    "latex": "f(x) = \\sum_{n=0}^{\\infty} \\frac{f^{(n)}(a)}{n!} (x-a)^n"
+  },
+  {
+    "id": "zeta-euler-product",
+    "category": "famous",
+    "title": "Riemann zeta Euler product",
+    "latex": "\\zeta(s) = \\sum_{n=1}^{\\infty} \\frac{1}{n^s} = \\prod_{p \\text{ prime}} \\frac{1}{1 - p^{-s}}"
+  },
+  {
+    "id": "stirling",
+    "category": "famous",
+    "title": "Stirling approximation",
+    "latex": "n! \\sim \\sqrt{2\\pi n} \\left( \\frac{n}{e} \\right)^n"
+  },
+  {
+    "id": "binomial-theorem",
+    "category": "famous",
+    "title": "Binomial theorem",
+    "latex": "(x+y)^n = \\sum_{k=0}^{n} \\binom{n}{k} x^{n-k} y^k"
+  },
+  {
+    "id": "black-scholes",
+    "category": "famous",
+    "title": "Black-Scholes",
+    "latex": "\\frac{\\partial V}{\\partial t} + \\frac{1}{2}\\sigma^2 S^2 \\frac{\\partial^2 V}{\\partial S^2} + rS\\frac{\\partial V}{\\partial S} - rV = 0"
+  },
+  {
+    "id": "bra-ket",
+    "category": "famous",
+    "title": "Dirac expectation",
+    "latex": "\\langle \\psi | \\hat{H} | \\psi \\rangle = \\int \\psi^*(x)\\, \\hat{H} \\psi(x) \\, dx"
+  },
+  {
+    "id": "path-integral",
+    "category": "famous",
+    "title": "Path integral",
+    "latex": "\\langle x_f | e^{-iHt/\\hbar} | x_i \\rangle = \\int \\mathcal{D}[x(t)] \\, e^{\\frac{i}{\\hbar} S[x(t)]}"
+  },
+  {
+    "id": "basel",
+    "category": "famous",
+    "title": "Basel problem",
+    "latex": "\\sum_{n=1}^\\infty \\frac{1}{n^2} = \\frac{\\pi^2}{6}"
+  },
+  {
+    "id": "ramanujan-pi",
+    "category": "famous",
+    "title": "Ramanujan series for pi",
+    "latex": "\\frac{1}{\\pi} = \\frac{2\\sqrt{2}}{9801} \\sum_{k=0}^\\infty \\frac{(4k)!\\,(1103+26390k)}{(k!)^4\\, 396^{4k}}"
+  },
+  {
+    "id": "dirac-equation",
+    "category": "famous",
+    "title": "Dirac equation",
+    "latex": "\\left( i\\hbar \\gamma^\\mu \\partial_\\mu - mc \\right) \\psi = 0"
+  },
+  {
+    "id": "golden-ratio",
+    "category": "famous",
+    "title": "Golden ratio",
+    "latex": "\\varphi = \\frac{1 + \\sqrt{5}}{2} = 1 + \\cfrac{1}{1 + \\cfrac{1}{1 + \\cfrac{1}{1 + \\ddots}}}"
+  },
+  {
+    "id": "residue-theorem",
+    "category": "famous",
+    "title": "Residue theorem",
+    "latex": "\\oint_\\gamma f(z)\\,dz = 2\\pi i \\sum_{k=1}^n \\operatorname{Res}(f, a_k)"
+  },
+  {
+    "id": "divergence-theorem",
+    "category": "famous",
+    "title": "Divergence theorem",
+    "latex": "\\iiint_V (\\nabla \\cdot \\mathbf{F}) \\, dV = \\oiint_{\\partial V} \\mathbf{F} \\cdot \\mathbf{n} \\, dS"
+  },
+  {
+    "id": "expectation",
+    "category": "stats-ml",
+    "title": "Expectation",
+    "latex": "\\mathbb{E}[X] = \\sum_{x} x \\, p(x), \\quad \\mathbb{E}_{x \\sim p}\\left[ f(x) \\right]"
+  },
+  {
+    "id": "variance",
+    "category": "stats-ml",
+    "title": "Variance",
+    "latex": "\\operatorname{Var}(X) = \\mathbb{E}\\left[ (X - \\mathbb{E}[X])^2 \\right] = \\mathbb{E}[X^2] - (\\mathbb{E}[X])^2"
+  },
+  {
+    "id": "covariance",
+    "category": "stats-ml",
+    "title": "Covariance",
+    "latex": "\\operatorname{Cov}(X, Y) = \\mathbb{E}\\left[ (X - \\mu_X)(Y - \\mu_Y) \\right]"
+  },
+  {
+    "id": "argmin-constraints",
+    "category": "stats-ml",
+    "title": "Argmin with constraints",
+    "latex": "\\hat{\\mathbf{w}} = \\operatorname*{arg\\,min}_{\\substack{\\mathbf{w} \\in \\mathbb{R}^d \\\\ \\|\\mathbf{w}\\|_1 \\le t}} \\sum_{i=1}^n \\left( y_i - \\mathbf{w}^\\top \\mathbf{x}_i \\right)^2"
+  },
+  {
+    "id": "softmax",
+    "category": "stats-ml",
+    "title": "Softmax",
+    "latex": "\\operatorname{softmax}(\\mathbf{z})_i = \\frac{e^{z_i}}{\\sum_{j=1}^K e^{z_j}}"
+  },
+  {
+    "id": "kl-divergence",
+    "category": "stats-ml",
+    "title": "KL divergence",
+    "latex": "D_{\\mathrm{KL}}(P \\parallel Q) = \\sum_{x \\in \\mathcal{X}} P(x) \\log \\frac{P(x)}{Q(x)}"
+  },
+  {
+    "id": "matrix-calculus",
+    "category": "stats-ml",
+    "title": "Matrix calculus",
+    "latex": "\\frac{\\partial}{\\partial \\mathbf{x}} \\left( \\mathbf{x}^\\top \\mathbf{A} \\mathbf{x} \\right) = \\left( \\mathbf{A} + \\mathbf{A}^\\top \\right) \\mathbf{x}"
+  },
+  {
+    "id": "normal-dist",
+    "category": "stats-ml",
+    "title": "Normal distribution notation",
+    "latex": "X \\sim \\mathcal{N}(\\mu, \\sigma^2), \\quad \\mathbf{y} \\sim \\mathcal{N}(\\bm{\\mu}, \\bm{\\Sigma})"
+  },
+  {
+    "id": "propto",
+    "category": "stats-ml",
+    "title": "Proportional posterior",
+    "latex": "p(\\theta \\mid \\mathcal{D}) \\propto p(\\mathcal{D} \\mid \\theta)\\, p(\\theta)"
+  },
+  {
+    "id": "transpose",
+    "category": "stats-ml",
+    "title": "Transpose notations",
+    "latex": "\\mathbf{A}^\\top, \\quad \\mathbf{A}^{\\mathsf{T}}, \\quad \\mathbf{A}^T, \\quad \\mathbf{A}^{\\intercal}, \\quad \\mathbf{A}^{H}"
+  },
+  {
+    "id": "cross-entropy",
+    "category": "stats-ml",
+    "title": "Cross-entropy loss",
+    "latex": "\\mathcal{L}(\\theta) = -\\frac{1}{N} \\sum_{i=1}^N \\sum_{c=1}^C y_{i,c} \\log \\hat{y}_{i,c}"
+  },
+  {
+    "id": "gradient-descent",
+    "category": "stats-ml",
+    "title": "Gradient descent step",
+    "latex": "\\theta_{t+1} = \\theta_t - \\eta \\nabla_\\theta \\mathcal{L}(\\theta_t)"
+  },
+  {
+    "id": "adam",
+    "category": "stats-ml",
+    "title": "Adam update",
+    "latex": "\\begin{aligned}\n  m_t &= \\beta_1 m_{t-1} + (1 - \\beta_1) g_t \\\\\n  v_t &= \\beta_2 v_{t-1} + (1 - \\beta_2) g_t^2 \\\\\n  \\hat{m}_t &= \\frac{m_t}{1 - \\beta_1^t}, \\quad \\hat{v}_t = \\frac{v_t}{1 - \\beta_2^t} \\\\\n  \\theta_t &= \\theta_{t-1} - \\alpha \\frac{\\hat{m}_t}{\\sqrt{\\hat{v}_t} + \\epsilon}\n\\end{aligned}"
+  },
+  {
+    "id": "attention",
+    "category": "stats-ml",
+    "title": "Scaled dot-product attention",
+    "latex": "\\operatorname{Attention}(Q, K, V) = \\operatorname{softmax}\\left( \\frac{QK^\\top}{\\sqrt{d_k}} \\right) V"
+  },
+  {
+    "id": "multivariate-normal",
+    "category": "stats-ml",
+    "title": "Multivariate normal pdf",
+    "latex": "p(\\mathbf{x}) = \\frac{1}{(2\\pi)^{k/2} |\\bm{\\Sigma}|^{1/2}} \\exp\\left( -\\frac{1}{2} (\\mathbf{x} - \\bm{\\mu})^\\top \\bm{\\Sigma}^{-1} (\\mathbf{x} - \\bm{\\mu}) \\right)"
+  },
+  {
+    "id": "elbo",
+    "category": "stats-ml",
+    "title": "ELBO",
+    "latex": "\\log p(\\mathbf{x}) \\ge \\mathbb{E}_{q_\\phi(\\mathbf{z}\\mid\\mathbf{x})}\\left[ \\log p_\\theta(\\mathbf{x} \\mid \\mathbf{z}) \\right] - D_{\\mathrm{KL}}\\left( q_\\phi(\\mathbf{z} \\mid \\mathbf{x}) \\,\\|\\, p(\\mathbf{z}) \\right)"
+  },
+  {
+    "id": "indicator",
+    "category": "stats-ml",
+    "title": "Indicator and probability",
+    "latex": "\\Pr\\left( \\sum_{i=1}^n X_i \\ge t \\right) \\le \\exp\\left( -\\frac{2t^2}{\\sum_i (b_i - a_i)^2} \\right), \\quad \\mathbb{1}\\{x > 0\\}"
+  },
+  {
+    "id": "svm-dual",
+    "category": "stats-ml",
+    "title": "SVM primal",
+    "latex": "\\begin{aligned}\n  \\min_{\\mathbf{w}, b, \\bm{\\xi}} \\quad & \\frac{1}{2} \\|\\mathbf{w}\\|^2 + C \\sum_{i=1}^n \\xi_i \\\\\n  \\text{s.t.} \\quad & y_i (\\mathbf{w}^\\top \\mathbf{x}_i + b) \\ge 1 - \\xi_i, \\quad \\xi_i \\ge 0\n\\end{aligned}"
+  },
+  {
+    "id": "deep-fractions",
+    "category": "pathological",
+    "title": "Deeply nested fractions",
+    "latex": "\\frac{1}{\\frac{2}{\\frac{3}{\\frac{4}{\\frac{5}{\\frac{6}{\\frac{7}{8}}}}}}}"
+  },
+  {
+    "id": "deep-roots",
+    "category": "pathological",
+    "title": "Deeply nested roots",
+    "latex": "\\sqrt{\\sqrt[3]{\\sqrt[4]{\\sqrt[5]{\\sqrt[6]{\\sqrt[7]{x}}}}}}"
+  },
+  {
+    "id": "power-tower",
+    "category": "pathological",
+    "title": "Power tower",
+    "latex": "x^{y^{z^{w}}}"
+  },
+  {
+    "id": "power-tower-deep",
+    "category": "pathological",
+    "title": "Deep power tower with subscripts",
+    "latex": "a_{b_{c_{d_{e}}}}^{f^{g^{h^{i}}}}"
+  },
+  {
+    "id": "frac-in-sub-sub",
+    "category": "pathological",
+    "title": "Fraction in subscript of subscript",
+    "latex": "x_{a_{\\frac{1}{2}}}"
+  },
+  {
+    "id": "empty-groups",
+    "category": "pathological",
+    "title": "Empty groups",
+    "latex": "{} + a{}b{} = {}"
+  },
+  {
+    "id": "empty-scripts",
+    "category": "pathological",
+    "title": "Empty sub and sup",
+    "latex": "x_{}^{} + y^{} + z_{}"
+  },
+  {
+    "id": "script-at-start",
+    "category": "pathological",
+    "title": "Script on nothing at start",
+    "latex": "^2 x + _3 y"
+  },
+  {
+    "id": "script-on-empty-group",
+    "category": "pathological",
+    "title": "Scripts on empty group",
+    "latex": "{}^{a}_{b} c {}_{d}"
+  },
+  {
+    "id": "many-left-right",
+    "category": "pathological",
+    "title": "Many left/right levels",
+    "latex": "\\left(\\left(\\left(\\left(\\left(\\left(x\\right)\\right)\\right)\\right)\\right)\\right)"
+  },
+  {
+    "id": "braces-only",
+    "category": "pathological",
+    "title": "Redundant braces",
+    "latex": "{{{x}}} + {{a}^{{b}}}_{{c}}"
+  },
+  {
+    "id": "matrix-10x10",
+    "category": "pathological",
+    "title": "10x10 matrix",
+    "latex": "\\begin{bmatrix}\n1 & a_{01} & a_{02} & a_{03} & a_{04} & a_{05} & a_{06} & a_{07} & a_{08} & a_{09} \\\\\na_{10} & 1 & a_{12} & a_{13} & a_{14} & a_{15} & a_{16} & a_{17} & a_{18} & a_{19} \\\\\na_{20} & a_{21} & 1 & a_{23} & a_{24} & a_{25} & a_{26} & a_{27} & a_{28} & a_{29} \\\\\na_{30} & a_{31} & a_{32} & 1 & a_{34} & a_{35} & a_{36} & a_{37} & a_{38} & a_{39} \\\\\na_{40} & a_{41} & a_{42} & a_{43} & 1 & a_{45} & a_{46} & a_{47} & a_{48} & a_{49} \\\\\na_{50} & a_{51} & a_{52} & a_{53} & a_{54} & 1 & a_{56} & a_{57} & a_{58} & a_{59} \\\\\na_{60} & a_{61} & a_{62} & a_{63} & a_{64} & a_{65} & 1 & a_{67} & a_{68} & a_{69} \\\\\na_{70} & a_{71} & a_{72} & a_{73} & a_{74} & a_{75} & a_{76} & 1 & a_{78} & a_{79} \\\\\na_{80} & a_{81} & a_{82} & a_{83} & a_{84} & a_{85} & a_{86} & a_{87} & 1 & a_{89} \\\\\na_{90} & a_{91} & a_{92} & a_{93} & a_{94} & a_{95} & a_{96} & a_{97} & a_{98} & 1\n\\end{bmatrix}"
+  },
+  {
+    "id": "long-sum",
+    "category": "pathological",
+    "title": "Very long sum",
+    "latex": "x_{1}^{1} + x_{2}^{2} + x_{3}^{3} + x_{4}^{4} + x_{5}^{5} + x_{6}^{6} + x_{7}^{7} + x_{8}^{8} + x_{9}^{9} + x_{10}^{10} + x_{11}^{11} + x_{12}^{12} + x_{13}^{13} + x_{14}^{14} + x_{15}^{15} + x_{16}^{16} + x_{17}^{17} + x_{18}^{18} + x_{19}^{19} + x_{20}^{20} + x_{21}^{21} + x_{22}^{22} + x_{23}^{23} + x_{24}^{24} + x_{25}^{25} + x_{26}^{26} + x_{27}^{27} + x_{28}^{28} + x_{29}^{29} + x_{30}^{30} + x_{31}^{31} + x_{32}^{32} + x_{33}^{33} + x_{34}^{34} + x_{35}^{35} + x_{36}^{36} + x_{37}^{37} + x_{38}^{38} + x_{39}^{39} + x_{40}^{40} + x_{41}^{41} + x_{42}^{42} + x_{43}^{43} + x_{44}^{44} + x_{45}^{45} + x_{46}^{46} + x_{47}^{47} + x_{48}^{48} + x_{49}^{49} + x_{50}^{50} + x_{51}^{51} + x_{52}^{52} + x_{53}^{53} + x_{54}^{54} + x_{55}^{55} + x_{56}^{56} + x_{57}^{57} + x_{58}^{58} + x_{59}^{59} + x_{60}^{60}"
+  },
+  {
+    "id": "comments-middle",
+    "category": "pathological",
+    "title": "Comments in the middle",
+    "latex": "a + b % this is a comment\n+ c % another one\n= d"
+  },
+  {
+    "id": "comment-in-env",
+    "category": "pathological",
+    "title": "Comment inside environment",
+    "latex": "\\begin{aligned}\n  a &= b % first line\n  \\\\ % row break after comment\n  c &= d\n\\end{aligned}"
+  },
+  {
+    "id": "weird-whitespace",
+    "category": "pathological",
+    "title": "Tabs and newlines",
+    "latex": "a\t+\tb\n  =\t\tc\n    +  d"
+  },
+  {
+    "id": "aligned-empty-cells",
+    "category": "pathological",
+    "title": "Aligned with empty cells",
+    "latex": "\\begin{aligned}\n  & a & & \\\\\n  &= b & &= c \\\\\n  & & & d\n\\end{aligned}"
+  },
+  {
+    "id": "escaped-specials",
+    "category": "pathological",
+    "title": "Escaped specials",
+    "latex": "\\{ a \\} + \\_ + \\& + \\% + \\# + \\$ + \\backslash"
+  },
+  {
+    "id": "mathchoice",
+    "category": "pathological",
+    "title": "mathchoice",
+    "latex": "\\mathchoice{D}{T}{S}{SS} \\quad x^{\\mathchoice{D}{T}{S}{SS}}"
+  },
+  {
+    "id": "limits-sup-first",
+    "category": "pathological",
+    "title": "Limits with sup before sub",
+    "latex": "\\sum\\limits^{n}_{i=1} a_i"
+  },
+  {
+    "id": "prime-and-sup",
+    "category": "pathological",
+    "title": "Primes combined with scripts",
+    "latex": "f'^2 + f''_1 + a^\\prime + {f'}^{2} + f^{\\prime 2}"
+  },
+  {
+    "id": "underset-lim",
+    "category": "pathological",
+    "title": "Underset of lim",
+    "latex": "\\underset{n \\to \\infty}{\\lim} a_n = \\lim\\limits_{n\\to\\infty} a_n"
+  },
+  {
+    "id": "style-switches",
+    "category": "pathological",
+    "title": "Style switches mid-formula",
+    "latex": "\\displaystyle\\frac{1}{2} \\textstyle\\frac{1}{2} \\scriptstyle\\frac{1}{2} \\scriptscriptstyle\\frac{1}{2}"
+  },
+  {
+    "id": "style-in-groups",
+    "category": "pathological",
+    "title": "Style switches in groups",
+    "latex": "{\\displaystyle \\sum_i} {\\textstyle \\sum_i} x^{\\displaystyle \\int_0^1 f}"
+  },
+  {
+    "id": "middle-vert",
+    "category": "pathological",
+    "title": "Left paren with middle vert",
+    "latex": "\\left( \\frac{a}{b} \\middle\\vert \\frac{c}{d} \\right)"
+  },
+  {
+    "id": "operatorname-weird",
+    "category": "pathological",
+    "title": "Operatorname with spaces and digits",
+    "latex": "\\operatorname{SO 3} + \\operatorname{GL}_2 + \\operatorname{erf2}(x) + \\operatorname{arg\\,sinh}"
+  },
+  {
+    "id": "differentials",
+    "category": "pathological",
+    "title": "Roman differentials",
+    "latex": "\\frac{\\mathrm{d}y}{\\mathrm{d}x} = \\frac{\\mathrm{d}^2 z}{\\mathrm{d} t^2}, \\quad \\mathrm{d}x\\,\\mathrm{d}y"
+  },
+  {
+    "id": "space-in-subscript",
+    "category": "pathological",
+    "title": "Spacing in subscripts",
+    "latex": "a_{i,\\,j} + b_{k\\;l} + c_{m\\quad n}"
+  },
+  {
+    "id": "unbraced-frac",
+    "category": "pathological",
+    "title": "Unbraced frac arguments",
+    "latex": "\\frac12 + \\frac1n + \\frac ab + \\tfrac34"
+  },
+  {
+    "id": "unbraced-sqrt",
+    "category": "pathological",
+    "title": "Unbraced sqrt",
+    "latex": "\\sqrt2 + \\sqrt x + \\sqrt[3]8"
+  },
+  {
+    "id": "unbraced-command-script",
+    "category": "pathological",
+    "title": "Unbraced command scripts",
+    "latex": "x^\\alpha + y_\\beta + z^\\infty"
+  },
+  {
+    "id": "unbraced-mathrm-script",
+    "category": "pathological",
+    "title": "Unbraced font command in script",
+    "latex": "a_\\mathrm{max} + b^\\mathbf{T} + c_\\text{sub}"
+  },
+  {
+    "id": "unbraced-frac-greek",
+    "category": "pathological",
+    "title": "Frac of Greek, unbraced",
+    "latex": "\\frac\\alpha\\beta + \\frac\\pi2"
+  },
+  {
+    "id": "quadratic-form",
+    "category": "pathological",
+    "title": "Quadratic form",
+    "latex": "\\mathbf{x}^\\top\\mathbf{A}\\mathbf{x}"
+  },
+  {
+    "id": "double-script-separation",
+    "category": "pathological",
+    "title": "Repeated script via groups",
+    "latex": "{x^2}^3 + {x_1}_2"
+  },
+  {
+    "id": "deep-delim-scripts",
+    "category": "pathological",
+    "title": "Scripted delimiters",
+    "latex": "\\left( \\frac{a}{b} \\right)^{\\left( \\frac{c}{d} \\right)^{\\left( \\frac{e}{f} \\right)}}"
+  },
+  {
+    "id": "aligned-in-aligned",
+    "category": "pathological",
+    "title": "Nested aligned",
+    "latex": "\\begin{aligned} a &= \\begin{aligned}[t] b &+ c \\\\ &+ d \\end{aligned} \\\\ e &= f \\end{aligned}"
+  },
+  {
+    "id": "matrix-in-script",
+    "category": "pathological",
+    "title": "Matrix in superscript",
+    "latex": "e^{\\begin{pmatrix} 0 & 1 \\\\ -1 & 0 \\end{pmatrix} t}"
+  },
+  {
+    "id": "cases-in-cases",
+    "category": "pathological",
+    "title": "Cases nested in cases",
+    "latex": "f = \\begin{cases} \\begin{cases} 1 & a \\\\ 2 & b \\end{cases} & x > 0 \\\\ 0 & x \\le 0 \\end{cases}"
+  },
+  {
+    "id": "sqrt-of-matrix",
+    "category": "pathological",
+    "title": "Root of matrix",
+    "latex": "\\sqrt{\\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix}}"
+  },
+  {
+    "id": "frac-of-sums-of-integrals",
+    "category": "pathological",
+    "title": "Fraction of integrals and sums",
+    "latex": "\\frac{\\displaystyle\\sum_{i=1}^n \\int_0^{x_i} f(t)\\,dt}{\\displaystyle\\prod_{j=1}^m \\oint_{C_j} g(z)\\,dz}"
+  },
+  {
+    "id": "accent-on-frac",
+    "category": "pathological",
+    "title": "Wide accent on fraction",
+    "latex": "\\widehat{\\frac{a}{b}} + \\overline{\\sqrt{x^2 + 1}} + \\vec{\\frac{1}{2}}"
+  },
+  {
+    "id": "relation-chain",
+    "category": "pathological",
+    "title": "Long relation chain",
+    "latex": "a < b \\le c = d \\equiv e \\approx f \\sim g \\cong h \\subset i \\in j \\to k \\mapsto l"
+  },
+  {
+    "id": "adjacent-operators",
+    "category": "pathological",
+    "title": "Adjacent binary operators",
+    "latex": "+ - \\times a + + b - - c = \\pm\\mp"
+  },
+  {
+    "id": "text-math-text",
+    "category": "pathological",
+    "title": "Text-math-text nesting",
+    "latex": "\\text{a $\\text{b $c^{\\text{d}}$}$}"
+  },
+  {
+    "id": "big-at-end",
+    "category": "pathological",
+    "title": "Unbalanced manual sizes",
+    "latex": "\\big( x \\Big] y \\bigg\\} \\Bigg|"
+  },
+  {
+    "id": "double-subscript-braces",
+    "category": "pathological",
+    "title": "Subscript with prime and braces",
+    "latex": "x'_{i}{}^{j} + y_{i}{}'"
+  },
+  {
+    "id": "hdots-and-vdots-in-text",
+    "category": "pathological",
+    "title": "Dots everywhere",
+    "latex": "\\cdots \\ldots \\vdots \\ddots \\dots"
+  },
+  {
+    "id": "nested-left-middle",
+    "category": "pathological",
+    "title": "Nested left with multiple middles",
+    "latex": "\\left\\langle a \\middle| b \\middle| \\left( c \\middle\\| d \\right) \\right\\rangle"
+  },
+  {
+    "id": "long-fraction-chain",
+    "category": "pathological",
+    "title": "Long product of fractions",
+    "latex": "\\frac{1}{2}\\cdot\\frac{2}{3}\\cdot\\frac{3}{4}\\cdot\\frac{4}{5}\\cdot\\frac{5}{6}\\cdot\\frac{6}{7}\\cdot\\frac{7}{8}\\cdot\\frac{8}{9}\\cdot\\frac{9}{10} = \\frac{1}{10}"
+  },
+  {
+    "id": "all-mixed",
+    "category": "pathological",
+    "title": "Everything at once",
+    "latex": "\\boxed{\\left. \\sum_{\\substack{i=1\\\\i\\ne j}}^{\\infty} \\frac{\\overbrace{\\sqrt[3]{\\hat{x}_i^{\\,2}}}^{\\text{root}}}{\\underbrace{\\left\\lVert \\mathbf{y}_j \\right\\rVert}_{\\neq 0}} \\right|_{t=0} \\xrightarrow[n\\to\\infty]{\\mathbb{P}} \\begin{pmatrix} \\alpha & \\beta \\\\ \\gamma & \\delta \\end{pmatrix}}"
+  },
+  {
+    "id": "color-across-align",
+    "category": "pathological",
+    "title": "Color across alignment",
+    "latex": "\\begin{aligned} {\\color{red} a} &= b \\\\ c &= \\textcolor{blue}{d} \\end{aligned}"
+  },
+  {
+    "id": "phantom-alignment",
+    "category": "pathological",
+    "title": "Phantom for alignment",
+    "latex": "\\begin{matrix} \\phantom{-}1 & -1 \\\\ -1 & \\phantom{-}1 \\end{matrix}"
+  },
+  {
+    "id": "limits-on-non-op",
+    "category": "pathological",
+    "title": "Limits on mathop",
+    "latex": "\\mathop{\\mathrm{foo}}\\limits_{x \\to 0} f(x) + \\mathop{X}_{a}^{b}"
+  },
+  {
+    "id": "mathbin-mathrel",
+    "category": "pathological",
+    "title": "Explicit math classes",
+    "latex": "a \\mathbin{\\#} b \\mathrel{\\square} c \\mathpunct{;} d \\mathord{+} e \\mathinner{x}"
+  },
+  {
+    "id": "joined-relations",
+    "category": "pathological",
+    "title": "Joined relation symbols",
+    "latex": "a \\mathrel{\\mathop:}= b, \\quad c :\\, = d, \\quad e \\mathrel{+}= f"
+  },
+  {
+    "id": "tall-in-sub",
+    "category": "pathological",
+    "title": "Tall material in subscript",
+    "latex": "\\lim_{\\begin{subarray}{c} x \\to 0 \\\\ y \\to 0 \\end{subarray}} \\frac{\\sum_{k=0}^{\\frac{n}{2}} x^k}{\\sqrt{y}}"
+  },
+  {
+    "id": "raisebox",
+    "category": "pathological",
+    "title": "raisebox in math",
+    "latex": "a \\raisebox{0.5ex}{$b$} c"
+  },
+  {
+    "id": "rule-strut",
+    "category": "pathological",
+    "title": "Rule as strut",
+    "latex": "\\left( \\rule{0pt}{1cm} x \\right) \\quad a\\rule{1cm}{0.4pt}b"
+  },
+  {
+    "id": "negative-space-heavy",
+    "category": "pathological",
+    "title": "Heavy negative spacing",
+    "latex": "\\int\\!\\!\\!\\int\\!\\!\\!\\!\\int f \\quad \\bigg|\\!\\!\\bigg|x\\bigg|\\!\\!\\bigg|"
+  },
+  {
+    "id": "ensuremath-in-text",
+    "category": "pathological",
+    "title": "ensuremath inside text",
+    "latex": "\\text{value \\ensuremath{x^2} here}"
+  },
+  {
+    "id": "hbox-vbox",
+    "category": "pathological",
+    "title": "hbox in math",
+    "latex": "a \\hbox{$b$ text} c"
+  },
+  {
+    "id": "unicode-greek",
+    "category": "unicode",
+    "title": "Unicode Greek letters",
+    "latex": "α + β = γ"
+  },
+  {
+    "id": "unicode-relations",
+    "category": "unicode",
+    "title": "Unicode relations",
+    "latex": "a ≤ b ≥ c ≠ d ≈ e"
+  },
+  {
+    "id": "unicode-operators",
+    "category": "unicode",
+    "title": "Unicode big operators",
+    "latex": "∑_{i=1}^n x_i = ∫_0^1 f"
+  },
+  {
+    "id": "unicode-arrows",
+    "category": "unicode",
+    "title": "Unicode arrows",
+    "latex": "A → B ⇒ C ↦ D"
+  },
+  {
+    "id": "unicode-mixed",
+    "category": "unicode",
+    "title": "Unicode mixed with commands",
+    "latex": "\\frac{∂f}{∂x} + ∞ \\cdot ∇ × \\mathbf{F}"
+  },
+  {
+    "id": "unicode-text",
+    "category": "unicode",
+    "title": "Unicode in text",
+    "latex": "\\text{Schrödinger — naïve}"
+  }
+]

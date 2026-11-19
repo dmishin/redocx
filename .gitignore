@@ -23,3 +23,6 @@ Thumbs.db
 ~$*.docx
 examples/**/*.docx
 !examples/media/chapter.docx
+
+# math benchmark output (tools/math-bench/make_bench.py)
+tools/math-bench/out/
