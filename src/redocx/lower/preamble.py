@@ -170,8 +170,6 @@ def std_modules() -> list[str]:
 
 def _use_std(lw: Lowering, module: str, command: ast.Command) -> None:
     """\\use{std:name}: a macro file from the standard library (redocx/std/name.rdx)."""
-    if module in lw.std_loaded:
-        return
     available = std_modules()
     if module not in available:
         close = difflib.get_close_matches(module, available, n=1)
@@ -182,6 +180,13 @@ def _use_std(lw: Lowering, module: str, command: ast.Command) -> None:
             f"did you mean `std:{close[0]}`?" if close else "",
             help=f"available: {', '.join(f'std:{m}' for m in available)}",
         )
+        return
+    load_std(lw, module)
+
+
+def load_std(lw: Lowering, module: str) -> None:
+    """Registers the macros of the standard library module `module`, once per document."""
+    if module in lw.std_loaded:
         return
     lw.std_loaded.add(module)
     text = (resources.files("redocx.std") / f"{module}.rdx").read_text("utf-8")

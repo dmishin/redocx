@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import difflib
+from collections.abc import Collection
 from dataclasses import replace
 from pathlib import Path
 
@@ -13,7 +14,7 @@ from redocx.lower.builtins import BUILTIN_STYLES, DEFAULT_NUMBERING
 from redocx.lower.citations import expand as expand_citations
 from redocx.lower.index import expand as expand_index
 from redocx.lower.lowering import Located, Lowering, StyleUse
-from redocx.lower.preamble import apply_template
+from redocx.lower.preamble import apply_template, load_std, std_modules
 from redocx.lower.references import report_to, resolve
 from redocx.lower.text import size_drop_caps
 from redocx.lower.watermarks import apply_watermarks
@@ -32,14 +33,21 @@ NOWHERE = Span(0, 0)
 
 
 def lower(
-    result: ParseResult, base_dir: Path | None = None, template: Template | None = None
+    result: ParseResult,
+    base_dir: Path | None = None,
+    template: Template | None = None,
+    *,
+    std: Collection[str] | None = None,
 ) -> tuple[ir.Document, list[Located]]:
     """Lower a parsed document. Diagnostics include the parse diagnostics; the document is
     only meaningful when none of them is an error. `template` (a loaded .dotx or .docx)
-    takes precedence over a \\document[template=...] option."""
+    takes precedence over a \\document[template=...] option. `std` names the standard
+    library modules loaded before the document (None: all of them)."""
     if base_dir is None:
         base_dir = Path(result.source.name).resolve().parent
     lowering = Lowering(result.source, base_dir)
+    for module in std_modules() if std is None else std:
+        load_std(lowering, module)
     if template is not None:
         apply_template(lowering, template, fixed=True)
     body = lowering.document(result.ast)

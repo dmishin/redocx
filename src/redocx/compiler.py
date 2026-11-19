@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Collection
 from dataclasses import dataclass, replace
 from os import PathLike
 from pathlib import Path
@@ -48,17 +49,22 @@ class InternalError(RuntimeError):
 
 
 def compile_source(
-    source: Source | str, base_dir: Path | None = None, template: TemplateArg = None
+    source: Source | str,
+    base_dir: Path | None = None,
+    template: TemplateArg = None,
+    *,
+    std: Collection[str] | None = None,
 ) -> CompileResult:
     """Parse and lower a document; the IR is returned only when there are no errors.
     `template` (a .dotx or .docx, or one `load_template` read) overrides the document's
-    \\document[template=...]; a file that is not one raises `TemplateError`."""
+    \\document[template=...]; a file that is not one raises `TemplateError`. `std` names
+    the standard library modules loaded before the document (None: all of them)."""
     if template is not None and not isinstance(template, Template):
         template = load_template(template)
     if isinstance(source, str):
         source = Source("<input>", source)
         base_dir = base_dir or Path.cwd()
-    document, diagnostics = lower(parse(source), base_dir, template)
+    document, diagnostics = lower(parse(source), base_dir, template, std=std)
     # By file (the document first, then the others in the order they were reported), then
     # by position.
     files = {source.name: 0}
@@ -69,8 +75,13 @@ def compile_source(
     return CompileResult(None if has_errors else document, ordered)
 
 
-def compile_file(path: str | PathLike[str], template: TemplateArg = None) -> CompileResult:
-    return compile_source(Source.from_path(path), template=template)
+def compile_file(
+    path: str | PathLike[str],
+    template: TemplateArg = None,
+    *,
+    std: Collection[str] | None = None,
+) -> CompileResult:
+    return compile_source(Source.from_path(path), template=template, std=std)
 
 
 def build(
@@ -79,6 +90,7 @@ def build(
     template: TemplateArg = None,
     *,
     as_template: bool = False,
+    std: Collection[str] | None = None,
 ) -> tuple[bytes | None, CompileResult]:
     """Compile to .docx bytes, or .dotx with `as_template` (None when there are errors).
     The written package is checked for consistency (`package_problems`); what is wrong is
@@ -86,7 +98,7 @@ def build(
     if isinstance(source, str):
         source = Source("<input>", source)
         base_dir = base_dir or Path.cwd()
-    result = compile_source(source, base_dir, template)
+    result = compile_source(source, base_dir, template, std=std)
     if result.document is None:
         return None, result
     try:

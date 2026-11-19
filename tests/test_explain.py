@@ -24,7 +24,9 @@ def test_a_command() -> None:
 def test_a_latex_command() -> None:
     text, found = explain("textbf")
     assert found
-    assert text.startswith("\\textbf is LaTeX, not redocx. Write `*x*` (Strong style) or `\\b{x}`.")
+    assert text.startswith("\\textbf: a macro defined at std:latex:")
+    assert "\\textbf is LaTeX, not redocx. Write `*x*` (Strong style) or `\\b{x}`." in text
+    assert "std:latex makes it work as in LaTeX; `--no-latex` turns that off." in text
     assert 'See "Text" in docs/guide/tex.md' in text
 
 
@@ -66,7 +68,7 @@ def test_a_standard_library_macro_and_module() -> None:
     assert found
     assert text.startswith("\\note: a macro defined at std:callout:")
     assert '    title (default "Note")' in text
-    assert "Load it with \\use{std:callout}" in text
+    assert "From std:callout, loaded by default; `--no-std` turns it off" in text
     module, found = explain("std:callout")
     assert found
     assert "Macros: \\callout, \\note, \\tip, \\warning, \\caution" in module

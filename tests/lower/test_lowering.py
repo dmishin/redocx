@@ -318,7 +318,8 @@ def test_errors(text: str, code: Code, message: str) -> None:
     ],
 )
 def test_latex_commands_get_the_redocx_form(text: str, help: str, note: str) -> None:
-    ((_, d),) = diagnostics(text).diagnostics
+    # Without std:latex (redocx check --no-std), which would make `\textbf` work.
+    ((_, d),) = compile_source(text, std=()).diagnostics
     assert d.label in ("this is LaTeX, not redocx", "")
     assert d.help is not None
     assert help in d.help
@@ -329,7 +330,7 @@ def test_latex_commands_get_the_redocx_form(text: str, help: str, note: str) -> 
 
 def test_latex_hint_replaces_the_suggestion() -> None:
     # Without the hint, `\textbf` would be "did you mean `\textbox`?".
-    ((_, d),) = diagnostics(r"\textbf{x}").diagnostics
+    ((_, d),) = compile_source(r"\textbf{x}", std=()).diagnostics
     assert d.code is Code.UNKNOWN_COMMAND
     assert "did you mean" not in d.label
 

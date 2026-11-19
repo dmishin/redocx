@@ -1,5 +1,13 @@
+from pathlib import Path
+
+import pytest
+
 from redocx import ir
-from redocx.compiler import compile_source
+from redocx.cli import main
+from redocx.commands.builtin import COMMANDS
+from redocx.commands.latex import LATEX
+from redocx.compiler import build, compile_source
+from redocx.explain import std_macros
 from redocx.lower.preamble import std_modules
 from redocx.syntax import ast, parse
 from redocx.syntax.diagnostics import Code
@@ -85,3 +93,76 @@ def test_unclosed_string_reports_once() -> None:
     result = parse('\\x[a="unclosed\nmore words, b=1] after')
     assert [d.code for d in result.diagnostics] == [Code.UNCLOSED_STRING]
     assert result.cst.text == '\\x[a="unclosed\nmore words, b=1] after'
+
+
+# --- loaded by default, and std:latex ---------------------------------------------------------
+
+
+def unknown(text: str, std: frozenset[str] | tuple[()] | None = None) -> list[str]:
+    result = compile_source(text, std=std)
+    return [d.message for _, d in result.diagnostics if d.code is Code.UNKNOWN_COMMAND]
+
+
+def test_std_is_loaded_by_default() -> None:
+    assert unknown("\\note{Info.}\n\n\\textbf{x}") == []
+
+
+def test_std_can_be_left_out() -> None:
+    no_latex = frozenset(std_modules()) - {"latex"}
+    assert unknown("\\note{Info.}\n\n\\textbf{x}", no_latex) == ["unknown command `\\textbf`"]
+    assert unknown("\\note{Info.}\n\n\\textbf{x}", ()) == [
+        "unknown command `\\note`",
+        "unknown command `\\textbf`",
+    ]
+    # \use still loads a module that was left out.
+    assert unknown("\\use{std:latex}\n\n\\textbf{x}", ()) == []
+
+
+def test_a_document_macro_overrides_std() -> None:
+    assert compiled("\\define{note}{\\i{#body}}\n\n\\note{x}").body == compiled("\\i{x}").body
+
+
+def test_std_adds_nothing_to_an_unused_document() -> None:
+    text = "= Title\n\nText."
+    assert build(text)[0] == build(text, std=())[0]
+
+
+@pytest.mark.parametrize(
+    ("latex", "redocx"),
+    [
+        ("\\textbf{x} \\textit{y} \\underline{z}", "\\b{x} \\i{y} \\u{z}"),
+        ("\\texttt{x} \\textsc{y}", "\\code{x} \\font[small-caps]{y}"),
+        ("H\\textsubscript{2}O, x\\textsuperscript{2}", "H\\sub{2}O, x\\sup{2}"),
+        ("a\\newline b, \\thepage, a\\ldots{}b\\dots", "a\\br b, \\pagenum, a…b…"),
+        ("\\chapter{A}\n\n\\subsection{B}\n\n\\subsubsection{C}", "= A\n\n== B\n\n=== C"),
+        ("\\newpage\n\n\\clearpage", "\\pagebreak\n\n\\pagebreak"),
+        (
+            "\\tableofcontents\n\n\\listoffigures\n\n\\listoftables",
+            "\\toc\n\n\\listof[Figure]\n\n\\listof[Table]",
+        ),
+        ("\\today", "\\date"),
+    ],
+)
+def test_latex_commands_are_their_redocx_form(latex: str, redocx: str) -> None:
+    assert compiled(latex).body == compiled(redocx).body
+
+
+def test_latex_module_names_have_hints() -> None:
+    # Each name std:latex defines is in the hint table, so --no-latex still helps.
+    names = {m.name for m in std_macros().values() if m.where.startswith("std:latex:")}
+    assert names
+    assert names <= set(LATEX)
+    assert not names & set(COMMANDS)
+
+
+@pytest.mark.parametrize(("flags", "code"), [([], 0), (["--no-latex"], 1), (["--no-std"], 1)])
+def test_cli_flags(tmp_path: Path, flags: list[str], code: int) -> None:
+    file = tmp_path / "doc.rdx"
+    file.write_text("\\textbf{x}\n", encoding="utf-8")
+    assert main(["check", *flags, str(file)]) == code
+    assert main(["build", *flags, str(file)]) == code
+
+
+def test_cli_flags_exclude_each_other(tmp_path: Path) -> None:
+    with pytest.raises(SystemExit):
+        main(["check", "--no-std", "--no-latex", str(tmp_path / "doc.rdx")])

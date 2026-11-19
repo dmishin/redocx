@@ -763,13 +763,17 @@ The \product is great.
 
 ### Standard macro library (prelude) (F-13)
 
-Conveniences that Word has no native concept for ship as a readable `.rdx` library, loaded with `\use{std:…}`, built only
-from Word primitives:
+Conveniences that Word has no native concept for ship as a readable `.rdx` library, built only from Word primitives.
+Every module is loaded before the document, so its macros need no `\use`. `redocx build --no-std` (also on `check`)
+loads none, and `--no-latex` loads all but `std:latex`; `\use{std:…}` still loads a module either way. The modules only
+define macros, so a document that calls none of them builds to the same bytes with or without them. A macro the
+document defines replaces a library macro of the same name.
 
 | Module | Provides | Built from | Status |
 |--------|----------|------------|--------|
 | `std:callout` | `\callout[title, shade]`, `\note`, `\tip`, `\warning`, `\caution` (each with `title`) | A borderless one-cell table with a shaded cell and a bold title | M1 ✓ |
 | `std:signature` | `\signature-block[party, name, role]`, `\approval[role]` | Borderless tables with underlined tabs as signature lines | M1 ✓ |
+| `std:latex` | `\textbf`, `\textit`, `\underline`, `\texttt`, `\textsc`, `\textsuperscript`, `\textsubscript`, `\newline`, `\today`, `\ldots`, `\dots`, `\chapter`, `\subsection`, `\subsubsection`, `\newpage`, `\clearpage`, `\tableofcontents`, `\listoffigures`, `\listoftables`, `\thepage` | Each is its redocx form (`\b`, `\p[style="Heading 2"]`, `\pagebreak`, …), for text typed from LaTeX habit | ✓ |
 | `std:theorem` | `\theorem`, `\lemma`, `\definition`, `\proof` | Styled paragraphs + `SEQ Theorem` | Not built ([§9.2](09-postponed.md)) |
 | `std:subfigure` | `\subfigures{…}` | Borderless layout table with images and letter-format `SEQ` captions | Not built ([§9.2](09-postponed.md)) |
 
@@ -850,8 +854,9 @@ error[RDX1203]: unknown paragraph property `space-befor`
    |                ^^^^^^^^^^^ did you mean `space-before`?
 ```
 
-LaTeX written from habit gets a hint instead of a near name. An unknown command that LaTeX knows (`\textbf`,
-`\label`, `\begin{itemize}`), or `\section{…}` and `\index{…}` with a LaTeX-style body, is reported as LaTeX, with
+LaTeX written from habit gets a hint instead of a near name. The common commands work through `std:latex` (§3.18);
+an unknown command that LaTeX knows (`\label`, `\hline`, `\begin{itemize}`, or `\textbf` with `--no-latex`), or
+`\section{…}` and `\index{…}` with a LaTeX-style body, is reported as LaTeX, with
 the redocx form as help and a note pointing to the section of the TeX guide (`docs/guide/tex.md`) and to
 `redocx explain NAME`. The names come from a table, `redocx.commands.latex`, and match exactly; a macro of the same
 name is used as usual.

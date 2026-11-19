@@ -14,6 +14,7 @@ from pathlib import Path
 from redocx import __version__, ir
 from redocx.compiler import InternalError, build
 from redocx.ir_json import to_json
+from redocx.lower.preamble import std_modules
 from redocx.ooxml.reader import read_docx
 from redocx.ooxml.template import Template, TemplateError, load_template
 from redocx.stylesheet import compile_stylesheets, parse_stylesheet
@@ -35,12 +36,38 @@ def _load(path: str) -> Source | None:
         return None
 
 
-def _diagnostics(source: Source) -> list[tuple[Source, Diagnostic]]:
+def _std_options(parser: argparse.ArgumentParser) -> None:
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        "--no-std",
+        action="store_true",
+        help="do not load the standard library (std:callout, std:latex, ...); "
+        "\\use{std:name} still loads a module",
+    )
+    group.add_argument(
+        "--no-latex",
+        action="store_true",
+        help="do not load std:latex: LaTeX commands such as \\textbf are errors with hints",
+    )
+
+
+def _std(no_std: bool, no_latex: bool) -> frozenset[str] | None:
+    """The standard library modules to load before the document (None: all of them)."""
+    if no_std:
+        return frozenset()
+    if no_latex:
+        return frozenset(std_modules()) - {"latex"}
+    return None
+
+
+def _diagnostics(
+    source: Source, std: frozenset[str] | None = None
+) -> list[tuple[Source, Diagnostic]]:
     """The diagnostics of a document (.rdx: the whole build, without writing it) or of a
     style sheet (.rdxs)."""
     if source.name.endswith(STYLESHEET_SUFFIX):
         return list(compile_stylesheets([parse_stylesheet(source)]).diagnostics)
-    return list(build(source)[1].diagnostics)
+    return list(build(source, std=std)[1].diagnostics)
 
 
 INTERNAL_HELP = "this is a bug in redocx; please report it with the document"
@@ -79,7 +106,12 @@ def _emit_ir(document: ir.Document, target: str) -> bool:
 
 
 def _build(
-    path: str, output: str | None, template: str | None, emit_ir: str | None, validate: bool
+    path: str,
+    output: str | None,
+    template: str | None,
+    emit_ir: str | None,
+    validate: bool,
+    std: frozenset[str] | None = None,
 ) -> int:
     source = _load(path)
     if source is None:
@@ -89,7 +121,7 @@ def _build(
     if template and loaded is None:
         return 1
     try:
-        data, result = build(source, template=loaded, as_template=as_template)
+        data, result = build(source, template=loaded, as_template=as_template, std=std)
     except InternalError as e:
         print(f"error: {path}: {e}\n  = help: {INTERNAL_HELP}", file=sys.stderr)
         return 1
@@ -134,7 +166,7 @@ def _schema_valid(data: bytes) -> bool:
     return not errors
 
 
-def _check(paths: Sequence[str]) -> int:
+def _check(paths: Sequence[str], std: frozenset[str] | None = None) -> int:
     errors = warnings = 0
     failed = False
     for path in paths:
@@ -143,7 +175,7 @@ def _check(paths: Sequence[str]) -> int:
             failed = True
             continue
         try:
-            diagnostics = _diagnostics(source)
+            diagnostics = _diagnostics(source, std)
         except InternalError as e:
             print(f"error: {path}: {e}\n  = help: {INTERNAL_HELP}", file=sys.stderr)
             failed = True
@@ -307,9 +339,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         action="store_true",
         help="also check the written document against the ECMA-376 schemas (slower)",
     )
+    _std_options(build_cmd)
 
     check = commands.add_parser("check", help="report diagnostics without writing output")
     check.add_argument("files", nargs="+", metavar="FILE")
+    _std_options(check)
 
     fmt = commands.add_parser("fmt", help="rewrite files in the canonical layout")
     fmt.add_argument("files", nargs="+", metavar="FILE")
@@ -374,9 +408,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "import":
         return _import(args.file, args.output, args.keep_styles, not args.commands_only, args.check)
     if args.command == "build":
-        return _build(args.file, args.output, args.template, args.emit_ir, args.validate)
+        std = _std(args.no_std, args.no_latex)
+        return _build(args.file, args.output, args.template, args.emit_ir, args.validate, std)
     if args.command == "check":
-        return _check(args.files)
+        return _check(args.files, _std(args.no_std, args.no_latex))
     if args.command == "fmt":
         return _fmt(args.files, args.check, args.diff)
     if args.command == "inspect":

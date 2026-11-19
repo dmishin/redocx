@@ -47,6 +47,7 @@ All recommendations in the [spike findings](../examples/spike/FINDINGS.md) were 
 |---|----------|---------|----------|
 | Q9 | Equation numbering layout | 3-column borderless table / OMML `#` alignment / tab stops | **Decided in M3:** OMML `#` alignment, which is what Word itself writes for `#(1)` (an `m:eqArr` row ending in `#` and the number); see design §3.14 |
 | Q10 | LaTeX commands written from habit | generic "unknown command" with a near name / fuzzy match against LaTeX names / exact-name hint table | **Exact-name table** (`redocx.commands.latex`): the near-name guess pointed LaTeX users the wrong way (`\textbf` -> `\textbox`), and fuzzy LaTeX matching would turn typos of redocx commands into LaTeX advice. Each hint names a section of `docs/guide/tex.md`; a test keeps table and guide in sync. Same codes (`RDX0301`, `RDX0302`, `RDX0303`); see design §3.21 |
+| Q11 | Standard library loading; LaTeX compatibility | opt-in `\use{std:…}` / loaded by default with flags to turn off; LaTeX commands as errors only / as a macro module | **Loaded by default**, with `--no-std` and `--no-latex`: the modules only define macros, so unused ones add nothing to the output, and a document macro of the same name wins. **`std:latex`** defines the common LaTeX commands as their redocx forms and is silent when used; what it cannot define (built-in names, two arguments, environments, string bodies) keeps the Q10 hints. See design §3.18 and §9 |
 
 ## 8.4 Still open
 

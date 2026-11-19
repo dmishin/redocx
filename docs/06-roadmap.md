@@ -36,7 +36,7 @@ with no repair prompt, pass both validators, and match their golden snapshots.
 - [x] `\include`, `\use` (style sheets and macro files), `\let`, `\define` (macros with `#param`), `\settings`,
   `\document`, `\meta`.
 - [x] Command registry with argument kinds (markup, string, raw, math); the comment, whitespace and flanking rules from the spike.
-- [x] Standard macro library (`std:callout`, `std:signature`), packaged with the compiler.
+- [x] Standard macro library (`std:callout`, `std:signature`, `std:latex`), packaged with the compiler and loaded by default.
 - [x] Trial: the spike's design specification ported to v0.2 (`examples/design-spec/`, findings in its `NOTES.md`).
 - [x] CLI: `redocx build` (and `check` runs the full compile).
 - **Exit:** a real 20-page document can be authored entirely in redocx. Language grammar v0.1 is frozen.

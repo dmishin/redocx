@@ -20,8 +20,35 @@ counterpart in Word, or a different one.
 - **One body per command.** `\frac`-style several arguments exist only in math; elsewhere extra arguments are named
   options: `\link[to="https://…"]{text}` rather than `\href{url}{text}`.
 - **Unknown commands and options are errors**, with suggestions, rather than silently ignored. A LaTeX command
-  such as `\textbf` or `\begin{itemize}` is named as LaTeX, with the redocx form to write and the section of this
-  page to read. `redocx explain textbf` shows the same.
+  such as `\label` or `\begin{itemize}` is named as LaTeX, with the redocx form to write and the section of this
+  page to read. `redocx explain label` shows the same.
+
+## LaTeX compatibility
+
+The common LaTeX commands work as they are, through the standard module `std:latex`, which is loaded by default:
+
+```rdx
+\chapter{Results}
+
+\subsection{Rates}
+
+The rate is \textbf{high}, see \texttt{rates.csv}\ldots
+
+\newpage
+```
+
+Each of them is a macro for its redocx form: `\textbf{x}` is `\b{x}`, `\subsection{x}` is a *Heading 2* paragraph,
+`\newpage` is `\pagebreak`. The full list is in [macros](macros.md#stdlatex), or run `redocx explain std:latex`.
+
+Some LaTeX cannot be a macro, and stays an error that says what to write:
+
+- `\section{…}` and `\index{…}`: redocx has commands of these names that mean something else (page setup, the
+  printed index). Write `= Title` and `\ix{term}`.
+- Commands with two arguments, such as `\href{url}{text}` and `\textcolor{red}{x}`.
+- Environments (`\begin{itemize}`), `\label`, citations, `\includegraphics` and the rest of the tables below.
+
+To get only redocx, pass `--no-latex` to `redocx build` or `redocx check`: every LaTeX command is then an error
+with a hint, which helps when converting a file to native redocx.
 
 ## Document structure
 

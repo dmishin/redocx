@@ -51,7 +51,7 @@ A \term{queue} forms when arrivals outpace service.
 ```text
 \include{chapters/02-design.rdx}    the content of another file, here
 \use{macros/house.rdx}             the definitions of a macro file (its content is ignored)
-\use{std:callout}                  a module of the standard library
+\use{std:callout}                  a module of the standard library (only needed with --no-std)
 ```
 
 A file is loaded once, however often it is used. Paths are relative to the file that names them.
@@ -61,13 +61,15 @@ A file is loaded once, however often it is used. Paths are relative to the file 
 The library holds conveniences Word has no concept of, built only from Word's own parts so that the result stays
 editable. The modules are ordinary `.rdx` files in `src/redocx/std/`: read them, or copy one and change it.
 
+Every module is loaded by default, so its macros work without `\use`. A macro of the same name in your document
+replaces the library's. To leave the library out, pass `--no-std` to `redocx build` or `redocx check`; `--no-latex`
+leaves out only `std:latex`. `\use{std:callout}` then loads that one module.
+
 ### `std:callout`
 
 Highlighted boxes: a borderless one-cell table with a shaded background and a bold title.
 
 ```rdx
-\use{std:callout}
-
 \note{Plain information.}
 \tip[title="Shortcut"]{Press F9 to update all fields.}
 \warning{Refunds older than 180 days are rejected.}
@@ -86,8 +88,6 @@ Signature blocks for approvals and contracts: underlined tabs in a borderless ta
 in Word.
 
 ```rdx
-\use{std:signature}
-
 \signature-block[party="the Customer", name="Jane Doe", role="Director"]
 
 \approval[role="Approved by"]
@@ -97,6 +97,23 @@ in Word.
 |-------|---------|
 | `\signature-block` | `party`, `name`, `role` |
 | `\approval` | `role` ("Approved by") |
+
+### `std:latex`
+
+Common LaTeX commands, each defined as its redocx form, so text typed from LaTeX habit works.
+
+```rdx
+\chapter{Results}
+
+The rate is \textbf{high} and H\textsubscript{2}O is \texttt{water}.
+
+\newpage
+```
+
+It covers `\textbf`, `\textit`, `\underline`, `\texttt`, `\textsc`, `\textsuperscript`, `\textsubscript`,
+`\newline`, `\today`, `\ldots`, `\dots`, `\chapter`, `\subsection`, `\subsubsection`, `\newpage`, `\clearpage`,
+`\tableofcontents`, `\listoffigures`, `\listoftables` and `\thepage`. Other LaTeX commands are errors that say what
+to write instead; see [redocx for TeX users](tex.md).
 
 ## How far macros go
 

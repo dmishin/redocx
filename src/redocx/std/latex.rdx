@@ -1,0 +1,41 @@
+% std:latex - common LaTeX commands, so text typed from LaTeX habit works.
+%
+%   \textbf{bold}, \textit{italic}, \texttt{code}
+%   \subsection{Method}
+%   \newpage
+%
+% Loaded by default; `redocx build --no-latex` turns it off, and the LaTeX names are then
+% errors that give the redocx form. Each macro is that redocx form.
+%
+% Not covered: \section (in redocx it sets the page layout; write `= Title`), commands
+% with two arguments (\href, \textcolor), environments (\begin{itemize}), \label and
+% citations. These stay errors with a hint; see docs/guide/tex.md.
+
+% Text.
+
+\define{textbf}{\b{#body}}
+\define{textit}{\i{#body}}
+\define{underline}{\u{#body}}
+\define{texttt}{\code{#body}}
+\define{textsc}{\font[small-caps]{#body}}
+\define{textsuperscript}{\sup{#body}}
+\define{textsubscript}{\sub{#body}}
+\define{newline}{\br}
+\define{today}{\date}
+\let{ldots}{…}
+\let{dots}{…}
+
+% Headings: \chapter is Heading 1, \subsection Heading 2, \subsubsection Heading 3.
+
+\define{chapter}{\p[style="Heading 1"]{#body}}
+\define{subsection}{\p[style="Heading 2"]{#body}}
+\define{subsubsection}{\p[style="Heading 3"]{#body}}
+
+% Pages and lists.
+
+\define{newpage}{\pagebreak}
+\define{clearpage}{\pagebreak}
+\define{tableofcontents}{\toc}
+\define{listoffigures}{\listof[Figure]}
+\define{listoftables}{\listof[Table]}
+\define{thepage}{\pagenum}

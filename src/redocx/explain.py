@@ -324,7 +324,10 @@ def explain_macro(macro: MacroDoc) -> str:
         facts.append("  Body: " + ("its #body" if macro.uses_body else "none (the body is unused)"))
     if macro.where.startswith("std:"):
         module = macro.where.split(":")[1]
-        facts.append(f"  Load it with \\use{{std:{module}}} (redocx explain std:{module})")
+        facts.append(
+            f"  From std:{module}, loaded by default; `--no-std` turns it off"
+            f" (redocx explain std:{module})"
+        )
     if facts:
         sections.append(facts)
     definition = [f"    {line}".rstrip() for line in macro.definition.splitlines()]
@@ -337,7 +340,7 @@ def explain_module(module: str) -> str | None:
     if source is None:
         return None
     macros = find_macros(source, Path.cwd())
-    lines = [f"std:{module}: a module of the standard library (\\use{{std:{module}}})", ""]
+    lines = [f"std:{module}: a module of the standard library, loaded by default", ""]
     lines += [f"  {line}".rstrip() for line in _header_comment(source).splitlines()]
     lines += ["", "  Macros: " + ", ".join(f"\\{name}" for name in macros)]
     lines.append(f"  (redocx explain {next(iter(macros), 'NAME')} for one of them)")
@@ -348,6 +351,9 @@ def explain_latex(name: str, hint: LatexHint) -> str:
     """What to write in redocx instead of the LaTeX command `name`."""
     what = "means something else in LaTeX" if name in COMMANDS else "is LaTeX, not redocx"
     text = f"\\{name} {what}. {sentence(hint.use)}\n"
+    macro = std_macros().get(name)
+    if macro is not None and macro.where.startswith("std:latex:"):
+        text += "  std:latex makes it work as in LaTeX; `--no-latex` turns that off.\n"
     if name == "begin":
         text += "".join(
             f"  {{{env}}}: {sentence(h.use)}\n" for env, h in LATEX_ENVIRONMENTS.items()
