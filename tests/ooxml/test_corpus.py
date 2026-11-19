@@ -11,6 +11,8 @@ from pathlib import Path
 import pytest
 
 from redocx import ir
+from redocx.math.latex import to_latex
+from redocx.math.nodes import Align, EqArr
 from redocx.ooxml.reader import ImportResult, read_docx
 from redocx.ooxml.writer import to_docx_bytes
 from tests.support.xsd import validate_package
@@ -20,6 +22,11 @@ DOCUMENTS = sorted(p.name for p in CORPUS.glob("*.docx"))
 
 EXPECTED_LOSSES = {
     "drawings.docx": {"shape (no text)"},
+    "math.docx": {
+        "m:box in an equation (kept as OMML)",
+        "m:d in an equation (kept as OMML)",  # with a separator: (a|b)
+        "m:eqArr in an equation (kept as OMML)",  # the numbered one, E=mc^2#(1)
+    },
     "review.docx": {"w:del (tracked deletion)"},
 }
 """What the reader is known to leave out of each document (everything else is read)."""
@@ -36,6 +43,7 @@ def everything(doc: ir.Document) -> list[ir.Inline]:
 def test_the_corpus_is_there() -> None:
     assert DOCUMENTS == [
         "drawings.docx",
+        "math.docx",
         "references.docx",
         "review.docx",
         "sections.docx",
@@ -135,3 +143,22 @@ def test_review() -> None:
     assert [i for i in everything(doc) if isinstance(i, ir.CommentEnd)]
     texts = [p.text() for p in doc.all_paragraphs()]
     assert any("sixty" in t and "thirty" not in t for t in texts)  # the tracked edit, accepted
+
+
+def test_math() -> None:
+    doc = read("math.docx").document
+    equations = [i for i in everything(doc) if isinstance(i, ir.Math)]
+    assert [m.display for m in equations] == [False, False] + [True] * 10
+    assert [to_latex(m.expr) for m in equations[:4]] == [
+        r"\pi r^2",
+        r"\frac{a}{b}",
+        r"x=\frac{-b\pm\sqrt{b^2-4ac}}{2a}",
+        r"\sum_{i=1}^n{i^2}=\frac{n\left(n+1\right)\left(2n+1\right)}{6}",
+    ]
+    arrays = [m.expr[0] for m in equations if isinstance(m.expr[0], EqArr)]
+    aligned = [a for a in arrays if any(isinstance(n, Align) for r in a.rows for n in r)]
+    assert len(aligned) == 1  # Word's & marks read as alignment points
+    assert [to_latex(m.expr) for m in equations if "\\ooxml" in (to_latex(m.expr) or "")] == [
+        to_latex(equations[-2].expr),
+        to_latex(equations[-1].expr),
+    ]  # only the numbered equation, the box and (a|b) are kept as OMML

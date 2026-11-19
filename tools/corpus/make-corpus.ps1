@@ -269,6 +269,43 @@ $doc.OMaths.Add($math) | Out-Null
 $doc.OMaths.Item(1).BuildUp()
 '@
 
+$documents['math.docx'] = @'
+# math: equations Word builds from its linear format (UnicodeMath). Characters by code,
+# since PowerShell 5.1 reads this file as ANSI.
+function C([int]$code) { [string][char]$code }
+$sum = C 0x2211; $int = C 0x222B; $inf = C 0x221E; $op = C 0x2592; $sqrt = C 0x221A
+$mat = C 0x25A0; $arr = C 0x2588; $box = C 0x25A1; $bar = C 0x2502; $apply = C 0x2061
+$below = C 0x252C; $to = C 0x2192; $ge = C 0x2265; $le = C 0x2264; $pi = C 0x03C0
+$close = C 0x2524; $hat = C 0x0302; $minus = C 0x2212
+function Eq([string]$linear, [int]$type) {
+    $sel.Style = $doc.Styles.Item($Normal)
+    $range = $sel.Range
+    $range.Text = $linear
+    $doc.OMaths.Add($range) | Out-Null
+    $equation = $range.OMaths.Item(1)
+    $equation.BuildUp()
+    $equation.Type = $type  # 0 display, 1 inline
+    $sel.EndKey(6) | Out-Null
+}
+Para $H1 "Equations"
+$sel.TypeText("Inline math: the area is ")
+Eq "${pi}r^2" 1
+$sel.TypeText(" and a fraction ")
+Eq "a/b" 1
+$sel.TypeText(" in text.")
+$sel.TypeParagraph()
+Eq "x=(${minus}b$(C 0x00B1)${sqrt}(b^2${minus}4ac))/2a" 0; $sel.TypeParagraph()
+Eq "${sum}_(i=1)^n${op}i^2=(n(n+1)(2n+1))/6" 0; $sel.TypeParagraph()
+Eq "${int}_0^${inf}${op}e^(${minus}x^2) dx=${sqrt}${pi}/2" 0; $sel.TypeParagraph()
+Eq "lim${below}(x${to}0)${apply}$(C 0x3016)(sin${apply}x)/x$(C 0x3017)=1" 0; $sel.TypeParagraph()
+Eq "A=(${mat}(a&b@c&d))" 0; $sel.TypeParagraph()
+Eq "f(x)={${mat}(1&x${ge}0@0&x<0)${close}" 0; $sel.TypeParagraph()
+Eq "${arr}(a&=b+c@&=d)" 0; $sel.TypeParagraph()
+Eq "x_i^2+y${hat}+${sqrt}(3&x)" 0; $sel.TypeParagraph()
+Eq "E=mc^2#(1)" 0; $sel.TypeParagraph()
+Eq "${box}(x+y)+(a${bar}b)" 0; $sel.TypeParagraph()
+'@
+
 foreach ($name in $documents.Keys) {
     if ($Only -and $Only -notcontains $name) { continue }
     $code = [scriptblock]::Create($header + "`n" + $documents[$name] + "`n" + $footer)  # here-strings drop their last newline
