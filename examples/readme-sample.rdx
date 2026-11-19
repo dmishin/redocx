@@ -1,0 +1,54 @@
+% Shown in README.md; keep the two in sync.
+\document[lang=en-GB]
+\meta[title="Quarterly report", author="Jane Doe"]
+\section[size=A4, margins=2cm]
+\header{Quarterly report \tab \tab \field{DATE}}
+\footer{\align[center]{Page \pagenum of \numpages}}
+
+\styles{
+  modify paragraph "Heading 1" { color: theme.accent1; space-before: 12pt; numbering: Headings level 1; }
+  numbering Headings { level 1 { format: decimal; text: "%1"; } }
+  table "Data Grid" : "Table Grid" {
+    header-row { bold; color: #FFFFFF; shading: theme.accent1; }
+    banded-rows { odd { shading: #F2F2F2; } }
+  }
+}
+
+\let{product}{ReDocx}
+
+\p[style=Title]{Quarterly report}
+
+= Summary {#sec:summary}
+
+Revenue grew by *12%* to $48.2M, mostly from _new_ customers.\footnote{Unaudited figures.}
+See @tbl:rev for the numbers and @sec:outlook for what comes next.
+
+\tip[title="Built with \product"]{Every heading, list and caption is a real Word style or field.}
+
+\caption[Table, id=tbl:rev]{Revenue by region}
+\table[style="Data Grid", header-rows=1, widths=(5cm, 1fr, 1fr), columns=(left, decimal, decimal)]{
+  | Region | Q1   | Q2    |
+  | North  | 10.5 | 12.25 |
+  | South  | 8.0  | 9.75  |
+}
+
+= Outlook {#sec:outlook}
+
+1. Expand hub capacity
+2. Hire in the north
+   a. two planners
+   b. one analyst
+
+Growth follows \m{r = \sqrt[n]{V_n / V_0} - 1}, and the forecast is
+
+$$ \hat{y}_t = \alpha y_t + (1-\alpha)\,\hat{y}_{t-1} $$ {#eq:ses}
+
+```python
+def forecast(y, alpha=0.3):
+    return alpha * y[-1] + (1 - alpha) * y[-2]
+```
+
+\figure[id=fig:logo, width=3cm, align=center]{
+  \image{img/logo.png}
+  \caption{The logo}
+}
