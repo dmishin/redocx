@@ -54,17 +54,22 @@ def compile_source(
     template: TemplateArg = None,
     *,
     std: Collection[str] | None = None,
+    root: str | PathLike[str] | None = None,
 ) -> CompileResult:
     """Parse and lower a document; the IR is returned only when there are no errors.
     `template` (a .dotx or .docx, or one `load_template` read) overrides the document's
     \\document[template=...]; a file that is not one raises `TemplateError`. `std` names
-    the standard library modules loaded before the document (None: all of them)."""
+    the standard library modules loaded before the document (None: all of them). With
+    `root`, every file the document names (`\\include`, `\\image`, ...) must be inside that
+    folder: use it when the source holds data from outside."""
     if template is not None and not isinstance(template, Template):
         template = load_template(template)
     if isinstance(source, str):
         source = Source("<input>", source)
         base_dir = base_dir or Path.cwd()
-    document, diagnostics = lower(parse(source), base_dir, template, std=std)
+    document, diagnostics = lower(
+        parse(source), base_dir, template, std=std, root=None if root is None else Path(root)
+    )
     # By file (the document first, then the others in the order they were reported), then
     # by position.
     files = {source.name: 0}
@@ -80,8 +85,9 @@ def compile_file(
     template: TemplateArg = None,
     *,
     std: Collection[str] | None = None,
+    root: str | PathLike[str] | None = None,
 ) -> CompileResult:
-    return compile_source(Source.from_path(path), template=template, std=std)
+    return compile_source(Source.from_path(path), template=template, std=std, root=root)
 
 
 def build(
@@ -91,6 +97,7 @@ def build(
     *,
     as_template: bool = False,
     std: Collection[str] | None = None,
+    root: str | PathLike[str] | None = None,
 ) -> tuple[bytes | None, CompileResult]:
     """Compile to .docx bytes, or .dotx with `as_template` (None when there are errors).
     The written package is checked for consistency (`package_problems`); what is wrong is
@@ -98,7 +105,7 @@ def build(
     if isinstance(source, str):
         source = Source("<input>", source)
         base_dir = base_dir or Path.cwd()
-    result = compile_source(source, base_dir, template, std=std)
+    result = compile_source(source, base_dir, template, std=std, root=root)
     if result.document is None:
         return None, result
     try:

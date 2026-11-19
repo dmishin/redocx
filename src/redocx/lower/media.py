@@ -57,7 +57,9 @@ def resolve_size(lw: Lowering, size: Length | Percent) -> Length:
 
 
 def read_file(lw: Lowering, command: ast.Command, name: str, what: str) -> bytes | None:
-    path = lw.base_dir / name
+    path = lw.file(name, command.span)
+    if path is None:
+        return None
     try:
         return path.read_bytes()
     except OSError as e:

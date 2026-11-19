@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 from redocx import ir
 from redocx.bibliography import (
+    BUNDLED_STYLES,
     DEFAULT_STYLE,
     Bibliography,
     BibliographyError,
@@ -140,14 +141,16 @@ def bibliography(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Bloc
     if lw.bibliography is not None:
         lw.report(Code.CITATION, "the bibliography is already set", command.span)
         return []
-    files = [lw.base_dir / name for name in args.items("file", str)]
-    if not files:
+    found = [lw.file(name, command.span) for name in args.items("file", str)]
+    files = [path for path in found if path is not None]
+    if not files or len(files) < len(found):
+        return []
+    style_name = args.text("style", DEFAULT_STYLE) or DEFAULT_STYLE
+    if style_name not in BUNDLED_STYLES and lw.file(style_name, command.span) is None:
         return []
     try:
         source = load_sources(files)
-        style = load_style(
-            args.text("style", DEFAULT_STYLE) or DEFAULT_STYLE, lw.base_dir, lw.meta.language
-        )
+        style = load_style(style_name, lw.base_dir, lw.meta.language)
     except BibliographyError as e:
         lw.report(Code.CITATION, str(e), command.span, help=lw.paths_help())
         return []

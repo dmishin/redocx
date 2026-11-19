@@ -123,6 +123,8 @@ class StyleUse:
 class Lowering:
     source: Source
     base_dir: Path
+    root: Path | None = None
+    """The folder every file the document names must be in (`--root`); resolved."""
     diagnostics: list[Located] = field(default_factory=lambda: [])
     stylesheets: StyleSheetCompiler = field(
         default_factory=lambda: StyleSheetCompiler(builtins=BUILTIN_STYLES)
@@ -668,6 +670,20 @@ class Lowering:
             gaps = section.column_gap.emu * (section.columns - 1)
             return Length((section.page.text_width.emu - gaps) // section.columns)
         return section.page.text_width
+
+    def file(self, name: str, span: Span) -> Path | None:
+        """The file a document names, relative to the current folder; None, reported, when
+        it is outside the root folder."""
+        path = self.base_dir / name
+        if self.root is not None and not path.resolve().is_relative_to(self.root):
+            self.report(
+                Code.OUTSIDE_ROOT,
+                f"`{name}` is outside the root folder",
+                span,
+                help=f"files must be in {shown_path(self.root)} (--root)",
+            )
+            return None
+        return path
 
     def load(self, path: Path, command: ast.Command) -> ParseResult | None:
         if len(self.include_stack) > MAX_INCLUDE_DEPTH:

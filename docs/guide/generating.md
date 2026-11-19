@@ -96,6 +96,30 @@ compiles into a template, as `redocx build -t` does.
 Treat any diagnostic as a failure in generated documents: a warning there usually means the data held something
 the template did not expect.
 
+## Data from outside
+
+Escaped data cannot add commands. Data used *as a file name* still names a file: `\image{{escape.string(path)}}`
+reads whatever `path` is, `../../secrets.txt` included. When the data comes from users, give a root folder, and
+every file the document names (`\include`, `\use`, `\image`, `\embed-docx`, `\bibliography`, `template=`) must be
+inside it:
+
+```python
+data, result = build(source, base_dir=Path("work"), root=Path("work"))
+```
+
+```text
+error[RDX0313]: `../../secrets.txt` is outside the root folder
+ --> <input>:3:1
+  |
+3 | \image{../../secrets.txt}
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = help: files must be in work (--root)
+```
+
+On the command line the option is `--root DIR`, on `build` and `check`. Links through symbolic links are followed
+before the check, so a link inside the root that points out of it is outside too.
+
 ## From other languages and scripts
 
 `redocx build` reads the source from standard input with `-` and writes the document to standard output with

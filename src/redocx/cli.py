@@ -123,6 +123,11 @@ def _report_options(parser: argparse.ArgumentParser) -> None:
         default="text",
         help="json: report on standard error as one JSON object per line, for programs",
     )
+    parser.add_argument(
+        "--root",
+        metavar="DIR",
+        help="every file the document names (\\include, \\image, ...) must be inside DIR",
+    )
 
 
 def _std(no_std: bool, no_latex: bool) -> frozenset[str] | None:
@@ -141,13 +146,13 @@ def _base_dir(source: Source) -> Path | None:
 
 
 def _diagnostics(
-    source: Source, std: frozenset[str] | None = None
+    source: Source, std: frozenset[str] | None = None, root: str | None = None
 ) -> list[tuple[Source, Diagnostic]]:
     """The diagnostics of a document (.rdx: the whole build, without writing it) or of a
     style sheet (.rdxs)."""
     if source.name.endswith(STYLESHEET_SUFFIX):
         return list(compile_stylesheets([parse_stylesheet(source)]).diagnostics)
-    return list(build(source, _base_dir(source), std=std)[1].diagnostics)
+    return list(build(source, _base_dir(source), std=std, root=root)[1].diagnostics)
 
 
 INTERNAL_HELP = "this is a bug in redocx; please report it with the document"
@@ -193,6 +198,7 @@ class _BuildOptions:
     std: frozenset[str] | None = None
     strict: bool = False
     """--warnings-as-errors"""
+    root: str | None = None
 
 
 def _build(path: str, options: _BuildOptions, out: _Reporter) -> int:
@@ -212,7 +218,12 @@ def _build(path: str, options: _BuildOptions, out: _Reporter) -> int:
         return 1
     try:
         data, result = build(
-            source, _base_dir(source), loaded, as_template=as_template, std=options.std
+            source,
+            _base_dir(source),
+            loaded,
+            as_template=as_template,
+            std=options.std,
+            root=options.root,
         )
     except InternalError as e:
         out.error(f"{source.name}: {e}", help=INTERNAL_HELP)
@@ -262,7 +273,13 @@ def _schema_valid(data: bytes, out: _Reporter) -> bool:
     return not errors
 
 
-def _check(paths: Sequence[str], std: frozenset[str] | None, strict: bool, out: _Reporter) -> int:
+def _check(
+    paths: Sequence[str],
+    std: frozenset[str] | None,
+    strict: bool,
+    out: _Reporter,
+    root: str | None = None,
+) -> int:
     errors = warnings = 0
     failed = False
     for path in paths:
@@ -271,7 +288,7 @@ def _check(paths: Sequence[str], std: frozenset[str] | None, strict: bool, out: 
             failed = True
             continue
         try:
-            diagnostics = _diagnostics(source, std)
+            diagnostics = _diagnostics(source, std, root)
         except InternalError as e:
             out.error(f"{source.name}: {e}", help=INTERNAL_HELP)
             failed = True
@@ -515,12 +532,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             validate=args.validate,
             std=_std(args.no_std, args.no_latex),
             strict=args.warnings_as_errors,
+            root=args.root,
         )
         return _build(args.file, options, _Reporter(json=args.diagnostics == "json"))
     if args.command == "check":
         std = _std(args.no_std, args.no_latex)
         out = _Reporter(json=args.diagnostics == "json")
-        return _check(args.files, std, args.warnings_as_errors, out)
+        return _check(args.files, std, args.warnings_as_errors, out, args.root)
     if args.command == "fmt":
         return _fmt(args.files, args.check, args.diff)
     if args.command == "inspect":

@@ -52,7 +52,9 @@ def document(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
                 help="put \\document[template=...] at the top of the document",
             )
         elif not lw.template_fixed:
-            use_template(lw, lw.base_dir / template, args.span_of("template"))
+            span = args.span_of("template")
+            if (path := lw.file(template, span)) is not None:
+                use_template(lw, path, span)
     return []
 
 
@@ -141,7 +143,9 @@ def use(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
     if target.startswith("std:"):
         _use_std(lw, target.removeprefix("std:"), command)
         return []
-    path = lw.base_dir / target
+    path = lw.file(target, command.span)
+    if path is None:
+        return []
     if target.endswith(STYLESHEET_SUFFIX):
         try:
             lw.stylesheets.add(parse_stylesheet(Source.from_path(path, shown_path(path))))
@@ -224,7 +228,9 @@ def include(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
     name = verbatim(command)
     if not name:
         return []
-    path = lw.base_dir / name
+    path = lw.file(name, command.span)
+    if path is None:
+        return []
     resolved = path.resolve()
     if resolved in lw.include_stack:
         lw.report(Code.INCLUDE, f"`{path.name}` includes itself", command.span)

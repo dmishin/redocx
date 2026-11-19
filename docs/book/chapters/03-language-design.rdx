@@ -547,7 +547,7 @@ The \product is great.
 - `#name` is valid *only inside a `\define` body*. It works in text and in option values. It never collides with command names.
 - An `id` option can be forwarded with `id=#id`. An empty optional `id` is dropped.
 - Macros are *hygienic and declarative*. They substitute at the AST level, not through token-level expansion as in TeX.
-- *There is no scripting in the language.* There are no conditionals, loops or expressions. Programmability comes from the *Python API*: build the IR directly, or render `.rdx` from Jinja. Untrusted sources can then be compiled safely.
+- *There is no scripting in the language.* There are no conditionals, loops or expressions. Programmability comes from generating the source (from Jinja or any program, with data escaped by `redocx.escape`; see the generation guide) or from building the IR directly. A source cannot run code. It can name any file it can reach, though: `\include`, `\use`, `\image`, `\embed-docx`, `\bibliography` and `template=` paths are relative to the document, and absolute paths and `..` work. `--root DIR` (`root=` in `redocx.compiler`) makes every such file outside `DIR` an error (`RDX0313`), for sources that hold data from outside.
 
 === Standard macro library (prelude) (F-13)
 

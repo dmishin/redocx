@@ -299,11 +299,12 @@ settled: see [tooling ideas](ideas/tooling.md).
    (`examples/generated/invoice.py`) and Jinja filters.
 3. [x] **CLI for programs**: `build -` and `check -` read standard input, `-o -` writes standard output,
    `--warnings-as-errors`, `--diagnostics json` (one JSON object per line).
-4. [ ] **A root for file names**: `--root DIR` keeps `\include`, `\image` and the other file references inside one
-   folder, for sources that hold data from outside.
+4. [x] **A root for file names**: `--root DIR` (`root=` in `redocx.compiler`) makes a file the document names
+   outside one folder an error (`RDX0313`), for sources that hold data from outside.
 
 - **Exit:** the invoice example builds from data with braces, marks and line-start markers in it, and every
   diagnostic reaches a program as JSON.
+  *Status: met.*
 
 ## Later / candidates
 

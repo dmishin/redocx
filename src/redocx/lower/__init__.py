@@ -38,14 +38,16 @@ def lower(
     template: Template | None = None,
     *,
     std: Collection[str] | None = None,
+    root: Path | None = None,
 ) -> tuple[ir.Document, list[Located]]:
     """Lower a parsed document. Diagnostics include the parse diagnostics; the document is
     only meaningful when none of them is an error. `template` (a loaded .dotx or .docx)
     takes precedence over a \\document[template=...] option. `std` names the standard
-    library modules loaded before the document (None: all of them)."""
+    library modules loaded before the document (None: all of them). With `root`, every file
+    the document names must be inside that folder."""
     if base_dir is None:
         base_dir = Path(result.source.name).resolve().parent
-    lowering = Lowering(result.source, base_dir)
+    lowering = Lowering(result.source, base_dir, None if root is None else root.resolve())
     for module in std_modules() if std is None else std:
         load_std(lowering, module)
     if template is not None:

@@ -66,6 +66,7 @@ class Code(Enum):
     TEMPLATE = "RDX0310"
     MATH = "RDX0311"
     CITATION = "RDX0312"
+    OUTSIDE_ROOT = "RDX0313"
 
     # Output: the written package (RDX04xx)
     INCONSISTENT_OUTPUT = "RDX0401"
