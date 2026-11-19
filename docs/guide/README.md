@@ -169,5 +169,6 @@ Text.
 - [Math and code](math-and-code.md): equations in LaTeX notation, highlighted code blocks.
 - [Macros and the standard library](macros.md): `\define`, `\let`, `\include`, `std:callout`, `std:signature`.
 - [Forms and review](forms.md): content controls, comments, protection.
+- [Generating documents](generating.md): writing source from a program or Jinja, escaping data, compiling.
 - [Importing Word documents](import.md): `redocx import`, and how a build is checked.
 - [For TeX users](tex.md): LaTeX constructs and their nearest redocx equivalents.

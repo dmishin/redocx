@@ -3,7 +3,7 @@
 redocx has simple macros: named snippets with parameters, expanded where they are used. They save repetition
 and give house conventions a name. They are deliberately not a programming language: there are no conditionals,
 loops or arithmetic, so any source can be compiled safely. For generated documents, write the source from a program
-(a template engine such as Jinja works well) or build the document with the Python API.
+or a template engine such as Jinja: see [Generating documents](generating.md).
 
 ## Constants
 
@@ -125,5 +125,5 @@ to write instead; see [redocx for TeX users](tex.md).
 | call macros from macros, forward `#body` | redefine built-in commands |
 | keep a house library in a file | use a macro inside a text option (`title={\product}` is an error) |
 
-When you need more, generate the source. Because every short form has a command form and options are named, a
+When you need more, [generate the source](generating.md). Because every short form has a command form and options are named, a
 generated `.rdx` file is easy to write and to read back.
