@@ -28,6 +28,7 @@ from pathlib import Path
 from lxml import etree
 
 from redocx import ir
+from redocx.math.read import MathReader, raw_xml
 from redocx.ooxml.constants import NS, RT
 from redocx.ooxml.parts.theme import theme_from_xml
 from redocx.ooxml.xml import Element
@@ -61,6 +62,7 @@ _RUN_IMAGE_FORMATS = {
     "wmf": "wmf",
 }
 _VML = "urn:schemas-microsoft-com:vml"
+_M = "http://schemas.openxmlformats.org/officeDocument/2006/math"
 _VML_SIZE = re.compile(r"(width|height)\s*:\s*([0-9.]+)(pt|in|cm|mm|px)")
 
 _BUILTIN_TABLE_STYLES = {"normal table"}
@@ -1186,8 +1188,37 @@ def _read_inline_element(element: Element, ctx: _Ctx) -> list[ir.Inline]:
     if tag == _w("del"):
         ctx.stats.note("w:del (tracked deletion)")
         return []
+    if tag in (_MATH_ZONE, _MATH_PARA):
+        return [_read_math(element, ctx)]
     ctx.stats.note(_qname(tag))
     return []
+
+
+_MATH_ZONE = f"{{{_M}}}oMath"
+_MATH_PARA = f"{{{_M}}}oMathPara"
+_CENTRED = frozenset({"centerGroup", "center"})
+
+
+def _read_math(element: Element, ctx: _Ctx) -> ir.Math | ir.RawXml:
+    """An equation: inline (m:oMath) or display (m:oMathPara holding one m:oMath). What
+    the math tree cannot hold is kept as OMML, an object at a time, or the whole equation
+    when its top level cannot be read."""
+    ctx.stats.count("equation")
+    omath: Element | None = element
+    if element.tag == _MATH_PARA:
+        zones = element.findall(_MATH_ZONE)
+        jc = element.find(f"{{{_M}}}oMathParaPr/{{{_M}}}jc")
+        centred = jc is None or jc.get(f"{{{_M}}}val", "centerGroup") in _CENTRED
+        omath = zones[0] if len(zones) == 1 and centred else None
+    reader = MathReader()
+    row = reader.equation(omath) if omath is not None else None
+    for name, count in reader.kept.items():
+        for _ in range(count):
+            ctx.stats.note(f"{name} in an equation (kept as OMML)")
+    if row is None:
+        ctx.stats.note("equation (kept as OMML)")
+        return ir.RawXml(raw_xml(element))
+    return ir.Math(row, display=element.tag == _MATH_PARA)
 
 
 # --- paragraphs, tables and blocks --------------------------------------------------------

@@ -9,7 +9,7 @@ from __future__ import annotations
 import html
 import re
 from collections.abc import Iterator
-from dataclasses import dataclass, field, fields, is_dataclass
+from dataclasses import dataclass, field, fields, is_dataclass, replace
 from typing import cast
 
 Row = tuple["Node", ...]
@@ -175,6 +175,51 @@ def _walk_value(value: object) -> Iterator[Node]:
 
 
 _TEXT_RE = re.compile(r"<m:t(?:\s[^>]*)?>([^<]*)</m:t>")
+
+
+def canonical(row: Row) -> Row:
+    """The formula in the form Word stores it, for comparing two formulas: adjacent runs of
+    one kind merged into one, alignment marks only before something, `-` as the minus sign
+    U+2212, and an empty limit of a big operator left out."""
+    out: list[Node] = []
+    for node in row:
+        node = _canonical_node(node)
+        last = out[-1] if out else None
+        if isinstance(node, Align) and isinstance(last, Align):
+            continue
+        if (
+            isinstance(node, Run)
+            and isinstance(last, Run)
+            and (last.style, last.script, last.normal) == (node.style, node.script, node.normal)
+        ):
+            out[-1] = replace(last, text=last.text + node.text)
+            continue
+        out.append(node)
+    if out and isinstance(out[-1], Align):
+        out.pop()
+    return tuple(out)
+
+
+def _canonical_node(node: Node) -> Node:
+    if isinstance(node, Run):
+        return node if node.normal else replace(node, text=node.text.replace("-", "−"))
+    if isinstance(node, Raw | Align):
+        return node
+    changes = {f.name: _canonical_value(getattr(node, f.name)) for f in fields(node)}
+    if isinstance(node, Nary):
+        changes["sub"] = changes["sub"] or None
+        changes["sup"] = changes["sup"] or None
+    return replace(node, **changes)
+
+
+def _canonical_value(value: object) -> object:
+    """A row canonical; rows of rows (an array, a matrix) each canonical."""
+    if not isinstance(value, tuple):
+        return value
+    items = cast("tuple[object, ...]", value)
+    if all(is_dataclass(item) for item in items):
+        return canonical(cast("Row", items))
+    return tuple(_canonical_value(item) for item in items)
 
 
 def linear_text(row: Row) -> str:

@@ -20,7 +20,7 @@ DOCUMENTS = sorted(p.name for p in CORPUS.glob("*.docx"))
 
 EXPECTED_LOSSES = {
     "drawings.docx": {"shape (no text)"},
-    "review.docx": {"oMath", "w:del (tracked deletion)"},
+    "review.docx": {"w:del (tracked deletion)"},
 }
 """What the reader is known to leave out of each document (everything else is read)."""
 
