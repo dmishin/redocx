@@ -4,6 +4,14 @@ Changes that users see, newest first. The language follows the compatibility rul
 [decision Q14](docs/08-open-questions.md): a source that compiles keeps its meaning in later 0.x versions, and
 anything that would change it is listed here first as a deprecation warning.
 
+## Unreleased
+
+- **Import:** equations come back as LaTeX (`\m{…}`, `$$ … $$`). What the LaTeX subset cannot say is kept as
+  `\ooxml{…}` inside the formula, or the whole equation as `\raw[ooxml]{<m:oMath>…}`.
+- **Math:** `\ooxml{…}` in a formula holds raw OMML; `\raw[ooxml]` accepts whole equations.
+- **Math:** `{…}^2` and `{…}_i` put the script on the whole group, as LaTeX does. It looks the same in Word; in
+  Word's equation editor the group is now the base.
+
 ## 0.1.0 (2026-11-20)
 
 First versioned release. The language grammar is frozen under Q14.

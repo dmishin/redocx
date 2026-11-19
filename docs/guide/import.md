@@ -21,6 +21,19 @@ The source reads like hand-written redocx: headings, lists, labels and `@referen
 - **`--keep-styles`:** the original, emptied of its body, becomes `report.template.docx`, and the source compiles
   into it with `\document[template=…]`. Styles, theme and lists stay exactly as they were.
 
+Equations come back as LaTeX: `\m{…}` in text, `$$ … $$` for a display equation. A part that the LaTeX subset has
+no form for (a prescript, a boxed formula, a linear fraction `a/b`) is printed as `\ooxml{…}` inside the formula,
+and an equation that cannot be printed at all as `\raw[ooxml]{<m:oMath>…}`. Either way, it compiles back to the
+same equation:
+
+```rdx
+$$ \frac{-b\pm\sqrt{b^2-4ac}}{2a} $$
+
+The isotope \m{\ooxml{<m:sPre><m:sub><m:r><m:t>6</m:t></m:r></m:sub><m:sup><m:r><m:t>14</m:t></m:r></m:sup><m:e><m:r><m:t>C</m:t></m:r></m:e></m:sPre>}} decays.
+```
+
+The report counts each of these under "Not printed as source".
+
 ### The check
 
 Every import compiles its own output and compares it with the original: the text, every block (paragraphs, tables,

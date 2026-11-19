@@ -326,10 +326,10 @@ _BRACES = {"{": "&#x7B;", "}": "&#x7D;", "\\": "&#x5C;"}
 
 
 def raw_xml(element: Element) -> str:
-    """An element as source XML: the usual prefixes undeclared (raw XML may use them as
-    they are), the Cambria Math font and empty control properties left out (Word applies
-    them anyway), and braces and backslashes as character references, so the text can sit
-    inside a command's braces."""
+    """An element as source XML: the usual prefixes (m:, w:, ...) whatever the document used,
+    undeclared (raw XML may use them as they are), the Cambria Math font and empty control
+    properties left out (Word applies them anyway), and braces and backslashes as character
+    references, so the text can sit inside a command's braces."""
     tidy = copy.deepcopy(element)
     for fonts in list(tidy.iter(f"{{{W}}}rFonts")):
         values = {v for k, v in fonts.attrib.items() if not k.endswith("}hint")}
@@ -347,6 +347,9 @@ def raw_xml(element: Element) -> str:
         empty = isinstance(pr.tag, str) and _local(pr).endswith("Pr") and not len(pr)
         if empty and _local(pr) not in ("rPr", "mPr"):
             _remove(pr)
+    holder = etree.Element("holder", nsmap=RAW_NAMESPACES)  # m:, w:, ... whatever the source used
+    holder.append(tidy)
+    etree.cleanup_namespaces(holder, top_nsmap=RAW_NAMESPACES)
     text = etree.tostring(tidy, encoding="unicode")
     known = {uri: prefix for prefix, uri in RAW_NAMESPACES.items()}
     text = _DECLARATION_RE.sub(lambda m: "" if known.get(m.group(2)) == m.group(1) else m[0], text)

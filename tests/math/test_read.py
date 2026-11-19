@@ -238,6 +238,11 @@ def test_raw_xml_is_safe_inside_braces() -> None:
     assert back.findtext(f"{{{M}}}t") == "{a\\b}"
 
 
+def test_raw_xml_uses_the_usual_prefixes() -> None:
+    element = etree.fromstring(f'<x:r xmlns:x="{M}" xmlns:y="{W}"><y:rPr><y:b/></y:rPr></x:r>')
+    assert raw_xml(element) == "<m:r><w:rPr><w:b/></w:rPr></m:r>"
+
+
 def test_display_equations_and_whole_equation_fallback(tmp_path: Path) -> None:
     body = (
         "<w:p><m:oMathPara><m:oMath><m:r><m:t>E</m:t></m:r></m:oMath></m:oMathPara></w:p>"

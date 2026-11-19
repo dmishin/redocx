@@ -221,13 +221,15 @@ class _Parser:
     def atom(self, stops: frozenset[str] = frozenset()) -> list[Node]:
         """A primary with its scripts; big operators and functions take their operand."""
         self.skip_space()
+        grouped = self.peek() == "{"  # {...}^2: the whole group is the base, as in LaTeX
         if self.peek() and self.peek() in "^_'":
             base: list[Node | _PendingNary | _PendingFunc] = [Run("")]
         else:
             base = list(self.primary())
-        if not base:
+        self.skip_space()
+        if not base and not (grouped and self.peek() and self.peek() in "^_'"):
             return []
-        head = base[-1] if len(base) == 1 else None
+        head = base[-1] if len(base) == 1 and not grouped else None
         sub = sup = None
         while True:
             self.skip_space()
@@ -258,6 +260,8 @@ class _Parser:
             return [self.func(head, sub, sup, stops)]
         if sub is None and sup is None:
             return base  # type: ignore[return-value]
+        if grouped:
+            return [Scripts(tuple(base), sub, sup)]  # type: ignore[arg-type]
         if isinstance(head, GroupChr) and (
             (head.pos == "top" and sup) or (head.pos == "bot" and sub)
         ):
@@ -469,7 +473,7 @@ class _Parser:
                     continue
                 break
             self.end_environment(name, start)
-            if rows and rows[-1] == [()]:  # a final \\
+            if len(rows) > 1 and rows[-1] == [()]:  # a final \\
                 rows.pop()
             width = max(len(r) for r in rows)
             matrix_rows = tuple(tuple(r) + ((),) * (width - len(r)) for r in rows)

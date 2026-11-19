@@ -20,6 +20,8 @@ from redocx.importer.check import Comparison, compare
 from redocx.importer.printer import display_name, print_document
 from redocx.importer.values import length, line_spacing
 from redocx.lower.builtins import BUILTIN_STYLES
+from redocx.math.nodes import Align, Frac, Raw, Run, canonical
+from redocx.math.parser import parse_math
 from redocx.ooxml.writer import to_docx_bytes
 from redocx.props import para_props, run_props
 from redocx.syntax import Source
@@ -395,3 +397,40 @@ def test_formatting_the_style_gives_is_left_out(tmp_path: Path) -> None:
     runs = (ir.run("same", font="Arial"), ir.run(" bigger", font="Arial", size="12pt"))
     source, _ = imported(ir.Document(body=(ir.Paragraph(runs),), styles=(normal,)), tmp_path)
     assert "same\\font[size=12pt]{ bigger}" in source
+
+
+def _equations(document: ir.Document) -> list[ir.Math]:
+    return [i for p in document.all_paragraphs() for i in p.content if isinstance(i, ir.Math)]
+
+
+def test_equations_print_as_latex(tmp_path: Path) -> None:
+    formulas = [
+        r"e^{i\pi}+1=0",
+        r"\frac{-b\pm\sqrt{b^2-4ac}}{2a}",
+        r"\sum_{i=1}^n{i^2}+\begin{pmatrix}a & b\end{pmatrix}",
+    ]
+    inline = ir.Math(parse_math(formulas[0]))
+    displays = [ir.Math(parse_math(f), display=True) for f in formulas[1:]]
+    pre = Raw("<m:sPre><m:sub/><m:sup/><m:e><m:r><m:t>C</m:t></m:r></m:e></m:sPre>")
+    body = (
+        ir.Paragraph((ir.Run("Euler: "), inline, ir.Run("."))),
+        *(ir.Paragraph((d,)) for d in displays),
+        ir.Paragraph((ir.Math((Run("a"), pre, Frac((Run("1"),), (Run("2"),), "lin"))),)),
+    )
+    source, compiled = imported(ir.Document(body=body), tmp_path)
+    assert f"Euler: \\m{{{formulas[0]}}}." in source
+    assert f"$$ {formulas[1]} $$" in source
+    assert f"$$ {formulas[2]} $$" in source
+    assert "\\m{a\\ooxml{<m:sPre>" in source
+    assert '\\ooxml{<m:f><m:fPr><m:type m:val="lin"/></m:fPr>' in source
+    before = _equations(ir.Document(body=body))
+    after = _equations(compiled)
+    assert [canonical(m.expr) for m in after[:3]] == [canonical(m.expr) for m in before[:3]]
+    assert [m.display for m in after] == [False, True, True, False]
+
+
+def test_an_equation_with_no_latex_form_is_raw(tmp_path: Path) -> None:
+    body = (ir.Paragraph((ir.Math((Run("a"), Align(), Run("b")), display=True),)),)
+    source, compiled = imported(ir.Document(body=body), tmp_path)
+    assert "\\raw[ooxml]{<m:oMathPara><m:oMath>" in source
+    assert any(isinstance(i, ir.RawXml) for p in compiled.all_paragraphs() for i in p.content)

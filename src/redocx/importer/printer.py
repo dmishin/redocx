@@ -32,6 +32,9 @@ from redocx.importer.values import (
     quote,
 )
 from redocx.lower.builtins import BUILTIN_STYLES
+from redocx.math.latex import raw_equation, to_latex
+from redocx.math.nodes import Raw as MathRaw
+from redocx.math.nodes import walk
 from redocx.ooxml.parts.theme import Theme
 from redocx.ooxml.style_names import is_builtin, stored_name
 from redocx.props import REGISTRY, PropertySet, Target
@@ -432,6 +435,10 @@ class Printer:
         if (caption := self.labels.captions.get(id(p))) is not None:
             return self.caption(caption)
         content = p.content
+        if len(content) == 1 and isinstance(content[0], ir.Math) and content[0].display:
+            if style is not None or p.props:
+                self.lost["formatting of a display equation's paragraph"] += 1
+            return self.math(content[0])
         opts: list[str] = []
         if drop is not None:
             letters = tuple(ir.Run(r.text) for r in drop.runs())
@@ -464,6 +471,22 @@ class Printer:
         if not opts and text.strip():
             return line_start(text)
         return f"\\p{_opts(opts)}{{{line_start(text)}}}"
+
+    def math(self, math: ir.Math) -> str:
+        r"""An equation as \m{...} (inline) or $$ ... $$ (display); objects LaTeX cannot say
+        as \ooxml{...}, and the whole equation as \raw when even that does not print it."""
+        if math.numbered:
+            self.lost["equation number"] += 1
+        text = to_latex(math.expr)
+        if text is None:
+            self.lost["equation (kept as OMML)"] += 1
+            return f"\\raw[ooxml]{{{raw_equation(math.expr, display=math.display)}}}"
+        kept = text.count("\\ooxml{") - sum(isinstance(n, MathRaw) for n in walk(math.expr))
+        if kept:
+            self.lost["math object with no LaTeX form (kept as OMML)"] += kept
+        if not math.display:
+            return f"\\m{{{text}}}"
+        return f"$$ {text} $$" if "$$" not in text else f"\\math{{{text}}}"
 
     def list(self, items: Sequence[ir.Paragraph]) -> str:
         first = items[0].list_item
@@ -715,6 +738,10 @@ class Printer:
             return [_Tok(self.control(item))]
         if isinstance(item, ir.RawXml):
             return [_Tok(f"\\raw[ooxml]{{{item.xml}}}")]
+        if isinstance(item, ir.Math):
+            if item.display:
+                self.lost["display equation inside text (printed inline)"] += 1
+            return [_Tok(self.math(replace(item, display=False)))]
         if isinstance(item, ir.CommentEnd):
             return []  # its start was printed as a point comment
         self.lost[type(item).__name__.lower()] += 1

@@ -179,11 +179,13 @@ _TEXT_RE = re.compile(r"<m:t(?:\s[^>]*)?>([^<]*)</m:t>")
 
 def canonical(row: Row) -> Row:
     """The formula in the form Word stores it, for comparing two formulas: adjacent runs of
-    one kind merged into one, alignment marks only before something, `-` as the minus sign
-    U+2212, and an empty limit of a big operator left out."""
+    one kind merged into one, empty runs left out, alignment marks only before something,
+    `-` as the minus sign U+2212, and an empty limit of a big operator left out."""
     out: list[Node] = []
     for node in row:
         node = _canonical_node(node)
+        if isinstance(node, Run) and not node.text:
+            continue
         last = out[-1] if out else None
         if isinstance(node, Align) and isinstance(last, Align):
             continue
