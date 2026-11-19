@@ -9,7 +9,7 @@ from redocx import ir
 from redocx.commands.bind import Args
 from redocx.lower.common import Format, InlineHandler, Piece, markup
 from redocx.lower.fields import format_date
-from redocx.lower.media import placeholder as blank_picture
+from redocx.lower.media import PLACEHOLDER_PNG
 from redocx.props import PropertySet, Target
 from redocx.syntax import ast
 from redocx.syntax.diagnostics import Code
@@ -84,7 +84,7 @@ def control(lw: Lowering, command: ast.Command, args: Args, fmt: Format) -> list
             placeholder = True
             width = args.get("width", Length) or EMPTY_PICTURE[0]
             height = args.get("height", Length) or EMPTY_PICTURE[1]
-            empty = ir.Image(blank_picture((width, height)), "png", width, height, "", "Picture")
+            empty = ir.Image(PLACEHOLDER_PNG, "png", width, height, "", "Picture")
             content = (empty,)
     elif kind == "checkbox":
         box = CHECKED if args.flag("checked") else UNCHECKED

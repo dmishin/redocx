@@ -39,8 +39,14 @@ SVG_UNITS = {
 SVG_LENGTH_RE = re.compile(r"\s*([0-9]*\.?[0-9]+(?:[eE][+-]?[0-9]+)?)\s*([a-z]*)\s*")
 SVG_DEFAULT_SIZE = (300, 150)
 """The size a browser gives an SVG that states none, in CSS pixels."""
-PLACEHOLDER_GREY = (217, 217, 217)
-PLACEHOLDER_PIXELS = 200
+PLACEHOLDER_PNG = bytes.fromhex(
+    "89504e470d0a1a0a0000000d4948445200000001000000010802000000907753de"
+    "0000000c49444154789c63b879f32600051a028cb5b098a90000000049454e44ae426082"
+)
+"""A 1 by 1 pixel grey (#D9D9D9) PNG: the picture shown for an SVG without a fallback and in an
+empty picture control. Word stretches it to the drawing's size. It is stored, not
+encoded, because PNG compression differs between zlib builds, and the output must be the
+same bytes on every platform."""
 
 
 def resolve_size(lw: Lowering, size: Length | Percent) -> Length:
@@ -113,7 +119,7 @@ def image(lw: Lowering, command: ast.Command, args: Args, fmt: Format) -> list[P
             return []
         image_format = "png"
         if fallback is None:
-            data = placeholder(natural)
+            data = PLACEHOLDER_PNG
         else:
             data = read_file(lw, command, fallback, "fallback image")
             found = raster(lw, command, fallback, data) if data is not None else None
@@ -312,20 +318,6 @@ def _svg_length(value: str | None) -> Decimal | None:
         return None
     inches = Decimal(match[1]) * SVG_UNITS[match[2]]
     return inches if inches > 0 else None
-
-
-def placeholder(size: tuple[Length, Length]) -> bytes:
-    """A plain grey PNG of the picture's proportions: what Word 2013 and older show in
-    place of an SVG without a fallback picture."""
-    width, height = size[0].emu, size[1].emu
-    longest = max(width, height)
-    pixels = (
-        max(1, PLACEHOLDER_PIXELS * width // longest),
-        max(1, PLACEHOLDER_PIXELS * height // longest),
-    )
-    out = io.BytesIO()
-    PILImage.new("RGB", pixels, PLACEHOLDER_GREY).save(out, "PNG")
-    return out.getvalue()
 
 
 def embed_docx(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:

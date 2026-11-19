@@ -12,7 +12,7 @@ from PIL import Image as PILImage
 
 from redocx import ir
 from redocx.compiler import build, compile_source
-from redocx.lower.media import svg_size
+from redocx.lower.media import PLACEHOLDER_PNG, svg_size
 from redocx.ooxml.reader import read_docx
 from redocx.values import Length
 from tests.support.xsd import validate_package
@@ -79,8 +79,9 @@ def test_svg_gets_a_placeholder_fallback(files: Path) -> None:
     assert image.svg == (files / "chart.svg").read_bytes()
     assert image.format == "png"
     assert (image.width, image.height) == (Length.cm(8), Length.cm(4))
+    assert image.data == PLACEHOLDER_PNG
     with PILImage.open(io.BytesIO(image.data)) as fallback:
-        assert fallback.size == (200, 100)  # the SVG's proportions
+        assert (fallback.size, fallback.getpixel((0, 0))) == ((1, 1), (217, 217, 217))
 
 
 def test_svg_with_fallback_and_width(files: Path) -> None:
