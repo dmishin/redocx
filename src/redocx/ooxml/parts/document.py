@@ -75,7 +75,7 @@ from redocx.values import Border, Color, Length, apply_tint_shade
 _SPLIT_RE = re.compile(r"(\t|\n)")
 PICTURE_URI = "http://schemas.openxmlformats.org/drawingml/2006/picture"
 SVG_BLIP_URI = "{96DAC541-7B7A-43D3-8B79-37D633B846F1}"
-PART_NAMESPACES = ("w", "r", "wp", "a", "pic")
+PART_NAMESPACES = ("w", "r", "wp", "a", "pic", "m")
 
 
 @dataclass(frozen=True)
