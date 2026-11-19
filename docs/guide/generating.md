@@ -96,5 +96,26 @@ compiles into a template, as `redocx build -t` does.
 Treat any diagnostic as a failure in generated documents: a warning there usually means the data held something
 the template did not expect.
 
-From a shell, write the source to a file and run `redocx build FILE.rdx -o OUT.docx`; the exit status is 1 when
-the build fails.
+## From other languages and scripts
+
+`redocx build` reads the source from standard input with `-` and writes the document to standard output with
+`-o -`, so any program can pipe through it without temporary files:
+
+```bash
+my-generator | redocx build - -o report.docx --warnings-as-errors
+my-generator | redocx build - -o - --diagnostics json > report.docx
+```
+
+Relative file names in source read from standard input are found from the current directory.
+
+- `--warnings-as-errors` fails the build on any warning, and nothing is written.
+- `--diagnostics json` writes one JSON object per line to standard error instead of text, ending with a summary:
+
+```text
+{"type": "diagnostic", "severity": "warning", "code": "RDX0113", "message": "`*` opens strong text but is never closed", "file": "<stdin>", "line": 1, "column": 7, "end_line": 1, "end_column": 8, "label": "treated as literal text", "help": "escape it as `\\*` to silence this warning", "notes": []}
+{"type": "summary", "errors": 0, "warnings": 1, "output": "-"}
+```
+
+Lines and columns count from 1; they are `null` for a problem of the whole file. Problems outside the source (a
+file that cannot be read or written) are `{"type": "error", "message": …, "help": …}`. The exit status is 1 when
+the build fails. `redocx check` takes the same options.

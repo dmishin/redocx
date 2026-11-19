@@ -289,6 +289,22 @@ from its documentation.*
 Tooling (language server, editor support, `watch`, PDF export and `finalize`, a website) waits until the language has
 settled: see [tooling ideas](ideas/tooling.md).
 
+## M8: Generation
+
+*Goal: a program or template engine can write redocx source from any data and compile it safely.*
+
+1. [x] **Escaping** (`redocx.escape`): `text`, `inline`, `string` and `value` make any data read back as itself
+   in markup, string bodies and option values. The importer's printer uses the same functions.
+2. [x] **Guide** ([Generating documents](guide/generating.md)) with a tested example generator
+   (`examples/generated/invoice.py`) and Jinja filters.
+3. [x] **CLI for programs**: `build -` and `check -` read standard input, `-o -` writes standard output,
+   `--warnings-as-errors`, `--diagnostics json` (one JSON object per line).
+4. [ ] **A root for file names**: `--root DIR` keeps `\include`, `\image` and the other file references inside one
+   folder, for sources that hold data from outside.
+
+- **Exit:** the invoice example builds from data with braces, marks and line-start markers in it, and every
+  diagnostic reaches a program as JSON.
+
 ## Later / candidates
 
 Native charts, native Word bibliography, content-control data binding, embedded fonts,

@@ -6,9 +6,11 @@ from __future__ import annotations
 import argparse
 import codecs
 import difflib
+import json
 import sys
 import zipfile
 from collections.abc import Sequence
+from dataclasses import dataclass
 from pathlib import Path
 
 from redocx import __version__, ir
@@ -22,18 +24,76 @@ from redocx.stylesheet.collect import STYLESHEET_SUFFIX
 from redocx.syntax import Source, ast, parse
 from redocx.syntax.cst import dump as dump_cst
 from redocx.syntax.diagnostics import Diagnostic, render, render_all
+from redocx.syntax.diagnostics import to_dict as diagnostic_dict
 from redocx.syntax.format import FormatError, format_source
 
+STDIN = "-"
+STDIN_NAME = "<stdin>"
 
-def _load(path: str) -> Source | None:
+
+def _load(path: str, out: _Reporter | None = None) -> Source | None:
+    """The source at `path` ("-": standard input); problems are reported."""
+    out = out or _Reporter()
     try:
+        if path == STDIN:
+            return Source(STDIN_NAME, sys.stdin.buffer.read().decode("utf-8-sig"))
         return Source.from_path(path)
     except OSError as e:
-        print(f"error: cannot read {path}: {e.strerror}", file=sys.stderr)
+        out.error(f"cannot read {path}: {e.strerror}")
         return None
     except UnicodeDecodeError:
-        print(f"error: {path} is not valid UTF-8", file=sys.stderr)
+        out.error(f"{STDIN_NAME if path == STDIN else path} is not valid UTF-8")
         return None
+
+
+class _Reporter:
+    """Where `build` and `check` report: text for people, or with `json` one JSON object
+    per line, for programs (`--diagnostics json`)."""
+
+    def __init__(self, json: bool = False) -> None:
+        self.json = json
+
+    def _emit(self, data: dict[str, object]) -> None:
+        print(json.dumps(data, ensure_ascii=False), file=sys.stderr)
+
+    def diagnostics(self, items: Sequence[tuple[Source, Diagnostic]]) -> None:
+        if not items:
+            return
+        if self.json:
+            for source, diagnostic in items:
+                self._emit(diagnostic_dict(diagnostic, source))
+        else:
+            print("\n".join(render(d, source) for source, d in items), file=sys.stderr)
+
+    def error(self, message: str, help: str | None = None) -> None:
+        if self.json:
+            self._emit({"type": "error", "message": message, "help": help})
+        else:
+            print(f"error: {message}" + (f"\n  = help: {help}" if help else ""), file=sys.stderr)
+
+    def warning(self, message: str) -> None:
+        if self.json:
+            self._emit({"type": "warning", "message": message})
+        else:
+            print(f"warning: {message}", file=sys.stderr)
+
+    def info(self, message: str) -> None:
+        """A progress line for people; programs get the summary instead."""
+        if not self.json:
+            print(message, file=sys.stderr)
+
+    def summary(self, text: str, errors: int, warnings: int, output: str | None = None) -> None:
+        """The last line: `text` for people; the counts and the file written for programs."""
+        if self.json:
+            self._emit(
+                {"type": "summary", "errors": errors, "warnings": warnings, "output": output}
+            )
+        else:
+            print(text, file=sys.stderr)
+
+
+def _counts(errors: int, warnings: int) -> str:
+    return f"{errors} error{'s' * (errors != 1)}, {warnings} warning{'s' * (warnings != 1)}"
 
 
 def _std_options(parser: argparse.ArgumentParser) -> None:
@@ -51,6 +111,20 @@ def _std_options(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def _report_options(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--warnings-as-errors",
+        action="store_true",
+        help="fail on warnings too (a build then writes nothing)",
+    )
+    parser.add_argument(
+        "--diagnostics",
+        choices=("text", "json"),
+        default="text",
+        help="json: report on standard error as one JSON object per line, for programs",
+    )
+
+
 def _std(no_std: bool, no_latex: bool) -> frozenset[str] | None:
     """The standard library modules to load before the document (None: all of them)."""
     if no_std:
@@ -60,6 +134,12 @@ def _std(no_std: bool, no_latex: bool) -> frozenset[str] | None:
     return None
 
 
+def _base_dir(source: Source) -> Path | None:
+    """Where relative file names are found: the current directory for standard input,
+    otherwise the file's own (None)."""
+    return Path.cwd() if source.name == STDIN_NAME else None
+
+
 def _diagnostics(
     source: Source, std: frozenset[str] | None = None
 ) -> list[tuple[Source, Diagnostic]]:
@@ -67,30 +147,29 @@ def _diagnostics(
     style sheet (.rdxs)."""
     if source.name.endswith(STYLESHEET_SUFFIX):
         return list(compile_stylesheets([parse_stylesheet(source)]).diagnostics)
-    return list(build(source, std=std)[1].diagnostics)
+    return list(build(source, _base_dir(source), std=std)[1].diagnostics)
 
 
 INTERNAL_HELP = "this is a bug in redocx; please report it with the document"
 
 
-def _load_template(path: str) -> Template | None:
+def _load_template(path: str, out: _Reporter) -> Template | None:
     """The --template file; problems are reported here, as there is no source line for them."""
     try:
         template = load_template(Path(path))
     except TemplateError as e:
-        print(f"error: --template: {e}", file=sys.stderr)
+        out.error(f"--template: {e}")
         return None
     if template.body_issue is not None:
-        print(
-            f"warning: --template: the body content of `{template.name}` is not carried over: "
+        out.warning(
+            f"--template: the body content of `{template.name}` is not carried over: "
             f"{template.body_issue}; only its styles, theme, page setup, headers and footers "
-            "are used",
-            file=sys.stderr,
+            "are used"
         )
     return template
 
 
-def _emit_ir(document: ir.Document, target: str) -> bool:
+def _emit_ir(document: ir.Document, target: str, out: _Reporter) -> bool:
     """Write the IR as JSON to `target` ("-": standard output)."""
     text = to_json(document)
     if target == "-":
@@ -99,94 +178,110 @@ def _emit_ir(document: ir.Document, target: str) -> bool:
     try:
         Path(target).write_text(text, encoding="utf-8", newline="\n")
     except OSError as e:
-        print(f"error: cannot write {target}: {e.strerror}", file=sys.stderr)
+        out.error(f"cannot write {target}: {e.strerror}")
         return False
-    print(f"wrote {target}", file=sys.stderr)
+    out.info(f"wrote {target}")
     return True
 
 
-def _build(
-    path: str,
-    output: str | None,
-    template: str | None,
-    emit_ir: str | None,
-    validate: bool,
-    std: frozenset[str] | None = None,
-) -> int:
-    source = _load(path)
+@dataclass(frozen=True)
+class _BuildOptions:
+    output: str | None = None
+    template: str | None = None
+    emit_ir: str | None = None
+    validate: bool = False
+    std: frozenset[str] | None = None
+    strict: bool = False
+    """--warnings-as-errors"""
+
+
+def _build(path: str, options: _BuildOptions, out: _Reporter) -> int:
+    output = options.output
+    if path == STDIN and output is None:
+        out.error("reading from standard input needs `-o`", help="write `-o FILE.docx`, or `-o -`")
+        return 1
+    if output == "-" and options.emit_ir == "-":
+        out.error("`-o -` and `--emit-ir -` both write to standard output", help="give one a file")
+        return 1
+    source = _load(path, out)
     if source is None:
         return 1
     as_template = output is not None and output.lower().endswith(".dotx")
-    loaded = _load_template(template) if template else None
-    if template and loaded is None:
+    loaded = _load_template(options.template, out) if options.template else None
+    if options.template and loaded is None:
         return 1
     try:
-        data, result = build(source, template=loaded, as_template=as_template, std=std)
+        data, result = build(
+            source, _base_dir(source), loaded, as_template=as_template, std=options.std
+        )
     except InternalError as e:
-        print(f"error: {path}: {e}\n  = help: {INTERNAL_HELP}", file=sys.stderr)
+        out.error(f"{source.name}: {e}", help=INTERNAL_HELP)
         return 1
-    if result.diagnostics:
-        print(result.render_diagnostics(), file=sys.stderr)
-    summary = f"{result.error_count} error{'s' * (result.error_count != 1)}, " + (
-        f"{result.warning_count} warning{'s' * (result.warning_count != 1)}"
-    )
-    if data is None:
-        print(f"build failed: {summary}", file=sys.stderr)
+    out.diagnostics(result.diagnostics)
+    errors, warnings = result.error_count, result.warning_count
+    summary = _counts(errors, warnings)
+    if data is None or (options.strict and warnings):
+        reason = " (warnings are errors)" if data is not None else ""
+        out.summary(f"build failed: {summary}{reason}", errors, warnings)
         return 1
-    if validate and not _schema_valid(data):
+    if options.validate and not _schema_valid(data, out):
         return 1
-    document = result.document
-    if emit_ir is not None and document is not None and not _emit_ir(document, emit_ir):
+    document, emit_ir = result.document, options.emit_ir
+    if emit_ir is not None and document is not None and not _emit_ir(document, emit_ir, out):
         return 1
+    if output == "-":
+        sys.stdout.buffer.write(data)
+        sys.stdout.buffer.flush()
+        out.summary(f"wrote the document to standard output ({summary})", errors, warnings, "-")
+        return 0
     target = Path(output) if output else Path(path).with_suffix(".docx")
     try:
         target.write_bytes(data)
     except OSError as e:
-        print(f"error: cannot write {target}: {e.strerror}", file=sys.stderr)
+        out.error(f"cannot write {target}: {e.strerror}")
         return 1
-    print(f"wrote {target} ({summary})", file=sys.stderr)
+    out.summary(f"wrote {target} ({summary})", errors, warnings, str(target))
     return 0
 
 
-def _schema_valid(data: bytes) -> bool:
+def _schema_valid(data: bytes, out: _Reporter) -> bool:
     """--validate: every part of the written document against the ECMA-376 schemas."""
     from redocx.ooxml.validate import validate_package  # loads the schemas
 
     errors = validate_package(data)
     for part, messages in errors.items():
         for message in messages:
-            print(f"error: {part}:{message}", file=sys.stderr)
+            out.error(f"{part}:{message}")
     if errors:
         count = sum(len(m) for m in errors.values())
-        print(
+        out.error(
             f"build failed: the written document does not match the schemas ({count} "
-            f"error{'s' * (count != 1)}; nothing was written)\n  = help: {INTERNAL_HELP}",
-            file=sys.stderr,
+            f"error{'s' * (count != 1)}; nothing was written)",
+            help=INTERNAL_HELP,
         )
     return not errors
 
 
-def _check(paths: Sequence[str], std: frozenset[str] | None = None) -> int:
+def _check(paths: Sequence[str], std: frozenset[str] | None, strict: bool, out: _Reporter) -> int:
     errors = warnings = 0
     failed = False
     for path in paths:
-        source = _load(path)
+        source = _load(path, out)
         if source is None:
             failed = True
             continue
         try:
             diagnostics = _diagnostics(source, std)
         except InternalError as e:
-            print(f"error: {path}: {e}\n  = help: {INTERNAL_HELP}", file=sys.stderr)
+            out.error(f"{source.name}: {e}", help=INTERNAL_HELP)
             failed = True
             continue
-        if diagnostics:
-            print("\n".join(render(d, src) for src, d in diagnostics), file=sys.stderr)
+        out.diagnostics(diagnostics)
         errors += sum(d.is_error for _, d in diagnostics)
         warnings += sum(not d.is_error for _, d in diagnostics)
-    summary = f"{errors} error{'s' * (errors != 1)}, {warnings} warning{'s' * (warnings != 1)}"
-    print(f"checked {len(paths)} file{'s' * (len(paths) != 1)}: {summary}", file=sys.stderr)
-    return 1 if errors or failed else 0
+    text = f"checked {len(paths)} file{'s' * (len(paths) != 1)}: {_counts(errors, warnings)}"
+    out.summary(text, errors, warnings)
+    return 1 if errors or failed or (strict and warnings) else 0
 
 
 def _fmt(paths: Sequence[str], check: bool, diff: bool) -> int:
@@ -318,9 +413,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     commands = parser.add_subparsers(dest="command", required=True)
 
     build_cmd = commands.add_parser("build", help="compile a document to .docx")
-    build_cmd.add_argument("file", metavar="FILE")
+    build_cmd.add_argument("file", metavar="FILE", help="the document (-: standard input)")
     build_cmd.add_argument(
-        "-o", "--output", metavar="OUT", help="output file (default: FILE.docx; .dotx: a template)"
+        "-o",
+        "--output",
+        metavar="OUT",
+        help="output file (default: FILE.docx; .dotx: a template; -: standard output)",
     )
     build_cmd.add_argument(
         "-t",
@@ -340,10 +438,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="also check the written document against the ECMA-376 schemas (slower)",
     )
     _std_options(build_cmd)
+    _report_options(build_cmd)
 
     check = commands.add_parser("check", help="report diagnostics without writing output")
-    check.add_argument("files", nargs="+", metavar="FILE")
+    check.add_argument("files", nargs="+", metavar="FILE", help="-: standard input")
     _std_options(check)
+    _report_options(check)
 
     fmt = commands.add_parser("fmt", help="rewrite files in the canonical layout")
     fmt.add_argument("files", nargs="+", metavar="FILE")
@@ -408,10 +508,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "import":
         return _import(args.file, args.output, args.keep_styles, not args.commands_only, args.check)
     if args.command == "build":
-        std = _std(args.no_std, args.no_latex)
-        return _build(args.file, args.output, args.template, args.emit_ir, args.validate, std)
+        options = _BuildOptions(
+            output=args.output,
+            template=args.template,
+            emit_ir=args.emit_ir,
+            validate=args.validate,
+            std=_std(args.no_std, args.no_latex),
+            strict=args.warnings_as_errors,
+        )
+        return _build(args.file, options, _Reporter(json=args.diagnostics == "json"))
     if args.command == "check":
-        return _check(args.files, _std(args.no_std, args.no_latex))
+        std = _std(args.no_std, args.no_latex)
+        out = _Reporter(json=args.diagnostics == "json")
+        return _check(args.files, std, args.warnings_as_errors, out)
     if args.command == "fmt":
         return _fmt(args.files, args.check, args.diff)
     if args.command == "inspect":

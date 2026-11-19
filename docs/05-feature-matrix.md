@@ -173,6 +173,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Import oracle (`--check`: compare the recompiled document with the original) | M6 ✓ | ●● |
 | `redocx fmt` (canonical layout; `--check`, `--diff`) | M3 ✓ | ●● |
 | `--emit-ir` (IR as JSON, one-way) | M3 ✓ | ● |
+| `redocx.escape`, standard input and output, `--warnings-as-errors`, `--diagnostics json` | M8 ✓ | ● |
 | Raw XML checked against the schemas; written-document integrity check (`RDX0401`); `build --validate` | M7 ✓ | ●● |
 | Command reference, guides, `redocx explain` | M7 ✓ | ● |
 | Language server, editor support, `watch` | Later ([tooling ideas](ideas/tooling.md)) | ●●● |

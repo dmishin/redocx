@@ -148,6 +148,28 @@ def render(diagnostic: Diagnostic, source: Source) -> str:
     return "\n".join(out) + "\n"
 
 
+def to_dict(diagnostic: Diagnostic, source: Source) -> dict[str, object]:
+    """One diagnostic as JSON-ready data (`--diagnostics json`): 1-based lines and columns,
+    `null` for a problem of the whole file."""
+    data: dict[str, object] = {
+        "type": "diagnostic",
+        "severity": diagnostic.severity.value,
+        "code": diagnostic.code.value,
+        "message": diagnostic.message,
+        "file": source.name,
+        "line": None,
+        "column": None,
+        "end_line": None,
+        "end_column": None,
+    }
+    if diagnostic.located:
+        start = source.position(diagnostic.span.start)
+        end = source.position(diagnostic.span.end)
+        data.update(line=start.line, column=start.column, end_line=end.line, end_column=end.column)
+    data.update(label=diagnostic.label, help=diagnostic.help, notes=list(diagnostic.notes))
+    return data
+
+
 def expansion_notes(span: Span) -> tuple[str, ...]:
     """A note ``in `\\name`, called at file:line:column`` for each macro call `span` came
     through, innermost first."""
