@@ -9,7 +9,7 @@ from pathlib import Path
 
 from redocx import ir
 from redocx.lower import Located, lower
-from redocx.ooxml.integrity import package_problems
+from redocx.ooxml.integrity import math_problems, package_problems
 from redocx.ooxml.parts.styles import StyleError
 from redocx.ooxml.template import Template, load_template
 from redocx.ooxml.writer import build_package
@@ -101,7 +101,7 @@ def build(
 ) -> tuple[bytes | None, CompileResult]:
     """Compile to .docx bytes, or .dotx with `as_template` (None when there are errors).
     The written package is checked for consistency (`package_problems`); what is wrong is
-    reported as warnings."""
+    reported as warnings. Invalid math (`math_problems`) is an error, and nothing is written."""
     if isinstance(source, str):
         source = Source("<input>", source)
         base_dir = base_dir or Path.cwd()
@@ -112,6 +112,10 @@ def build(
         package = build_package(result.document, as_template=as_template)
     except StyleError as e:  # a consistency problem the lowering did not catch
         raise InternalError(f"internal error while writing the document: {e}") from e
+    invalid = math_problems(package)
+    if invalid:
+        errors = (*result.diagnostics, *_invalid_math(source, invalid))
+        return None, replace(result, document=None, diagnostics=errors)
     problems = package_problems(package)
     if problems:
         result = replace(
@@ -141,3 +145,20 @@ def _output_warnings(source: Source, problems: list[str]) -> list[Located]:
         located=False,
     )
     return [(source, warning)]
+
+
+def _invalid_math(source: Source, problems: list[str]) -> list[Located]:
+    """Invalid math in the written package, as one error for the whole document. The writer
+    is meant never to write it, and raw OMML is checked where it is written, so this is a
+    bug in redocx."""
+    count = f"{len(problems)} problem{'s' * (len(problems) != 1)}"
+    error = Diagnostic(
+        Severity.ERROR,
+        Code.INVALID_MATH,
+        f"the written document has invalid math ({count}; nothing was written)",
+        Span(0, 0),
+        help="this is a bug in redocx: please report it with the document",
+        notes=tuple(problems),
+        located=False,
+    )
+    return [(source, error)]

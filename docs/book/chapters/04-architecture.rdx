@@ -29,7 +29,7 @@
  └──────┬───────┘   content types, core/app/custom props, media, theme, fontTable
         ▼  OPC package (deterministic zip)
  ┌──────────────┐   XSD validation (always in tests; opt-in build --validate)
- │ 6. Validate  │   integrity check of the written parts (RDX0401, always)
+ │ 6. Validate  │   integrity check of the written parts (RDX0401, RDX0402, always)
  └──────────────┘
 ```
 

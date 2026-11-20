@@ -66,7 +66,8 @@ A document that compiles without errors should open in Word without complaint. r
 3. **The written document.** After writing, redocx reads the parts back and checks what no schema sees: every
    relationship exists, every bookmark is opened once and closed, bookmark names and drawing ids are unique, links
    go to bookmarks that exist, and notes, comments, styles and lists that are referred to exist. A problem is a
-   warning, `RDX0401`, listing each one.
+   warning, `RDX0401`, listing each one. Math must be valid: a math object without the arguments the schema
+   requires is an error, `RDX0402`, and nothing is written.
 
 For a full check, `redocx build --validate` also validates every part of the written document against the
 schemas (about half a second more) and writes nothing if one fails. The test suite does this, and runs Microsoft's

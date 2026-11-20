@@ -6,21 +6,6 @@ remove it from this list and say so in the commit and the [changelog](../CHANGEL
 
 ## Math
 
-### Bold italic text in an equation loses its formatting
-
-Text in an equation (`m:nor`) that is both bold and italic is read with `style="bi"`. The OMML writer
-(`math/omml.py`, `_Writer.run`) writes `w:b` only for `b` and `w:i` only for `i`, so a `bi` run is written plain.
-On import, the printer has no `\text…` form for bold italic and writes the run as `\ooxml{…}`. It does that through
-the same writer, so the formatting is lost:
-
-```text
-<m:r><m:rPr><m:nor/></m:rPr><w:rPr><w:b/><w:i/></w:rPr><m:t>if</m:t></m:r>
-  imports as  \ooxml{<m:r><m:rPr><m:nor/></m:rPr><m:t>if</m:t></m:r>}
-```
-
-`--check` reports the equation as different. Fix: write both `w:b` and `w:i` for `bi`. The language cannot write
-bold italic text in a formula (`\textbf` and `\textit` do not nest), so it stays `\ooxml{…}` on import.
-
 ### `\&` in an aligned row is an alignment point in Word
 
 Word marks alignment points in an equation array with `&` in the math text, and redocx writes `&` the same way.
@@ -75,20 +60,6 @@ objects, so each pair becomes `\left( … \right)` (`f\left(x\right)`). Everythi
 is only less readable than hand-written source. Fix: spaces around relations and binary operators, and plain `(`
 `)` where the delimiter holds a single row of simple content. The printed form must still parse back the same.
 
-### Empty scripts write invalid OMML
-
-`x_{}^{}`, `y^{}` and `z_{}` compile without a diagnostic, but the output fails the schema: an `m:sSup` with no
-`m:sup`, which Word may refuse to open without a repair. The OMML writer (`math/omml.py`, `_Writer`, the `Scripts`
-case) picks the element kind and writes `m:sub` and `m:sup` by testing the scripts for truth, so an empty script
-(`()`) counts as missing, while the parser made a `Scripts` node because a script was there.
-
-```text
-y^{}  ->  <m:sSup><m:sSupPr/><m:e><m:r><m:t>y</m:t></m:r></m:e></m:sSup>     (no m:sup)
-```
-
-Fix: test `is not None` and write an empty argument, as Word does for an empty placeholder. Found by the math
-benchmark (`empty-scripts`).
-
 ### A prime followed by a superscript is rejected
 
 `f'^2` is an error, "double superscript: use braces, x^{a^b}". In LaTeX it is valid and means `f^{\prime 2}`: the
@@ -102,7 +73,7 @@ Fix: when the superscript so far holds only primes, append the `^` argument to i
 
 `tools/math-bench/make_bench.py` compiles the 349 formulas of `tools/math-bench/formulas.json` (written without
 regard to what redocx supports) and puts each next to its LaTeX picture in `tools/math-bench/out/bench.docx`. On the
-first run, redocx rejected 112. Apart from the two bugs above, every rejection is "unknown math command" or
+first run, redocx rejected 112. Apart from the prime bug above, every rejection is "unknown math command" or
 "unknown environment" (RDX0311). By kind, with a rough cost:
 
 - Symbols only, a table entry each in `math/symbols.py`: `\varkappa`, `\varGamma` (and the other `\var` capitals),

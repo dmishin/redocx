@@ -6,11 +6,12 @@ from pathlib import Path
 
 import pytest
 
+import redocx.compiler
 from redocx import ir
 from redocx.cli import main
 from redocx.compiler import build
 from redocx.ooxml import validate
-from redocx.ooxml.integrity import package_problems
+from redocx.ooxml.integrity import math_problems, package_problems
 from redocx.ooxml.writer import build_package
 from redocx.syntax.diagnostics import Code
 
@@ -110,3 +111,43 @@ def test_build_validate_fails_on_schema_errors(
     err = capsys.readouterr().err
     assert "error: word/document.xml:2:0: `w:bogus` is not allowed here" in err
     assert "does not match the schemas (1 error; nothing was written)" in err
+
+
+def test_math_objects_have_their_arguments() -> None:
+    document = ir.Document(
+        body=(
+            ir.RawBlock(
+                "<w:p><m:oMath>"
+                "<m:sSup><m:e/></m:sSup>"
+                "<m:f><m:den/><m:num/></m:f>"
+                "<m:m><m:mr/></m:m>"
+                "<m:rad><m:deg/><m:e/></m:rad>"
+                "</m:oMath></w:p>"
+            ),
+        )
+    )
+    package = build_package(document)
+    assert package_problems(package) == []  # not a consistency problem: the math is invalid
+    assert math_problems(package) == [
+        "word/document.xml: `m:sSup` has no `m:sup`",
+        "word/document.xml: `m:f` has no `m:num`",
+        "word/document.xml: `m:num` is not allowed in `m:f` here",
+        "word/document.xml: `m:mr` has no `m:e`",
+    ]
+
+
+def test_build_stops_on_invalid_math(monkeypatch: pytest.MonkeyPatch) -> None:
+    def invalid(package: object) -> list[str]:
+        return ["word/document.xml: `m:sSup` has no `m:sup`"]
+
+    monkeypatch.setattr(redocx.compiler, "math_problems", invalid)
+    data, result = build(r"\m{x^2}")
+    assert data is None
+    assert result.document is None
+    ((_, error),) = result.diagnostics
+    assert error.code is Code.INVALID_MATH
+    assert error.notes == ("word/document.xml: `m:sSup` has no `m:sup`",)
+    assert (
+        "error[RDX0402]: the written document has invalid math (1 problem; nothing was written)"
+        in (result.render_diagnostics())
+    )

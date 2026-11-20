@@ -70,6 +70,7 @@ class Code(Enum):
 
     # Output: the written package (RDX04xx)
     INCONSISTENT_OUTPUT = "RDX0401"
+    INVALID_MATH = "RDX0402"
 
 
 @dataclass(frozen=True)

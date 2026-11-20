@@ -170,6 +170,19 @@ def test_numbered_equation_uses_words_hash() -> None:
     assert inside.find(f"{M}r/{M}rPr/{M}nor") is None
 
 
+def test_bold_italic_text_is_both() -> None:
+    element = omml((Run("if", style="bi", normal=True),), display=False)
+    assert _tags(element) == ["oMath", "r", "rPr", "nor", "rPr", "b", "i", "t"]
+
+
+def test_empty_scripts_are_valid() -> None:
+    for formula in (r"y^{}", r"z_{}", r"x_{}^{}"):
+        data, result = build(f"\\m{{{formula}}}")
+        assert data is not None
+        assert result.diagnostics == (), formula
+        assert validate_package(data) == {}, formula
+
+
 def test_equation_number_with_a_dash_is_text() -> None:
     element = omml(parse_math("x = 1"), display=True, number="2–1")
     number = element.find(f".//{M}d/{M}e/{M}r")

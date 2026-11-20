@@ -99,8 +99,8 @@ class _Writer:
         text_props = (
             E(
                 "w:rPr",
-                E("w:b") if run.style == "b" else None,
-                E("w:i") if run.style == "i" else None,
+                E("w:b") if run.style in ("b", "bi") else None,
+                E("w:i") if run.style in ("i", "bi") else None,
             )
             if run.normal
             else _math_rpr()
@@ -133,11 +133,19 @@ class _Writer:
                     self.arg("m:e", e),
                 )
             case Scripts(base=base, sub=sub, sup=sup):
-                kind = "sSubSup" if sub and sup else "sSub" if sub else "sSup"
+                # An empty script (x^{}) is an empty argument, as Word writes a placeholder;
+                # the element needs it to be valid.
+                kind = (
+                    "sSubSup"
+                    if sub is not None and sup is not None
+                    else "sSub"
+                    if sub is not None
+                    else "sSup"
+                )
                 parts = [self.arg("m:e", base)]
-                if sub:
+                if kind != "sSup":
                     parts.append(self.arg("m:sub", sub))
-                if sup:
+                if kind != "sSub":
                     parts.append(self.arg("m:sup", sup))
                 return E(f"m:{kind}", E(f"m:{kind}Pr", _ctrl()), *parts)
             case Nary(chr=c, sub=sub, sup=sup, e=e, lim_loc=loc):
@@ -193,7 +201,9 @@ class _Writer:
                 )
                 return E("m:groupChr", props, self.arg("m:e", e))
             case Matrix(rows=rows, align=align):
-                columns = max((len(r) for r in rows), default=1)
+                # A matrix has at least one row of one cell, or it is not valid OMML.
+                columns = max((len(r) for r in rows), default=0) or 1
+                rows = tuple(tuple(r) + ((),) * (columns - len(r)) for r in rows or ((),))
                 mcs = E(
                     "m:mcs",
                     E("m:mc", E("m:mcPr", _val("m:count", str(columns)), _val("m:mcJc", align))),
@@ -204,7 +214,11 @@ class _Writer:
                     *(E("m:mr", *(self.arg("m:e", cell) for cell in r)) for r in rows),
                 )
             case EqArr(rows=rows):
-                return E("m:eqArr", E("m:eqArrPr", _ctrl()), *(self.arg("m:e", r) for r in rows))
+                return E(
+                    "m:eqArr",
+                    E("m:eqArrPr", _ctrl()),
+                    *(self.arg("m:e", r) for r in rows or ((),)),
+                )
             case Align():
                 return self.run(Run("&"))
             case Raw():

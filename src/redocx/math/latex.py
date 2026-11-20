@@ -338,13 +338,13 @@ class _Printer:
             b = f"{{{b}}}"
         text = b
         sub_e = sup_e = None
-        if sub:
+        if sub is not None:  # an empty script is kept: it is written as an empty argument
             s, sub_e = self.arg(sub)
             text += f"_{s}"
         if sup and sub is None and len(sup) == 1 and _primes(sup[0]):
             text += "'" * len(sup[0].text)  # type: ignore[union-attr]
             sup_e = sup
-        elif sup:
+        elif sup is not None:
             s, sup_e = self.arg(sup)
             text += f"^{s}"
         return text, (Scripts(base_e, sub_e, sup_e),)

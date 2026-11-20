@@ -887,6 +887,9 @@ once and closed once; bookmark names and drawing ids are unique; links within th
 exists; note, comment, style and list references name
 something that exists. Problems are one warning, `RDX0401`, with a note each. The writer is meant to get all of
 this right, so the warning points at raw XML and template content first, and otherwise asks for a bug report.
+Math is checked too: each math object has the arguments the schema requires, in order (an `m:sSup` has an `m:sup`;
+the rules are read from the math schema, which takes a few milliseconds). Invalid math is an error, `RDX0402`, and
+nothing is written: the writer is meant never to write it, and `\ooxml{…}` is checked where it is written.
 `redocx build --validate` also checks every part against the ECMA-376 schemas (about half a second more) and fails
 without writing when one does not match. The schemas ship with the package (`redocx/data/schemas`).
 
