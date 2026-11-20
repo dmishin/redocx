@@ -595,7 +595,7 @@ $$\begin{aligned}
 
 | Kind | Commands |
 |------|----------|
-| Scripts | `x^2`, `x_i`, `x_i^2`, `x'`, `x''`; `{…}` groups (`{ab}^2` puts the script on the whole group) |
+| Scripts | `x^2`, `x_i`, `x_i^2`, `x'`, `x''`, `f'^2`; `{…}` groups (`{ab}^2` puts the script on the whole group) |
 | Fractions, roots | `\frac` (`\dfrac`, `\tfrac`, `\cfrac`), `\binom`, `\sqrt`, `\sqrt[n]` |
 | Big operators | `\sum \prod \coprod \int \iint \iiint \oint \bigcup \bigcap \bigvee \bigwedge \bigoplus \bigotimes \bigodot`, with `\limits` / `\nolimits` |
 | Functions | `\sin \cos \tan \log \ln \exp \lim \max \min \sup \inf \det \gcd …`, `\operatorname`, `\mathop` |

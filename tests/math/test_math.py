@@ -43,6 +43,14 @@ def test_scripts_fractions_roots() -> None:
     assert parse_math(r"x^23") == (Scripts((Run("x"),), None, (Run("2"),)), Run("3"))  # one token
 
 
+def test_a_superscript_after_primes_joins_them() -> None:
+    assert parse_math(r"f'^2") == (Scripts((Run("f"),), None, (Run("′"), Run("2"))),)
+    assert parse_math(r"f''_1^3") == (Scripts((Run("f"),), (Run("1"),), (Run("′′"), Run("3"))),)
+    for formula in (r"f'^2^3", r"f^2'^3"):
+        with pytest.raises(MathError, match="double superscript"):
+            parse_math(formula)
+
+
 def test_symbols_and_text() -> None:
     assert parse_math(r"\alpha \leq \Omega - 1") == (
         Run("α"),

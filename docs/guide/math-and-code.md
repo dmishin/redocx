@@ -29,7 +29,7 @@ The supported LaTeX:
 
 | Kind | Commands |
 |------|----------|
-| Scripts | `x^2`, `x_i`, `x_i^2`, `x'`; `{…}` groups (`{ab}^2` puts the script on the whole group) |
+| Scripts | `x^2`, `x_i`, `x_i^2`, `x'`, `f'^2`; `{…}` groups (`{ab}^2` puts the script on the whole group) |
 | Fractions, roots | `\frac`, `\dfrac`, `\tfrac`, `\cfrac`, `\binom`, `\sqrt`, `\sqrt[n]` |
 | Big operators | `\sum \prod \int \iint \oint \bigcup \bigcap …`, `\limits`, `\nolimits` |
 | Functions | `\sin \cos \log \ln \exp \lim \max \min …`, `\operatorname{argmin}`, `\mathop` |

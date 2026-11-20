@@ -60,20 +60,11 @@ objects, so each pair becomes `\left( … \right)` (`f\left(x\right)`). Everythi
 is only less readable than hand-written source. Fix: spaces around relations and binary operators, and plain `(`
 `)` where the delimiter holds a single row of simple content. The printed form must still parse back the same.
 
-### A prime followed by a superscript is rejected
-
-`f'^2` is an error, "double superscript: use braces, x^{a^b}". In LaTeX it is valid and means `f^{\prime 2}`: the
-prime is a superscript, and the `^2` joins it. The parser (`math/parser.py`, `_Parser.atom`) turns primes into a
-superscript and then rejects any `^` that follows. `f''_1` and `f^{\prime 2}` work.
-
-Fix: when the superscript so far holds only primes, append the `^` argument to it. Found by the math benchmark
-(`prime-and-sup`).
-
 ### LaTeX commands the subset does not have
 
 `tools/math-bench/make_bench.py` compiles the 349 formulas of `tools/math-bench/formulas.json` (written without
 regard to what redocx supports) and puts each next to its LaTeX picture in `tools/math-bench/out/bench.docx`. On the
-first run, redocx rejected 112. Apart from the prime bug above, every rejection is "unknown math command" or
+first run, redocx rejected 112. Every rejection is "unknown math command" or
 "unknown environment" (RDX0311). By kind, with a rough cost:
 
 - Symbols only, a table entry each in `math/symbols.py`: `\varkappa`, `\varGamma` (and the other `\var` capitals),

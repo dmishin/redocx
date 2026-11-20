@@ -231,6 +231,7 @@ class _Parser:
             return []
         head = base[-1] if len(base) == 1 and not grouped else None
         sub = sup = None
+        primed = False  # the superscript so far is primes only: f'^2 is f^{\prime 2}
         while True:
             self.skip_space()
             c = self.peek()
@@ -239,6 +240,7 @@ class _Parser:
                 while self.peek() == "'":
                     primes += "′"
                     self.i += 1
+                primed = sup is None or primed
                 sup = (*(sup or ()), Run(primes))
                 continue
             if not c or c not in "^_":
@@ -247,9 +249,10 @@ class _Parser:
             self.i += 1
             arg = self.group()
             if c == "^":
-                if sup is not None:
+                if sup is not None and not primed:
                     raise self.error("double superscript: use braces, x^{a^b}", start)
-                sup = arg
+                sup = (*(sup or ()), *arg)
+                primed = False
             else:
                 if sub is not None:
                     raise self.error("double subscript: use braces, x_{a_b}", start)
