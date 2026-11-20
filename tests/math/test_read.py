@@ -142,7 +142,7 @@ def _objects(children: st.SearchStrategy[Node]) -> st.SearchStrategy[Node]:
                 st.lists(
                     st.lists(row, min_size=width, max_size=width).map(tuple), min_size=1, max_size=2
                 ).map(tuple),
-                st.sampled_from(["center", "left"]),
+                st.sampled_from(["center", "left", "right"]),
             )
         ),
         st.builds(

@@ -9,6 +9,7 @@ them inside the document.
 from __future__ import annotations
 
 import difflib
+import re
 from dataclasses import dataclass, replace
 
 from redocx.math import symbols as S  # noqa: N812
@@ -38,10 +39,11 @@ from redocx.math.nodes import (
 )
 
 PASS_THROUGH = frozenset(
-    "mathord mathbin mathrel mathopen mathclose mathpunct mathinner mathnormal".split()
+    "mathord mathbin mathrel mathopen mathclose mathpunct mathinner mathnormal "
+    "shoveleft shoveright".split()
 )
 """Commands whose argument is written as it is: they set TeX spacing classes, which Word
-decides itself, or the default math font."""
+decides itself, the default math font, or the side of a row in multline."""
 
 CANCELS = {"cancel": ("bltr",), "bcancel": ("tlbr",), "xcancel": ("bltr", "tlbr")}
 """Strike-outs: a box with its sides hidden and a diagonal through it."""
@@ -70,6 +72,9 @@ OPERATORS: dict[str, Row] = {
 }
 """Operator names built from other objects (amsmath); their subscript goes underneath."""
 
+LENGTHS = frozenset({"hspace", "hspace*", "mspace", "mkern", "kern", "hskip", "mskip"})
+"""Spaces with a length; braces are optional after the TeX primitives (\\mkern3mu)."""
+
 QUAD, THICK = "\N{EM SPACE}", "\N{THREE-PER-EM SPACE}"
 
 KNOWN_COMMANDS = sorted(
@@ -81,7 +86,8 @@ KNOWN_COMMANDS = sorted(
         "stackrel", "left", "right", "begin", "end", "not", "ooxml", "bmod", "pmod", "mod", "pod",
         "boxed", "fbox", "cancelto", *CANCELS, *PHANTOMS, *S.OVER_UNDER, *S.X_ARROWS,
         *S.INFIX, *OPERATORS, "prescript", "substack", "middle", "genfrac", "leftroot",
-        "uproot", "mathllap", "mathrlap", "color", "textcolor", "colorbox",
+        "uproot", "mathllap", "mathrlap", *S.SWITCHES, *S.TEXT_STYLES, *LENGTHS, "tag", "tag*",
+        "hline", "cline", "hdotsfor", "color", "textcolor", "colorbox",
         "fcolorbox",
         *PASS_THROUGH,
     }
@@ -151,8 +157,7 @@ class _Parser:
             if (
                 j < len(self.s)
                 and self.s[j] == "*"
-                and self.s[i + 1 : j]
-                in ("operatorname", "align", "gather", "multline", "alignat", "eqnarray")
+                and self.s[i + 1 : j] in ("operatorname", "tag", "hspace")
             ):
                 j += 1
             return self.s[i + 1 : j], j
@@ -199,6 +204,34 @@ class _Parser:
             return S.color(value, model)
         except ValueError as e:
             raise self.error(str(e), value_start, self.i, COLOR_HINT) from None
+
+    def warn(self, message: str, start: int, end: int, hint: str = "") -> None:
+        self.warnings.append(self.error(message, start, end, hint))
+
+    def space(self, start: int, after: int) -> str:
+        """Unicode spaces for the length after \\hspace or \\mkern; nothing when negative."""
+        self.skip_space()
+        if self.peek() == "{":
+            text = self.raw_group()
+        else:
+            match = _LENGTH_RE.match(self.s, self.i)
+            text = match.group(0) if match else ""
+            self.i = match.end() if match else self.i
+        length = _LENGTH_RE.fullmatch(text.strip())
+        if length is None or length.group(2) not in S.LENGTH_UNITS:
+            raise self.error(
+                f"`{text.strip()}` is not a length",
+                start,
+                self.i,
+                "write a number and a unit: 1em, 3mu",
+            )
+        ems = float(length.group(1)) * S.LENGTH_UNITS[length.group(2)]
+        out = ""
+        for width, char in S.UNICODE_SPACES:
+            while ems >= width - 1 / 36:
+                out += char
+                ems -= width
+        return out
 
     def optional_row(self, start: int) -> Row | None:
         """An optional [...] argument in math, or None when there is none."""
@@ -309,6 +342,10 @@ class _Parser:
                     beg, end, kind = S.INFIX[name]
                     fraction = Frac(tuple(out), tuple(rest), kind)
                     return [Delim(beg, end, (fraction,)) if beg else fraction], stop
+                if name in S.SWITCHES:  # {\\bf x}: the rest of the group in the font
+                    self.i = after
+                    rest, stop = self.sequence(stops, align=align, opening=opening)
+                    return [*out, *_styled(tuple(rest), *S.SWITCHES[name])], stop
                 if name == "color":  # a switch: the rest of the group is in the colour
                     self.i = after
                     color = self.color(self.i - len(name) - 1)
@@ -597,6 +634,29 @@ class _Parser:
         if name in S.TEXT:
             style = {"textit": "i", "textbf": "b"}.get(name)
             return [Run(self.text_group(), style=style, normal=True)]
+        if name in S.TEXT_STYLES:
+            text = self.text_group()
+            if name in ("textsf", "texttt", "textsc"):
+                self.warn(f"`\\{name}` is plain text in Word; the font is not kept", start, after)
+            return [Run(text, style=S.TEXT_STYLES[name], normal=True)]
+        if name in LENGTHS:
+            return [Run(c) for c in self.space(start, after)]
+        if name in ("tag", "tag*"):
+            self.raw_group()
+            self.warn(
+                "`\\tag` is not supported; it is ignored",
+                start,
+                self.i,
+                "number a display equation with `\\math[numbered]{…}` or `$$ … $$ {#eq:label}`",
+            )
+            return []
+        if name in ("hline", "cline", "hdotsfor"):
+            if name == "hdotsfor":
+                self.optional(start)
+            if name != "hline":
+                self.raw_group()
+            self.warn(f"`\\{name}` is not supported in Word's math; it is ignored", start, self.i)
+            return []
         if name == "left":
             beg = self.delimiter(start)
             parts: list[Row] = []
@@ -676,9 +736,24 @@ class _Parser:
 
     def environment(self, start: int) -> Node:
         name = self.raw_group().strip()
-        if name in ("array", "subarray"):
-            self.raw_group()  # the column spec: Word sizes columns itself
-        if name in S.MATRICES or name == "cases":
+        if name in ("array", "subarray", "alignedat", "alignat", "alignat*"):
+            self.raw_group()  # the column spec or count: Word sizes columns itself
+        if name == "multlined":
+            while self.optional(start) is not None:  # position and width
+                pass
+        align = "center"
+        if name.endswith("*") and name[:-1] in S.MATRICES:  # pmatrix*[r] (mathtools)
+            name = name[:-1]
+            column = self.optional(start) or "c"
+            if column not in ("l", "c", "r"):
+                raise self.error(
+                    f"`{column}` is not a column alignment", start, self.i, "use l, c or r"
+                )
+            align = {"l": "left", "c": "center", "r": "right"}[column]
+            star = True
+        else:
+            star = False
+        if name in S.MATRICES or name in S.CASES:
             rows: list[list[Row]] = [[]]
             while True:
                 nodes, stop = self.sequence(
@@ -691,23 +766,22 @@ class _Parser:
                     rows.append([])
                     continue
                 break
-            self.end_environment(name, start)
+            self.end_environment(name + "*" if star else name, start)
             if len(rows) > 1 and rows[-1] == [()]:  # a final \\
                 rows.pop()
             width = max(len(r) for r in rows)
             matrix_rows = tuple(tuple(r) + ((),) * (width - len(r)) for r in rows)
-            if name == "cases":
-                return Delim("{", "", (Matrix(matrix_rows, "left"),))
+            if name in S.CASES:
+                return Delim(*S.CASES[name], (Matrix(matrix_rows, "left"),))
             beg, end = S.MATRICES[name]
-            matrix = Matrix(matrix_rows)
+            matrix = Matrix(matrix_rows, align)
             return Delim(beg, end, (matrix,)) if beg or end else matrix
         if name in S.ARRAYS or name == "subarray":
             lines: list[Row] = []
             while True:
                 nodes, stop = self.sequence(
                     frozenset({"\\\\", "end"}),
-                    align=name
-                    not in ("gathered", "gather", "gather*", "multline", "multline*", "subarray"),
+                    align=name not in (*S.UNALIGNED, "subarray"),
                     opening=(start, self.i, f"`\\begin{{{name}}}`"),
                 )
                 lines.append(tuple(nodes))
@@ -722,8 +796,8 @@ class _Parser:
             f"unknown environment `{name}`",
             start,
             self.i,
-            "supported: aligned, gathered, cases, matrix, pmatrix, bmatrix, Bmatrix, vmatrix, "
-            "Vmatrix, array",
+            "supported: aligned, alignedat, gathered, multlined, cases, dcases, rcases, matrix, "
+            "pmatrix, bmatrix, Bmatrix, vmatrix, Vmatrix, array, subarray",
         )
 
     def end_environment(self, name: str, start: int) -> None:
@@ -735,6 +809,9 @@ class _Parser:
             raise self.error(
                 f"`\\begin{{{name}}}` is closed by `\\end{{{closing}}}`", start, self.i
             )
+
+
+_LENGTH_RE = re.compile(r"\s*(-?\d*\.?\d+)\s*([a-z]{2})")
 
 
 def _styled(row: Row, style: str | None, script: str | None) -> Row:

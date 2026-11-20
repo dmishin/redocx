@@ -148,7 +148,7 @@ class GroupChr:
 class Matrix:
     rows: tuple[tuple[Row, ...], ...]
     align: str = "center"
-    """Column alignment: center | left (cases)."""
+    """Column alignment: center | left (cases) | right (pmatrix*[r], from mathtools)."""
     color: str | None = None
     """The colour of its own marks (bar, sign, brackets) as RRGGBB, from m:ctrlPr."""
 

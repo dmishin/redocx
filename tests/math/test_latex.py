@@ -91,6 +91,8 @@ def test_what_is_printed_parses_back_to_the_same_equation(row: Row) -> None:
         r"A \xrightarrow{f} B \xleftarrow[g]{h} C \xmapsto{} D",
         r"\prescript{14}{6}{C} + \left\langle a \middle| b \middle| c \right\rangle",
         r"{a \atop b} + \mathclap{x} + \varlimsup_{n} a + \varinjlim_i A + \injlim B",
+        r"\begin{rcases} a & b \\ c & d \end{rcases} \begin{pmatrix*}[r] -1 \\ 10 \end{pmatrix*}",
+        r"\begin{matrix*}[l] a & bb \end{matrix*} \begin{bmatrix*}[l] x \end{bmatrix*}",
     ],
 )
 def test_parsed_formulas_print_back(formula: str) -> None:

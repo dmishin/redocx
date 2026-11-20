@@ -79,6 +79,7 @@ _NARY = {c: name for name, c in reversed(S.NARY.items())}
 _ACCENTS = {c: name for name, c in reversed(S.ACCENTS.items())}
 _ENVIRONMENTS = {value: name for name, value in S.MATRICES.items() if value != ("", "")}
 _TEXT = {None: "text", "i": "textit", "b": "textbf"}
+_COLUMNS = {"left": "[l]", "center": "[c]", "right": "[r]"}
 _BOXES: dict[tuple[tuple[str, ...], tuple[str, ...]], str] = {
     ((), ()): "boxed",
     **{(BOX_SIDES, strike): name for name, strike in CANCELS.items()},
@@ -351,6 +352,16 @@ class _Printer:
             case Delim(beg=beg, end=end, e=(Matrix(align="left") as m,)) if (beg, end) == ("{", ""):
                 text, matrix = self.matrix("cases", m)
                 return text, (Delim(beg, end, (matrix,)),)
+            case Delim(beg="", end="}", e=(Matrix(align="left") as m,)):
+                text, matrix = self.matrix("rcases", m)
+                return text, (Delim("", "}", (matrix,)),)
+            case Delim(beg=beg, end=end, e=(Matrix(align="left" | "right") as m,)) if (
+                beg,
+                end,
+            ) in _ENVIRONMENTS:
+                environment = _ENVIRONMENTS[beg, end] + "*"
+                text, matrix = self.matrix(environment, m, _COLUMNS[m.align])
+                return text, (Delim(beg, end, (matrix,)),)
             case Delim(beg=beg, end=end, e=(Matrix(align="center") as m,)) if (
                 beg,
                 end,
@@ -415,6 +426,9 @@ class _Printer:
                 return f"\\{command}{{{t}}}", (Phant(e_e, show, wid, asc, desc),)
             case Matrix(align="center"):
                 text, matrix = self.matrix("matrix", node)
+                return text, (matrix,)
+            case Matrix(align=align):
+                text, matrix = self.matrix("matrix*", node, _COLUMNS[align])
                 return text, (matrix,)
             case EqArr(rows=rows):
                 lines = [self.row(r) for r in rows]
@@ -504,7 +518,7 @@ class _Printer:
             case _:
                 raise _Unprintable
 
-    def matrix(self, environment: str, matrix: Matrix) -> tuple[str, Matrix]:
+    def matrix(self, environment: str, matrix: Matrix, option: str = "") -> tuple[str, Matrix]:
         rows: list[str] = []
         rows_e: list[tuple[Row, ...]] = []
         for r in matrix.rows:
@@ -513,7 +527,7 @@ class _Printer:
             rows_e.append(tuple(e for _, e in cells))
         body = " \\\\ ".join(rows)
         return (
-            f"\\begin{{{environment}}}{body}\\end{{{environment}}}",
+            f"\\begin{{{environment}}}{option}{body}\\end{{{environment}}}",
             Matrix(tuple(rows_e), matrix.align),
         )
 

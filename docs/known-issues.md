@@ -63,20 +63,13 @@ is only less readable than hand-written source. Fix: spaces around relations and
 
 `tools/math-bench/make_bench.py` compiles the 349 formulas of `tools/math-bench/formulas.json` (written without
 regard to what redocx supports) and puts each next to its LaTeX picture in `tools/math-bench/out/bench.docx`.
-redocx rejects 72 of them, each with "unknown math command" or "unknown environment" (RDX0311). Every formula it
-accepts builds without a warning and passes the schemas. Counting only the first error of each formula, by kind,
-with a rough cost:
+redocx rejects 9 of them, each with "unknown math command" (RDX0311). The formulas it accepts pass the schemas;
+the ones with `\tag`, `\hline`, `\cline`, `\hdotsfor`, `\cancelto`, `\textsf`, `\texttt` or `\textsc` build with a
+warning. What is left, with a rough cost:
 
-- Symbols: a long tail of AMS symbols is still missing (`\Lsh`, `\lll`, `\bigcirc`, `\Finv`, ...). Each is one
-  entry in `math/symbols.py`, plus `RELATIONS` for a relation.
-- Spacing with a size: `\hspace{…}`, `\mkern`. They need a length turned into a Unicode space.
-- Functions: `\idotsint` (two integral signs with dots, no single character).
-- Structures: `\sideset` (scripts on both sides of a big operator: `m:sPre` and `m:nary` together).
-- Environments: `alignedat`, `multlined`, `dcases`, `dcases*`, `rcases`, `pmatrix*`, `bmatrix*`; `\hline`,
-  `\cline` and `\hdotsfor` in arrays.
-- Text and font switches: `\textsf`, `\textsc`, `\rm` and the other old switches.
-- Numbering: `\tag` and `\tag*`. Display equations are numbered by `\math[id=…]`, so this is a design decision
-  (docs/08): ignore with a warning, or take the tag as the number.
+- Big operators: `\sideset` (scripts on both sides of a big operator: `m:sPre` and `m:nary` together) and
+  `\idotsint` (two integral signs with dots, no single character).
+- Arrays: `\multicolumn` (Word's matrices have no merged cells).
 - No equivalent: `\mathchoice`, `\raisebox`, `\rule`, `\hbox`.
 
 Accepted formulas can still come out wrong; the benchmark is checked by eye in Word. Rerun it after a change to

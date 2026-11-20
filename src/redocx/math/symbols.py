@@ -55,6 +55,11 @@ SYMBOLS = {
     "hookrightarrow": "↪", "hookleftarrow": "↩", "nearrow": "↗", "searrow": "↘",
     "rightleftharpoons": "⇌", "leftrightharpoons": "⇋", "Uparrow": "⇑", "Downarrow": "⇓",
     "Updownarrow": "⇕", "nrightarrow": "↛", "nleftarrow": "↚", "nRightarrow": "⇏",
+    "Lsh": "↰", "Rsh": "↱", "lll": "⋘", "llless": "⋘", "ggg": "⋙", "gggtr": "⋙",
+    "bigcirc": "◯", "Finv": "Ⅎ", "Game": "⅁", "upharpoonright": "↾", "upharpoonleft": "↿",
+    "downharpoonright": "⇂", "downharpoonleft": "⇃", "restriction": "↾",
+    "rightharpoonup": "⇀", "rightharpoondown": "⇁", "leftharpoonup": "↼",
+    "leftharpoondown": "↽",
     "nLeftarrow": "⇍", "nLeftrightarrow": "⇎", "nleftrightarrow": "↮", "leadsto": "⇝",
     "swarrow": "↙", "nwarrow": "↖", "rightsquigarrow": "⇝", "twoheadrightarrow": "↠",
     "twoheadleftarrow": "↞", "Longrightarrow": "⟹", "Longleftarrow": "⟸", "Longleftrightarrow": "⟺",
@@ -169,9 +174,16 @@ ARRAYS = frozenset(
         "eqnarray*",
         "multline",
         "multline*",
+        "multlined",
+        "alignedat",
+        "flalign",
+        "flalign*",
     }
 )
 """Environments that are rows of an equation (m:eqArr)."""
+
+UNALIGNED = frozenset({"gathered", "gather", "gather*", "multline", "multline*", "multlined"})
+"""Rows of an equation without alignment points (`&`): each row is centred."""
 
 IGNORED = frozenset(
     {
@@ -193,7 +205,8 @@ IGNORED = frozenset(
 RELATIONS = frozenset(
     "= < > ≤ ≥ ≠ ≈ ≡ ∼ ≃ ≅ ∝ ≪ ≫ ≺ ≻ ⪯ ⪰ ⊂ ⊃ ⊆ ⊇ ∈ ∉ ∋ ⊥ ∥ ∣ ⊢ ⊨ ≐ ≍ ⩽ ⩾ ≲ ≳ ≔ "
     "→ ← ↔ ⇒ ⇐ ⇔ ⟹ ⟸ ⟺ ↦ ⟶ ⟵ ⟷ , ; ≕ ⊏ ⊐ ⊑ ⊒ ⊣ ⪅ ⪆ ≰ ≱ ≮ ≯ ≁ ≇ ∤ ∦ ⊈ ⊉ "
-    "⇋ ⇑ ⇓ ⇕ ↛ ↚ ⇏ ⇍ ⊩ ⊪ ⊀ ⊁ ≼ ≽ ⩴ ⊲ ⊳ ⊴ ⊵ ⇎ ↮ ⇝ ≜ ∷ ↠ ↞ ⊬ ⊭ ≊ ↣ ↢ ∽ ⋍ ⋈ ↷ ↶ ⨝ ≂ ↺ ↻".split()
+    "⇋ ⇑ ⇓ ⇕ ↛ ↚ ⇏ ⇍ ⊩ ⊪ ⊀ ⊁ ≼ ≽ ⩴ ⊲ ⊳ ⊴ ⊵ ⇎ ↮ ⇝ ≜ ∷ ↠ ↞ ⊬ ⊭ ≊ ↣ ↢ ∽ ⋍ ⋈ ↷ ↶ ⨝ ≂ ↺ ↻ "
+    "↰ ↱ ⋘ ⋙".split()
 ) | {"+", "−", "±", "∓"}
 """Where the operand of a big operator ends (relations, commas, + and -)."""
 
@@ -292,3 +305,37 @@ INFIX = {
     "brack": ("[", "]", "noBar"), "brace": ("{", "}", "noBar"),
 }  # fmt: skip
 """TeX's fractions between their parts, {a \\over b}: (left, right delimiter, m:type)."""
+
+CASES = {
+    "cases": ("{", ""), "dcases": ("{", ""), "dcases*": ("{", ""), "cases*": ("{", ""),
+    "rcases": ("", "}"), "rcases*": ("", "}"), "drcases": ("", "}"),
+}  # fmt: skip
+"""Environments of left-aligned rows in a brace: (left, right delimiter)."""
+
+SWITCHES = {
+    "rm": ("p", None), "bf": ("b", None), "it": ("i", None), "sf": ("p", "sans-serif"),
+    "tt": ("p", "monospace"), "cal": ("p", "script"), "mit": ("i", None),
+}  # fmt: skip
+"""Old font switches: {\\bf x} sets the rest of the group like \\mathbf."""
+
+TEXT_STYLES = {
+    "textsl": "i",
+    "emph": "i",
+    "textmd": None,
+    "textsf": None,
+    "texttt": None,
+    "textsc": None,
+}
+"""Text commands beyond \\text, with their style; sf, tt and sc keep the text, not the font."""
+
+LENGTH_UNITS = {
+    "em": 1.0, "ex": 0.43, "mu": 1 / 18, "pt": 0.1, "pc": 1.2, "bp": 0.1004, "mm": 0.2845,
+    "cm": 2.845, "in": 7.227, "sp": 0.1 / 65536,
+}  # fmt: skip
+"""Units of \\hspace and \\mkern in em, taking an em as 10pt."""
+
+UNICODE_SPACES = (
+    (1.0, "\u2003"), (1 / 2, "\u2002"), (1 / 3, "\u2004"), (1 / 4, "\u2005"),
+    (2 / 9, "\u205f"), (1 / 6, "\u2009"), (1 / 12, "\u200a"),
+)  # fmt: skip
+"""Unicode spaces by width in em: em, en, three-per-em, four-per-em, medium, thin, hair."""

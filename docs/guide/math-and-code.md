@@ -34,14 +34,16 @@ The supported LaTeX:
 | Big operators | `\sum \prod \int \iint \oint \bigcup \bigcap …`, `\limits`, `\nolimits` |
 | Functions | `\sin \cos \log \ln \exp \lim \max \min …`, `\operatorname{argmin}`, `\mathop`, `\bmod`, `\pmod{n}` |
 | Delimiters | `\left( … \right)`, with `[ ] \{ \} \| \langle \rangle \lfloor \rfloor \lceil \rceil .`; `\middle|`; `\big(` and friends |
-| Environments | `matrix pmatrix bmatrix Bmatrix vmatrix Vmatrix array cases aligned align split gathered` |
+| Environments | `matrix pmatrix bmatrix Bmatrix vmatrix Vmatrix array cases aligned align split gathered`, `pmatrix*[r]`, `dcases rcases alignedat multlined` |
 | Accents, arrows | `\hat \bar \tilde \vec \dot \ddot`, `\overline \underline \overbrace \underbrace`, `\overrightarrow`, `\overbracket`, `\overset \underset`; `\xrightarrow[below]{above}` |
 | Boxes, phantoms | `\boxed \fbox`, `\cancel \bcancel \xcancel \cancelto`, `\phantom \hphantom \vphantom \smash` |
 | Colour | `\textcolor{red}{…}`, `{\color{blue} …}`, `\colorbox{yellow}{text}`, `\fcolorbox{red}{yellow}{text}`; names, `red!30`, `[HTML]{00A0FF}`, `[rgb]{1,0.5,0}` |
-| Fonts, text | `\mathrm \mathbf \mathit \boldsymbol \mathbb \mathcal \mathfrak \mathsf \mathtt`, `\text{…}` |
-| Symbols, spacing | Greek letters, relations, arrows, `\infty \partial \nabla \forall \exists`, `\not`; `\, \: \; \enspace \quad \qquad` |
+| Fonts, text | `\mathrm \mathbf \mathit \boldsymbol \mathbb \mathcal \mathfrak \mathsf \mathtt`, `{\bf x}`, `\text{…}`, `\textit \textbf \emph` |
+| Symbols, spacing | Greek letters, relations, arrows, `\infty \partial \nabla \forall \exists`, `\not`; `\, \: \; \enspace \quad \qquad`, `\hspace{1em}`, `\mkern3mu` |
 
 A command outside this list is an error at its place in the formula, with the nearest supported command.
+A few are accepted with a warning and left out: `\tag` (number the equation with `{#eq:…}` instead),
+`\hline` and `\cline` (Word's math has no rules), `\hdotsfor`.
 
 ### Raw OMML
 

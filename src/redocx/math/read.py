@@ -344,7 +344,7 @@ def _matrix(r: MathReader, el: Element) -> Node:
             raise _UnsupportedError(name)  # spacing, base justification, placeholders
         for column in prop.iter(_m("mcJc")):
             justs.add(column.get(_m("val"), "center"))
-    if len(justs) > 1 or justs - {"center", "left"}:
+    if len(justs) > 1 or justs - {"center", "left", "right"}:
         raise _UnsupportedError("mcJc")
     rows = tuple(
         tuple(r.row(cell) for cell in row.findall(_m("e"))) for row in el.findall(_m("mr"))

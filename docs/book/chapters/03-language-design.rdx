@@ -447,13 +447,14 @@ Colour goes on every run and object inside (`w:color`, on an object in `m:ctrlPr
 | Big operators | `\sum \prod \coprod \int \iint \iiint \oint \bigcup \bigcap \bigvee \bigwedge \bigoplus \bigotimes \bigodot`, `\iiiint \oiint \oiiint \fint …`, with `\limits` / `\nolimits` |
 | Functions | `\sin \cos \tan \log \ln \exp \lim \max \min \sup \inf \det \gcd …`, `\operatorname`, `\mathop`; `\bmod \pmod \mod \pod`; `\varlimsup \varliminf \varinjlim \varprojlim \injlim \projlim` |
 | Delimiters | `\left … \right` with `( ) [ ] \{ \} | \langle \rangle \lfloor \rfloor \lceil \rceil .`; `\middle|` between the parts (one separator character per pair); `\big(` and friends |
-| Environments | `matrix pmatrix bmatrix Bmatrix vmatrix Vmatrix array subarray cases aligned align split gathered`; `&` and `\\` |
+| Environments | `matrix pmatrix bmatrix Bmatrix vmatrix Vmatrix array subarray cases aligned align split gathered`, mathtools' `pmatrix*[r]` (and the other starred matrices, `[l]`, `[c]`, `[r]`), `dcases rcases alignedat multlined`; `&` and `\\`; `\hline`, `\cline` and `\hdotsfor` warn and are ignored |
 | Accents, bars | `\hat \bar \tilde \vec \dot \ddot \check \breve \acute \grave`, `\overline \underline \overbrace \underbrace`, `\overrightarrow \overleftarrow \overleftrightarrow` and the `\under…` forms, `\overbracket \underbracket \overparen \underparen`, `\overset \underset \stackrel`; `\xrightarrow[below]{above}`, `\xleftarrow`, `\xRightarrow`, `\xmapsto`, `\xhookrightarrow`, `\xrightleftharpoons` and the other extensible arrows |
 | Boxes, phantoms | `\boxed \fbox`; `\cancel \bcancel \xcancel`, `\cancelto` (a warning: Word has no arrow, so the value is a superscript); `\phantom \hphantom \vphantom \smash`, `\mathclap \mathllap \mathrlap` |
 | Colour | `\textcolor{red}{…}`, `{\color{red} …}` (the rest of the group), `\colorbox{yellow}{text}`, `\fcolorbox{red}{yellow}{text}`; xcolor's base names and mixes (`red!30`, `red!50!blue`), `[HTML]`, `[rgb]`, `[RGB]`, `[cmyk]`, `[gray]` |
-| Fonts, text | `\mathrm \mathbf \mathit \boldsymbol \mathbb \mathcal \mathfrak \mathsf \mathtt`, `\text`; `\mathbin \mathrel \mathopen \mathclose \mathord \mathpunct \mathinner \mathnormal` give their argument as it is |
+| Fonts, text | `\mathrm \mathbf \mathit \boldsymbol \mathbb \mathcal \mathfrak \mathsf \mathtt`; the old switches `{\bf x}`, `\rm \it \sf \tt \cal` (the rest of the group); `\text`, `\textit \textbf \emph \textsl`, `\textsf \texttt \textsc` (a warning: plain text, the font is not kept); `\mathbin \mathrel \mathopen \mathclose \mathord \mathpunct \mathinner \mathnormal` give their argument as it is |
 | Symbols | Greek letters (upper-case upright, `\varGamma` … italic), relations, arrows, operators, `\infty \partial \nabla \forall \exists …`, `\not` |
-| Spacing | `\, \: \; \quad \qquad \ ~`, `\thinspace \medspace \thickspace \enspace`; `\!`, `\negthinspace …` and `\mathstrut` are ignored |
+| Spacing | `\, \: \; \quad \qquad \ ~`, `\thinspace \medspace \thickspace \enspace`; `\hspace{1em}`, `\mkern3mu`, `\kern`, `\hskip`, `\mskip`, `\mspace` as the nearest Unicode spaces (an em is 10pt); `\!`, `\negthinspace …`, negative lengths and `\mathstrut` are ignored |
+| Numbering | `\tag{…}` and `\tag*{…}` warn and are ignored: number a display equation with `\math[numbered]` or `{#eq:…}` (docs/08 Q16) |
 }
 
 == Code blocks

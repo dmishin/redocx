@@ -546,3 +546,68 @@ def test_operator_names_made_of_objects() -> None:
     assert isinstance(func, Func)
     assert func.name == (Limit("low", (Bar("top", (Run("lim", style="p"),)),), (Run("n"),)),)
     assert parse_math(r"\mathllap{x}") == (Phant((Run("x"),), True, True, False, False),)
+
+
+def test_more_environments() -> None:
+    cells = ((Run("a"), Run("b")),)
+    assert parse_math(r"\begin{dcases} a & b \end{dcases}") == parse_math(
+        r"\begin{cases} a & b \end{cases}"
+    )
+    (rcases,) = parse_math(r"\begin{rcases} a & b \end{rcases}")
+    assert rcases == Delim("", "}", (Matrix(((cells[0][:1], cells[0][1:]),), "left"),))
+    (pmatrix,) = parse_math(r"\begin{pmatrix*}[r] a \\ b \end{pmatrix*}")
+    assert pmatrix == Delim("(", ")", (Matrix((((Run("a"),),), ((Run("b"),),)), "right"),))
+    assert parse_math(r"\begin{alignedat}{2} a &= b \end{alignedat}") == parse_math(
+        r"\begin{aligned} a &= b \end{aligned}"
+    )
+    assert parse_math(r"\begin{multlined}[t][5cm] a \\ b \end{multlined}") == (
+        EqArr(((Run("a"),), (Run("b"),))),
+    )
+    with pytest.raises(MathError, match="is not a column alignment"):
+        parse_math(r"\begin{pmatrix*}[x] a \end{pmatrix*}")
+
+
+def test_rules_in_arrays_are_ignored_with_a_warning() -> None:
+    row, warnings = parse_formula(r"\begin{array}{c|c} a & b \\ \hline c & d \end{array}")
+    assert row == parse_math(r"\begin{array}{cc} a & b \\ c & d \end{array}")
+    assert [w.args[0] for w in warnings] == [
+        "`\\hline` is not supported in Word's math; it is ignored"
+    ]
+    _, warnings = parse_formula(r"\begin{matrix} a \\ \cline{1-2} \hdotsfor[2]{1} \end{matrix}")
+    assert len(warnings) == 2
+
+
+def test_tag_is_ignored_with_a_warning() -> None:
+    for formula in (r"E = mc^2 \tag{1}", r"E = mc^2 \tag*{(a)}"):
+        row, (warning,) = parse_formula(formula)
+        assert row == parse_math("E = mc^2")
+        assert warning.args[0] == "`\\tag` is not supported; it is ignored"
+        assert formula[warning.start : warning.end].startswith("\\tag")
+
+
+def test_tag_warns_in_the_document() -> None:
+    result = compile_source("$$ E = mc^2 \\tag{1} $$\n")
+    assert [d.message for _, d in result.diagnostics] == ["`\\tag` is not supported; it is ignored"]
+
+
+def test_old_font_switches_set_the_rest_of_the_group() -> None:
+    assert parse_math(r"{\bf x y} z") == (Run("x", style="b"), Run("y", style="b"), Run("z"))
+    assert parse_math(r"{\cal L}") == parse_math(r"\mathcal{L}")
+    assert parse_math(r"a {\rm d}x") == parse_math(r"a \mathrm{d}x")
+
+
+def test_more_text_commands() -> None:
+    row, warnings = parse_formula(r"\emph{e} \textsf{s}")
+    assert row == (Run("e", style="i", normal=True), Run("s", normal=True))
+    assert [w.args[0] for w in warnings] == [
+        "`\\textsf` is plain text in Word; the font is not kept"
+    ]
+
+
+def test_spaces_with_a_length() -> None:
+    assert parse_math(r"a\hspace{1em}b") == (Run("a"), Run(" "), Run("b"))
+    assert parse_math(r"a\mkern3mu b") == (Run("a"), Run(" "), Run("b"))
+    assert parse_math(r"a\hspace*{1.5em}b") == (Run("a"), Run(" "), Run(" "), Run("b"))
+    assert parse_math(r"a\kern-1em b") == (Run("a"), Run("b"))
+    with pytest.raises(MathError, match="`1xx` is not a length"):
+        parse_math(r"\hspace{1xx}")

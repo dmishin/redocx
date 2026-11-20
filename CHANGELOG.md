@@ -6,6 +6,12 @@ anything that would change it is listed here first as a deprecation warning.
 
 ## Unreleased
 
+- **Math:** more environments: `dcases`, `rcases`, `alignedat`, `multlined` and the starred matrices of
+  mathtools with a column alignment (`pmatrix*[r]`). The old font switches `{\bf x}`, `\rm`, `\it`,
+  `\sf`, `\tt` and `\cal`; `\emph`, `\textsl`; `\textsf`, `\texttt` and `\textsc` as plain text with a
+  warning. Spaces with a length (`\hspace{1em}`, `\mkern3mu`) become the nearest Unicode spaces.
+  `\tag`, `\hline`, `\cline` and `\hdotsfor` are accepted with a warning and ignored, `\shoveleft` and
+  `\shoveright` without one. More AMS symbols: `\Lsh`, `\lll`, `\ggg`, `\bigcirc`, `\Finv`, the harpoons.
 - **Math:** more structures: `\overrightarrow` and the other arrows, brackets and parentheses over and
   under; the extensible arrows `\xrightarrow[below]{above}` and friends; `\prescript`; `\middle`;
   `\substack` and `subarray`; `\genfrac` and TeX's `\over`, `\atop`, `\choose`, `\brack`, `\brace`;
