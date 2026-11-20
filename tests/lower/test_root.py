@@ -14,9 +14,10 @@ EXAMPLES = Path(__file__).resolve().parents[2] / "examples"
 
 @pytest.fixture
 def tree(tmp_path: Path) -> Path:
-    """tmp/outside/: secret.rdx, logo.png, refs.bib, s.rdxs; tmp/inside/: part.rdx, logo.png."""
+    """tmp/outside/: secret.rdx, logo.png, refs.bib, s.rdxs; tmp/inside/: part.rdx, logo.png, sub/."""
     outside, inside = tmp_path / "outside", tmp_path / "inside"
     inside.mkdir()
+    (inside / "sub").mkdir()
     outside.mkdir()
     for folder in (inside, outside):
         (folder / "part.rdx").write_text("Part text.\n", encoding="utf-8")
