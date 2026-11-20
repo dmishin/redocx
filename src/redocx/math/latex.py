@@ -9,6 +9,7 @@ compiles to the equation it was read from.
 
 from __future__ import annotations
 
+import dataclasses
 import re
 import unicodedata
 
@@ -38,6 +39,7 @@ from redocx.math.nodes import (
     canonical,
     colored,
     uncolored,
+    unshaded,
     walk,
 )
 from redocx.math.omml import _Writer, omml  # pyright: ignore[reportPrivateUsage]
@@ -265,21 +267,40 @@ class _Printer:
             expected.extend(nodes)
         return _join(texts), tuple(expected)
 
+    def text_mode(self, row: Row, shade: str) -> str:
+        """A shaded row as a text-mode argument: its text as it is, the rest as $...$."""
+        parts: list[str] = []
+        math: list[Node] = []
+
+        def flush() -> None:
+            if math:
+                parts.append(f"${self.row(unshaded(tuple(math), shade))[0]}$")
+                math.clear()
+
+        for node in row:
+            if (
+                isinstance(node, Run)
+                and node.shade == shade
+                and node.color is None
+                and _plain_text(node)
+            ):
+                flush()
+                parts.append(_escaped(node.text))
+                continue
+            math.append(node)
+        flush()
+        return "".join(parts)
+
     def colored(self, row: Row, color: str) -> tuple[str, Row]:
         """Nodes in one colour as \\textcolor{...}{...}; what is inside without that colour.
         When colouring everything inside would colour something the original did not (Word
         can colour a fraction bar and not its digits), the nodes are raw OMML."""
         match row:
-            case (
-                BorderBox(e=(Run(normal=True, color=None, shade=str(shade)) as text,)) as box,
-            ) if (
-                box.hide,
-                box.strike,
-            ) == ((), ()) and _plain_text(text):
-                return (
-                    f"\\fcolorbox{_color_spec(color)}{_color_spec(shade)}{{{_escaped(text.text)}}}",
-                    row,
-                )
+            case (BorderBox(e=e, hide=(), strike=()),) if (shade := _shade_of(e)) is not None:
+                inner = self.text_mode(e, shade)
+                text = f"\\fcolorbox{_color_spec(color)}{_color_spec(shade)}{{{inner}}}"
+                if _same(text, row):
+                    return text, row
             case _:
                 pass
         inside = uncolored(row, color)
@@ -533,16 +554,20 @@ class _Printer:
 
     def run(self, run: Run) -> tuple[str, Row]:
         """A run as characters and commands; characters with no form become raw OMML."""
-        if run.shade is not None:  # \colorbox holds plain text
+        if run.shade is not None and run.normal:  # \colorbox holds plain text
             if not _plain_text(run):
                 return _raw(run)
             return f"\\colorbox{_color_spec(run.shade)}{{{_escaped(run.text)}}}", (run,)
+        if run.shade is not None:  # math in a \colorbox: \colorbox{yellow}{$x$}
+            text, inner = self.run(dataclasses.replace(run, shade=None))
+            if len(inner) != 1 or isinstance(inner[0], Raw):
+                return _raw(run)
+            return f"\\colorbox{_color_spec(run.shade)}{{${text}$}}", (run,)
         if run.normal:
             command = _TEXT.get(run.style) if run.script is None else None
             if command is None or "\\" in run.text:
                 return _raw(run)
-            text = run.text.replace("{", "\\{").replace("}", "\\}")
-            return f"\\{command}{{{text}}}", (run,)
+            return f"\\{command}{{{_escaped(run.text)}}}", (run,)
         if run.style == "p" and run.script is None and all(c in _UPPER_GREEK for c in run.text):
             return _join([_UPPER_GREEK[c] for c in run.text]), (run,)
         font = None
@@ -599,8 +624,15 @@ def _plain_text(run: Run) -> bool:
     return run.normal and run.style is None and run.script is None and "\\" not in run.text
 
 
+def _shade_of(row: Row) -> str | None:
+    """The one shade of every run in the row, at any depth, or None."""
+    shades = {node.shade for node in walk(row) if isinstance(node, Run)}
+    return shades.pop() if len(shades) == 1 else None
+
+
 def _escaped(text: str) -> str:
-    return text.replace("{", "\\{").replace("}", "\\}")
+    """Text for a text-mode argument: braces and dollar signs escaped."""
+    return text.replace("{", "\\{").replace("}", "\\}").replace("$", "\\$")
 
 
 def _color_of(node: Node) -> str | None:

@@ -271,6 +271,55 @@ def _colored_value(value: object, color: str) -> object:
     )
 
 
+def shaded(row: Row, shade: str) -> Row:
+    """The row with every run in it, at any depth, shaded in `shade` unless it has a shade of
+    its own: math inside \\colorbox{...}{$...$}. Word shades runs, not objects."""
+    return tuple(_shaded(node, shade) for node in row)
+
+
+def _shaded(node: Node, shade: str) -> Node:
+    if isinstance(node, Align | Raw):
+        return node
+    if isinstance(node, Run):
+        return node if node.shade is not None else replace(node, shade=shade)
+    changes = {f.name: _shaded_value(getattr(node, f.name), shade) for f in fields(node)}
+    return replace(node, **changes)
+
+
+def _shaded_value(value: object, shade: str) -> object:
+    if not isinstance(value, tuple):
+        return value
+    items = cast("tuple[object, ...]", value)
+    return tuple(
+        _shaded(cast("Node", item), shade) if is_dataclass(item) else _shaded_value(item, shade)
+        for item in items
+    )
+
+
+def unshaded(row: Row, shade: str) -> Row:
+    """The row without `shade` where it has it, at any depth: the inverse of `shaded`."""
+    return tuple(_unshaded(node, shade) for node in row)
+
+
+def _unshaded(node: Node, shade: str) -> Node:
+    if isinstance(node, Align | Raw):
+        return node
+    if isinstance(node, Run):
+        return replace(node, shade=None) if node.shade == shade else node
+    changes = {f.name: _unshaded_value(getattr(node, f.name), shade) for f in fields(node)}
+    return replace(node, **changes)
+
+
+def _unshaded_value(value: object, shade: str) -> object:
+    if not isinstance(value, tuple):
+        return value
+    items = cast("tuple[object, ...]", value)
+    return tuple(
+        _unshaded(cast("Node", item), shade) if is_dataclass(item) else _unshaded_value(item, shade)
+        for item in items
+    )
+
+
 def uncolored(row: Row, color: str) -> Row:
     """The row without `color` where it has it, at any depth: the inverse of `colored`."""
     return tuple(_uncolored(node, color) for node in row)

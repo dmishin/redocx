@@ -93,6 +93,8 @@ def test_what_is_printed_parses_back_to_the_same_equation(row: Row) -> None:
         r"{a \atop b} + \mathclap{x} + \varlimsup_{n} a + \varinjlim_i A + \injlim B",
         r"\begin{rcases} a & b \\ c & d \end{rcases} \begin{pmatrix*}[r] -1 \\ 10 \end{pmatrix*}",
         r"\begin{matrix*}[l] a & bb \end{matrix*} \begin{bmatrix*}[l] x \end{bmatrix*}",
+        r"f(n) = \begin{cases} n/2 & \text{if $n$ is even} \\ 3n+1 & \text{if $n$ is odd} \end{cases}",
+        r"\text{50\% of \$100} + \colorbox{yellow}{$x + y$} + \fcolorbox{red}{white}{$\int f$ dx}",
     ],
 )
 def test_parsed_formulas_print_back(formula: str) -> None:

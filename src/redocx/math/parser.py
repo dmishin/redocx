@@ -36,6 +36,7 @@ from redocx.math.nodes import (
     Scripts,
     SPre,
     colored,
+    shaded,
 )
 
 PASS_THROUGH = frozenset(
@@ -74,6 +75,9 @@ OPERATORS: dict[str, Row] = {
 
 LENGTHS = frozenset({"hspace", "hspace*", "mspace", "mkern", "kern", "hskip", "mskip"})
 """Spaces with a length; braces are optional after the TeX primitives (\\mkern3mu)."""
+
+TEXT_ESCAPES = frozenset("$%&#_{} ")
+"""What follows a backslash in text to stand for itself: \\$ is a dollar sign."""
 
 QUAD, THICK = "\N{EM SPACE}", "\N{THREE-PER-EM SPACE}"
 
@@ -190,9 +194,62 @@ class _Parser:
             self.i += 1
         raise self.error("unclosed `{`", start)
 
-    def text_group(self) -> str:
-        """The text of a text-mode argument (\\text{...}, \\fbox{...})."""
-        return self.raw_group().replace("\\{", "{").replace("\\}", "}").replace("\\ ", " ")
+    def text_row(self, style: str | None = None, shade: str | None = None) -> Row:
+        """A text-mode argument (\\text{...}, \\colorbox{...}{...}): plain text runs, and math
+        between dollar signs as in LaTeX (\\text{if $n$ is even}). An escape such as \\$ or
+        \\% is its character; braces only group. \\colorbox shades the math too."""
+        self.skip_space()
+        if self.peek() != "{":
+            raise self.error("expected `{`")
+        opening = self.i
+        self.i += 1
+        out: list[Node] = []
+        text: list[str] = []
+
+        def flush() -> None:
+            if text:
+                out.append(Run("".join(text), style=style, normal=True, shade=shade))
+                text.clear()
+
+        depth = 0
+        while True:
+            if self.i >= len(self.s):
+                raise self.error("`{` is not closed", opening, opening + 1)
+            c = self.s[self.i]
+            if c == "\\":
+                if self.s[self.i + 1 : self.i + 2] in TEXT_ESCAPES:
+                    text.append(self.s[self.i + 1])
+                    self.i += 2
+                    continue
+                after = self.command_at(self.i)[1]
+                text.append(self.s[self.i : after])  # other commands are kept as they are
+                self.i = after
+                continue
+            if c == "$":
+                flush()
+                dollar = self.i
+                self.i += 1
+                nodes, stop = self.sequence(
+                    frozenset({"$", "}"}), opening=(dollar, dollar + 1, "`$`")
+                )
+                if stop != "$":
+                    raise self.error("`$` is not closed", dollar, dollar + 1)
+                self.i += 1
+                out.extend(shaded(tuple(nodes), shade) if shade else nodes)
+                continue
+            self.i += 1
+            if c == "{":
+                depth += 1
+            elif c == "}":
+                if not depth:
+                    break
+                depth -= 1
+            else:
+                text.append(c)
+        flush()
+        if not out:  # an empty argument is an empty text run, as Word stores \\text{}
+            out.append(Run("", style=style, normal=True, shade=shade))
+        return tuple(out)
 
     def color(self, start: int) -> str:
         """A colour argument, [model]{value}, as RRGGBB (xcolor names and mixes, HTML, rgb,
@@ -308,7 +365,7 @@ class _Parser:
                         raise self.error(f"{what} is not closed", start, end)
                     raise self.error("unexpected end of the formula: something is not closed")
                 return out, "eof"
-            if c in "}]" and c in stops:
+            if c in "}]$" and c in stops:
                 return out, c
             if c == "}":
                 raise self.error("unexpected `}`")
@@ -447,6 +504,7 @@ class _Parser:
             if (
                 not c
                 or c in "}]&"
+                or (c == "$" and "$" in stops)
                 or (c == "\\" and self.command_at(self.i)[0] in ("\\", "right", "end"))
             ):
                 break
@@ -587,11 +645,10 @@ class _Parser:
             return list(colored(self.group(), color))
         if name == "colorbox":
             shade = self.color(start)
-            return [Run(self.text_group(), normal=True, shade=shade)]
+            return list(self.text_row(shade=shade))
         if name == "fcolorbox":
             frame, shade = self.color(start), self.color(start)
-            text = Run(self.text_group(), normal=True, shade=shade)
-            return [BorderBox((text,), color=frame)]
+            return [BorderBox(self.text_row(shade=shade), color=frame)]
         if name == "color":
             raise self.error(
                 "`\\color` colours the rest of a group: put it inside `{...}`", start, after
@@ -599,7 +656,7 @@ class _Parser:
         if name == "boxed":
             return [BorderBox(self.group())]
         if name == "fbox":
-            return [BorderBox((Run(self.text_group(), normal=True),))]
+            return [BorderBox(self.text_row())]
         if name in CANCELS:
             return [BorderBox(self.group(), BOX_SIDES, CANCELS[name])]
         if name == "cancelto":
@@ -633,12 +690,12 @@ class _Parser:
             return list(_styled(self.group(), style, script))
         if name in S.TEXT:
             style = {"textit": "i", "textbf": "b"}.get(name)
-            return [Run(self.text_group(), style=style, normal=True)]
+            return list(self.text_row(style))
         if name in S.TEXT_STYLES:
-            text = self.text_group()
+            text = self.text_row(S.TEXT_STYLES[name])
             if name in ("textsf", "texttt", "textsc"):
                 self.warn(f"`\\{name}` is plain text in Word; the font is not kept", start, after)
-            return [Run(text, style=S.TEXT_STYLES[name], normal=True)]
+            return list(text)
         if name in LENGTHS:
             return [Run(c) for c in self.space(start, after)]
         if name in ("tag", "tag*"):

@@ -67,7 +67,7 @@ math_runs = st.builds(
 )
 text_runs = st.builds(
     Run,
-    st.sampled_from(["if ", "and"]),
+    st.sampled_from(["if ", "and", "a $5", "50% {x} #1"]),
     st.sampled_from([None, "b", "i"]),
     normal=st.just(True),
     color=colors,

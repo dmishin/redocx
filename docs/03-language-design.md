@@ -596,6 +596,11 @@ sign or brackets); the innermost colour wins. `\colorbox` shades text (`w:shd`).
 when its first run is shaded, so a formula that starts with `\colorbox` gets an invisible zero-width space in
 front.
 
+The arguments of `\text`, `\textit`, `\textbf`, `\mbox`, `\fbox`, `\colorbox` and `\fcolorbox` are text, as in
+LaTeX: `$…$` inside them is math again (`\text{if $n$ is even}`), `\$ \% \& \# \_ \{ \}` are those characters,
+and other braces only group. `\colorbox{yellow}{$\frac{1}{2}$}` shades the runs of the math inside; Word has no
+shading for an object, so a fraction's bar or a big operator's sign stays unshaded.
+
 **The supported subset** (`redocx.math`):
 
 | Kind | Commands |

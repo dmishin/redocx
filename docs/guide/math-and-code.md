@@ -41,6 +41,9 @@ The supported LaTeX:
 | Fonts, text | `\mathrm \mathbf \mathit \boldsymbol \mathbb \mathcal \mathfrak \mathsf \mathtt`, `{\bf x}`, `\text{…}`, `\textit \textbf \emph` |
 | Symbols, spacing | Greek letters, relations, arrows, `\infty \partial \nabla \forall \exists`, `\not`; `\, \: \; \enspace \quad \qquad`, `\hspace{1em}`, `\mkern3mu` |
 
+Text arguments (`\text`, `\colorbox`, `\fbox`) can hold math between dollar signs, as in LaTeX:
+`\text{if $n$ is even}`. Write a dollar sign in text as `\$`.
+
 A command outside this list is an error at its place in the formula, with the nearest supported command.
 A few are accepted with a warning and left out: `\tag` (number the equation with `{#eq:…}` instead),
 `\hline` and `\cline` (Word's math has no rules), `\hdotsfor`.

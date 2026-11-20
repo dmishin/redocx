@@ -6,6 +6,10 @@ anything that would change it is listed here first as a deprecation warning.
 
 ## Unreleased
 
+- **Math:** `$…$` inside `\text`, `\colorbox`, `\fcolorbox` and `\fbox` is math, as in LaTeX
+  (`\text{if $n$ is even}`), and `\$`, `\%`, `\&`, `\#` and `\_` there are their characters; braces
+  inside text only group. Before, all of these came out as written, backslashes and dollar signs
+  included. `\colorbox` shades the math inside it. Import writes a dollar sign in text as `\$`.
 - **Math:** more environments: `dcases`, `rcases`, `alignedat`, `multlined` and the starred matrices of
   mathtools with a column alignment (`pmatrix*[r]`). The old font switches `{\bf x}`, `\rm`, `\it`,
   `\sf`, `\tt` and `\cal`; `\emph`, `\textsl`; `\textsf`, `\texttt` and `\textsc` as plain text with a

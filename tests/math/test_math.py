@@ -611,3 +611,40 @@ def test_spaces_with_a_length() -> None:
     assert parse_math(r"a\kern-1em b") == (Run("a"), Run("b"))
     with pytest.raises(MathError, match="`1xx` is not a length"):
         parse_math(r"\hspace{1xx}")
+
+
+def test_math_between_dollars_in_text() -> None:
+    assert parse_math(r"\text{if $n$ is even}") == (
+        Run("if ", normal=True),
+        Run("n"),
+        Run(" is even", normal=True),
+    )
+    assert parse_math(r"\text{a $\text{b $c$}$}") == (
+        Run("a ", normal=True),
+        Run("b ", normal=True),
+        Run("c"),
+    )
+    assert parse_math(r"\fbox{$a$}") == (BorderBox((Run("a"),)),)
+    (sum_,) = parse_math(r"\text{$\sum_i a$}")
+    assert isinstance(sum_, Nary)
+
+
+def test_escapes_in_text_are_their_characters() -> None:
+    assert parse_math(r"\text{50\% of \$100 \& \#1 a\_b \{x\} {y}}") == (
+        Run("50% of $100 & #1 a_b {x} y", normal=True),
+    )
+
+
+def test_colorbox_shades_its_math() -> None:
+    (frac, text) = parse_math(r"\colorbox{yellow}{$\frac{1}{2}$ half}")
+    assert frac == Frac((Run("1", shade="FFFF00"),), (Run("2", shade="FFFF00"),))
+    assert text == Run(" half", normal=True, shade="FFFF00")
+    (box,) = parse_math(r"\fcolorbox{red}{white}{$x$}")
+    assert box == BorderBox((Run("x", shade="FFFFFF"),), color="FF0000")
+
+
+def test_an_unclosed_dollar_in_text() -> None:
+    for formula in (r"\text{a $x}", r"\text{a $x"):
+        with pytest.raises(MathError, match=r"`\$` is not closed") as info:
+            parse_math(formula)
+        assert (info.value.start, info.value.end) == (8, 9)
