@@ -85,6 +85,10 @@ class Delim:
     e: Row
     color: str | None = None
     """The colour of its own marks (bar, sign, brackets) as RRGGBB, from m:ctrlPr."""
+    sep: str = "\N{BOX DRAWINGS LIGHT VERTICAL}"
+    """The separator between the parts (m:sepChr), from \\middle."""
+    rest: tuple[Row, ...] = ()
+    """The parts after the first, each after a separator."""
 
 
 @dataclass(frozen=True)
@@ -127,11 +131,15 @@ class Bar:
 
 @dataclass(frozen=True)
 class GroupChr:
-    """A brace over or under an expression (\\overbrace, \\underbrace)."""
+    """A brace or an arrow over or under an expression (\\overbrace, \\overrightarrow), or
+    an arrow under its label (\\xrightarrow)."""
 
     chr: str
     pos: str
     e: Row
+    vert: str = ""
+    """m:vertJc when it is not Word's usual for `pos`: bot for an arrow with its label above
+    (\\xrightarrow), which puts the arrow on the baseline."""
     color: str | None = None
     """The colour of its own marks (bar, sign, brackets) as RRGGBB, from m:ctrlPr."""
 
@@ -150,6 +158,17 @@ class EqArr:
     """Rows of a multi-line equation (aligned, gathered); `Align` marks alignment points."""
 
     rows: tuple[Row, ...]
+    color: str | None = None
+    """The colour of its own marks (bar, sign, brackets) as RRGGBB, from m:ctrlPr."""
+
+
+@dataclass(frozen=True)
+class SPre:
+    """Scripts before an expression (m:sPre): \\prescript."""
+
+    sub: Row
+    sup: Row
+    e: Row
     color: str | None = None
     """The colour of its own marks (bar, sign, brackets) as RRGGBB, from m:ctrlPr."""
 
@@ -213,6 +232,7 @@ Node = (
     | EqArr
     | BorderBox
     | Phant
+    | SPre
     | Raw
 )
 
@@ -373,8 +393,10 @@ def linear_text(row: Row) -> str:
                     + (f"^({linear_text(sup)})" if sup else "")
                 )
                 out.append(linear_text(e))
-            case Delim(beg=beg, end=end, e=e):
-                out.append(f"{beg}{linear_text(e)}{end}")
+            case Delim(beg=beg, end=end, e=e, sep=sep, rest=rest):
+                out.append(f"{beg}{sep.join(linear_text(part) for part in (e, *rest))}{end}")
+            case SPre(sub=sub, sup=sup, e=e):
+                out.append(f"_({linear_text(sub)})^({linear_text(sup)}){linear_text(e)}")
             case Func(name=name, e=e):
                 out.append(f"{linear_text(name)} {linear_text(e)}")
             case Limit(e=e, lim=lim):

@@ -34,15 +34,14 @@ the subset:
 - characters: a plain space (U+0020), and `*`, `'`, `^`, `~` as math text (the parser reads them as `∗`, a prime, a
   superscript and a no-break space);
 - a math font given without a style (`m:scr` without `m:sty`);
-- linear and skewed fractions (`a/b` built up as `m:f` with `m:type` `lin` or `skw`), and a fraction without a bar
-  outside parentheses (`\binom` is only the parenthesised form);
+- linear and skewed fractions (`a/b` built up as `m:f` with `m:type` `lin` or `skw`);
 - a matrix with left-aligned columns, except inside a left brace (`cases`);
 - accent, brace and big-operator characters that are not in `math/symbols.py`;
-- `m:box`, `m:sPre`, a phantom with `m:transp`, a delimiter with separators (`(a|b)`) or with `m:grow`;
+- `m:box`, a phantom with `m:transp`, a delimiter with `m:grow`;
 - a matrix whose last row is one empty cell (the parser drops a final empty row);
 - other formatting on math text (size, highlight, theme colours).
 
-Each needs a language addition (for example `\ ` for a plain space, a command for a prescript) and is a design
+Each needs a language addition (for example `\ ` for a plain space) and is a design
 decision (docs/08) before it is code.
 
 ### Word's brace with conditions is not `cases`
@@ -71,17 +70,8 @@ with a rough cost:
 - Symbols: a long tail of AMS symbols is still missing (`\Lsh`, `\lll`, `\bigcirc`, `\Finv`, ...). Each is one
   entry in `math/symbols.py`, plus `RELATIONS` for a relation.
 - Spacing with a size: `\hspace{…}`, `\mkern`. They need a length turned into a Unicode space.
-- Functions: `\varlimsup`, `\injlim` (a function name with a bar or two words), `\idotsint` (two integral
-  signs with dots, no single character).
-- Structures that map to an OMML object:
-  - `\prescript`, `\sideset` (`m:sPre`);
-  - `\overrightarrow`, `\xrightarrow` and the other extensible arrows (`m:groupChr`);
-  - `\overbracket`;
-  - `\middle` (separators in `m:d`);
-  - `\substack` and `subarray` (a one-column `m:eqArr` or matrix);
-  - `\genfrac`, `\over`, `\choose`;
-  - `\leftroot`;
-  - `\mathclap` and the other overlaps.
+- Functions: `\idotsint` (two integral signs with dots, no single character).
+- Structures: `\sideset` (scripts on both sides of a big operator: `m:sPre` and `m:nary` together).
 - Environments: `alignedat`, `multlined`, `dcases`, `dcases*`, `rcases`, `pmatrix*`, `bmatrix*`; `\hline`,
   `\cline` and `\hdotsfor` in arrays.
 - Text and font switches: `\textsf`, `\textsc`, `\rm` and the other old switches.

@@ -37,6 +37,7 @@ from redocx.math.nodes import (
     Row,
     Run,
     Scripts,
+    SPre,
 )
 from redocx.math.omml import DEFAULT_ACCENT, MATH_FONT, SHADING_GUARD
 from redocx.ooxml.xml import RAW_NAMESPACES, Element
@@ -274,11 +275,21 @@ def _nary(r: MathReader, el: Element) -> Node:
 
 def _delim(r: MathReader, el: Element) -> Node:
     _only(el, "e")
-    props = _props(el, frozenset({"begChr", "endChr"}))
-    parts = el.findall(_m("e"))
-    if len(parts) != 1:
-        raise _UnsupportedError("separators")  # (a, b) with m:sepChr: one m:e per part
-    return Delim(props.get("begChr", "("), props.get("endChr", ")"), r.row(parts[0]))
+    props = _props(el, frozenset({"begChr", "endChr", "sepChr"}))
+    first, *rest = [r.row(part) for part in el.findall(_m("e"))] or [()]
+    return Delim(
+        props.get("begChr", "("),
+        props.get("endChr", ")"),
+        first,
+        sep=props.get("sepChr", "\N{BOX DRAWINGS LIGHT VERTICAL}"),
+        rest=tuple(rest),
+    )
+
+
+def _spre(r: MathReader, el: Element) -> Node:
+    _only(el, "sub", "sup", "e")
+    _props(el, frozenset())
+    return SPre(r.args(el, "sub"), r.args(el, "sup"), r.args(el, "e"))
 
 
 def _func(r: MathReader, el: Element) -> Node:
@@ -310,10 +321,15 @@ def _group_chr(r: MathReader, el: Element) -> Node:
     props = _props(el, frozenset({"chr", "pos", "vertJc"}))
     pos = props.get("pos") or "bot"
     # Word puts a brace above with its base at the bottom, and one below with its base at
-    # the top; other combinations change the layout.
-    if props.get("vertJc", "") not in ("", "bot" if pos == "top" else "top"):
-        raise _UnsupportedError("vertJc")
-    return GroupChr(props.get("chr") or DEFAULT_GROUP_CHR, pos, r.args(el, "e"))
+    # the top; the other way round is an arrow with its label (\xrightarrow).
+    usual = "bot" if pos == "top" else "top"
+    vert = props.get("vertJc", "")
+    return GroupChr(
+        props.get("chr") or DEFAULT_GROUP_CHR,
+        pos,
+        r.args(el, "e"),
+        "" if vert in ("", usual) else vert,
+    )
 
 
 def _matrix(r: MathReader, el: Element) -> Node:
@@ -408,6 +424,7 @@ _OBJECTS = {
     "eqArr": _eq_arr,
     "borderBox": _border_box,
     "phant": _phant,
+    "sPre": _spre,
 }
 
 

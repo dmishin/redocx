@@ -411,7 +411,7 @@ def test_equations_print_as_latex(tmp_path: Path) -> None:
     ]
     inline = ir.Math(parse_math(formulas[0]))
     displays = [ir.Math(parse_math(f), display=True) for f in formulas[1:]]
-    pre = Raw("<m:sPre><m:sub/><m:sup/><m:e><m:r><m:t>C</m:t></m:r></m:e></m:sPre>")
+    pre = Raw("<m:box><m:e><m:r><m:t>C</m:t></m:r></m:e></m:box>")
     body = (
         ir.Paragraph((ir.Run("Euler: "), inline, ir.Run("."))),
         *(ir.Paragraph((d,)) for d in displays),
@@ -421,7 +421,7 @@ def test_equations_print_as_latex(tmp_path: Path) -> None:
     assert f"Euler: \\m{{{formulas[0]}}}." in source
     assert f"$$ {formulas[1]} $$" in source
     assert f"$$ {formulas[2]} $$" in source
-    assert "\\m{a\\ooxml{<m:sPre>" in source
+    assert "\\m{a\\ooxml{<m:box>" in source
     assert '\\ooxml{<m:f><m:fPr><m:type m:val="lin"/></m:fPr>' in source
     before = _equations(ir.Document(body=body))
     after = _equations(compiled)

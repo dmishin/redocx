@@ -6,6 +6,12 @@ anything that would change it is listed here first as a deprecation warning.
 
 ## Unreleased
 
+- **Math:** more structures: `\overrightarrow` and the other arrows, brackets and parentheses over and
+  under; the extensible arrows `\xrightarrow[below]{above}` and friends; `\prescript`; `\middle`;
+  `\substack` and `subarray`; `\genfrac` and TeX's `\over`, `\atop`, `\choose`, `\brack`, `\brace`;
+  `\mathclap`, `\mathllap`, `\mathrlap`; `\varlimsup` and the other amsmath limits. `\leftroot` and
+  `\uproot` are accepted and ignored. Import reads `m:sPre`, separators in `m:d` and arrows under
+  their label, and prints them with these commands.
 - **Math:** colour: `\textcolor`, `\color`, `\colorbox` and `\fcolorbox`, with xcolor's base names, mixes
   (`red!30`) and the `HTML`, `rgb`, `RGB`, `cmyk` and `gray` models. Import reads coloured and shaded math
   and prints it with these commands.

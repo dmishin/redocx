@@ -33,6 +33,7 @@ from redocx.math.nodes import (
     Row,
     Run,
     Scripts,
+    SPre,
     colored,
 )
 
@@ -50,6 +51,7 @@ PHANTOMS = {
     "hphantom": (False, False, True, True),
     "vphantom": (False, True, False, False),
     "smash": (True, False, True, True),
+    "mathclap": (True, True, False, False),
 }
 """(show, zero width, zero ascent, zero descent) of m:phant."""
 
@@ -57,6 +59,16 @@ COLOR_HINT = (
     "a name (red, blue, ...), a mix (red!30, red!50!blue), or [HTML]{FF8000}, "
     "[rgb]{1,0.5,0}, [RGB]{255,128,0}, [cmyk]{0,0.5,1,0}, [gray]{0.5}"
 )
+
+OPERATORS: dict[str, Row] = {
+    "varlimsup": (Bar("top", (Run("lim", style="p"),)),),
+    "varliminf": (Bar("bot", (Run("lim", style="p"),)),),
+    "varinjlim": (Limit("low", (Run("lim", style="p"),), (Run("→"),)),),
+    "varprojlim": (Limit("low", (Run("lim", style="p"),), (Run("←"),)),),
+    "injlim": (Run("inj lim", style="p"),),
+    "projlim": (Run("proj lim", style="p"),),
+}
+"""Operator names built from other objects (amsmath); their subscript goes underneath."""
 
 QUAD, THICK = "\N{EM SPACE}", "\N{THREE-PER-EM SPACE}"
 
@@ -67,7 +79,9 @@ KNOWN_COMMANDS = sorted(
         "frac", "dfrac", "tfrac", "cfrac", "binom", "dbinom", "tbinom", "sqrt", "operatorname",
         "mathop", "overline", "underline", "overbrace", "underbrace", "overset", "underset",
         "stackrel", "left", "right", "begin", "end", "not", "ooxml", "bmod", "pmod", "mod", "pod",
-        "boxed", "fbox", "cancelto", *CANCELS, *PHANTOMS, "color", "textcolor", "colorbox",
+        "boxed", "fbox", "cancelto", *CANCELS, *PHANTOMS, *S.OVER_UNDER, *S.X_ARROWS,
+        *S.INFIX, *OPERATORS, "prescript", "substack", "middle", "genfrac", "leftroot",
+        "uproot", "mathllap", "mathrlap", "color", "textcolor", "colorbox",
         "fcolorbox",
         *PASS_THROUGH,
     }
@@ -107,7 +121,7 @@ class _PendingFunc:
 class _Parser:
     def __init__(self, text: str) -> None:
         self.s = text
-        self.i = 0
+        self.i: int = 0
         self.warnings: list[MathError] = []
         """What is written only approximately; the formula is still made."""
 
@@ -186,6 +200,48 @@ class _Parser:
         except ValueError as e:
             raise self.error(str(e), value_start, self.i, COLOR_HINT) from None
 
+    def optional_row(self, start: int) -> Row | None:
+        """An optional [...] argument in math, or None when there is none."""
+        self.skip_space()
+        if self.peek() != "[":
+            return None
+        opening = self.i
+        self.i += 1
+        nodes, stop = self.sequence(frozenset({"]"}), opening=(opening, opening + 1, "`[`"))
+        if stop != "]":
+            raise self.error("unclosed `[`", start)
+        self.i += 1
+        return tuple(nodes)
+
+    def rows(self, start: int) -> tuple[Row, ...]:
+        """A {...} argument of rows separated by \\\\ (\\substack)."""
+        self.skip_space()
+        if self.peek() != "{":
+            raise self.error("expected `{`")
+        opening = self.i
+        self.i += 1
+        lines: list[Row] = []
+        while True:
+            nodes, stop = self.sequence(
+                frozenset({"\\\\", "}"}), opening=(opening, opening + 1, "`{`")
+            )
+            lines.append(tuple(nodes))
+            if stop == "}":
+                self.i += 1
+                break
+        if len(lines) > 1 and not lines[-1]:
+            lines.pop()
+        return tuple(lines)
+
+    def genfrac_delimiter(self, start: int) -> str:
+        """A delimiter argument of \\genfrac: {(}, {\\{}, or {} for none."""
+        text = self.raw_group().strip()
+        if not text:
+            return ""
+        if text not in S.DELIMITERS:
+            raise self.error(f"`{text}` is not a delimiter", start, self.i)
+        return S.DELIMITERS[text]
+
     def optional(self, start: int) -> str | None:
         """The text of an optional [...] argument, or None when there is none."""
         self.skip_space()
@@ -242,14 +298,17 @@ class _Parser:
                         "`\\\\` (a new row) belongs in an environment or a display equation",
                         end=after,
                     )
-                if name in ("right", "end"):
+                if name in ("right", "end", "middle"):
                     if name in stops:
                         return out, name
-                    raise self.error(
-                        f"`\\{name}` without a matching "
-                        f"`\\{'left' if name == 'right' else 'begin'}`",
-                        end=after,
-                    )
+                    opener = "begin" if name == "end" else "left"
+                    raise self.error(f"`\\{name}` without a matching `\\{opener}`", end=after)
+                if name in S.INFIX:  # {a \\over b}: what comes before is the numerator
+                    self.i = after
+                    rest, stop = self.sequence(stops, align=align, opening=opening)
+                    beg, end, kind = S.INFIX[name]
+                    fraction = Frac(tuple(out), tuple(rest), kind)
+                    return [Delim(beg, end, (fraction,)) if beg else fraction], stop
                 if name == "color":  # a switch: the rest of the group is in the colour
                     self.i = after
                     color = self.color(self.i - len(name) - 1)
@@ -460,6 +519,32 @@ class _Parser:
             return [Limit("low" if name == "underset" else "upp", e, lim)]
         if name in PASS_THROUGH:
             return list(self.group())
+        if name in S.OVER_UNDER:
+            char, pos = S.OVER_UNDER[name]
+            return [GroupChr(char, pos, self.group())]
+        if name in S.X_ARROWS:
+            below = self.optional_row(start)
+            arrow = GroupChr(S.X_ARROWS[name], "bot", self.group(), "bot")
+            return [Limit("low", (arrow,), below)] if below else [arrow]
+        if name == "prescript":
+            sup, sub = self.group(), self.group()
+            return [SPre(sub, sup, self.group())]
+        if name == "substack":
+            return [EqArr(self.rows(start))]
+        if name == "genfrac":
+            beg, end = self.genfrac_delimiter(start), self.genfrac_delimiter(start)
+            thickness = self.raw_group().strip()
+            self.raw_group()  # the style: Word sizes fractions itself
+            kind = "noBar" if thickness and not any(c in "123456789" for c in thickness) else "bar"
+            fraction = Frac(self.group(), self.group(), kind)
+            return [Delim(beg, end, (fraction,)) if beg or end else fraction]
+        if name in ("leftroot", "uproot"):
+            self.group()  # moves the degree of a root a little: Word places it itself
+            return []
+        if name in ("mathllap", "mathrlap"):
+            return [Phant(self.group(), True, True, False, False)]
+        if name in OPERATORS:
+            return [_PendingFunc(OPERATORS[name], True)]
         if name == "textcolor":
             color = self.color(start)
             return list(colored(self.group(), color))
@@ -514,12 +599,32 @@ class _Parser:
             return [Run(self.text_group(), style=style, normal=True)]
         if name == "left":
             beg = self.delimiter(start)
-            nodes, stop = self.sequence(frozenset({"right"}), opening=(start, after, "`\\left`"))
+            parts: list[Row] = []
+            separators: set[str] = set()
+            while True:
+                nodes, stop = self.sequence(
+                    frozenset({"right", "middle"}), opening=(start, after, "`\\left`")
+                )
+                parts.append(tuple(nodes))
+                if stop != "middle":
+                    break
+                middle = self.i
+                self.i = self.command_at(self.i)[1]
+                separators.add(self.delimiter(middle))
+                if "" in separators or len(separators) > 1:
+                    raise self.error(
+                        "one `\\left` ... `\\right` has one separator character in Word",
+                        middle,
+                        self.i,
+                        "use the same `\\middle` delimiter throughout, and not `.`",
+                    )
             if stop != "right":
                 raise self.error("`\\left` without `\\right`", start, after)
             self.i = self.command_at(self.i)[1]
             end = self.delimiter(start)
-            return [Delim(beg, end, tuple(nodes))]
+            if not separators:
+                return [Delim(beg, end, parts[0])]
+            return [Delim(beg, end, parts[0], sep=separators.pop(), rest=tuple(parts[1:]))]
         if name in S.SIZED:
             return [Run(self.delimiter(start))]
         if name == "begin":
@@ -571,7 +676,7 @@ class _Parser:
 
     def environment(self, start: int) -> Node:
         name = self.raw_group().strip()
-        if name == "array":
+        if name in ("array", "subarray"):
             self.raw_group()  # the column spec: Word sizes columns itself
         if name in S.MATRICES or name == "cases":
             rows: list[list[Row]] = [[]]
@@ -596,12 +701,13 @@ class _Parser:
             beg, end = S.MATRICES[name]
             matrix = Matrix(matrix_rows)
             return Delim(beg, end, (matrix,)) if beg or end else matrix
-        if name in S.ARRAYS:
+        if name in S.ARRAYS or name == "subarray":
             lines: list[Row] = []
             while True:
                 nodes, stop = self.sequence(
                     frozenset({"\\\\", "end"}),
-                    align=name not in ("gathered", "gather", "gather*", "multline", "multline*"),
+                    align=name
+                    not in ("gathered", "gather", "gather*", "multline", "multline*", "subarray"),
                     opening=(start, self.i, f"`\\begin{{{name}}}`"),
                 )
                 lines.append(tuple(nodes))

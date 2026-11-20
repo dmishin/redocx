@@ -31,6 +31,7 @@ from redocx.math.nodes import (
     Row,
     Run,
     Scripts,
+    SPre,
     same_format,
 )
 from redocx.ooxml.xml import E, Element, parse_fragment, qn
@@ -191,14 +192,15 @@ class _Writer:
                     self.arg("m:sup", sup),
                     self.arg("m:e", e),
                 )
-            case Delim(beg=beg, end=end, e=e):
+            case Delim(beg=beg, end=end, e=e, sep=sep, rest=rest):
                 props = E(
                     "m:dPr",
                     _val("m:begChr", beg) if beg != "(" else None,
+                    _val("m:sepChr", sep) if rest else None,
                     _val("m:endChr", end) if end != ")" else None,
                     _ctrl(),
                 )
-                return E("m:d", props, self.arg("m:e", e))
+                return E("m:d", props, *(self.arg("m:e", part) for part in (e, *rest)))
             case Func(name=name, e=e):
                 return E(
                     "m:func", E("m:funcPr", _ctrl()), self.arg("m:fName", name), self.arg("m:e", e)
@@ -218,12 +220,13 @@ class _Writer:
                     E("m:barPr", _val("m:pos", pos) if pos != "bot" else None, _ctrl()),
                     self.arg("m:e", e),
                 )
-            case GroupChr(chr=c, pos=pos, e=e):
+            case GroupChr(chr=c, pos=pos, e=e, vert=vert):
+                vert = vert or ("bot" if pos == "top" else "")
                 props = E(
                     "m:groupChrPr",
                     _val("m:chr", c),
                     _val("m:pos", pos) if pos != "bot" else None,
-                    _val("m:vertJc", "bot") if pos == "top" else None,
+                    _val("m:vertJc", vert) if vert else None,
                     _ctrl(),
                 )
                 return E("m:groupChr", props, self.arg("m:e", e))
@@ -254,6 +257,14 @@ class _Writer:
                     _ctrl(),
                 )
                 return E("m:borderBox", props, self.arg("m:e", e))
+            case SPre(sub=sub, sup=sup, e=e):
+                return E(
+                    "m:sPre",
+                    E("m:sPrePr", _ctrl()),
+                    self.arg("m:sub", sub),
+                    self.arg("m:sup", sup),
+                    self.arg("m:e", e),
+                )
             case Phant(e=e, show=show, zero_width=wid, zero_ascent=asc, zero_descent=desc):
                 props = E(
                     "m:phantPr",

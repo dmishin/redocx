@@ -29,13 +29,13 @@ The supported LaTeX:
 
 | Kind | Commands |
 |------|----------|
-| Scripts | `x^2`, `x_i`, `x_i^2`, `x'`, `f'^2`; `{…}` groups (`{ab}^2` puts the script on the whole group) |
-| Fractions, roots | `\frac`, `\dfrac`, `\tfrac`, `\cfrac`, `\binom`, `\sqrt`, `\sqrt[n]` |
+| Scripts | `x^2`, `x_i`, `x_i^2`, `x'`, `f'^2`; `{…}` groups (`{ab}^2` puts the script on the whole group); `\prescript{14}{6}{C}`, `\substack` |
+| Fractions, roots | `\frac`, `\dfrac`, `\tfrac`, `\cfrac`, `\binom`, `\genfrac`, `{a \over b}`, `{n \choose k}`, `\sqrt`, `\sqrt[n]` |
 | Big operators | `\sum \prod \int \iint \oint \bigcup \bigcap …`, `\limits`, `\nolimits` |
 | Functions | `\sin \cos \log \ln \exp \lim \max \min …`, `\operatorname{argmin}`, `\mathop`, `\bmod`, `\pmod{n}` |
-| Delimiters | `\left( … \right)`, with `[ ] \{ \} \| \langle \rangle \lfloor \rfloor \lceil \rceil .`; `\big(` and friends |
+| Delimiters | `\left( … \right)`, with `[ ] \{ \} \| \langle \rangle \lfloor \rfloor \lceil \rceil .`; `\middle|`; `\big(` and friends |
 | Environments | `matrix pmatrix bmatrix Bmatrix vmatrix Vmatrix array cases aligned align split gathered` |
-| Accents | `\hat \bar \tilde \vec \dot \ddot`, `\overline \underline \overbrace \underbrace`, `\overset \underset` |
+| Accents, arrows | `\hat \bar \tilde \vec \dot \ddot`, `\overline \underline \overbrace \underbrace`, `\overrightarrow`, `\overbracket`, `\overset \underset`; `\xrightarrow[below]{above}` |
 | Boxes, phantoms | `\boxed \fbox`, `\cancel \bcancel \xcancel \cancelto`, `\phantom \hphantom \vphantom \smash` |
 | Colour | `\textcolor{red}{…}`, `{\color{blue} …}`, `\colorbox{yellow}{text}`, `\fcolorbox{red}{yellow}{text}`; names, `red!30`, `[HTML]{00A0FF}`, `[rgb]{1,0.5,0}` |
 | Fonts, text | `\mathrm \mathbf \mathit \boldsymbol \mathbb \mathcal \mathfrak \mathsf \mathtt`, `\text{…}` |
@@ -45,11 +45,11 @@ A command outside this list is an error at its place in the formula, with the ne
 
 ### Raw OMML
 
-For what LaTeX notation cannot say, such as a pre-script, `\ooxml{…}` puts Word's own math XML
+For what LaTeX notation cannot say, such as a box that makes a group act as one operator, `\ooxml{…}` puts Word's own math XML
 (OMML) into a formula. The rest of the formula stays LaTeX:
 
 ```rdx
-Carbon-14 is \m{\ooxml{<m:sPre><m:sub><m:r><m:t>6</m:t></m:r></m:sub><m:sup><m:r><m:t>14</m:t></m:r></m:sup><m:e><m:r><m:t>C</m:t></m:r></m:e></m:sPre>}}.
+It holds when \m{a \ooxml{<m:box><m:boxPr><m:opEmu m:val="1"/></m:boxPr><m:e><m:r><m:t>==</m:t></m:r></m:e></m:box>} b}.
 ```
 
 The XML is checked when the document compiles: it must be `m:` elements that are valid at that place in an

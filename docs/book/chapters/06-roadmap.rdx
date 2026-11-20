@@ -125,7 +125,7 @@ _Goal: a program or template engine can write redocx source from any data and co
 _Goal: equations in a `.docx` come back as LaTeX that compiles to the same equation, and nothing is dropped._
 
 1. \[x\] *Raw OMML* in the language: `\ooxml{…}` inside a formula, whole equations in `\raw[ooxml]`, both checked against the schemas (Q15).
-2. \[x\] *Reader* (`math/read.py`): OMML into the math tree. What the tree cannot hold (`m:box`, `m:sPre`, a delimiter with separators, a run with colour) is kept as OMML, one object at a time.
+2. \[x\] *Reader* (`math/read.py`): OMML into the math tree. What the tree cannot hold (`m:box`, a run with a font size) is kept as OMML, one object at a time.
 3. \[x\] *Printer* (`math/latex.py`): the math tree as LaTeX. Each object is parsed back and compared, and written as `\ooxml{…}` when it does not come back the same.
 4. \[x\] *Corpus*: `tests/corpus/math.docx`, equations Word built from its linear format.
 5. \[x\] *Numbers and labels*: Word's numbered equation (`#(1)` in an equation array) reads as a numbered equation; one a REF points at gets `{#eq:…}`, the REF `@eq:…`. Numbers per chapter set `captions=(chapter-numbers)`. The oracle compares every equation.

@@ -34,13 +34,14 @@ from redocx.math.nodes import (
     Row,
     Run,
     Scripts,
+    SPre,
     canonical,
     colored,
     uncolored,
     walk,
 )
 from redocx.math.omml import _Writer, omml  # pyright: ignore[reportPrivateUsage]
-from redocx.math.parser import CANCELS, PHANTOMS, MathError, parse_math
+from redocx.math.parser import CANCELS, OPERATORS, PHANTOMS, MathError, parse_math
 from redocx.math.read import raw_xml
 from redocx.ooxml.xml import Element
 
@@ -88,6 +89,13 @@ _PHANTOMS = {
     (True, False, True, False): "smash[t]",
     (True, False, False, True): "smash[b]",
 }
+_OVER_UNDER = {
+    **{value: name for name, value in reversed(S.OVER_UNDER.items())},
+    ("⏞", "top"): "overbrace",
+    ("⏟", "bot"): "underbrace",
+}
+_X_ARROWS = {c: name for name, c in reversed(S.X_ARROWS.items())}
+_OPERATORS = {value: name for name, value in OPERATORS.items()}
 
 
 def _delimiters() -> dict[str, str]:
@@ -107,7 +115,9 @@ def _delimiters() -> dict[str, str]:
 
 
 _DELIMITERS = _delimiters()
-_SIMPLE = (Frac, Rad, Delim, Accent, Bar, Limit, Matrix, EqArr, BorderBox, Phant, Raw)
+_SIMPLE = (
+    Frac, Rad, Delim, Accent, Bar, Limit, Matrix, EqArr, BorderBox, Phant, SPre, Raw
+)  # fmt: skip
 """Objects that print as one atom, which a script can follow without braces."""
 
 _COMMAND_END_RE = re.compile(r"\\[A-Za-z]+\*?$")
@@ -330,6 +340,11 @@ class _Printer:
                     text += f"^{s}"
                 operand, e_e = self.operand(e)
                 return _join([text, operand]), (Nary(c, sub_e, sup_e, e_e, loc),)
+            case Frac(num=num, den=den, kind="noBar"):
+                (n, num_e), (d, den_e) = self.row(num), self.row(den)
+                return f"{{{n} \\atop {d}}}", (Frac(num_e, den_e, "noBar"),)
+            case Delim(rest=rest) if rest:
+                return self.separated(node)
             case Delim(beg="(", end=")", e=(Frac(num=num, den=den, kind="noBar"),)):
                 (n, num_e), (d, den_e) = self.row(num), self.row(den)
                 return f"\\binom{{{n}}}{{{d}}}", (Delim("(", ")", (Frac(num_e, den_e, "noBar"),)),)
@@ -350,7 +365,14 @@ class _Printer:
                 text, name_e = self.function_name(name)
                 operand, e_e = self.operand(e)
                 return _join([text, operand]), (Func(name_e, e_e),)
-            case Limit(kind=kind, e=(GroupChr(pos=pos) as brace,), lim=lim) if (
+            case Limit(kind="low", e=(GroupChr(vert="bot") as arrow,), lim=lim):
+                text, (arrow_e,) = self.checked(arrow)
+                if not text.startswith("\\x"):
+                    raise _Unprintable
+                below, lim_e = self.row(lim)
+                name, above = text.split("{", 1)
+                return f"{name}[{below}]{{{above}", (Limit("low", (arrow_e,), lim_e),)
+            case Limit(kind=kind, e=(GroupChr(pos=pos, vert="") as brace,), lim=lim) if (
                 kind == "upp" and pos == "top"
             ) or (kind == "low" and pos == "bot"):
                 b, b_e = self.checked(brace)
@@ -370,10 +392,15 @@ class _Printer:
                 t, e_e = self.row(e)
                 command = "overline" if pos == "top" else "underline"
                 return f"\\{command}{{{t}}}", (Bar(pos, e_e),)
-            case GroupChr(chr=c, pos=pos, e=e) if (c, pos) in (("⏞", "top"), ("⏟", "bot")):
+            case GroupChr(chr=c, pos=pos, e=e, vert="") if (c, pos) in _OVER_UNDER:
                 t, e_e = self.row(e)
-                command = "overbrace" if pos == "top" else "underbrace"
-                return f"\\{command}{{{t}}}", (GroupChr(c, pos, e_e),)
+                return f"\\{_OVER_UNDER[c, pos]}{{{t}}}", (GroupChr(c, pos, e_e),)
+            case GroupChr(chr=c, pos="bot", e=e, vert="bot") if c in _X_ARROWS:
+                t, e_e = self.row(e)
+                return f"\\{_X_ARROWS[c]}{{{t}}}", (GroupChr(c, "bot", e_e, "bot"),)
+            case SPre(sub=sub, sup=sup, e=e):
+                (a, sup_e), (b, sub_e), (t, e_e) = self.row(sup), self.row(sub), self.row(e)
+                return f"\\prescript{{{a}}}{{{b}}}{{{t}}}", (SPre(sub_e, sup_e, e_e),)
             case BorderBox(e=e, hide=hide, strike=strike):
                 command = _BOXES.get((hide, strike))
                 if command is None:
@@ -398,6 +425,20 @@ class _Printer:
                 )
             case _:
                 raise _Unprintable
+
+    def separated(self, delim: Delim) -> tuple[str, Row]:
+        """\\left( a \\middle| b \\right): a delimiter with separators."""
+        if not all(c in _DELIMITERS for c in (delim.beg, delim.end, delim.sep)) or not delim.sep:
+            raise _Unprintable
+        parts = [self.row(part) for part in (delim.e, *delim.rest)]
+        texts = [f"\\left{_DELIMITERS[delim.beg]}"]
+        for i, (t, _) in enumerate(parts):
+            if i:
+                texts.append(f"\\middle{_DELIMITERS[delim.sep]}")
+            texts.append(t)
+        texts.append(f"\\right{_DELIMITERS[delim.end]}")
+        first, *rest = [e for _, e in parts]
+        return _join(texts), (Delim(delim.beg, delim.end, first, sep=delim.sep, rest=tuple(rest)),)
 
     def scripts(self, base: Row, sub: Row | None, sup: Row | None) -> tuple[str, Row]:
         b, base_e = self.row(base)
@@ -429,6 +470,11 @@ class _Printer:
     def function_name(self, name: Row) -> tuple[str, Row]:
         """\\sin, \\lim_{x\\to 0}, \\sin^2, \\operatorname{argmax}, \\operatorname*{argmin}_x."""
         match name:
+            case _ if name in _OPERATORS:
+                return f"\\{_OPERATORS[name]}", name
+            case (Limit(kind="low", e=e) as lim,) if e in _OPERATORS:
+                s, lim_e = self.arg(lim.lim)
+                return f"\\{_OPERATORS[e]}_{s}", (Limit("low", e, lim_e),)
             case (Run(style="p", script=None, normal=False) as run,):
                 return _function(run.text, "plain"), name
             case (Limit(kind="low", e=(Run(style="p", script=None, normal=False) as run,)) as lim,):

@@ -312,8 +312,8 @@ settled: see [tooling ideas](ideas/tooling.md).
 
 1. [x] **Raw OMML** in the language: `\ooxml{…}` inside a formula, whole equations in `\raw[ooxml]`, both checked
    against the schemas ([Q15](08-open-questions.md)).
-2. [x] **Reader** (`math/read.py`): OMML into the math tree. What the tree cannot hold (`m:box`, `m:sPre`, a
-   delimiter with separators, a run with colour) is kept as OMML, one object at a time.
+2. [x] **Reader** (`math/read.py`): OMML into the math tree. What the tree cannot hold (`m:box`, a run with
+   a font size) is kept as OMML, one object at a time.
 3. [x] **Printer** (`math/latex.py`): the math tree as LaTeX. Each object is parsed back and compared, and written
    as `\ooxml{…}` when it does not come back the same.
 4. [x] **Corpus**: `tests/corpus/math.docx`, equations Word built from its linear format.

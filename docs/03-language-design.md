@@ -582,7 +582,7 @@ $$\begin{aligned}
 - Unsupported commands are errors at their position in the document (`RDX0311`), with the nearest known command as a
   suggestion.
 - **Raw OMML** for what the subset cannot say: `\ooxml{…}` inside a formula holds Office Math elements as they are,
-  `\m{a + \ooxml{<m:sPre><m:sub>…</m:sub><m:sup>…</m:sup><m:e>…</m:e></m:sPre>} = c}`. The XML is checked like other
+  `\m{a \ooxml{<m:box><m:boxPr><m:opEmu m:val="1"/></m:boxPr><m:e>…</m:e></m:box>} c}`. The XML is checked like other
   raw XML (§3.20): `m:` elements only, well-formed, and valid where they go inside `m:oMath`; a problem is an
   `RDX0311` error at the command. Write `{`, `}` and `\` in its text as `&#x7B;`, `&#x7D;` and `&#x5C;`, so the
   formula's braces stay balanced. A whole equation can also be raw: `\raw[ooxml]{<m:oMath>…</m:oMath>}`
@@ -600,14 +600,14 @@ front.
 
 | Kind | Commands |
 |------|----------|
-| Scripts | `x^2`, `x_i`, `x_i^2`, `x'`, `x''`, `f'^2`; `{…}` groups (`{ab}^2` puts the script on the whole group) |
-| Fractions, roots | `\frac` (`\dfrac`, `\tfrac`, `\cfrac`), `\binom`, `\sqrt`, `\sqrt[n]` |
+| Scripts | `x^2`, `x_i`, `x_i^2`, `x'`, `x''`, `f'^2`; `{…}` groups (`{ab}^2` puts the script on the whole group); `\prescript{14}{6}{C}`; `\substack{…\\…}` |
+| Fractions, roots | `\frac` (`\dfrac`, `\tfrac`, `\cfrac`), `\binom`, `\genfrac`, `{a \over b}` (`\atop \choose \brack \brace`), `\sqrt`, `\sqrt[n]` (`\leftroot`, `\uproot` are ignored) |
 | Big operators | `\sum \prod \coprod \int \iint \iiint \oint \bigcup \bigcap \bigvee \bigwedge \bigoplus \bigotimes \bigodot`, `\iiiint \oiint \oiiint \fint …`, with `\limits` / `\nolimits` |
-| Functions | `\sin \cos \tan \log \ln \exp \lim \max \min \sup \inf \det \gcd …`, `\operatorname`, `\mathop`; `\bmod \pmod \mod \pod` |
-| Delimiters | `\left … \right` with `( ) [ ] \{ \} \| \langle \rangle \lfloor \rfloor \lceil \rceil .`; `\big(` and friends |
-| Environments | `matrix pmatrix bmatrix Bmatrix vmatrix Vmatrix array cases aligned align split gathered`; `&` and `\\` |
-| Accents, bars | `\hat \bar \tilde \vec \dot \ddot \check \breve \acute \grave`, `\overline \underline \overbrace \underbrace`, `\overset \underset \stackrel` |
-| Boxes, phantoms | `\boxed \fbox`; `\cancel \bcancel \xcancel`, `\cancelto` (a warning: Word has no arrow, so the value is a superscript); `\phantom \hphantom \vphantom \smash` |
+| Functions | `\sin \cos \tan \log \ln \exp \lim \max \min \sup \inf \det \gcd …`, `\operatorname`, `\mathop`; `\bmod \pmod \mod \pod`; `\varlimsup \varliminf \varinjlim \varprojlim \injlim \projlim` |
+| Delimiters | `\left … \right` with `( ) [ ] \{ \} \| \langle \rangle \lfloor \rfloor \lceil \rceil .`; `\middle|` between the parts (one separator character per pair); `\big(` and friends |
+| Environments | `matrix pmatrix bmatrix Bmatrix vmatrix Vmatrix array subarray cases aligned align split gathered`; `&` and `\\` |
+| Accents, bars | `\hat \bar \tilde \vec \dot \ddot \check \breve \acute \grave`, `\overline \underline \overbrace \underbrace`, `\overrightarrow \overleftarrow \overleftrightarrow` and the `\under…` forms, `\overbracket \underbracket \overparen \underparen`, `\overset \underset \stackrel`; `\xrightarrow[below]{above}`, `\xleftarrow`, `\xRightarrow`, `\xmapsto`, `\xhookrightarrow`, `\xrightleftharpoons` and the other extensible arrows |
+| Boxes, phantoms | `\boxed \fbox`; `\cancel \bcancel \xcancel`, `\cancelto` (a warning: Word has no arrow, so the value is a superscript); `\phantom \hphantom \vphantom \smash`, `\mathclap \mathllap \mathrlap` |
 | Colour | `\textcolor{red}{…}`, `{\color{red} …}` (the rest of the group), `\colorbox{yellow}{text}`, `\fcolorbox{red}{yellow}{text}`; xcolor's base names and mixes (`red!30`, `red!50!blue`), `[HTML]`, `[rgb]`, `[RGB]`, `[cmyk]`, `[gray]` |
 | Fonts, text | `\mathrm \mathbf \mathit \boldsymbol \mathbb \mathcal \mathfrak \mathsf \mathtt`, `\text`; `\mathbin \mathrel \mathopen \mathclose \mathord \mathpunct \mathinner \mathnormal` give their argument as it is |
 | Symbols | Greek letters (upper-case upright, `\varGamma` … italic), relations, arrows, operators, `\infty \partial \nabla \forall \exists …`, `\not` |

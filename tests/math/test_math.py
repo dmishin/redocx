@@ -13,11 +13,13 @@ from redocx.math.nodes import (
     BOX_SIDES,
     Accent,
     Align,
+    Bar,
     BorderBox,
     Delim,
     EqArr,
     Frac,
     Func,
+    GroupChr,
     Limit,
     Matrix,
     Nary,
@@ -26,6 +28,7 @@ from redocx.math.nodes import (
     Raw,
     Run,
     Scripts,
+    SPre,
     canonical,
     linear_text,
 )
@@ -476,3 +479,70 @@ def test_a_shaded_first_run_is_guarded() -> None:
     back = MathReader().equation(element)
     assert back is not None
     assert canonical(back) == canonical(row)
+
+
+def test_arrows_and_brackets_over_and_under() -> None:
+    assert parse_math(r"\overrightarrow{AB}") == (GroupChr("→", "top", (Run("A"), Run("B"))),)
+    assert parse_math(r"\underbracket{x}") == (GroupChr("⎵", "bot", (Run("x"),)),)
+
+
+def test_an_extensible_arrow_sits_under_its_label() -> None:
+    arrow = GroupChr("→", "bot", (Run("f"),), "bot")
+    assert parse_math(r"\xrightarrow{f}") == (arrow,)
+    assert parse_math(r"\xrightarrow[g]{f}") == (Limit("low", (arrow,), (Run("g"),)),)
+    xml = etree.tostring(omml((arrow,), display=False), encoding="unicode")
+    assert ':vertJc ns0:val="bot"/>' in xml
+
+
+def test_prescript() -> None:
+    assert parse_math(r"\prescript{14}{6}{C}") == (SPre((Run("6"),), (Run("14"),), (Run("C"),)),)
+
+
+def test_middle_separates_parts() -> None:
+    (delim,) = parse_math(r"\left( a \middle| b \middle| c \right)")
+    assert delim == Delim("(", ")", (Run("a"),), sep="|", rest=((Run("b"),), (Run("c"),)))
+    xml = etree.tostring(omml((delim,), display=False), encoding="unicode")
+    assert ':sepChr ns0:val="|"/>' in xml
+    assert xml.count(":e>") == 6
+
+
+def test_middle_needs_one_separator() -> None:
+    with pytest.raises(MathError, match="one separator character"):
+        parse_math(r"\left( a \middle| b \middle/ c \right)")
+    with pytest.raises(MathError, match=r"`\\middle` without a matching `\\left`"):
+        parse_math(r"a \middle| b")
+
+
+def test_infix_fractions_take_the_whole_group() -> None:
+    frac = Frac((Run("a"), Run("+"), Run("b")), (Run("c"),))
+    assert parse_math(r"{a+b \over c}") == (frac,)
+    assert parse_math(r"x + {n \choose k}") == (
+        Run("x"),
+        Run("+"),
+        Delim("(", ")", (Frac((Run("n"),), (Run("k"),), "noBar"),)),
+    )
+    assert parse_math(r"{a \atop b}") == (Frac((Run("a"),), (Run("b"),), "noBar"),)
+
+
+def test_genfrac() -> None:
+    assert parse_math(r"\genfrac{(}{)}{0pt}{}{n}{k}") == parse_math(r"\binom{n}{k}")
+    assert parse_math(r"\genfrac{}{}{}{1}{a}{b}") == parse_math(r"\frac{a}{b}")
+    with pytest.raises(MathError, match="is not a delimiter"):
+        parse_math(r"\genfrac{x}{}{}{}{a}{b}")
+
+
+def test_substack_and_subarray_are_rows() -> None:
+    rows = EqArr(((Run("i"), Run("<"), Run("n")), (Run("j"),)))
+    assert parse_math(r"\substack{i<n \\ j}") == (rows,)
+    assert parse_math(r"\begin{subarray}{l} i<n \\ j \end{subarray}") == (rows,)
+
+
+def test_root_offsets_are_dropped() -> None:
+    assert parse_math(r"\sqrt[\leftroot{2}\uproot{3} n]{x}") == parse_math(r"\sqrt[n]{x}")
+
+
+def test_operator_names_made_of_objects() -> None:
+    (func,) = parse_math(r"\varlimsup_{n} a")
+    assert isinstance(func, Func)
+    assert func.name == (Limit("low", (Bar("top", (Run("lim", style="p"),)),), (Run("n"),)),)
+    assert parse_math(r"\mathllap{x}") == (Phant((Run("x"),), True, True, False, False),)

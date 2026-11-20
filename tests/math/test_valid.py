@@ -28,6 +28,7 @@ from redocx.math.nodes import (
     Row,
     Run,
     Scripts,
+    SPre,
 )
 from redocx.math.omml import omml
 from redocx.ooxml.integrity import math_problems, package_problems
@@ -39,6 +40,11 @@ from tests.math.test_read import colors, math_runs, text_runs
 
 def _rows(children: st.SearchStrategy[Node]) -> st.SearchStrategy[Row]:
     return st.lists(children, max_size=3).map(tuple)
+
+
+def _separated(beg: str, end: str, e: Row, sep: str, rest: list[Row]) -> Delim:
+    """A delimiter with parts after separators, or one part with the default separator."""
+    return Delim(beg, end, e, sep=sep, rest=tuple(rest)) if rest else Delim(beg, end, e)
 
 
 def _objects(children: st.SearchStrategy[Node]) -> st.SearchStrategy[Node]:
@@ -65,7 +71,17 @@ def _objects(children: st.SearchStrategy[Node]) -> st.SearchStrategy[Node]:
         st.builds(Limit, st.sampled_from(["low", "upp"]), row, row),
         st.builds(Accent, st.just("̂"), row),
         st.builds(Bar, st.sampled_from(["top", "bot"]), row),
-        st.builds(GroupChr, st.just("⏞"), st.sampled_from(["top", "bot"]), row),
+        st.builds(
+            GroupChr,
+            st.just("⏞"),
+            st.sampled_from(["top", "bot"]),
+            row,
+            st.sampled_from(["", "bot"]),
+        ),
+        st.builds(
+            _separated, st.just("("), st.just(")"), row, st.just("|"), st.lists(row, max_size=2)
+        ),
+        st.builds(SPre, row, row, row),
         st.builds(
             Matrix,
             st.lists(st.lists(row, max_size=3).map(tuple), max_size=3).map(tuple),

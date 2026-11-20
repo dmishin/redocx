@@ -9,7 +9,19 @@ from hypothesis import strategies as st
 
 from redocx.math import symbols as S  # noqa: N812
 from redocx.math.latex import to_latex
-from redocx.math.nodes import Delim, EqArr, Frac, Func, Raw, Row, Run, Scripts, canonical, walk
+from redocx.math.nodes import (
+    Delim,
+    EqArr,
+    Frac,
+    Func,
+    GroupChr,
+    Raw,
+    Row,
+    Run,
+    Scripts,
+    canonical,
+    walk,
+)
 from redocx.math.omml import omml
 from redocx.math.parser import parse_math
 from redocx.math.read import MathReader
@@ -75,6 +87,10 @@ def test_what_is_printed_parses_back_to_the_same_equation(row: Row) -> None:
         r"\{ \} \% \$ \# \& \_ \| \backslash a~b\,c\:d\;e\quad f",
         r"3.14 + .5 - 2 * 4 / 1",
         r"\sin \frac{\pi}{2} + \cos\left(x\right) \tan{(x+y)}",
+        r"\overrightarrow{AB} \underleftarrow{x} \overbracket{a} \underparen{b}",
+        r"A \xrightarrow{f} B \xleftarrow[g]{h} C \xmapsto{} D",
+        r"\prescript{14}{6}{C} + \left\langle a \middle| b \middle| c \right\rangle",
+        r"{a \atop b} + \mathclap{x} + \varlimsup_{n} a + \varinjlim_i A + \injlim B",
     ],
 )
 def test_parsed_formulas_print_back(formula: str) -> None:
@@ -94,6 +110,11 @@ def test_every_symbol_prints() -> None:
         printed(f"\\{name} x + \\{name}_a y + \\{name}^2 z")
     for key in S.DELIMITERS:
         printed(f"\\left{key} x \\right{key}")
+
+
+def test_separators_print_with_middle() -> None:
+    row = (Delim("(", ")", (Run("a"),), sep="|", rest=((Run("b"),),)),)
+    assert to_latex(row) == r"\left(a\middle|b\right)"
 
 
 def test_readable_forms() -> None:
@@ -127,7 +148,7 @@ def test_what_the_subset_cannot_say_is_raw_omml() -> None:
     row = (
         Run("a b"),
         Frac((Run("1"),), (Run("2"),), "lin"),
-        Delim("(", ")", (Frac((Run("1"),), (Run("2"),), "noBar"), Run("x"))),
+        GroupChr("~", "top", (Run("x"),)),
         Run("x", script="fraktur"),
         Raw("<m:sPre><m:sub/><m:sup/><m:e/></m:sPre>"),
     )

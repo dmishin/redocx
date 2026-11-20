@@ -130,9 +130,10 @@ DELIMITERS = {
     "\\rbrace": "}", "\\uparrow": "↑", "\\downarrow": "↓",
     "\\updownarrow": "↕", "\\Uparrow": "⇑", "\\Downarrow": "⇓", "\\Updownarrow": "⇕",
     "\\backslash": "\\", "\\lgroup": "⟮", "\\rgroup": "⟯",
-    "\\lmoustache": "⎰", "\\rmoustache": "⎱",
+    "\\lmoustache": "⎰", "\\rmoustache": "⎱", "│": "│",
 }  # fmt: skip
-"""What may follow \\left, \\right and \\big...; `.` is no delimiter."""
+"""What may follow \\left, \\middle, \\right and \\big...; `.` is no delimiter, and `│` is the
+separator Word puts between the parts of a delimiter by default."""
 
 SIZED = frozenset(
     "big Big bigg Bigg bigl Bigl biggl Biggl bigr Bigr biggr Biggr bigm Bigm biggm Biggm".split()
@@ -266,3 +267,28 @@ def _hex(values: Iterable[float]) -> str:
     if any(not 0 <= c <= 255 for c in channels):
         raise ValueError("a colour value is out of range")
     return "".join(f"{c:02X}" for c in channels)
+
+
+OVER_UNDER = {
+    "overrightarrow": ("→", "top"), "overleftarrow": ("←", "top"),
+    "overleftrightarrow": ("↔", "top"), "underrightarrow": ("→", "bot"),
+    "underleftarrow": ("←", "bot"), "underleftrightarrow": ("↔", "bot"),
+    "overbracket": ("⎴", "top"), "underbracket": ("⎵", "bot"),
+    "overparen": ("⏜", "top"), "underparen": ("⏝", "bot"),
+}  # fmt: skip
+"""Arrows, brackets and parentheses stretched over or under an expression (m:groupChr)."""
+
+X_ARROWS = {
+    "xrightarrow": "→", "xleftarrow": "←", "xRightarrow": "⇒", "xLeftarrow": "⇐",
+    "xleftrightarrow": "↔", "xLeftrightarrow": "⇔", "xmapsto": "↦", "xhookrightarrow": "↪",
+    "xhookleftarrow": "↩", "xrightharpoonup": "⇀", "xrightharpoondown": "⇁",
+    "xleftharpoonup": "↼", "xleftharpoondown": "↽", "xrightleftharpoons": "⇌",
+    "xleftrightharpoons": "⇋",
+}  # fmt: skip
+"""Arrows that stretch under their label: \\xrightarrow[below]{above}."""
+
+INFIX = {
+    "over": ("", "", "bar"), "atop": ("", "", "noBar"), "choose": ("(", ")", "noBar"),
+    "brack": ("[", "]", "noBar"), "brace": ("{", "}", "noBar"),
+}  # fmt: skip
+"""TeX's fractions between their parts, {a \\over b}: (left, right delimiter, m:type)."""

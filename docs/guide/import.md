@@ -22,14 +22,14 @@ The source reads like hand-written redocx: headings, lists, labels and `@referen
   into it with `\document[template=…]`. Styles, theme and lists stay exactly as they were.
 
 Equations come back as LaTeX: `\m{…}` in text, `$$ … $$` for a display equation. A part that the LaTeX subset has
-no form for (a prescript, a linear fraction `a/b`) is printed as `\ooxml{…}` inside the formula,
+no form for (a box that groups an operator, a linear fraction `a/b`) is printed as `\ooxml{…}` inside the formula,
 and an equation that cannot be printed at all as `\raw[ooxml]{<m:oMath>…}`. Either way, it compiles back to the
 same equation:
 
 ```rdx
 $$ \frac{-b\pm\sqrt{b^2-4ac}}{2a} $$
 
-The isotope \m{\ooxml{<m:sPre><m:sub><m:r><m:t>6</m:t></m:r></m:sub><m:sup><m:r><m:t>14</m:t></m:r></m:sup><m:e><m:r><m:t>C</m:t></m:r></m:e></m:sPre>}} decays.
+The relation \m{a \ooxml{<m:box><m:boxPr><m:opEmu m:val="1"/></m:boxPr><m:e><m:r><m:t>==</m:t></m:r></m:e></m:box>} b} holds.
 ```
 
 The report counts each of these under "Not printed as source". Word's numbered equations (typed with `#(1)`) come

@@ -32,6 +32,7 @@ from redocx.math.nodes import (
     Row,
     Run,
     Scripts,
+    SPre,
     canonical,
     linear_text,
 )
@@ -78,6 +79,16 @@ def _rows(children: st.SearchStrategy[Node]) -> st.SearchStrategy[Row]:
     return st.lists(children, max_size=3).map(tuple)
 
 
+def _arrow(c: str, pos: str, e: Row, odd: bool) -> GroupChr:
+    """A brace or arrow; odd puts its base the other way round (\\xrightarrow)."""
+    return GroupChr(c, pos, e, pos if odd else "")
+
+
+def _separated(beg: str, end: str, e: Row, sep: str, rest: list[Row]) -> Delim:
+    """A delimiter with parts after separators, or one part with the default separator."""
+    return Delim(beg, end, e, sep=sep, rest=tuple(rest)) if rest else Delim(beg, end, e)
+
+
 def _objects(children: st.SearchStrategy[Node]) -> st.SearchStrategy[Node]:
     row = _rows(children)
     some = st.lists(children, min_size=1, max_size=3).map(tuple)
@@ -109,7 +120,22 @@ def _objects(children: st.SearchStrategy[Node]) -> st.SearchStrategy[Node]:
         st.builds(Limit, st.sampled_from(["low", "upp"]), row, row),
         st.builds(Accent, st.sampled_from(["̂", "̃", "⃗"]), row),
         st.builds(Bar, st.sampled_from(["top", "bot"]), row),
-        st.builds(GroupChr, st.sampled_from(["⏞", "⏟"]), st.sampled_from(["top", "bot"]), row),
+        st.builds(
+            _arrow,
+            st.sampled_from(["⏞", "⏟", "→"]),
+            st.sampled_from(["top", "bot"]),
+            row,
+            st.booleans(),
+        ),
+        st.builds(
+            _separated,
+            st.sampled_from(["(", "⟨"]),
+            st.sampled_from([")", "⟩"]),
+            row,
+            st.sampled_from(["|", "│"]),
+            st.lists(row, max_size=2),
+        ),
+        st.builds(SPre, row, row, row, color=colors),
         st.integers(1, 3).flatmap(
             lambda width: st.builds(
                 Matrix,
@@ -201,24 +227,23 @@ def test_text_runs_take_bold_and_italic_from_the_run() -> None:
 
 # --- what the tree cannot hold ------------------------------------------------------------------
 
-SPRE = (
-    "<m:sPre><m:sPrePr><m:ctrlPr><w:rPr><w:rFonts w:ascii='Cambria Math' w:hAnsi='Cambria Math'/>"
-    "<w:i/></w:rPr></m:ctrlPr></m:sPrePr><m:sub><m:r><m:t>6</m:t></m:r></m:sub>"
-    "<m:sup><m:r><m:t>14</m:t></m:r></m:sup><m:e><m:r><m:t>C</m:t></m:r></m:e></m:sPre>"
+BOX = (
+    "<m:box><m:boxPr><m:opEmu m:val='1'/><m:ctrlPr><w:rPr>"
+    "<w:rFonts w:ascii='Cambria Math' w:hAnsi='Cambria Math'/><w:i/></w:rPr></m:ctrlPr></m:boxPr>"
+    "<m:e><m:r><m:t>C</m:t></m:r></m:e></m:box>"
 )
 
 
 def test_unknown_objects_are_kept_as_xml_in_place() -> None:
-    row, kept = read(f"<m:r><m:t>a+</m:t></m:r>{SPRE}<m:r><m:t>=c</m:t></m:r>")
-    assert kept == {"m:sPre": 1}
+    row, kept = read(f"<m:r><m:t>a+</m:t></m:r>{BOX}<m:r><m:t>=c</m:t></m:r>")
+    assert kept == {"m:box": 1}
     assert row is not None
     first, raw, last = row
     assert (first, last) == (Run("a+"), Run("=c"))
     assert isinstance(raw, Raw)
     # tidy: no namespace declarations, no default font or empty control properties
     assert raw.xml == (
-        "<m:sPre><m:sub><m:r><m:t>6</m:t></m:r></m:sub><m:sup><m:r><m:t>14</m:t></m:r></m:sup>"
-        "<m:e><m:r><m:t>C</m:t></m:r></m:e></m:sPre>"
+        '<m:box><m:boxPr><m:opEmu m:val="1"/></m:boxPr><m:e><m:r><m:t>C</m:t></m:r></m:e></m:box>'
     )
 
 
@@ -226,11 +251,11 @@ def test_the_smallest_object_is_kept() -> None:
     row, kept = read(
         "<m:f><m:num><m:r><m:t>1</m:t></m:r></m:num><m:den>"
         "<m:r><w:rPr><w:sz w:val='40'/></w:rPr><m:t>x</m:t></m:r>"
-        "<m:d><m:dPr><m:sepChr m:val=','/></m:dPr><m:e/><m:e/></m:d>"
+        "<m:box><m:e/></m:box>"
         "<m:f><m:fPr><m:type m:val='skw'/></m:fPr><m:num/><m:den/></m:f>"
         "</m:den></m:f>"
     )
-    assert kept == {"m:r": 1, "m:d": 1}
+    assert kept == {"m:r": 1, "m:box": 1}
     assert row is not None
     (frac,) = row
     assert isinstance(frac, Frac)
@@ -238,7 +263,7 @@ def test_the_smallest_object_is_kept() -> None:
     assert isinstance(colour, Raw)
     assert "w:sz" in colour.xml
     assert isinstance(delim, Raw)
-    assert "m:sepChr" in delim.xml
+    assert "m:box" in delim.xml
     assert skewed == Frac((), (), "skw")
     for raw in (colour, delim):
         assert fragment_problems(raw.xml, "math") == []

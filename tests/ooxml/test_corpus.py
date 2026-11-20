@@ -24,7 +24,6 @@ EXPECTED_LOSSES = {
     "drawings.docx": {"shape (no text)"},
     "math.docx": {
         "m:box in an equation (kept as OMML)",
-        "m:d in an equation (kept as OMML)",  # with a separator: (a|b)
     },
     "review.docx": {"w:del (tracked deletion)"},
 }
