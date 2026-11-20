@@ -13,6 +13,7 @@ Old name wordgenx/.wgx; leftovers = bugs.
 - docs/07-testing-strategy.md: test layers, why.
 - docs/08-open-questions.md: decision log. Check before redeciding anything.
 - docs/09-postponed.md: what we deliberately don't do.
+- docs/known-issues.md: known defects and rough edges not yet fixed. Remove an entry when it is fixed.
 - docs/06-roadmap.md, 05-feature-matrix.md: status. docs/guide/: user guides. docs/reference.md: generated, don't edit.
 
 ## Layout
