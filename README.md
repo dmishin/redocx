@@ -92,12 +92,57 @@ def forecast(y, alpha=0.3):
 - [Command reference](docs/reference.md): every command, option and formatting property, generated from the
   compiler's own tables (`python tools/make_reference.py`).
 
-## Design documents
+## Installation
+
+ReDocx needs Python 3.12 or later. Each command below puts `redocx` on your `PATH`.
+
+From GitHub, with [uv](https://docs.astral.sh/uv/) (it installs Python if needed), pipx or pip:
+
+```bash
+uv tool install git+https://github.com/dmishin/redocx
+pipx install git+https://github.com/dmishin/redocx
+pip install git+https://github.com/dmishin/redocx
+```
+
+From a clone of the repository:
+
+```bash
+git clone https://github.com/dmishin/redocx
+cd redocx
+uv tool install .          # or: pip install .
+```
+
+Without installing, `uv run redocx ...` inside the clone runs the current source.
+
+ReDocx is not on PyPI yet. Once it is, `uv tool install redocx`, `pipx install redocx` or
+`pip install redocx` will work.
+
+To use ReDocx from Python code (for example `redocx.escape` or `redocx.compiler.compile_source`), install it into your
+project's environment instead: `uv add git+https://github.com/dmishin/redocx` or the `pip install` line above.
+
+## Using ReDocx
+
+```bash
+redocx build examples/hello.rdx               # compile to examples/hello.docx
+redocx build examples/hello.rdx --validate    # also check every part against the schemas
+redocx check examples/syntax-tour.rdx         # compile and report diagnostics, write nothing
+redocx fmt examples/hello.rdx                 # rewrite in the canonical layout (--check, --diff)
+redocx explain table                          # a command, property, macro or std: module
+redocx explain note --in examples/hello.rdx   # ... including the document's own macros
+redocx inspect examples/hello.docx            # read a .docx back, report structure and coverage
+redocx import examples/hello.docx -o hello    # turn a .docx into source: .rdx, .rdxs, pictures, report
+redocx import report.docx --keep-styles       # ... compiling into the original's styles as a template
+redocx import report.docx --commands-only     # ... with commands only, no sugar (level L1)
+redocx import report.docx --check             # ... failing unless it compiles to what the original was
+```
+
+## Development
+### Design documents
 
 | # | Document | What it covers |
 |---|----------|----------------|
 | 1 | [Vision & scope](docs/01-vision-and-scope.md) | Goals, non-goals, principles, prior art, what is and isn't possible |
-| 2 | [ADR-0001: Implementation language](docs/02-adr-implementation-language.md) | Python vs .NET vs Java vs Rust vs JS, and the decision |
+| 2 | [Implementation language](docs/02-adr-implementation-language.md) | Python vs .NET vs Java vs Rust vs JS, and the decision |
 | 3 | [Language design](docs/03-language-design.md) | Syntax, commands, styles, lists, tables, math, macros, escape hatches |
 | 4 | [Architecture](docs/04-architecture.md) | Compiler pipeline, intermediate representation, OOXML writer, templates |
 | 5 | [Feature matrix](docs/05-feature-matrix.md) | Word features × implementation tier |
@@ -106,7 +151,7 @@ def forecast(y, alpha=0.3):
 | 8 | [Decisions & open questions](docs/08-open-questions.md) | Decision log and what is still open |
 | 9 | [Postponed features](docs/09-postponed.md) | What is left out on purpose, and known gaps |
 
-## Development status
+### Development status
 
 Milestones M0–M8 are done (see the [roadmap](docs/06-roadmap.md)): styles and style sheets, lists with
 real Word numbering, tables, pictures, captions and cross-references, fields, notes, math, code, citations, sections,
@@ -115,7 +160,7 @@ opens in Word, a command reference, guides and `redocx explain`, and (M8) genera
 input and output, JSON diagnostics and `--root`. The grammar is frozen since 0.1.0; see the
 [changelog](CHANGELOG.md).
 
-## Development
+### Running examples
 
 See [CONTRIBUTING](CONTRIBUTING.md) for what a change includes and how it is checked.
 
