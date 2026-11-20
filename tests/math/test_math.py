@@ -167,7 +167,7 @@ def test_colour_values(spec: str, rgb: str) -> None:
         (r"\textcolor[hsb]{1,1,1}{x}", "unknown colour model `hsb`"),
         (r"\textcolor[HTML]{red}{x}", "`red` is not a `HTML` colour"),
         (r"\textcolor{red!150}{x}", "`150` is not a percentage"),
-        (r"x^\color{red}y", "`\\color` colours the rest of a group"),
+        (r"x^\color{red}y", "`\\color` applies to the rest of a group"),
     ],
 )
 def test_colour_errors(formula: str, message: str) -> None:

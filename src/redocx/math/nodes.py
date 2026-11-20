@@ -271,6 +271,20 @@ def _colored_value(value: object, color: str) -> object:
     )
 
 
+def styled(row: Row, style: str | None, script: str | None) -> Row:
+    """The row with a font style on its math text (\\mathbf{...}, \\mathbb{...}); a script's
+    base takes it too, text runs do not."""
+
+    def apply(node: Node) -> Node:
+        if isinstance(node, Run) and not node.normal:
+            return replace(node, style=style, script=script or node.script)
+        if isinstance(node, Scripts):
+            return replace(node, base=styled(node.base, style, script))
+        return node
+
+    return tuple(apply(n) for n in row)
+
+
 def shaded(row: Row, shade: str) -> Row:
     """The row with every run in it, at any depth, shaded in `shade` unless it has a shade of
     its own: math inside \\colorbox{...}{$...$}. Word shades runs, not objects."""

@@ -22,7 +22,7 @@ Check in Word first.
 same, but in Word's equation editor the base is `n`. The same holds for `\mathbf`, `\mathbb` and the other font
 commands. The importer avoids it by writing `{\mathrm{sin}}^2`.
 
-Fix: in `math/parser.py` (`_Parser.atom`), treat a font command's argument as the base, as for `{…}`. This changes
+Fix: in `math/core.py` (`Parser.atom`), treat a font command's argument as the base, as for `{…}`. This changes
 the OMML that existing sources compile to, so it goes through the compatibility rule (Q14).
 
 ### Some math has no LaTeX form and imports as raw OMML

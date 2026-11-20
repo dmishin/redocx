@@ -14,6 +14,7 @@ import re
 import unicodedata
 
 from redocx.math import symbols as S  # noqa: N812
+from redocx.math.commands import CANCELS, OPERATORS, PHANTOMS
 from redocx.math.nodes import (
     BOX_SIDES,
     Accent,
@@ -43,7 +44,7 @@ from redocx.math.nodes import (
     walk,
 )
 from redocx.math.omml import _Writer, omml  # pyright: ignore[reportPrivateUsage]
-from redocx.math.parser import CANCELS, OPERATORS, PHANTOMS, MathError, parse_math
+from redocx.math.parser import MathError, parse_math
 from redocx.math.read import raw_xml
 from redocx.ooxml.xml import Element
 
@@ -221,7 +222,7 @@ def _single_atom(row: Row) -> bool:
 
 def _stops_operand(rest: Row) -> bool:
     """Whether what follows a big operator or function ends its operand: nothing, `&`, or a
-    relation, `+` or `-` (math/parser.py `operand`)."""
+    relation, `+` or `-` (math/core.py `Parser.operand`)."""
     if not rest or isinstance(rest[0], Align):
         return True
     first = rest[0]

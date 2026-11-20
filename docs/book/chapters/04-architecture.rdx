@@ -55,7 +55,9 @@ src/redocx/
   ir.py          IR node dataclasses; ir_json.py: the one-way JSON dump (--emit-ir)
   values.py      units and colours
   escape.py      data escaped as markup, string bodies or option values, for generated source
-  math/          LaTeX-subset parser → OMML; read.py: OMML → math tree (import)
+  math/          LaTeX-subset parser → OMML; parser.py: entry; core.py: scanning, arguments, sequences;
+                 commands.py: COMMAND TABLE (name → handler) and group switches; symbols.py: characters;
+                 omml.py: writer; read.py: OMML → math tree (import); latex.py: math tree → LaTeX
   highlight.py   Pygments → runs + generated code styles
   bibliography.py  BibTeX / CSL-JSON and citeproc-py
   std/           standard macro library (.rdx files: callout, signature)
