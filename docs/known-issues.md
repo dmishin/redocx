@@ -63,18 +63,16 @@ is only less readable than hand-written source. Fix: spaces around relations and
 ### LaTeX commands the subset does not have
 
 `tools/math-bench/make_bench.py` compiles the 349 formulas of `tools/math-bench/formulas.json` (written without
-regard to what redocx supports) and puts each next to its LaTeX picture in `tools/math-bench/out/bench.docx`. On the
-first run, redocx rejected 112. Every rejection is "unknown math command" or
-"unknown environment" (RDX0311). By kind, with a rough cost:
+regard to what redocx supports) and puts each next to its LaTeX picture in `tools/math-bench/out/bench.docx`.
+redocx rejects 72 of them, each with "unknown math command" or "unknown environment" (RDX0311). Every formula it
+accepts builds without a warning and passes the schemas. Counting only the first error of each formula, by kind,
+with a rough cost:
 
-- Symbols only, a table entry each in `math/symbols.py`: `\varkappa`, `\varGamma` (and the other `\var` capitals),
-  `\hslash`, `\Bbbk`, `\sqcup`, `\sqsubset`, `\dashv`, `\oslash`, `\boxplus`, `\intercal`, `\smallsetminus`,
-  `\leftrightharpoons`, `\Uparrow`, `\nrightarrow`, `\nsubseteq`, `\gtrapprox`, `\eqqcolon`, `\measuredangle`,
-  `\blacksquare`, `\maltese`, `\clubsuit`, `\backprime`, `\dotsb`, `\iiiint`, `\idotsint`, `\oiint`,
-  `\ointctrclockwise`, `\ulcorner`, `\ddddot`; `\Updownarrow` and `\backslash` as delimiters; `\biggm`.
-- Spacing, as Unicode spaces or nothing: `\enspace`, `\thickspace`, `\hspace{…}`, `\mkern`, `\mathstrut`.
-- Functions and operators: `\bmod`, `\pmod`, `\mod`, `\varlimsup`, `\injlim`, `\mathopen`, `\mathbin`,
-  `\mathrel`, `\mathnormal`.
+- Symbols: a long tail of AMS symbols is still missing (`\Lsh`, `\lll`, `\bigcirc`, `\Finv`, ...). Each is one
+  entry in `math/symbols.py`, plus `RELATIONS` for a relation.
+- Spacing with a size: `\hspace{…}`, `\mkern`. They need a length turned into a Unicode space.
+- Functions: `\varlimsup`, `\injlim` (a function name with a bar or two words), `\idotsint` (two integral
+  signs with dots, no single character).
 - Structures that map to an OMML object:
   - `\phantom`, `\smash` (`m:phant`);
   - `\boxed`, `\fbox` (`m:borderBox`);
@@ -84,7 +82,8 @@ first run, redocx rejected 112. Every rejection is "unknown math command" or
   - `\middle` (separators in `m:d`);
   - `\substack` and `subarray` (a one-column `m:eqArr` or matrix);
   - `\genfrac`, `\over`, `\choose`;
-  - `\leftroot`.
+  - `\leftroot`;
+  - `\mathclap` and the other overlaps.
 - Environments: `alignedat`, `multlined`, `dcases`, `dcases*`, `rcases`, `pmatrix*`, `bmatrix*`; `\hline`,
   `\cline` and `\hdotsfor` in arrays.
 - Text and font switches: `\textsf`, `\textsc`, `\rm` and the other old switches.

@@ -32,13 +32,22 @@ from redocx.math.nodes import (
     Scripts,
 )
 
+PASS_THROUGH = frozenset(
+    "mathord mathbin mathrel mathopen mathclose mathpunct mathinner mathnormal".split()
+)
+"""Commands whose argument is written as it is: they set TeX spacing classes, which Word
+decides itself, or the default math font."""
+
+QUAD, THICK = "\N{EM SPACE}", "\N{THREE-PER-EM SPACE}"
+
 KNOWN_COMMANDS = sorted(
     {
         *S.GREEK, *S.UPPER_GREEK, *S.SYMBOLS, *S.NARY, *S.FUNCTIONS, *S.ACCENTS, *S.FONTS, *S.TEXT,
         *S.SIZED, *S.IGNORED, *(k for k in S.SPACES if k.isalpha()),
         "frac", "dfrac", "tfrac", "cfrac", "binom", "dbinom", "tbinom", "sqrt", "operatorname",
         "mathop", "overline", "underline", "overbrace", "underbrace", "overset", "underset",
-        "stackrel", "left", "right", "begin", "end", "not", "ooxml",
+        "stackrel", "left", "right", "begin", "end", "not", "ooxml", "bmod", "pmod", "mod", "pod",
+        *PASS_THROUGH,
     }
 )  # fmt: skip
 
@@ -394,6 +403,16 @@ class _Parser:
         if name in ("overset", "stackrel", "underset"):
             lim, e = self.group(), self.group()
             return [Limit("low" if name == "underset" else "upp", e, lim)]
+        if name in PASS_THROUGH:
+            return list(self.group())
+        if name == "bmod":
+            return [Run(THICK), Run("mod", style="p"), Run(THICK)]
+        if name == "mod":
+            return [Run(QUAD), Run("mod", style="p"), Run(THICK)]
+        if name == "pmod":
+            return [Run(QUAD), Delim("(", ")", (Run("mod", style="p"), Run(THICK), *self.group()))]
+        if name == "pod":
+            return [Run(QUAD), Delim("(", ")", self.group())]
         if name in S.FONTS:
             style, script = S.FONTS[name]
             return list(_styled(self.group(), style, script))

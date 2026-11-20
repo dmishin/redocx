@@ -597,14 +597,14 @@ $$\begin{aligned}
 |------|----------|
 | Scripts | `x^2`, `x_i`, `x_i^2`, `x'`, `x''`, `f'^2`; `{…}` groups (`{ab}^2` puts the script on the whole group) |
 | Fractions, roots | `\frac` (`\dfrac`, `\tfrac`, `\cfrac`), `\binom`, `\sqrt`, `\sqrt[n]` |
-| Big operators | `\sum \prod \coprod \int \iint \iiint \oint \bigcup \bigcap \bigvee \bigwedge \bigoplus \bigotimes \bigodot`, with `\limits` / `\nolimits` |
-| Functions | `\sin \cos \tan \log \ln \exp \lim \max \min \sup \inf \det \gcd …`, `\operatorname`, `\mathop` |
+| Big operators | `\sum \prod \coprod \int \iint \iiint \oint \bigcup \bigcap \bigvee \bigwedge \bigoplus \bigotimes \bigodot`, `\iiiint \oiint \oiiint \fint …`, with `\limits` / `\nolimits` |
+| Functions | `\sin \cos \tan \log \ln \exp \lim \max \min \sup \inf \det \gcd …`, `\operatorname`, `\mathop`; `\bmod \pmod \mod \pod` |
 | Delimiters | `\left … \right` with `( ) [ ] \{ \} \| \langle \rangle \lfloor \rfloor \lceil \rceil .`; `\big(` and friends |
 | Environments | `matrix pmatrix bmatrix Bmatrix vmatrix Vmatrix array cases aligned align split gathered`; `&` and `\\` |
 | Accents, bars | `\hat \bar \tilde \vec \dot \ddot \check \breve \acute \grave`, `\overline \underline \overbrace \underbrace`, `\overset \underset \stackrel` |
-| Fonts, text | `\mathrm \mathbf \mathit \boldsymbol \mathbb \mathcal \mathfrak \mathsf \mathtt`, `\text` |
-| Symbols | Greek letters (upper-case upright), relations, arrows, operators, `\infty \partial \nabla \forall \exists …`, `\not` |
-| Spacing | `\, \: \; \quad \qquad \ ~`; `\!` is ignored |
+| Fonts, text | `\mathrm \mathbf \mathit \boldsymbol \mathbb \mathcal \mathfrak \mathsf \mathtt`, `\text`; `\mathbin \mathrel \mathopen \mathclose \mathord \mathpunct \mathinner \mathnormal` give their argument as it is |
+| Symbols | Greek letters (upper-case upright, `\varGamma` … italic), relations, arrows, operators, `\infty \partial \nabla \forall \exists …`, `\not` |
+| Spacing | `\, \: \; \quad \qquad \ ~`, `\thinspace \medspace \thickspace \enspace`; `\!`, `\negthinspace …` and `\mathstrut` are ignored |
 
 ## 3.15 Code blocks
 

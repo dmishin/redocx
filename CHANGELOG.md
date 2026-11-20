@@ -11,6 +11,9 @@ anything that would change it is listed here first as a deprecation warning.
   the schema requires; what is missing is an error, `RDX0402`, and nothing is written.
 - **Math (fix):** bold italic text in a formula (`m:nor` with `w:b` and `w:i`) kept neither; it now keeps both.
 - **Math:** `f'^2` is accepted and means `f^{\prime 2}`, as in LaTeX.
+- **Math:** more symbols (`\sqcup`, `\dashv`, `\varGamma` and the other italic capitals, `\Updownarrow`,
+  `\oiint`, `\ddddot`, ...), the spaces `\thinspace` to `\enspace`, `\bmod`, `\pmod`, `\mod`, `\pod`, and
+  `\mathbin`, `\mathrel` and the other class commands, which give their argument as it is.
 - **Import:** equations come back as LaTeX (`\m{…}`, `$$ … $$`). What the LaTeX subset cannot say is kept as
   `\ooxml{…}` inside the formula, or the whole equation as `\raw[ooxml]{<m:oMath>…}`. Numbered equations come
   back numbered, labelled `{#eq:…}` when a cross-reference points at them; `--check` compares every equation.

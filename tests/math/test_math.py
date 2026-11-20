@@ -51,6 +51,48 @@ def test_a_superscript_after_primes_joins_them() -> None:
             parse_math(formula)
 
 
+def test_more_symbols_spaces_and_operators() -> None:
+    assert parse_math(r"\varGamma\Gamma\varkappa") == (
+        Run("Γ"),
+        Run("Γ", style="p"),
+        Run("ϰ"),
+    )
+    assert parse_math(r"A \sqcup B \dashv \Updownarrow") == (
+        Run("A"),
+        Run("⊔"),
+        Run("B"),
+        Run("⊣"),
+        Run("⇕"),
+    )
+    assert parse_math(r"a\enspace b\negthinspace c\mathstrut") == (
+        Run("a"),
+        Run("\N{EN SPACE}"),
+        Run("b"),
+        Run("c"),
+    )
+    assert parse_math(r"\mathbin{\star}\mathrel{=}") == (Run("⋆"), Run("="))
+    (nary,) = parse_math(r"\oiint_S f")
+    assert isinstance(nary, Nary) and (nary.chr, nary.lim_loc) == ("∯", "subSup")  # noqa: PT018
+    assert parse_math(r"\left\backslash x \right\Uparrow") == (Delim("\\", "⇑", (Run("x"),)),)
+    assert parse_math(r"\biggm|") == (Run("|"),)
+
+
+def test_modulo() -> None:
+    mod = Run("mod", style="p")
+    assert parse_math(r"a \bmod b") == (
+        Run("a"),
+        Run("\N{THREE-PER-EM SPACE}"),
+        mod,
+        Run("\N{THREE-PER-EM SPACE}"),
+        Run("b"),
+    )
+    assert parse_math(r"a \pmod{n}") == (
+        Run("a"),
+        Run("\N{EM SPACE}"),
+        Delim("(", ")", (mod, Run("\N{THREE-PER-EM SPACE}"), Run("n"))),
+    )
+
+
 def test_symbols_and_text() -> None:
     assert parse_math(r"\alpha \leq \Omega - 1") == (
         Run("α"),
