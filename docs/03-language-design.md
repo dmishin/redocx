@@ -591,6 +591,11 @@ $$\begin{aligned}
   object with no form here is printed as `\ooxml{…}`. Word's numbered equations come back numbered, labelled
   `{#eq:…}` when a REF points at them.
 
+Colour goes on every run and object inside (`w:color`, on an object in `m:ctrlPr`, which colours its bar,
+sign or brackets); the innermost colour wins. `\colorbox` shades text (`w:shd`). Word shades a whole equation
+when its first run is shaded, so a formula that starts with `\colorbox` gets an invisible zero-width space in
+front.
+
 **The supported subset** (`redocx.math`):
 
 | Kind | Commands |
@@ -603,6 +608,7 @@ $$\begin{aligned}
 | Environments | `matrix pmatrix bmatrix Bmatrix vmatrix Vmatrix array cases aligned align split gathered`; `&` and `\\` |
 | Accents, bars | `\hat \bar \tilde \vec \dot \ddot \check \breve \acute \grave`, `\overline \underline \overbrace \underbrace`, `\overset \underset \stackrel` |
 | Boxes, phantoms | `\boxed \fbox`; `\cancel \bcancel \xcancel`, `\cancelto` (a warning: Word has no arrow, so the value is a superscript); `\phantom \hphantom \vphantom \smash` |
+| Colour | `\textcolor{red}{…}`, `{\color{red} …}` (the rest of the group), `\colorbox{yellow}{text}`, `\fcolorbox{red}{yellow}{text}`; xcolor's base names and mixes (`red!30`, `red!50!blue`), `[HTML]`, `[rgb]`, `[RGB]`, `[cmyk]`, `[gray]` |
 | Fonts, text | `\mathrm \mathbf \mathit \boldsymbol \mathbb \mathcal \mathfrak \mathsf \mathtt`, `\text`; `\mathbin \mathrel \mathopen \mathclose \mathord \mathpunct \mathinner \mathnormal` give their argument as it is |
 | Symbols | Greek letters (upper-case upright, `\varGamma` … italic), relations, arrows, operators, `\infty \partial \nabla \forall \exists …`, `\not` |
 | Spacing | `\, \: \; \quad \qquad \ ~`, `\thinspace \medspace \thickspace \enspace`; `\!`, `\negthinspace …` and `\mathstrut` are ignored |

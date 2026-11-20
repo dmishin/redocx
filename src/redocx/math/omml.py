@@ -31,10 +31,13 @@ from redocx.math.nodes import (
     Row,
     Run,
     Scripts,
+    same_format,
 )
-from redocx.ooxml.xml import E, Element, parse_fragment
+from redocx.ooxml.xml import E, Element, parse_fragment, qn
 
 MATH_FONT = "Cambria Math"
+SHADING_GUARD = "\N{ZERO WIDTH SPACE}"
+"""The run in front of an equation that starts with a shaded run."""
 DEFAULT_ACCENT = "̂"
 _STRIKES = {"h": "H", "v": "V", "bltr": "BLTR", "tlbr": "TLBR"}
 
@@ -45,6 +48,16 @@ def _math_rpr(italic: bool = False) -> Element:
         E("w:rFonts", {"w:ascii": MATH_FONT, "w:hAnsi": MATH_FONT}),
         E("w:i") if italic else None,
     )
+
+
+def _colors(color: str | None, shade: str | None) -> list[Element]:
+    """w:color and w:shd for a run's w:rPr, in schema order (after w:b and w:i)."""
+    out: list[Element] = []
+    if color is not None:
+        out.append(E("w:color", {"w:val": color}))
+    if shade is not None:
+        out.append(E("w:shd", {"w:val": "clear", "w:color": "auto", "w:fill": shade}))
+    return out
 
 
 def _ctrl() -> Element:
@@ -108,6 +121,7 @@ class _Writer:
             if run.normal
             else _math_rpr()
         )
+        text_props.extend(_colors(run.color, run.shade))
         if not len(text_props):
             text_props = None
         space = {"xml:space": "preserve"} if run.text != run.text.strip() or not run.text else None
@@ -116,6 +130,16 @@ class _Writer:
         )
 
     def node(self, node: Node) -> Element:
+        element = self.object(node)
+        if not isinstance(node, Run | Align | Raw) and node.color is not None:
+            # The colour of the object's own marks (fraction bar, radical sign, brackets)
+            # is the colour of its control properties, as Word writes it.
+            ctrl = element[0].find(qn("m:ctrlPr"))
+            if ctrl is not None:
+                ctrl[0].extend(_colors(node.color, None))
+        return element
+
+    def object(self, node: Node) -> Element:
         match node:
             case Run():
                 return self.run(node)
@@ -271,13 +295,8 @@ def _merge_runs(row: Row) -> Iterable[Node]:
     """Adjacent runs of the same kind as one m:r, as Word writes them."""
     pending: Run | None = None
     for node in row:
-        if (
-            isinstance(node, Run)
-            and pending is not None
-            and (pending.style, pending.script, pending.normal)
-            == (node.style, node.script, node.normal)
-        ):
-            pending = Run(pending.text + node.text, node.style, node.script, node.normal)
+        if isinstance(node, Run) and pending is not None and same_format(pending, node):
+            pending = replace(pending, text=pending.text + node.text)
             continue
         if pending is not None:
             yield pending
@@ -302,6 +321,11 @@ def omml(
     `number` gets Word's # numbering, and `bookmark` around the number."""
     writer = _Writer(bookmark_id)
     content = [writer.numbered(row, number, bookmark)] if number is not None else writer.row(row)
+    first = content[0] if content else None
+    if first is not None and first.find(f"{qn('w:rPr')}/{qn('w:shd')}") is not None:
+        # Word shades the whole equation when its first run is shaded (\colorbox at the
+        # start); an invisible run in front keeps the shading to that run.
+        content.insert(0, writer.run(Run(SHADING_GUARD)))
     math = E("m:oMath", *content)
     return E("m:oMathPara", math) if display else math
 

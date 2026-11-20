@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import re
+from collections.abc import Iterable
+
 GREEK = {
     "alpha": "α", "beta": "β", "gamma": "γ", "delta": "δ", "epsilon": "ϵ", "varepsilon": "ε",
     "zeta": "ζ", "eta": "η", "theta": "θ", "vartheta": "ϑ", "iota": "ι", "kappa": "κ",
@@ -192,3 +195,74 @@ RELATIONS = frozenset(
     "⇋ ⇑ ⇓ ⇕ ↛ ↚ ⇏ ⇍ ⊩ ⊪ ⊀ ⊁ ≼ ≽ ⩴ ⊲ ⊳ ⊴ ⊵ ⇎ ↮ ⇝ ≜ ∷ ↠ ↞ ⊬ ⊭ ≊ ↣ ↢ ∽ ⋍ ⋈ ↷ ↶ ⨝ ≂ ↺ ↻".split()
 ) | {"+", "−", "±", "∓"}
 """Where the operand of a big operator ends (relations, commas, + and -)."""
+
+COLORS = {
+    "black": "000000", "white": "FFFFFF", "red": "FF0000", "green": "00FF00", "blue": "0000FF",
+    "cyan": "00FFFF", "magenta": "FF00FF", "yellow": "FFFF00", "gray": "808080",
+    "darkgray": "404040", "lightgray": "BFBFBF", "brown": "BF8040", "lime": "BFFF00",
+    "olive": "808000", "orange": "FF8000", "pink": "FFBFBF", "purple": "BF0040",
+    "teal": "008080", "violet": "800080",
+}  # fmt: skip
+"""The xcolor base colours, as RRGGBB."""
+
+
+def color(value: str, model: str | None = None) -> str:
+    """An xcolor colour as RRGGBB: a name, a mix (red!30, red!50!blue), or a value in a
+    model ([HTML]{FF8000}, [rgb]{1,0.5,0}, [RGB]{255,128,0}, [cmyk]{0,0.5,1,0}, [gray]{0.5}). Raises
+    ValueError with a short message."""
+    if model is None:
+        return _mix(value)
+    numbers = [n.strip() for n in value.split(",")]
+    try:
+        if model == "HTML" and re.fullmatch(r"[0-9A-Fa-f]{6}", value):
+            return value.upper()
+        if model == "rgb" and len(numbers) == 3:
+            return _hex(float(n) * 255 for n in numbers)
+        if model == "RGB" and len(numbers) == 3:
+            return _hex(float(n) for n in numbers)
+        if model == "cmyk" and len(numbers) == 4:
+            c, m, y, k = (float(n) for n in numbers)
+            return _hex(255 * (1 - v) * (1 - k) for v in (c, m, y))
+        if model == "gray" and len(numbers) == 1:
+            return _hex([float(numbers[0]) * 255] * 3)
+    except ValueError:
+        pass
+    if model not in ("HTML", "rgb", "RGB", "cmyk", "gray"):
+        raise ValueError(f"unknown colour model `{model}`")
+    raise ValueError(f"`{value}` is not a `{model}` colour")
+
+
+def _mix(expression: str) -> str:
+    """red, red!30 (30% red, the rest white), red!30!blue (30% red, the rest blue)."""
+    parts = expression.split("!")
+    current = _named(parts[0])
+    rest = parts[1:]
+    while rest:
+        try:
+            percent = float(rest[0])
+        except ValueError:
+            raise ValueError(f"`{expression}` is not a colour mix such as red!30") from None
+        other = _named(rest[1]) if len(rest) > 1 else "FFFFFF"
+        if not 0 <= percent <= 100:
+            raise ValueError(f"`{rest[0]}` is not a percentage")
+        current = _hex(
+            int(current[i : i + 2], 16) * percent / 100
+            + int(other[i : i + 2], 16) * (100 - percent) / 100
+            for i in (0, 2, 4)
+        )
+        rest = rest[2:]
+    return current
+
+
+def _named(name: str) -> str:
+    name = name.strip()
+    if name not in COLORS:
+        raise ValueError(f"unknown colour `{name}`")
+    return COLORS[name]
+
+
+def _hex(values: Iterable[float]) -> str:
+    channels = [round(v) for v in values]
+    if any(not 0 <= c <= 255 for c in channels):
+        raise ValueError("a colour value is out of range")
+    return "".join(f"{c:02X}" for c in channels)

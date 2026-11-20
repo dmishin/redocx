@@ -37,6 +37,7 @@ The supported LaTeX:
 | Environments | `matrix pmatrix bmatrix Bmatrix vmatrix Vmatrix array cases aligned align split gathered` |
 | Accents | `\hat \bar \tilde \vec \dot \ddot`, `\overline \underline \overbrace \underbrace`, `\overset \underset` |
 | Boxes, phantoms | `\boxed \fbox`, `\cancel \bcancel \xcancel \cancelto`, `\phantom \hphantom \vphantom \smash` |
+| Colour | `\textcolor{red}{…}`, `{\color{blue} …}`, `\colorbox{yellow}{text}`, `\fcolorbox{red}{yellow}{text}`; names, `red!30`, `[HTML]{00A0FF}`, `[rgb]{1,0.5,0}` |
 | Fonts, text | `\mathrm \mathbf \mathit \boldsymbol \mathbb \mathcal \mathfrak \mathsf \mathtt`, `\text{…}` |
 | Symbols, spacing | Greek letters, relations, arrows, `\infty \partial \nabla \forall \exists`, `\not`; `\, \: \; \enspace \quad \qquad` |
 

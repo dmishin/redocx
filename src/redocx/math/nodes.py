@@ -26,6 +26,10 @@ class Run:
     """m:scr: double-struck, script, fraktur, sans-serif, monospace."""
     normal: bool = False
     """Ordinary text (\\text{...}): the document's font, not math letters (m:nor)."""
+    color: str | None = None
+    """The text colour as RRGGBB (w:color); None is automatic."""
+    shade: str | None = None
+    """The background as RRGGBB (w:shd), from \\colorbox."""
 
 
 @dataclass(frozen=True)
@@ -39,12 +43,16 @@ class Frac:
     den: Row
     kind: str = "bar"
     """bar | noBar (binomials) | lin (a/b on one line)."""
+    color: str | None = None
+    """The colour of its own marks (bar, sign, brackets) as RRGGBB, from m:ctrlPr."""
 
 
 @dataclass(frozen=True)
 class Rad:
     e: Row
     degree: Row | None = None
+    color: str | None = None
+    """The colour of its own marks (bar, sign, brackets) as RRGGBB, from m:ctrlPr."""
 
 
 @dataclass(frozen=True)
@@ -52,6 +60,8 @@ class Scripts:
     base: Row
     sub: Row | None = None
     sup: Row | None = None
+    color: str | None = None
+    """The colour of its own marks (bar, sign, brackets) as RRGGBB, from m:ctrlPr."""
 
 
 @dataclass(frozen=True)
@@ -64,6 +74,8 @@ class Nary:
     e: Row
     lim_loc: str
     """undOvr (limits above and below) | subSup (beside)."""
+    color: str | None = None
+    """The colour of its own marks (bar, sign, brackets) as RRGGBB, from m:ctrlPr."""
 
 
 @dataclass(frozen=True)
@@ -71,6 +83,8 @@ class Delim:
     beg: str
     end: str
     e: Row
+    color: str | None = None
+    """The colour of its own marks (bar, sign, brackets) as RRGGBB, from m:ctrlPr."""
 
 
 @dataclass(frozen=True)
@@ -79,6 +93,8 @@ class Func:
 
     name: Row
     e: Row
+    color: str | None = None
+    """The colour of its own marks (bar, sign, brackets) as RRGGBB, from m:ctrlPr."""
 
 
 @dataclass(frozen=True)
@@ -88,12 +104,16 @@ class Limit:
     kind: str
     e: Row
     lim: Row
+    color: str | None = None
+    """The colour of its own marks (bar, sign, brackets) as RRGGBB, from m:ctrlPr."""
 
 
 @dataclass(frozen=True)
 class Accent:
     chr: str
     e: Row
+    color: str | None = None
+    """The colour of its own marks (bar, sign, brackets) as RRGGBB, from m:ctrlPr."""
 
 
 @dataclass(frozen=True)
@@ -101,6 +121,8 @@ class Bar:
     pos: str
     """top (\\overline) | bot (\\underline)."""
     e: Row
+    color: str | None = None
+    """The colour of its own marks (bar, sign, brackets) as RRGGBB, from m:ctrlPr."""
 
 
 @dataclass(frozen=True)
@@ -110,6 +132,8 @@ class GroupChr:
     chr: str
     pos: str
     e: Row
+    color: str | None = None
+    """The colour of its own marks (bar, sign, brackets) as RRGGBB, from m:ctrlPr."""
 
 
 @dataclass(frozen=True)
@@ -117,6 +141,8 @@ class Matrix:
     rows: tuple[tuple[Row, ...], ...]
     align: str = "center"
     """Column alignment: center | left (cases)."""
+    color: str | None = None
+    """The colour of its own marks (bar, sign, brackets) as RRGGBB, from m:ctrlPr."""
 
 
 @dataclass(frozen=True)
@@ -124,6 +150,8 @@ class EqArr:
     """Rows of a multi-line equation (aligned, gathered); `Align` marks alignment points."""
 
     rows: tuple[Row, ...]
+    color: str | None = None
+    """The colour of its own marks (bar, sign, brackets) as RRGGBB, from m:ctrlPr."""
 
 
 BOX_SIDES = ("top", "bot", "left", "right")
@@ -140,6 +168,8 @@ class BorderBox:
     """Sides left out, in BOX_SIDES order."""
     strike: tuple[str, ...] = ()
     """Lines through it, in BOX_STRIKES order: h, v, bltr (bottom left to top right), tlbr."""
+    color: str | None = None
+    """The colour of its own marks (bar, sign, brackets) as RRGGBB, from m:ctrlPr."""
 
 
 @dataclass(frozen=True)
@@ -151,6 +181,8 @@ class Phant:
     zero_width: bool = False
     zero_ascent: bool = False
     zero_descent: bool = False
+    color: str | None = None
+    """The colour of its own marks (bar, sign, brackets) as RRGGBB, from m:ctrlPr."""
 
 
 @dataclass(frozen=True)
@@ -183,6 +215,70 @@ Node = (
     | Phant
     | Raw
 )
+
+
+def same_format(a: Run, b: Run) -> bool:
+    """Whether two runs differ only in their text (and can be one run)."""
+    return replace(a, text="") == replace(b, text="")
+
+
+def colored(row: Row, color: str) -> Row:
+    """The row in `color`: every run and object in it, at any depth, that has no colour of
+    its own (\\textcolor, \\color)."""
+    return tuple(_colored(node, color) for node in row)
+
+
+def _colored(node: Node, color: str) -> Node:
+    if isinstance(node, Align | Raw):
+        return node
+    changes: dict[str, object] = {
+        f.name: _colored_value(getattr(node, f.name), color)
+        for f in fields(node)
+        if f.name != "color"
+    }
+    if node.color is None:
+        changes["color"] = color
+    return replace(node, **changes)
+
+
+def _colored_value(value: object, color: str) -> object:
+    if not isinstance(value, tuple):
+        return value
+    items = cast("tuple[object, ...]", value)
+    return tuple(
+        _colored(cast("Node", item), color) if is_dataclass(item) else _colored_value(item, color)
+        for item in items
+    )
+
+
+def uncolored(row: Row, color: str) -> Row:
+    """The row without `color` where it has it, at any depth: the inverse of `colored`."""
+    return tuple(_uncolored(node, color) for node in row)
+
+
+def _uncolored(node: Node, color: str) -> Node:
+    if isinstance(node, Align | Raw):
+        return node
+    changes: dict[str, object] = {
+        f.name: _uncolored_value(getattr(node, f.name), color)
+        for f in fields(node)
+        if f.name != "color"
+    }
+    if node.color == color:
+        changes["color"] = None
+    return replace(node, **changes)
+
+
+def _uncolored_value(value: object, color: str) -> object:
+    if not isinstance(value, tuple):
+        return value
+    items = cast("tuple[object, ...]", value)
+    return tuple(
+        _uncolored(cast("Node", item), color)
+        if is_dataclass(item)
+        else _uncolored_value(item, color)
+        for item in items
+    )
 
 
 def walk(row: Row) -> Iterator[Node]:
@@ -218,11 +314,7 @@ def canonical(row: Row) -> Row:
         last = out[-1] if out else None
         if isinstance(node, Align) and isinstance(last, Align):
             continue
-        if (
-            isinstance(node, Run)
-            and isinstance(last, Run)
-            and (last.style, last.script, last.normal) == (node.style, node.script, node.normal)
-        ):
+        if isinstance(node, Run) and isinstance(last, Run) and same_format(last, node):
             out[-1] = replace(last, text=last.text + node.text)
             continue
         out.append(node)

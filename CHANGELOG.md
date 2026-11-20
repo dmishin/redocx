@@ -6,6 +6,9 @@ anything that would change it is listed here first as a deprecation warning.
 
 ## Unreleased
 
+- **Math:** colour: `\textcolor`, `\color`, `\colorbox` and `\fcolorbox`, with xcolor's base names, mixes
+  (`red!30`) and the `HTML`, `rgb`, `RGB`, `cmyk` and `gray` models. Import reads coloured and shaded math
+  and prints it with these commands.
 - **Math:** boxes and phantoms: `\boxed`, `\fbox`, `\cancel`, `\bcancel`, `\xcancel` (Word's border box) and
   `\phantom`, `\hphantom`, `\vphantom`, `\smash` (Word's phantom). `\cancelto` is a warning: Word has no
   arrow, so the value is written as a superscript. Import prints them as these commands.

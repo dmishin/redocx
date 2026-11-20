@@ -34,7 +34,7 @@ from redocx.ooxml.integrity import math_problems, package_problems
 from redocx.ooxml.validate import schema
 from redocx.ooxml.writer import build_package
 from redocx.ooxml.xml import E, nsmap
-from tests.math.test_read import math_runs, text_runs
+from tests.math.test_read import colors, math_runs, text_runs
 
 
 def _rows(children: st.SearchStrategy[Node]) -> st.SearchStrategy[Row]:
@@ -46,7 +46,7 @@ def _objects(children: st.SearchStrategy[Node]) -> st.SearchStrategy[Node]:
     row = _rows(children)
     maybe = st.none() | row
     return st.one_of(
-        st.builds(Frac, row, row, st.sampled_from(["bar", "noBar", "lin", "skw"])),
+        st.builds(Frac, row, row, st.sampled_from(["bar", "noBar", "lin", "skw"]), color=colors),
         st.builds(Rad, row, maybe),
         st.builds(Scripts, row, maybe, maybe),
         st.builds(
@@ -59,6 +59,7 @@ def _objects(children: st.SearchStrategy[Node]) -> st.SearchStrategy[Node]:
             row,
             st.sampled_from([(), BOX_SIDES, ("top",)]),
             st.sampled_from([(), ("bltr",), ("bltr", "tlbr"), ("h",)]),
+            color=colors,
         ),
         st.builds(Phant, row, st.booleans(), st.booleans(), st.booleans(), st.booleans()),
         st.builds(Limit, st.sampled_from(["low", "upp"]), row, row),

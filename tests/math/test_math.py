@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 import pytest
 from lxml import etree
 
@@ -24,10 +26,12 @@ from redocx.math.nodes import (
     Raw,
     Run,
     Scripts,
+    canonical,
     linear_text,
 )
 from redocx.math.omml import omml
 from redocx.math.parser import MathError, parse_formula, parse_math
+from redocx.math.read import MathReader
 from tests.support.xsd import validate_package
 
 M = "{http://schemas.openxmlformats.org/officeDocument/2006/math}"
@@ -111,6 +115,77 @@ def test_box_and_phantom_omml() -> None:
     show = element.find(f"{M}phant/{M}phantPr/{M}show")
     assert show is not None
     assert show.get(f"{M}val") == "0"
+
+
+def test_colours() -> None:
+    red, blue = "FF0000", "0000FF"
+    (scripts, plus) = parse_math(r"\textcolor{red}{x^2}+")
+    assert scripts == Scripts((Run("x", color=red),), None, (Run("2", color=red),), color=red)
+    assert plus == Run("+")
+    row = parse_math(r"a{\color{blue} b \frac{1}{2}}c")
+    assert row == (
+        Run("a"),
+        Run("b", color=blue),
+        Frac((Run("1", color=blue),), (Run("2", color=blue),), color=blue),
+        Run("c"),
+    )
+    # the innermost colour wins
+    assert parse_math(r"\textcolor{red}{a\textcolor{blue}{b}}") == (
+        Run("a", color=red),
+        Run("b", color=blue),
+    )
+    assert parse_math(r"\colorbox{yellow}{if}") == (Run("if", normal=True, shade="FFFF00"),)
+    assert parse_math(r"\fcolorbox{red}{yellow}{if}") == (
+        BorderBox((Run("if", normal=True, shade="FFFF00"),), color=red),
+    )
+
+
+@pytest.mark.parametrize(
+    ("spec", "rgb"),
+    [
+        ("{orange}", "FF8000"),
+        ("{red!50}", "FF8080"),
+        ("{red!50!blue}", "800080"),
+        ("[HTML]{00a0ff}", "00A0FF"),
+        ("[rgb]{1,0.5,0}", "FF8000"),
+        ("[RGB]{0,128,255}", "0080FF"),
+        ("[cmyk]{0,1,1,0}", "FF0000"),
+        ("[gray]{0.5}", "808080"),
+    ],
+)
+def test_colour_values(spec: str, rgb: str) -> None:
+    assert parse_math(rf"\textcolor{spec}{{x}}") == (Run("x", color=rgb),)
+
+
+@pytest.mark.parametrize(
+    ("formula", "message"),
+    [
+        (r"\textcolor{rot}{x}", "unknown colour `rot`"),
+        (r"\textcolor[hsb]{1,1,1}{x}", "unknown colour model `hsb`"),
+        (r"\textcolor[HTML]{red}{x}", "`red` is not a `HTML` colour"),
+        (r"\textcolor{red!150}{x}", "`150` is not a percentage"),
+        (r"x^\color{red}y", "`\\color` colours the rest of a group"),
+    ],
+)
+def test_colour_errors(formula: str, message: str) -> None:
+    with pytest.raises(MathError, match=re.escape(message)):
+        parse_math(formula)
+
+
+def test_colour_omml() -> None:
+    element = omml(parse_math(r"\textcolor{red}{\frac{1}{2}} \colorbox{yellow}{if}"), display=False)
+    frac = element.find(f"{M}f")
+    assert frac is not None
+    bar = frac.find(f"{M}fPr/{M}ctrlPr/{W}rPr/{W}color")
+    assert bar is not None and bar.get(f"{W}val") == "FF0000"  # noqa: PT018
+    digit = frac.find(f"{M}num/{M}r/{W}rPr/{W}color")
+    assert digit is not None and digit.get(f"{W}val") == "FF0000"  # noqa: PT018
+    shade = element.find(f"{M}r/{W}rPr/{W}shd")
+    assert shade is not None and shade.get(f"{W}fill") == "FFFF00"  # noqa: PT018
+    data, result = build(r"\m{\textcolor{red}{\sqrt{x}} + \fcolorbox{blue}{yellow}{a}}")
+    assert data is not None
+    assert result.diagnostics == ()
+    assert validate_package(data) == {}
 
 
 def test_modulo() -> None:
@@ -390,3 +465,14 @@ def test_ir_json_leaves_out_source_offsets() -> None:
     from redocx.ir_json import encode
 
     assert encode(Raw(SPRE, 3, 9)) == {"type": "Raw", "xml": SPRE}
+
+
+def test_a_shaded_first_run_is_guarded() -> None:
+    # Word shades the whole equation when its first run is shaded.
+    row = parse_math(r"\colorbox{yellow}{if} + b")
+    element = omml(row, display=False)
+    assert element[0].findtext(f"{M}t") == "\N{ZERO WIDTH SPACE}"
+    assert element[0].find(f"{W}rPr/{W}shd") is None
+    back = MathReader().equation(element)
+    assert back is not None
+    assert canonical(back) == canonical(row)

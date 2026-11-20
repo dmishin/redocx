@@ -38,7 +38,7 @@ from redocx.math.nodes import (
     Run,
     Scripts,
 )
-from redocx.math.omml import DEFAULT_ACCENT, MATH_FONT
+from redocx.math.omml import DEFAULT_ACCENT, MATH_FONT, SHADING_GUARD
 from redocx.ooxml.xml import RAW_NAMESPACES, Element
 
 M = RAW_NAMESPACES["m"]
@@ -75,9 +75,14 @@ class MathReader:
         """The formula of an m:oMath, or None when its top level cannot be read (then the
         whole equation is kept as XML by the caller)."""
         try:
-            return self.row(omath)
+            row = self.row(omath)
         except _UnsupportedError:
             return None
+        # the writer's guard in front of a shaded first run (omml.SHADING_GUARD)
+        guard = Run(SHADING_GUARD)
+        if len(row) > 1 and row[0] == guard and isinstance(row[1], Run) and row[1].shade:
+            return row[1:]
+        return row
 
     # --- rows and runs ----------------------------------------------------------------------
 
@@ -105,9 +110,12 @@ class MathReader:
                 out.append(self.keep(child))
                 continue
             try:
-                out.append(reader(self, child))
+                node = reader(self, child)
+                color = _ctrl_color(child)
             except _UnsupportedError:
                 out.append(self.keep(child))
+                continue
+            out.append(replace(node, color=color) if color is not None else node)
         return tuple(out)
 
     def keep(self, element: Element) -> Raw:
@@ -119,6 +127,7 @@ class MathReader:
         style = script = None
         normal = align = False
         bold = italic = False
+        color = shade = None
         text: list[str] = []
         for child in run:
             local = _local(child)
@@ -147,8 +156,12 @@ class MathReader:
                         on = prop.get(f"{{{W}}}val", "") in _ON
                         bold = bold or (on and name in ("b", "bCs"))
                         italic = italic or (on and name in ("i", "iCs"))
+                    elif name == "color":
+                        color = _color(prop.get(f"{{{W}}}val"))
+                    elif name == "shd":
+                        shade = _shade(prop)
                     elif name not in _RUN_IGNORED:
-                        raise _UnsupportedError(name)  # colour, size, highlight, ...
+                        raise _UnsupportedError(name)  # size, highlight, ...
             elif namespace == M and local == "t":
                 text.append(child.text or "")
             elif namespace == W and local == "proofErr":
@@ -160,7 +173,7 @@ class MathReader:
             style = {(True, True): "bi", (True, False): "b", (False, True): "i"}.get((bold, italic))
         nodes: list[Node] = [Align()] if align else []
         if joined or not align:
-            nodes.append(Run(joined, style, script, normal))
+            nodes.append(Run(joined, style, script, normal, color, shade))
         return nodes
 
     # --- arguments and properties -----------------------------------------------------------
@@ -172,6 +185,30 @@ class MathReader:
 
     def args(self, element: Element, name: str) -> Row:
         return self.arg(element, name) or ()
+
+
+def _color(value: str | None) -> str | None:
+    """A w:color value as RRGGBB, None for automatic; raises for a theme colour."""
+    if value is None or value == "auto":
+        return None
+    if not re.fullmatch(r"[0-9A-Fa-f]{6}", value):
+        raise _UnsupportedError("color")
+    return value.upper()
+
+
+def _shade(shd: Element) -> str | None:
+    """A plain w:shd background as RRGGBB; raises for patterns and theme colours."""
+    if shd.get(f"{{{W}}}val") not in ("clear", None) or any(
+        name.startswith("{") and "theme" in name for name in shd.attrib
+    ):
+        raise _UnsupportedError("shd")
+    return _color(shd.get(f"{{{W}}}fill"))
+
+
+def _ctrl_color(element: Element) -> str | None:
+    """The colour of an object's own marks: w:color in its m:ctrlPr."""
+    found = element.find(f"{_m(_local(element) + 'Pr')}/{_m('ctrlPr')}/{{{W}}}rPr/{{{W}}}color")
+    return None if found is None else _color(found.get(f"{{{W}}}val"))
 
 
 def _props(element: Element, allowed: frozenset[str]) -> dict[str, str]:

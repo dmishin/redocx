@@ -33,6 +33,7 @@ from redocx.math.nodes import (
     Row,
     Run,
     Scripts,
+    colored,
 )
 
 PASS_THROUGH = frozenset(
@@ -52,6 +53,11 @@ PHANTOMS = {
 }
 """(show, zero width, zero ascent, zero descent) of m:phant."""
 
+COLOR_HINT = (
+    "a name (red, blue, ...), a mix (red!30, red!50!blue), or [HTML]{FF8000}, "
+    "[rgb]{1,0.5,0}, [RGB]{255,128,0}, [cmyk]{0,0.5,1,0}, [gray]{0.5}"
+)
+
 QUAD, THICK = "\N{EM SPACE}", "\N{THREE-PER-EM SPACE}"
 
 KNOWN_COMMANDS = sorted(
@@ -61,7 +67,8 @@ KNOWN_COMMANDS = sorted(
         "frac", "dfrac", "tfrac", "cfrac", "binom", "dbinom", "tbinom", "sqrt", "operatorname",
         "mathop", "overline", "underline", "overbrace", "underbrace", "overset", "underset",
         "stackrel", "left", "right", "begin", "end", "not", "ooxml", "bmod", "pmod", "mod", "pod",
-        "boxed", "fbox", "cancelto", *CANCELS, *PHANTOMS,
+        "boxed", "fbox", "cancelto", *CANCELS, *PHANTOMS, "color", "textcolor", "colorbox",
+        "fcolorbox",
         *PASS_THROUGH,
     }
 )  # fmt: skip
@@ -168,6 +175,17 @@ class _Parser:
         """The text of a text-mode argument (\\text{...}, \\fbox{...})."""
         return self.raw_group().replace("\\{", "{").replace("\\}", "}").replace("\\ ", " ")
 
+    def color(self, start: int) -> str:
+        """A colour argument, [model]{value}, as RRGGBB (xcolor names and mixes, HTML, rgb,
+        RGB, gray)."""
+        model = self.optional(start)
+        value_start = self.i
+        value = self.raw_group().strip()
+        try:
+            return S.color(value, model)
+        except ValueError as e:
+            raise self.error(str(e), value_start, self.i, COLOR_HINT) from None
+
     def optional(self, start: int) -> str | None:
         """The text of an optional [...] argument, or None when there is none."""
         self.skip_space()
@@ -232,6 +250,11 @@ class _Parser:
                         f"`\\{'left' if name == 'right' else 'begin'}`",
                         end=after,
                     )
+                if name == "color":  # a switch: the rest of the group is in the colour
+                    self.i = after
+                    color = self.color(self.i - len(name) - 1)
+                    rest, stop = self.sequence(stops, align=align, opening=opening)
+                    return [*out, *colored(tuple(rest), color)], stop
             out.extend(self.atom(stops))
 
     def group(self) -> Row:
@@ -437,6 +460,20 @@ class _Parser:
             return [Limit("low" if name == "underset" else "upp", e, lim)]
         if name in PASS_THROUGH:
             return list(self.group())
+        if name == "textcolor":
+            color = self.color(start)
+            return list(colored(self.group(), color))
+        if name == "colorbox":
+            shade = self.color(start)
+            return [Run(self.text_group(), normal=True, shade=shade)]
+        if name == "fcolorbox":
+            frame, shade = self.color(start), self.color(start)
+            text = Run(self.text_group(), normal=True, shade=shade)
+            return [BorderBox((text,), color=frame)]
+        if name == "color":
+            raise self.error(
+                "`\\color` colours the rest of a group: put it inside `{...}`", start, after
+            )
         if name == "boxed":
             return [BorderBox(self.group())]
         if name == "fbox":

@@ -55,15 +55,22 @@ def read(xml: str) -> tuple[Row | None, dict[str, int]]:
 
 # --- what the writer writes reads back -----------------------------------------------------------
 
+colors = st.sampled_from([None, None, "FF0000", "0000FF"])
 texts = st.sampled_from(["x", "2", "+", "-", "α", "sin", "", "ab", " "])
 math_runs = st.builds(
     Run,
     texts,
     st.sampled_from([None, "p", "b", "bi"]),
     st.sampled_from([None, "double-struck", "script"]),
+    color=colors,
 )
 text_runs = st.builds(
-    Run, st.sampled_from(["if ", "and"]), st.sampled_from([None, "b", "i"]), normal=st.just(True)
+    Run,
+    st.sampled_from(["if ", "and"]),
+    st.sampled_from([None, "b", "i"]),
+    normal=st.just(True),
+    color=colors,
+    shade=st.sampled_from([None, None, "FFFF00"]),
 )
 
 
@@ -75,7 +82,7 @@ def _objects(children: st.SearchStrategy[Node]) -> st.SearchStrategy[Node]:
     row = _rows(children)
     some = st.lists(children, min_size=1, max_size=3).map(tuple)
     return st.one_of(
-        st.builds(Frac, row, row, st.sampled_from(["bar", "noBar", "lin"])),
+        st.builds(Frac, row, row, st.sampled_from(["bar", "noBar", "lin"]), color=colors),
         st.builds(Rad, row, st.none() | row),
         st.builds(Scripts, row, st.none() | some, some),
         st.builds(Scripts, row, some, st.none()),
@@ -96,6 +103,7 @@ def _objects(children: st.SearchStrategy[Node]) -> st.SearchStrategy[Node]:
             row,
             st.sampled_from([(), BOX_SIDES, ("top",)]),
             st.sampled_from([(), ("bltr",), ("bltr", "tlbr"), ("h",)]),
+            color=colors,
         ),
         st.builds(Phant, row, st.booleans(), st.booleans(), st.booleans(), st.booleans()),
         st.builds(Limit, st.sampled_from(["low", "upp"]), row, row),
@@ -217,7 +225,7 @@ def test_unknown_objects_are_kept_as_xml_in_place() -> None:
 def test_the_smallest_object_is_kept() -> None:
     row, kept = read(
         "<m:f><m:num><m:r><m:t>1</m:t></m:r></m:num><m:den>"
-        "<m:r><w:rPr><w:color w:val='FF0000'/></w:rPr><m:t>x</m:t></m:r>"
+        "<m:r><w:rPr><w:sz w:val='40'/></w:rPr><m:t>x</m:t></m:r>"
         "<m:d><m:dPr><m:sepChr m:val=','/></m:dPr><m:e/><m:e/></m:d>"
         "<m:f><m:fPr><m:type m:val='skw'/></m:fPr><m:num/><m:den/></m:f>"
         "</m:den></m:f>"
@@ -228,7 +236,7 @@ def test_the_smallest_object_is_kept() -> None:
     assert isinstance(frac, Frac)
     colour, delim, skewed = frac.den
     assert isinstance(colour, Raw)
-    assert "w:color" in colour.xml
+    assert "w:sz" in colour.xml
     assert isinstance(delim, Raw)
     assert "m:sepChr" in delim.xml
     assert skewed == Frac((), (), "skw")

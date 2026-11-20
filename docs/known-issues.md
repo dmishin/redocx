@@ -40,7 +40,7 @@ the subset:
 - accent, brace and big-operator characters that are not in `math/symbols.py`;
 - `m:box`, `m:sPre`, a phantom with `m:transp`, a delimiter with separators (`(a|b)`) or with `m:grow`;
 - a matrix whose last row is one empty cell (the parser drops a final empty row);
-- formatting on math text (colour, size, highlight).
+- other formatting on math text (size, highlight, theme colours).
 
 Each needs a language addition (for example `\ ` for a plain space, a command for a prescript) and is a design
 decision (docs/08) before it is code.
@@ -85,7 +85,6 @@ with a rough cost:
 - Environments: `alignedat`, `multlined`, `dcases`, `dcases*`, `rcases`, `pmatrix*`, `bmatrix*`; `\hline`,
   `\cline` and `\hdotsfor` in arrays.
 - Text and font switches: `\textsf`, `\textsc`, `\rm` and the other old switches.
-- Colour: `\color`, `\textcolor`, `\colorbox`, `\fcolorbox`.
 - Numbering: `\tag` and `\tag*`. Display equations are numbered by `\math[id=…]`, so this is a design decision
   (docs/08): ignore with a warning, or take the tag as the number.
 - No equivalent: `\mathchoice`, `\raisebox`, `\rule`, `\hbox`.

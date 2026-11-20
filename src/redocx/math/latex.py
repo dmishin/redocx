@@ -35,6 +35,9 @@ from redocx.math.nodes import (
     Run,
     Scripts,
     canonical,
+    colored,
+    uncolored,
+    walk,
 )
 from redocx.math.omml import _Writer, omml  # pyright: ignore[reportPrivateUsage]
 from redocx.math.parser import CANCELS, PHANTOMS, MathError, parse_math
@@ -79,6 +82,7 @@ _BOXES: dict[tuple[tuple[str, ...], tuple[str, ...]], str] = {
     ((), ()): "boxed",
     **{(BOX_SIDES, strike): name for name, strike in CANCELS.items()},
 }
+_COLOR_NAMES = {value: name for name, value in reversed(S.COLORS.items())}
 _PHANTOMS = {
     **{flags: name for name, flags in PHANTOMS.items()},
     (True, False, True, False): "smash[t]",
@@ -227,15 +231,54 @@ class _Printer:
         that were written as raw OMML)."""
         texts: list[str] = []
         expected: list[Node] = []
-        for i, node in enumerate(row):
+        i = 0
+        while i < len(row):
+            node = row[i]
+            color = _color_of(node)
+            if color is not None:  # the nodes in this colour, as one \textcolor
+                j = i
+                while j < len(row) and _color_of(row[j]) == color:
+                    j += 1
+                text, nodes = self.colored(row[i:j], color)
+                texts.append(text)
+                expected.extend(nodes)
+                i = j
+                continue
+            i += 1
             if isinstance(node, Align):
                 texts.append("&")
                 expected.append(node)
                 continue
-            text, nodes = self.checked(node, wrap=not _stops_operand(row[i + 1 :]))
+            text, nodes = self.checked(node, wrap=not _stops_operand(row[i:]))
             texts.append(text)
             expected.extend(nodes)
         return _join(texts), tuple(expected)
+
+    def colored(self, row: Row, color: str) -> tuple[str, Row]:
+        """Nodes in one colour as \\textcolor{...}{...}; what is inside without that colour.
+        When colouring everything inside would colour something the original did not (Word
+        can colour a fraction bar and not its digits), the nodes are raw OMML."""
+        match row:
+            case (
+                BorderBox(e=(Run(normal=True, color=None, shade=str(shade)) as text,)) as box,
+            ) if (
+                box.hide,
+                box.strike,
+            ) == ((), ()) and _plain_text(text):
+                return (
+                    f"\\fcolorbox{_color_spec(color)}{_color_spec(shade)}{{{_escaped(text.text)}}}",
+                    row,
+                )
+            case _:
+                pass
+        inside = uncolored(row, color)
+        if colored(inside, color) == row:
+            text, expected = self.row(inside)
+            # \textcolor does not reach into raw OMML: then the whole of it is raw.
+            if not any(isinstance(node, Raw) for node in walk(expected)):
+                return f"\\textcolor{_color_spec(color)}{{{text}}}", colored(expected, color)
+        pieces = [_raw(node) for node in row]
+        return _join([t for t, _ in pieces]), tuple(n for _, e in pieces for n in e)
 
     def checked(self, node: Node, *, wrap: bool = False) -> tuple[str, Row]:
         """A node as LaTeX, parsed back and compared; raw OMML when it does not match."""
@@ -430,6 +473,10 @@ class _Printer:
 
     def run(self, run: Run) -> tuple[str, Row]:
         """A run as characters and commands; characters with no form become raw OMML."""
+        if run.shade is not None:  # \colorbox holds plain text
+            if not _plain_text(run):
+                return _raw(run)
+            return f"\\colorbox{_color_spec(run.shade)}{{{_escaped(run.text)}}}", (run,)
         if run.normal:
             command = _TEXT.get(run.style) if run.script is None else None
             if command is None or "\\" in run.text:
@@ -479,6 +526,25 @@ def _char(c: str) -> str | None:
     if c.isascii() or c.isspace() or unicodedata.category(c).startswith("C"):
         return None
     return c
+
+
+def _color_spec(color: str) -> str:
+    """A colour argument: {red} for an xcolor name, else [HTML]{RRGGBB}."""
+    name = _COLOR_NAMES.get(color)
+    return f"{{{name}}}" if name else f"[HTML]{{{color}}}"
+
+
+def _plain_text(run: Run) -> bool:
+    """Whether a run is text a text-mode argument (\\colorbox{...}) can hold."""
+    return run.normal and run.style is None and run.script is None and "\\" not in run.text
+
+
+def _escaped(text: str) -> str:
+    return text.replace("{", "\\{").replace("}", "\\}")
+
+
+def _color_of(node: Node) -> str | None:
+    return None if isinstance(node, Align | Raw) else node.color
 
 
 def _primes(node: Node) -> bool:
