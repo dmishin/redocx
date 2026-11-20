@@ -13,9 +13,11 @@ from dataclasses import dataclass, replace
 
 from redocx.math import symbols as S  # noqa: N812
 from redocx.math.nodes import (
+    BOX_SIDES,
     Accent,
     Align,
     Bar,
+    BorderBox,
     Delim,
     EqArr,
     Frac,
@@ -25,6 +27,7 @@ from redocx.math.nodes import (
     Matrix,
     Nary,
     Node,
+    Phant,
     Rad,
     Raw,
     Row,
@@ -38,6 +41,17 @@ PASS_THROUGH = frozenset(
 """Commands whose argument is written as it is: they set TeX spacing classes, which Word
 decides itself, or the default math font."""
 
+CANCELS = {"cancel": ("bltr",), "bcancel": ("tlbr",), "xcancel": ("bltr", "tlbr")}
+"""Strike-outs: a box with its sides hidden and a diagonal through it."""
+
+PHANTOMS = {
+    "phantom": (False, False, False, False),
+    "hphantom": (False, False, True, True),
+    "vphantom": (False, True, False, False),
+    "smash": (True, False, True, True),
+}
+"""(show, zero width, zero ascent, zero descent) of m:phant."""
+
 QUAD, THICK = "\N{EM SPACE}", "\N{THREE-PER-EM SPACE}"
 
 KNOWN_COMMANDS = sorted(
@@ -47,6 +61,7 @@ KNOWN_COMMANDS = sorted(
         "frac", "dfrac", "tfrac", "cfrac", "binom", "dbinom", "tbinom", "sqrt", "operatorname",
         "mathop", "overline", "underline", "overbrace", "underbrace", "overset", "underset",
         "stackrel", "left", "right", "begin", "end", "not", "ooxml", "bmod", "pmod", "mod", "pod",
+        "boxed", "fbox", "cancelto", *CANCELS, *PHANTOMS,
         *PASS_THROUGH,
     }
 )  # fmt: skip
@@ -86,6 +101,8 @@ class _Parser:
     def __init__(self, text: str) -> None:
         self.s = text
         self.i = 0
+        self.warnings: list[MathError] = []
+        """What is written only approximately; the formula is still made."""
 
     # --- scanning ---------------------------------------------------------------------------
 
@@ -146,6 +163,21 @@ class _Parser:
                     return self.s[start + 1 : self.i - 1]
             self.i += 1
         raise self.error("unclosed `{`", start)
+
+    def text_group(self) -> str:
+        """The text of a text-mode argument (\\text{...}, \\fbox{...})."""
+        return self.raw_group().replace("\\{", "{").replace("\\}", "}").replace("\\ ", " ")
+
+    def optional(self, start: int) -> str | None:
+        """The text of an optional [...] argument, or None when there is none."""
+        self.skip_space()
+        if self.peek() != "[":
+            return None
+        end = self.s.find("]", self.i)
+        if end < 0:
+            raise self.error("unclosed `[`", start, self.i + 1)
+        text, self.i = self.s[self.i + 1 : end].strip(), end + 1
+        return text
 
     # --- sequences ------------------------------------------------------------------------
 
@@ -405,6 +437,30 @@ class _Parser:
             return [Limit("low" if name == "underset" else "upp", e, lim)]
         if name in PASS_THROUGH:
             return list(self.group())
+        if name == "boxed":
+            return [BorderBox(self.group())]
+        if name == "fbox":
+            return [BorderBox((Run(self.text_group(), normal=True),))]
+        if name in CANCELS:
+            return [BorderBox(self.group(), BOX_SIDES, CANCELS[name])]
+        if name == "cancelto":
+            value = self.group()
+            self.warnings.append(
+                self.error(
+                    "`\\cancelto` has no arrow in Word; the value is written as a superscript",
+                    start,
+                    after,
+                )
+            )
+            return [Scripts((BorderBox(self.group(), BOX_SIDES, ("bltr",)),), None, value)]
+        if name in PHANTOMS:
+            show, wid, asc, desc = PHANTOMS[name]
+            if name == "smash":
+                where = self.optional(start)
+                if where not in (None, "t", "b"):
+                    raise self.error("`\\smash` takes [t] or [b]", start, self.i)
+                asc, desc = where != "b", where != "t"
+            return [Phant(self.group(), show, wid, asc, desc)]
         if name == "bmod":
             return [Run(THICK), Run("mod", style="p"), Run(THICK)]
         if name == "mod":
@@ -417,9 +473,8 @@ class _Parser:
             style, script = S.FONTS[name]
             return list(_styled(self.group(), style, script))
         if name in S.TEXT:
-            text = self.raw_group().replace("\\{", "{").replace("\\}", "}").replace("\\ ", " ")
             style = {"textit": "i", "textbf": "b"}.get(name)
-            return [Run(text, style=style, normal=True)]
+            return [Run(self.text_group(), style=style, normal=True)]
         if name == "left":
             beg = self.delimiter(start)
             nodes, stop = self.sequence(frozenset({"right"}), opening=(start, after, "`\\left`"))
@@ -555,6 +610,11 @@ def _styled(row: Row, style: str | None, script: str | None) -> Row:
 def parse_math(text: str) -> Row:
     """The math tree of a formula. Rows separated by \\\\ at the top level become an
     equation array (as in a gathered display)."""
+    return parse_formula(text)[0]
+
+
+def parse_formula(text: str) -> tuple[Row, tuple[MathError, ...]]:
+    """The math tree of a formula and the warnings about it (`parse_math`)."""
     parser = _Parser(text)
     rows: list[Row] = []
     while True:
@@ -562,11 +622,12 @@ def parse_math(text: str) -> Row:
         rows.append(tuple(nodes))
         if stop == "eof":
             break
+    warnings = tuple(parser.warnings)
     if len(rows) > 1:
         if not rows[-1]:
             rows.pop()
-        return (EqArr(tuple(rows)),)
-    return rows[0]
+        return (EqArr(tuple(rows)),), warnings
+    return rows[0], warnings
 
 
-__all__ = ["MathError", "parse_math"]
+__all__ = ["MathError", "parse_formula", "parse_math"]

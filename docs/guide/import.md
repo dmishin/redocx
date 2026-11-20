@@ -22,7 +22,7 @@ The source reads like hand-written redocx: headings, lists, labels and `@referen
   into it with `\document[template=…]`. Styles, theme and lists stay exactly as they were.
 
 Equations come back as LaTeX: `\m{…}` in text, `$$ … $$` for a display equation. A part that the LaTeX subset has
-no form for (a prescript, a boxed formula, a linear fraction `a/b`) is printed as `\ooxml{…}` inside the formula,
+no form for (a prescript, a linear fraction `a/b`) is printed as `\ooxml{…}` inside the formula,
 and an equation that cannot be printed at all as `\raw[ooxml]{<m:oMath>…}`. Either way, it compiles back to the
 same equation:
 

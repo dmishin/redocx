@@ -16,9 +16,12 @@ from dataclasses import replace
 from lxml import etree
 
 from redocx.math.nodes import (
+    BOX_SIDES,
+    BOX_STRIKES,
     Accent,
     Align,
     Bar,
+    BorderBox,
     Delim,
     EqArr,
     Frac,
@@ -28,6 +31,7 @@ from redocx.math.nodes import (
     Matrix,
     Nary,
     Node,
+    Phant,
     Rad,
     Raw,
     Row,
@@ -301,6 +305,39 @@ def _eq_arr(r: MathReader, el: Element) -> Node:
     return EqArr(tuple(_alignments(r.row(row)) for row in el.findall(_m("e"))))
 
 
+_BOX_PROPS = {
+    **{f"hide{side.capitalize()}": ("hide", side) for side in BOX_SIDES},
+    **{f"strike{line.upper()}": ("strike", line) for line in BOX_STRIKES},
+}
+
+
+def _border_box(r: MathReader, el: Element) -> Node:
+    _only(el, "e")
+    props = _props(el, frozenset(_BOX_PROPS))
+    on = {_BOX_PROPS[name] for name, value in props.items() if value in _ON}
+    return BorderBox(
+        r.args(el, "e"),
+        tuple(side for side in BOX_SIDES if ("hide", side) in on),
+        tuple(line for line in BOX_STRIKES if ("strike", line) in on),
+    )
+
+
+def _phant(r: MathReader, el: Element) -> Node:
+    _only(el, "e")
+    props = _props(el, frozenset({"show", "zeroWid", "zeroAsc", "zeroDesc"}))
+
+    def flag(name: str, default: str) -> bool:
+        return props.get(name, default) in _ON
+
+    return Phant(
+        r.args(el, "e"),
+        flag("show", "1"),
+        flag("zeroWid", "0"),
+        flag("zeroAsc", "0"),
+        flag("zeroDesc", "0"),
+    )
+
+
 def _alignments(row: Row) -> Row:
     """An equation array row with Word's alignment marks, `&` in its math text, as Align."""
     out: list[Node] = []
@@ -332,6 +369,8 @@ _OBJECTS = {
     "groupChr": _group_chr,
     "m": _matrix,
     "eqArr": _eq_arr,
+    "borderBox": _border_box,
+    "phant": _phant,
 }
 
 

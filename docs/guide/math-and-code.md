@@ -36,6 +36,7 @@ The supported LaTeX:
 | Delimiters | `\left( … \right)`, with `[ ] \{ \} \| \langle \rangle \lfloor \rfloor \lceil \rceil .`; `\big(` and friends |
 | Environments | `matrix pmatrix bmatrix Bmatrix vmatrix Vmatrix array cases aligned align split gathered` |
 | Accents | `\hat \bar \tilde \vec \dot \ddot`, `\overline \underline \overbrace \underbrace`, `\overset \underset` |
+| Boxes, phantoms | `\boxed \fbox`, `\cancel \bcancel \xcancel \cancelto`, `\phantom \hphantom \vphantom \smash` |
 | Fonts, text | `\mathrm \mathbf \mathit \boldsymbol \mathbb \mathcal \mathfrak \mathsf \mathtt`, `\text{…}` |
 | Symbols, spacing | Greek letters, relations, arrows, `\infty \partial \nabla \forall \exists`, `\not`; `\, \: \; \enspace \quad \qquad` |
 
@@ -43,7 +44,7 @@ A command outside this list is an error at its place in the formula, with the ne
 
 ### Raw OMML
 
-For what LaTeX notation cannot say, such as a pre-script or a boxed term, `\ooxml{…}` puts Word's own math XML
+For what LaTeX notation cannot say, such as a pre-script, `\ooxml{…}` puts Word's own math XML
 (OMML) into a formula. The rest of the formula stays LaTeX:
 
 ```rdx

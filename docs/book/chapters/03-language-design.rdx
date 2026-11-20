@@ -447,6 +447,7 @@ $$\begin{aligned}
 | Delimiters | `\left … \right` with `( ) [ ] \{ \} | \langle \rangle \lfloor \rfloor \lceil \rceil .`; `\big(` and friends |
 | Environments | `matrix pmatrix bmatrix Bmatrix vmatrix Vmatrix array cases aligned align split gathered`; `&` and `\\` |
 | Accents, bars | `\hat \bar \tilde \vec \dot \ddot \check \breve \acute \grave`, `\overline \underline \overbrace \underbrace`, `\overset \underset \stackrel` |
+| Boxes, phantoms | `\boxed \fbox`; `\cancel \bcancel \xcancel`, `\cancelto` (a warning: Word has no arrow, so the value is a superscript); `\phantom \hphantom \vphantom \smash` |
 | Fonts, text | `\mathrm \mathbf \mathit \boldsymbol \mathbb \mathcal \mathfrak \mathsf \mathtt`, `\text`; `\mathbin \mathrel \mathopen \mathclose \mathord \mathpunct \mathinner \mathnormal` give their argument as it is |
 | Symbols | Greek letters (upper-case upright, `\varGamma` … italic), relations, arrows, operators, `\infty \partial \nabla \forall \exists …`, `\not` |
 | Spacing | `\, \: \; \quad \qquad \ ~`, `\thinspace \medspace \thickspace \enspace`; `\!`, `\negthinspace …` and `\mathstrut` are ignored |

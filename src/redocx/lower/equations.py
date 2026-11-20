@@ -10,7 +10,7 @@ from redocx.commands.bind import Args
 from redocx.lower.common import BlockHandler, Format, InlineHandler, Piece
 from redocx.math.nodes import Raw, walk
 from redocx.math.nodes import Row as MathRow
-from redocx.math.parser import MathError, parse_math
+from redocx.math.parser import MathError, parse_formula
 from redocx.syntax import ast
 from redocx.syntax.diagnostics import Code
 from redocx.syntax.source import Span
@@ -77,12 +77,17 @@ def _formula(lw: Lowering, command: ast.Command) -> tuple[str, int]:
 def _parse(lw: Lowering, text: str, start: int, span: Span) -> MathRow | None:
     if not text.strip():
         return None
+
+    def place(e: MathError) -> Span:
+        return replace(span, start=start + e.start, end=start + e.end) if start >= 0 else span
+
     try:
-        expr = parse_math(text)
+        expr, warnings = parse_formula(text)
     except MathError as e:
-        where = replace(span, start=start + e.start, end=start + e.end) if start >= 0 else span
-        lw.report(Code.MATH, e.message, where, e.hint)
+        lw.report(Code.MATH, e.message, place(e), e.hint)
         return None
+    for warning in warnings:
+        lw.warn(Code.MATH, warning.message, place(warning), warning.hint or None)
     ok = True
     for node in walk(expr):
         if isinstance(node, Raw) and (problem := _raw_problem(node.xml)) is not None:

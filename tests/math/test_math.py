@@ -8,8 +8,10 @@ from lxml import etree
 from redocx import ir
 from redocx.compiler import build, compile_source
 from redocx.math.nodes import (
+    BOX_SIDES,
     Accent,
     Align,
+    BorderBox,
     Delim,
     EqArr,
     Frac,
@@ -17,6 +19,7 @@ from redocx.math.nodes import (
     Limit,
     Matrix,
     Nary,
+    Phant,
     Rad,
     Raw,
     Run,
@@ -24,7 +27,7 @@ from redocx.math.nodes import (
     linear_text,
 )
 from redocx.math.omml import omml
-from redocx.math.parser import MathError, parse_math
+from redocx.math.parser import MathError, parse_formula, parse_math
 from tests.support.xsd import validate_package
 
 M = "{http://schemas.openxmlformats.org/officeDocument/2006/math}"
@@ -75,6 +78,39 @@ def test_more_symbols_spaces_and_operators() -> None:
     assert isinstance(nary, Nary) and (nary.chr, nary.lim_loc) == ("∯", "subSup")  # noqa: PT018
     assert parse_math(r"\left\backslash x \right\Uparrow") == (Delim("\\", "⇑", (Run("x"),)),)
     assert parse_math(r"\biggm|") == (Run("|"),)
+
+
+def test_boxes_cancels_and_phantoms() -> None:
+    x = (Run("x"),)
+    assert parse_math(r"\boxed{x}") == (BorderBox(x),)
+    assert parse_math(r"\fbox{if x}") == (BorderBox((Run("if x", normal=True),)),)
+    assert parse_math(r"\cancel{x}") == (BorderBox(x, BOX_SIDES, ("bltr",)),)
+    assert parse_math(r"\bcancel{x}") == (BorderBox(x, BOX_SIDES, ("tlbr",)),)
+    assert parse_math(r"\xcancel{x}") == (BorderBox(x, BOX_SIDES, ("bltr", "tlbr")),)
+    assert parse_math(r"\phantom{x}") == (Phant(x, show=False),)
+    assert parse_math(r"\hphantom{x}") == (Phant(x, False, False, True, True),)
+    assert parse_math(r"\vphantom{x}") == (Phant(x, False, True),)
+    assert parse_math(r"\smash{x}") == (Phant(x, True, False, True, True),)
+    assert parse_math(r"\smash[t]{x}") == (Phant(x, True, False, True, False),)
+    with pytest.raises(MathError, match="takes"):
+        parse_math(r"\smash[q]{x}")
+
+
+def test_cancelto_warns_and_writes_a_superscript() -> None:
+    row, (warning,) = parse_formula(r"\cancelto{0}{x}")
+    assert row == (Scripts((BorderBox((Run("x"),), BOX_SIDES, ("bltr",)),), None, (Run("0"),)),)
+    assert "no arrow in Word" in warning.message
+    assert (warning.start, warning.end) == (0, 9)
+
+
+def test_box_and_phantom_omml() -> None:
+    element = omml(parse_math(r"\cancel{x}\phantom{y}"), display=False)
+    tags = _tags(element)
+    for tag in ("borderBox", "hideTop", "hideBot", "hideLeft", "hideRight", "strikeBLTR"):
+        assert tag in tags, tag
+    show = element.find(f"{M}phant/{M}phantPr/{M}show")
+    assert show is not None
+    assert show.get(f"{M}val") == "0"
 
 
 def test_modulo() -> None:

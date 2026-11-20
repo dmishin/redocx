@@ -15,6 +15,7 @@ from redocx.math.nodes import (
     Accent,
     Align,
     Bar,
+    BorderBox,
     Delim,
     EqArr,
     Frac,
@@ -24,6 +25,7 @@ from redocx.math.nodes import (
     Matrix,
     Nary,
     Node,
+    Phant,
     Rad,
     Raw,
     Row,
@@ -34,6 +36,7 @@ from redocx.ooxml.xml import E, Element, parse_fragment
 
 MATH_FONT = "Cambria Math"
 DEFAULT_ACCENT = "̂"
+_STRIKES = {"h": "H", "v": "V", "bltr": "BLTR", "tlbr": "TLBR"}
 
 
 def _math_rpr(italic: bool = False) -> Element:
@@ -219,6 +222,24 @@ class _Writer:
                     E("m:eqArrPr", _ctrl()),
                     *(self.arg("m:e", r) for r in rows or ((),)),
                 )
+            case BorderBox(e=e, hide=hide, strike=strike):
+                props = E(
+                    "m:borderBoxPr",
+                    *(_val(f"m:hide{side.capitalize()}", "1") for side in hide),
+                    *(_val(f"m:strike{_STRIKES[line]}", "1") for line in strike),
+                    _ctrl(),
+                )
+                return E("m:borderBox", props, self.arg("m:e", e))
+            case Phant(e=e, show=show, zero_width=wid, zero_ascent=asc, zero_descent=desc):
+                props = E(
+                    "m:phantPr",
+                    _val("m:show", "0") if not show else None,
+                    _val("m:zeroWid", "1") if wid else None,
+                    _val("m:zeroAsc", "1") if asc else None,
+                    _val("m:zeroDesc", "1") if desc else None,
+                    _ctrl(),
+                )
+                return E("m:phant", props, self.arg("m:e", e))
             case Align():
                 return self.run(Run("&"))
             case Raw():

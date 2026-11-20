@@ -126,6 +126,33 @@ class EqArr:
     rows: tuple[Row, ...]
 
 
+BOX_SIDES = ("top", "bot", "left", "right")
+BOX_STRIKES = ("h", "v", "bltr", "tlbr")
+
+
+@dataclass(frozen=True)
+class BorderBox:
+    """A box around an expression (m:borderBox): \\boxed, or with its sides hidden and a
+    diagonal struck through it, \\cancel."""
+
+    e: Row
+    hide: tuple[str, ...] = ()
+    """Sides left out, in BOX_SIDES order."""
+    strike: tuple[str, ...] = ()
+    """Lines through it, in BOX_STRIKES order: h, v, bltr (bottom left to top right), tlbr."""
+
+
+@dataclass(frozen=True)
+class Phant:
+    """An expression that takes up space it may not show (m:phant): \\phantom, \\smash."""
+
+    e: Row
+    show: bool = True
+    zero_width: bool = False
+    zero_ascent: bool = False
+    zero_descent: bool = False
+
+
 @dataclass(frozen=True)
 class Raw:
     """OMML written as XML (`\\ooxml{...}` in a formula), kept as it is: m: elements such as
@@ -152,6 +179,8 @@ Node = (
     | GroupChr
     | Matrix
     | EqArr
+    | BorderBox
+    | Phant
     | Raw
 )
 
@@ -258,7 +287,7 @@ def linear_text(row: Row) -> str:
                 out.append(f"{linear_text(name)} {linear_text(e)}")
             case Limit(e=e, lim=lim):
                 out.append(f"{linear_text(e)}_({linear_text(lim)})")
-            case Accent(e=e) | Bar(e=e) | GroupChr(e=e):
+            case Accent(e=e) | Bar(e=e) | GroupChr(e=e) | BorderBox(e=e):
                 out.append(linear_text(e))
             case Matrix(rows=rows):
                 out.append(
@@ -266,6 +295,9 @@ def linear_text(row: Row) -> str:
                 )
             case EqArr(rows=rows):
                 out.append(" \\\\ ".join(linear_text(r) for r in rows))
+            case Phant(e=e, show=show):
+                if show:
+                    out.append(linear_text(e))
             case Align():
                 pass
             case Raw(xml=xml):

@@ -58,6 +58,8 @@ def test_what_is_printed_parses_back_to_the_same_equation(row: Row) -> None:
         r"|x| = \begin{cases} x & x \ge 0 \\ -x & \text{otherwise} \end{cases}",
         r"\begin{aligned} a &= b + c \\ &= d \end{aligned}",
         r"a \\ b",
+        r"\boxed{E = mc^2} + \cancel{x} + \bcancel{y} + \xcancel{z} + \fbox{if}",
+        r"a\phantom{x}b + \hphantom{y} + \vphantom{X} + \smash{q} + \smash[t]{p} + \smash[b]{g}",
         r"\hat{x} \vec{v} \overline{AB} \underline{y} \underbrace{a+b}_{n} \overbrace{c}^{m}",
         r"\binom{n}{k} \left\langle x \right\rangle \left( a \right. \left\{ b \right\}",
         r"\left\lfloor x \right\rfloor \left\| v \right\|",

@@ -12,9 +12,11 @@ from lxml import etree
 
 from redocx import ir
 from redocx.math.nodes import (
+    BOX_SIDES,
     Accent,
     Align,
     Bar,
+    BorderBox,
     Delim,
     EqArr,
     Frac,
@@ -24,6 +26,7 @@ from redocx.math.nodes import (
     Matrix,
     Nary,
     Node,
+    Phant,
     Rad,
     Raw,
     Row,
@@ -88,6 +91,13 @@ def _objects(children: st.SearchStrategy[Node]) -> st.SearchStrategy[Node]:
             Delim, st.sampled_from(["(", "[", "{", "|", ""]), st.sampled_from([")", "]", ""]), row
         ),
         st.builds(Func, row, row),
+        st.builds(
+            BorderBox,
+            row,
+            st.sampled_from([(), BOX_SIDES, ("top",)]),
+            st.sampled_from([(), ("bltr",), ("bltr", "tlbr"), ("h",)]),
+        ),
+        st.builds(Phant, row, st.booleans(), st.booleans(), st.booleans(), st.booleans()),
         st.builds(Limit, st.sampled_from(["low", "upp"]), row, row),
         st.builds(Accent, st.sampled_from(["̂", "̃", "⃗"]), row),
         st.builds(Bar, st.sampled_from(["top", "bot"]), row),

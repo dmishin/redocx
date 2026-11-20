@@ -38,7 +38,7 @@ the subset:
   outside parentheses (`\binom` is only the parenthesised form);
 - a matrix with left-aligned columns, except inside a left brace (`cases`);
 - accent, brace and big-operator characters that are not in `math/symbols.py`;
-- `m:box`, `m:borderBox`, `m:sPre`, `m:phant`, a delimiter with separators (`(a|b)`) or with `m:grow`;
+- `m:box`, `m:sPre`, a phantom with `m:transp`, a delimiter with separators (`(a|b)`) or with `m:grow`;
 - a matrix whose last row is one empty cell (the parser drops a final empty row);
 - formatting on math text (colour, size, highlight).
 
@@ -74,8 +74,6 @@ with a rough cost:
 - Functions: `\varlimsup`, `\injlim` (a function name with a bar or two words), `\idotsint` (two integral
   signs with dots, no single character).
 - Structures that map to an OMML object:
-  - `\phantom`, `\smash` (`m:phant`);
-  - `\boxed`, `\fbox` (`m:borderBox`);
   - `\prescript`, `\sideset` (`m:sPre`);
   - `\overrightarrow`, `\xrightarrow` and the other extensible arrows (`m:groupChr`);
   - `\overbracket`;
@@ -87,8 +85,7 @@ with a rough cost:
 - Environments: `alignedat`, `multlined`, `dcases`, `dcases*`, `rcases`, `pmatrix*`, `bmatrix*`; `\hline`,
   `\cline` and `\hdotsfor` in arrays.
 - Text and font switches: `\textsf`, `\textsc`, `\rm` and the other old switches.
-- Colour and marks: `\color`, `\textcolor`, `\colorbox`, `\fcolorbox`, `\cancel`, `\cancelto`. Word math text can
-  be coloured; it has no strike-out mark, so cancel needs a design decision.
+- Colour: `\color`, `\textcolor`, `\colorbox`, `\fcolorbox`.
 - Numbering: `\tag` and `\tag*`. Display equations are numbered by `\math[id=…]`, so this is a design decision
   (docs/08): ignore with a warning, or take the tag as the number.
 - No equivalent: `\mathchoice`, `\raisebox`, `\rule`, `\hbox`.

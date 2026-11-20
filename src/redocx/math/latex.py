@@ -14,9 +14,11 @@ import unicodedata
 
 from redocx.math import symbols as S  # noqa: N812
 from redocx.math.nodes import (
+    BOX_SIDES,
     Accent,
     Align,
     Bar,
+    BorderBox,
     Delim,
     EqArr,
     Frac,
@@ -26,6 +28,7 @@ from redocx.math.nodes import (
     Matrix,
     Nary,
     Node,
+    Phant,
     Rad,
     Raw,
     Row,
@@ -34,7 +37,7 @@ from redocx.math.nodes import (
     canonical,
 )
 from redocx.math.omml import _Writer, omml  # pyright: ignore[reportPrivateUsage]
-from redocx.math.parser import MathError, parse_math
+from redocx.math.parser import CANCELS, PHANTOMS, MathError, parse_math
 from redocx.math.read import raw_xml
 from redocx.ooxml.xml import Element
 
@@ -72,6 +75,15 @@ _NARY = {c: name for name, c in reversed(S.NARY.items())}
 _ACCENTS = {c: name for name, c in reversed(S.ACCENTS.items())}
 _ENVIRONMENTS = {value: name for name, value in S.MATRICES.items() if value != ("", "")}
 _TEXT = {None: "text", "i": "textit", "b": "textbf"}
+_BOXES: dict[tuple[tuple[str, ...], tuple[str, ...]], str] = {
+    ((), ()): "boxed",
+    **{(BOX_SIDES, strike): name for name, strike in CANCELS.items()},
+}
+_PHANTOMS = {
+    **{flags: name for name, flags in PHANTOMS.items()},
+    (True, False, True, False): "smash[t]",
+    (True, False, False, True): "smash[b]",
+}
 
 
 def _delimiters() -> dict[str, str]:
@@ -91,7 +103,7 @@ def _delimiters() -> dict[str, str]:
 
 
 _DELIMITERS = _delimiters()
-_SIMPLE = (Frac, Rad, Delim, Accent, Bar, Limit, Matrix, EqArr, Raw)
+_SIMPLE = (Frac, Rad, Delim, Accent, Bar, Limit, Matrix, EqArr, BorderBox, Phant, Raw)
 """Objects that print as one atom, which a script can follow without braces."""
 
 _COMMAND_END_RE = re.compile(r"\\[A-Za-z]+\*?$")
@@ -319,6 +331,18 @@ class _Printer:
                 t, e_e = self.row(e)
                 command = "overbrace" if pos == "top" else "underbrace"
                 return f"\\{command}{{{t}}}", (GroupChr(c, pos, e_e),)
+            case BorderBox(e=e, hide=hide, strike=strike):
+                command = _BOXES.get((hide, strike))
+                if command is None:
+                    raise _Unprintable
+                t, e_e = self.row(e)
+                return f"\\{command}{{{t}}}", (BorderBox(e_e, hide, strike),)
+            case Phant(e=e, show=show, zero_width=wid, zero_ascent=asc, zero_descent=desc):
+                command = _PHANTOMS.get((show, wid, asc, desc))
+                if command is None:
+                    raise _Unprintable
+                t, e_e = self.row(e)
+                return f"\\{command}{{{t}}}", (Phant(e_e, show, wid, asc, desc),)
             case Matrix(align="center"):
                 text, matrix = self.matrix("matrix", node)
                 return text, (matrix,)
