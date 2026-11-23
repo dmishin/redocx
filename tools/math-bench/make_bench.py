@@ -132,12 +132,16 @@ def code_lines(latex: str) -> str:
     out: list[str] = []
     for ln in lines:
         shown = ln.replace("\t", "    ")
-        out.append('\\font[font="Consolas", size=8pt]{' + escape.inline(shown or " ") + "}")
+        out.append(
+            '\\font[font="Consolas", size=8pt]{'
+            + escape.inline(shown or " ", punctuation=True)
+            + "}"
+        )
     return "\n\n".join(out)
 
 
 def red(text: str) -> str:
-    return "\\font[color=#C00000, size=8pt]{" + escape.inline(text) + "}"
+    return "\\font[color=#C00000, size=8pt]{" + escape.inline(text, punctuation=True) + "}"
 
 
 def row(e: Entry) -> str:

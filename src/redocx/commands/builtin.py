@@ -125,6 +125,7 @@ _command(
     "document", BLOCK, "Document-wide choices: language, smart quotes, template.",
     _o("lang", PropValue(Target.RUN, "lang"), "the document language (en-US)"),
     _o("smart-quotes", FLAG, "curly quotes and dashes"),
+    _o("quotes", TEXT, "the quotes `\"` and `'` become, for every language: «»„“ (two: `\"` only)"),
     _o("template", TEXT, "a .dotx or .docx to compile into"),
     _o("page-color", PropValue(Target.RUN, "color"), "the colour of every page"),
     body=None,

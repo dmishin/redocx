@@ -39,6 +39,16 @@ def document(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
         lw.meta = replace(lw.meta, language=language)
     if "smart-quotes" in args:
         lw.smart_quotes = args.flag("smart-quotes")
+    if (quotes := args.text("quotes")) is not None:
+        if len(quotes) in (2, 4):
+            lw.quotes = quotes
+        else:
+            lw.report(
+                Code.INVALID_VALUE,
+                f"`quotes` takes two or four characters, got {len(quotes)}",
+                args.span_of("quotes"),
+                help='the opening and closing quote for `"`, then for `\'`: quotes="«»„“"',
+            )
     if (color := args.get("page-color", Color)) is not None:
         lw.settings = replace(
             lw.settings, page_color=None if color.rgb is None and color.theme is None else color

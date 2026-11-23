@@ -9,8 +9,10 @@ The exact rules of a `.rdx` file. Files are UTF-8; style sheets (`.rdxs`) have t
 - **Comments** run from `%` to the end of the line, when the `%` is at the start of a line or after whitespace.
   `12%` and `a%20b` are text; `\%` is always a percent sign. There are no block comments. `50 %`, with a space
   before the sign, is the number 50 and a comment; it is a warning (RDX0117), so write `50 \%`.
-- **Typography:** `--` is an en dash, `---` an em dash, and straight quotes become curly ones.
-  `\document[smart-quotes=off]` keeps them as typed. `~` is a non-breaking space.
+- **Typography:** `--` is an en dash, `---` an em dash, and straight quotes become the quotes of the text's
+  language: “…” in English, „…“ in German, «…» in French and Russian (`\document[lang=…]`, `\lang[…]{…}`).
+  `\document[quotes="«»„“"]` chooses them for the whole document, and `\document[smart-quotes=off]` keeps quotes
+  and dashes as typed. `~` is a non-breaking space.
 - `$` is ordinary text (`$48.2M`). Only `$$` at the start of a line begins display math.
 
 ## Escapes

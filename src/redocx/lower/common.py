@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, get_args
 
 from redocx import ir
 from redocx.commands.bind import Args
-from redocx.lower.typography import smarten
+from redocx.lower.typography import quotes_for, smarten
 from redocx.props import EMPTY_RUN, PropertySet
 from redocx.syntax import ast
 from redocx.syntax.diagnostics import Diagnostic
@@ -117,13 +117,22 @@ def with_paragraph_props(
 # --- paragraph assembly ------------------------------------------------------------------
 
 
-def assemble(pieces: list[Piece], smart_quotes: bool) -> tuple[ir.Inline, ...]:
-    """Smart punctuation, whitespace collapsing, and grouping into runs and hyperlinks."""
+def assemble(
+    pieces: list[Piece],
+    smart_quotes: bool,
+    language: str | None = None,
+    quotes: str | None = None,
+) -> tuple[ir.Inline, ...]:
+    """Smart punctuation, whitespace collapsing, and grouping into runs and hyperlinks.
+    Quotes follow each piece's `lang`, else the document `language`; `quotes` is
+    `\\document[quotes=]`."""
     previous = ""
     smart: list[Piece] = []
     for piece in pieces:
         if piece.kind == "text" and smart_quotes:
-            piece = replace(piece, text=smarten(piece.text, previous))
+            lang = piece.format.props.get("lang")
+            style = quotes_for(lang if isinstance(lang, str) else language, quotes)
+            piece = replace(piece, text=smarten(piece.text, previous, style))
         if piece.text:
             previous = piece.text[-1]
         elif piece.kind in ("page", "column"):

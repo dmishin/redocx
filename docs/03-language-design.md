@@ -978,8 +978,24 @@ Lowering (`redocx.lower`) turns the AST into the document IR. It fixes these beh
   (`RDX0303`); separate them with a blank line. `\pagebreak` and `\columnbreak` work inline, and alone they form their
   own paragraph.
 - **Text.** Runs of spaces and line breaks collapse to one space. Spaces at paragraph edges and around `\tab` / `\br` /
-  breaks are dropped. Smart punctuation (`--` → –, `---` → —, curly quotes) applies to text, not to code or URLs, and
-  `\document[smart-quotes=off]` turns it off.
+  breaks are dropped. Smart punctuation (`--` → –, `---` → —, curly quotes) applies to text, not to code, URLs or the
+  escapes `\"` `\'` `\-`, and `\document[smart-quotes=off]` turns it off. It is applied when a paragraph's pieces
+  become runs (`assemble` in `lower/common.py`); the parser and the IR do no typography.
+- **Quotes by language.** `"` becomes the language's outer quotes and `'` its inner ones. The language is the text's
+  own (`\lang[de-DE]{…}`), else `\document[lang=…]`, else English. An apostrophe between letters is always ’. No space
+  is added (French spacing is the writer's), and Chinese and Japanese use English rules, since their input methods
+  type their own marks. `\document[quotes="«»„“"]` sets the quotes for every language: four characters, or two for
+  `"` only.
+
+  | Language | `"…"` | `'…'` |
+  |----------|-------|-------|
+  | English and others | “…” | ‘…’ |
+  | German, Czech, Slovak | „…“ | ‚…‘ |
+  | French, Italian, Spanish | «…» | “…” |
+  | Russian, Ukrainian, Belarusian | «…» | „…“ |
+  | Polish | „…” | «…» |
+  | Dutch | „…” | ‘…’ |
+  | Swedish, Finnish | ”…” | ’…’ |
 - **Character styles.** `*…*` → `Strong`, `_…_` → `Emphasis`, `` `…` `` → `Code`, links → `Hyperlink`. A Word run has one
   character style, so for nested styles the innermost wins and the outer style's formatting is added as direct
   formatting.

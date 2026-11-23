@@ -55,6 +55,7 @@ Document-wide choices: language, smart quotes, template.
 |--------|-------|---------|
 | `lang` | language tag, e.g. en-US | the document language (en-US) |
 | `smart-quotes` | on \| off | curly quotes and dashes |
+| `quotes` | text | the quotes `"` and `'` become, for every language: «»„“ (two: `"` only) |
 | `template` | text | a .dotx or .docx to compile into |
 | `page-color` | #RRGGBB \| auto \| theme.<name> | the colour of every page |
 

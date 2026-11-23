@@ -8,8 +8,9 @@ each with its own rules (design §3.2):
 - string bodies (`\\image{…}`, `\\url{…}`, `\\include{…}`): `string`
 - option values (`alt=…`, `title=…`, `\\meta[author=…]`): `value`
 
-Escaped text keeps its spaces (runs of them, and those at the start and end) and its straight
-quotes and hyphens: smart punctuation applies only to the text the template writes itself.
+Each result depends only on the arguments. Escaped text keeps its spaces (runs of them, and
+those at the start and end). Its quotes and hyphens get the document's smart punctuation, as
+typed text does, unless `punctuation` asks to keep them as they are.
 """
 
 from __future__ import annotations
@@ -27,15 +28,14 @@ _NEWLINE_RE = re.compile(r"\r\n|[\r\n]")
 _ALWAYS = frozenset("\\{}[]`~|")
 
 
-def inline(text: str, *, punctuation: bool = True, edges: bool = True) -> str:
+def inline(text: str, *, punctuation: bool = False, edges: bool = True) -> str:
     """`text` as markup in the middle of a line: every mark that would be read as markup is
     escaped, and line breaks become spaces. Use `text` instead when the result may start a line.
 
     Spaces stay as they are: a space after another one is written `\\ `, and so is one at the
     start or end unless `edges` is off (for pieces of a longer line, as the importer prints).
-    With `punctuation` (the default), straight quotes and runs of hyphens are escaped too, so
-    smart punctuation leaves them as typed; a document with `smart-quotes=off` does not need
-    that."""
+    With `punctuation`, straight quotes and runs of hyphens are written `\\"`, `\\'`, `\\-`, so
+    they stay as in the data whatever smart punctuation the document sets."""
     text = _NEWLINE_RE.sub(" ", text)
     out: list[str] = []
     last = len(text) - 1
@@ -78,18 +78,19 @@ def line_start(text: str) -> str:
     return text
 
 
-def text(text: str, *, indent: int = 0, punctuation: bool = True) -> str:
+def text(text: str, *, indent: int = 0, punctuation: bool = False) -> str:
     """`text` as markup that reads as exactly this text, wherever it is put. A line break
     stays a line break in the source: one is a space, a blank line starts a new paragraph.
 
     `indent` puts that many spaces before every line after the first, so text written after
-    a list marker (`- `, `1. `) stays in its item: pass the width of the marker."""
+    a list marker (`- `, `1. `) stays in its item: pass the width of the marker.
+    `punctuation` is as for `inline`."""
     return _join(text, "\n", indent, punctuation)
 
 
-def lines(text: str, *, indent: int = 0, punctuation: bool = True) -> str:
+def lines(text: str, *, indent: int = 0, punctuation: bool = False) -> str:
     """`text` as markup in which every line break of the data is a line break in the
-    paragraph (`\\br`), as in an address. `indent` is as for `text`."""
+    paragraph (`\\br`), as in an address. `indent` and `punctuation` are as for `text`."""
     return _join(text, "\\br\n", indent, punctuation)
 
 

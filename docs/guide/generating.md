@@ -46,7 +46,8 @@ Text goes into three kinds of places, each with its own rules (see [Syntax](synt
 | a string body: `\image`, `\url`, `\include` | `escape.string(s)` | `\url{{escape.string(s)}}` |
 | an option value | `escape.value(s)` | `alt={escape.value(s)}` (adds the quotes) |
 
-Escaped text reads back as exactly the data:
+Each function's result depends only on its arguments, never on the document or the command line. Escaped
+text reads back as the data:
 
 - `escape.text` makes literal what would start a block at the start of a line: `- `, `1. `, `a. `, `=`, `|`,
   `$$`, and the Markdown marks redocx warns about (`#`, `>`, `+`). A line break in the data stays a line break in
@@ -55,8 +56,9 @@ Escaped text reads back as exactly the data:
   are indented to the item's text, so they stay in the item instead of ending the list.
 - `escape.inline` writes line breaks as spaces, so the data stays on its line (a heading, a table row).
 - Spaces are kept: a run of them, and those at the start and end, are written `\ `.
-- Straight quotes and hyphens are kept as typed (`\"`, `\'`, `\-`). Smart punctuation still applies to the text
-  the template writes itself.
+- Quotes and hyphens get the document's smart punctuation, as text typed in the source does: `"a" -- b` becomes
+  “a” – b, or stays as it is under `\document[smart-quotes=off]`. To keep them as in the data whatever the
+  document says, pass `punctuation=True`: they are then written `\"`, `\'`, `\-`.
 
 `escape.value` turns line breaks into spaces, since an option value is one line.
 

@@ -808,8 +808,7 @@ class Printer:
             elif piece == "\n":
                 tokens.append(_Tok("\\br", bare=True))
             elif piece:
-                # The document has smart-quotes=off, so quotes and dashes need no escape.
-                tokens.append(_Tok(inline(piece, punctuation=False, edges=False)))
+                tokens.append(_Tok(inline(piece, edges=False)))
         props = run.props
         if self.run_base is not None and run.style is None:
             props = _differences(props, self.run_base)  # what the paragraph style already gives

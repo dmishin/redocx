@@ -92,17 +92,28 @@ def test_text_keeps_line_breaks_as_source_line_breaks() -> None:
     assert _paragraphs(escape.text("- one\n= two\n\n1. three")) == ["- one = two", "1. three"]
 
 
-def test_quotes_dashes_and_spaces_are_kept_with_smart_punctuation_on() -> None:
-    data = '  He said "don\'t" -- twice,   then left --- 5\'10".  '
-    result = compile_source(f'"Quoted" -- {escape.inline(data)} -- "end"')
+OPEN, CLOSE = "\N{LEFT DOUBLE QUOTATION MARK}", "\N{RIGHT DOUBLE QUOTATION MARK}"
+
+
+def _text(source: str) -> str:
+    result = compile_source(source)
     assert not result.diagnostics, result.render_diagnostics()
     assert result.document is not None
     (paragraph,) = result.document.body
     assert isinstance(paragraph, ir.Paragraph)
-    open_quote, close_quote = "\N{LEFT DOUBLE QUOTATION MARK}", "\N{RIGHT DOUBLE QUOTATION MARK}"
-    assert paragraph.text() == (
-        f"{open_quote}Quoted{close_quote} {EN_DASH} {data} {EN_DASH} {open_quote}end{close_quote}"
-    )
+    return paragraph.text()
+
+
+def test_punctuation_keeps_quotes_dashes_and_spaces_with_smart_punctuation_on() -> None:
+    data = '  He said "don\'t" -- twice,   then left --- 5\'10".  '
+    text = _text(f'"Quoted" -- {escape.inline(data, punctuation=True)} -- "end"')
+    assert text == f"{OPEN}Quoted{CLOSE} {EN_DASH} {data} {EN_DASH} {OPEN}end{CLOSE}"
+
+
+def test_quotes_and_dashes_follow_the_document_by_default() -> None:
+    assert escape.inline('"a" -- b') == '"a" -- b'
+    assert _text(escape.text('"a" -- b')) == f"{OPEN}a{CLOSE} {EN_DASH} b"
+    assert _text(PREAMBLE + escape.text('"a" -- b')) == '"a" -- b'
 
 
 def test_inline_turns_line_breaks_into_spaces() -> None:

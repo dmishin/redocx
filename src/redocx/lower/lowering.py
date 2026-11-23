@@ -143,6 +143,8 @@ class Lowering:
     section: ir.Section = field(default_factory=ir.Section)
     """The section being written (earlier ones are closed by SectionBreak blocks)."""
     smart_quotes: bool = True
+    quotes: str | None = None
+    """`\\document[quotes=]`: the quote characters for every language."""
     has_content: bool = False
     even_headers: bool = False
     header_kinds: set[str] = field(default_factory=lambda: set[str]())
@@ -637,7 +639,7 @@ class Lowering:
         return style
 
     def assemble(self, pieces: list[Piece]) -> tuple[ir.Inline, ...]:
-        return assemble(pieces, self.smart_quotes)
+        return assemble(pieces, self.smart_quotes, self.meta.language, self.quotes)
 
     # --- shared services ---------------------------------------------------------------------
 
