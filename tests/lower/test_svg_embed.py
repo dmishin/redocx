@@ -22,6 +22,7 @@ A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
 ASVG = "{http://schemas.microsoft.com/office/drawing/2016/SVG/main}"
 R = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}"
 SVG = '<svg xmlns="http://www.w3.org/2000/svg" {}><rect width="10" height="10"/></svg>'
+RTF = rb"{\rtf1\ansi\deff0{\fonttbl{\f0 Arial;}}\pard\fs20 From an {\b RTF} file.\par}"
 
 
 @pytest.fixture
@@ -34,6 +35,7 @@ def files(tmp_path: Path) -> Path:
     assert part is not None, result.render_diagnostics()
     (tmp_path / "part.docx").write_bytes(part)
     (tmp_path / "notes.txt").write_text("not a docx", "utf-8")
+    (tmp_path / "part.rtf").write_bytes(RTF)
     return tmp_path
 
 
@@ -133,7 +135,7 @@ def test_svg_errors(files: Path) -> None:
 
 def test_embed_docx_is_an_alt_chunk(files: Path) -> None:
     doc = compiled("Before.\n\n\\embed-docx{part.docx}\n\nAfter.", files)
-    (chunk,) = [b for b in doc.body if isinstance(b, ir.EmbeddedDocx)]
+    (chunk,) = [b for b in doc.body if isinstance(b, ir.AltChunk)]
     assert chunk.data == (files / "part.docx").read_bytes()
     data, result = build("Before.\n\n\\embed-docx{part.docx}\n\nAfter.", files)
     assert data is not None, result.render_diagnostics()
@@ -156,3 +158,25 @@ def test_embed_docx_errors(files: Path) -> None:
         "cannot read document `missing.docx`"
     )
     assert errors("| \\embed-docx{part.docx} |\n|---|", files) != []
+
+
+def test_embed_rtf_is_an_alt_chunk(files: Path) -> None:
+    data, result = build("Before.\n\n\\embed-rtf{part.rtf}\n\nAfter.", files)
+    assert data is not None, result.render_diagnostics()
+    assert not result.diagnostics, result.render_diagnostics()
+    package = zipfile.ZipFile(io.BytesIO(data))
+    body = etree.fromstring(package.read("word/document.xml")).find(f"{W}body")
+    assert body is not None
+    assert [etree.QName(child).localname for child in body] == ["p", "altChunk", "p", "sectPr"]
+    rels = etree.fromstring(package.read("word/_rels/document.xml.rels"))
+    (rel,) = [r for r in rels if r.get("Type", "").endswith("/aFChunk")]
+    assert rel.get("Target") == "afchunk1.rtf"
+    assert package.read("word/afchunk1.rtf") == RTF
+    assert b'Extension="rtf" ContentType="application/rtf"' in package.read("[Content_Types].xml")
+    assert validate_package(data) == {}
+
+
+def test_embed_rtf_errors(files: Path) -> None:
+    assert errors("\\embed-rtf{notes.txt}", files) == ["`notes.txt` is not an RTF document"]
+    assert errors("\\embed-rtf{part.docx}", files) == ["`part.docx` is not an RTF document"]
+    assert errors("| \\embed-rtf{part.rtf} |\n|---|", files) != []

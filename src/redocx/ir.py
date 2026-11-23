@@ -13,7 +13,7 @@ from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field, replace
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from redocx.math.nodes import Row as MathRow
 from redocx.math.nodes import linear_text
@@ -1006,15 +1006,17 @@ class RawBlock:
 
 
 @dataclass(frozen=True)
-class EmbeddedDocx:
-    """Another .docx that Word merges into the body when it opens the file (w:altChunk)."""
+class AltChunk:
+    """Another document, a .docx or an .rtf, that Word merges into the body when it opens
+    the file (w:altChunk)."""
 
     data: bytes
     name: str = ""
     """The file name, for messages."""
+    format: Literal["docx", "rtf"] = "docx"
 
 
-Block = Paragraph | Table | SectionBreak | FieldBlock | RawBlock | EmbeddedDocx
+Block = Paragraph | Table | SectionBreak | FieldBlock | RawBlock | AltChunk
 
 
 @dataclass(frozen=True)
@@ -1143,7 +1145,7 @@ def map_paragraphs(
             out.append(SectionBreak(map_section(block.section, fn)))
         elif isinstance(block, FieldBlock):
             out.append(replace(block, content=tuple(_map_paragraph(p, fn) for p in block.content)))
-        elif isinstance(block, RawBlock | EmbeddedDocx):
+        elif isinstance(block, RawBlock | AltChunk):
             out.append(block)
         else:
             rows = tuple(

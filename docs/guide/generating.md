@@ -150,7 +150,7 @@ data, result = build(source, files={"charts/q3.png": chart})
 ```
 
 A name in `files` wins over a file on disk of the same name, and is inside `root` whatever its name. It works for
-`\image` (and its SVG `fallback`), `\embed-docx` and `\watermark[image=…]`; `\include`, `\use` and
+`\image` (and its SVG `fallback`), `\embed-docx`, `\embed-rtf` and `\watermark[image=…]`; `\include`, `\use` and
 `\bibliography` read from disk.
 
 Treat any diagnostic as a failure in generated documents: a warning there usually means the data held something
@@ -160,7 +160,8 @@ the template did not expect.
 
 Escaped data cannot add commands. Data used *as a file name* still names a file: `\image{{escape.string(path)}}`
 reads whatever `path` is, `../../secrets.txt` included. When the data comes from users, give a root folder, and
-every file the document names (`\include`, `\use`, `\image`, `\embed-docx`, `\bibliography`, `template=`) must be
+every file the document names (`\include`, `\use`, `\image`, `\embed-docx`, `\embed-rtf`, `\bibliography`,
+`template=`) must be
 inside it:
 
 ```python

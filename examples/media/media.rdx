@@ -3,6 +3,7 @@
 % Word 2016 and later show chart.svg itself; older versions show the fallback picture
 % (a grey placeholder unless fallback= names one). Word merges chapter.docx into the
 % body when it opens the file; the table of contents lists its headings after updating.
+% It converts note.rtf the same way.
 
 \document[lang=en-GB]
 
@@ -15,6 +16,8 @@ Flow by hour, as a vector graphic:
 \image[alt="Bar chart of traffic flow by hour", width=60%]{chart.svg}
 
 \embed-docx{chapter.docx}
+
+\embed-rtf{note.rtf}
 
 = Conclusion
 

@@ -37,6 +37,7 @@ _DEFAULT_CONTENT_TYPES: dict[str, str] = {
     "svg": CT.SVG,
     "emf": CT.EMF,
     "wmf": CT.WMF,
+    "rtf": CT.RTF,
 }
 
 # Fixed ZIP metadata so output does not depend on the clock or the host OS.

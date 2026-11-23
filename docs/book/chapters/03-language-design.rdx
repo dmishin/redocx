@@ -510,6 +510,8 @@ Any picture, inline or floating, can be cropped (`crop=(left=10%, top=5%, right=
 
 `\embed-docx{part.docx}` is a block that inserts another document as a `w:altChunk`: the file is stored in the package unchanged and Word merges its body in when it opens the document. Its paragraphs, lists, tables and pictures come along; where its styles have the same names as the document's, the document's styles win; its headers, footers and page setup are dropped. Only Word does this merge: other readers show nothing there until the file has been saved in Word. redocx does not look inside the embedded file, so the table of contents lists its headings only after Word updates the field, and `@label` references cannot point into it. It is a body block (not in tables, notes, headers or figures) and takes a .docx only, not a macro-enabled document or a template.
 
+`\embed-rtf{part.rtf}` does the same for an RTF file: it is stored as `afchunkN.rtf` and Word converts it with its own RTF reader when it opens the document, tables and pictures included. The same limits apply: only Word does the conversion, and redocx does not look inside the file. The file must start with `{\rtf`.
+
 == Collaboration and forms
 
 ```rdx
@@ -563,7 +565,7 @@ The \product is great.
 - `#name` is valid *only inside a `\define` body*. It works in text and in option values. It never collides with command names.
 - An `id` option can be forwarded with `id=#id`. An empty optional `id` is dropped.
 - Macros are *hygienic and declarative*. They substitute at the AST level, not through token-level expansion as in TeX.
-- *There is no scripting in the language.* There are no conditionals, loops or expressions. Programmability comes from generating the source (from Jinja or any program, with data escaped by `redocx.escape`; see the generation guide) or from building the IR directly. A source cannot run code. It can name any file it can reach, though: `\include`, `\use`, `\image`, `\embed-docx`, `\bibliography` and `template=` paths are relative to the document, and absolute paths and `..` work. `--root DIR` (`root=` in `redocx.compiler`) makes every such file outside `DIR` an error (`RDX0313`), for sources that hold data from outside.
+- *There is no scripting in the language.* There are no conditionals, loops or expressions. Programmability comes from generating the source (from Jinja or any program, with data escaped by `redocx.escape`; see the generation guide) or from building the IR directly. A source cannot run code. It can name any file it can reach, though: `\include`, `\use`, `\image`, `\embed-docx`, `\embed-rtf`, `\bibliography` and `template=` paths are relative to the document, and absolute paths and `..` work. `--root DIR` (`root=` in `redocx.compiler`) makes every such file outside `DIR` an error (`RDX0313`), for sources that hold data from outside.
 
 === Standard macro library (prelude) (F-13)
 
@@ -607,7 +609,7 @@ Citations are rendered with CSL (citeproc-py) as text with hyperlinks to bookmar
 2. Option or style-sheet key `ooxml.rPr` / `ooxml.pPr` / `ooxml.tblPr` / `ooxml.tcPr`: raw property XML for the generated element (`\p[ooxml.pPr="<w:snapToGrid w:val='0'/>"]{…}`). Each element replaces the one redocx would write under the same name; the elements must be ones that container holds.
 3. `\raw[ooxml]{<w:r>…</w:r>}`: raw run- or block-level WordprocessingML. The body is raw. A body of `w:p`, `w:tbl` (or a `w:sdt` holding them) is a block of its own; anything else goes inline. Run-level and block-level elements cannot be mixed. Whole equations (`m:oMath`, `m:oMathPara`) count as run-level.
 4. `\ooxml{…}` inside math: raw OMML elements in a formula (§3.14).
-5. `\embed-docx{part.docx}`: insert another document as `altChunk`. Word merges it on open (§3.16).
+5. `\embed-docx{part.docx}`, `\embed-rtf{part.rtf}`: insert another document as `altChunk`. Word merges it on open (§3.16).
 
 Raw XML is checked when the document compiles: it must be well-formed WordprocessingML (`w:` elements or whole equations, and `m:` elements in `\ooxml`; the usual prefixes `w:`, `r:`, `a:`, `wp:`, `pic:`, `w14:`, `mc:`, `v:`, `o:`, `m:` need no declaration). A bad escape hatch is a compile error, not a corrupt file. It is also checked against the ECMA-376 schemas where it goes (block or run content, or the property container of an `ooxml.*` option), so an unknown element, a misplaced one or a bad value is a compile error too (``raw XML that Word would reject: `w:bogus` is not allowed here``). Elements and attributes of namespaces the schemas do not define (`w14:`, `w15:`, ...) are not checked. Relationship ids (`r:id`) are not rewritten, so raw XML cannot refer to images or links of its own yet. Ids and references inside raw XML (bookmarks, notes, drawings) are checked with the written document (§3.21).
 

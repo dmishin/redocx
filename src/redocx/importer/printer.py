@@ -429,9 +429,9 @@ class Printer:
             return self.field_block(block)
         if isinstance(block, ir.RawBlock):
             return f"\\raw[ooxml]{{{block.xml}}}"
-        if isinstance(block, ir.EmbeddedDocx):
-            name = self._file(block.data, "embedded", "docx", block.name)
-            return f"\\embed-docx{{{name}}}"
+        if isinstance(block, ir.AltChunk):
+            name = self._file(block.data, "embedded", block.format, block.name)
+            return f"\\embed-{block.format}{{{name}}}"
         self.lost["section break inside a table or note"] += 1
         return ""
 

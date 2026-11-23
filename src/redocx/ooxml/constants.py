@@ -50,6 +50,7 @@ class CT:
     SVG: Final = "image/svg+xml"
     EMF: Final = "image/x-emf"
     WMF: Final = "image/x-wmf"
+    RTF: Final = "application/rtf"
 
 
 class RT:

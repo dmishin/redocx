@@ -22,6 +22,7 @@ from redocx.ir import (
     V_ANCHORS,
     VERTICAL_ALIGNMENTS,
     WRAP_SIDES,
+    AltChunk,
     Anchor,
     Block,
     BookmarkEnd,
@@ -33,7 +34,6 @@ from redocx.ir import (
     CommentStart,
     ContentControl,
     Document,
-    EmbeddedDocx,
     Field,
     FieldBlock,
     Image,
@@ -109,7 +109,7 @@ class BodyContext:
     the kinds it does not define)."""
     template_body: Callable[[], list[Element]] = lambda: []
     """The template's body content, rewritten for this package; it precedes the document's."""
-    chunk: Callable[[EmbeddedDocx], str] = lambda chunk: ""
+    chunk: Callable[[AltChunk], str] = lambda chunk: ""
     comment: Callable[[Comment], int] = lambda comment: 0
     """Writes a comment into comments.xml; returns its w:id."""
     comment_id: Callable[[str], int] = lambda name: 0
@@ -641,7 +641,7 @@ def _blocks(blocks: tuple[Block, ...], ctx: BodyContext, *, final: bool = False)
             paragraphs = _field_block(block, ctx)
             elements.extend(paragraphs)
             last_paragraph = paragraphs[-1]
-        elif isinstance(block, EmbeddedDocx):
+        elif isinstance(block, AltChunk):
             elements.append(E("w:altChunk", {"r:id": ctx.chunk(block)}))
             last_paragraph = None
         else:

@@ -46,7 +46,7 @@ CATEGORIES: dict[str, tuple[str, ...]] = {
     ),
     "Fields and counters": ("pagenum", "numpages", "sectionpages", "date", "field", "seq"),
     "Breaks": ("br", "tab", "pagebreak", "columnbreak"),
-    "Pictures, text boxes and forms": ("image", "textbox", "control", "embed-docx"),
+    "Pictures, text boxes and forms": ("image", "textbox", "control", "embed-docx", "embed-rtf"),
     "Math": ("math", "m"),
     "Escape hatches": ("raw",),
     "Not implemented": ("ins", "del"),

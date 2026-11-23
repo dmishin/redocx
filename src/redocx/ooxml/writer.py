@@ -13,10 +13,10 @@ from lxml import etree
 from redocx.ir import (
     IMAGE_FORMATS,
     NOTE_KINDS,
+    AltChunk,
     Block,
     Comment,
     Document,
-    EmbeddedDocx,
     Note,
     Numbering,
     NumberingRef,
@@ -383,10 +383,11 @@ def build_package(
 
     chunk_numbers = itertools.count(1)
 
-    def chunk(embedded: EmbeddedDocx) -> str:
+    def chunk(embedded: AltChunk) -> str:
         """Word imports each alternative format part where its w:altChunk stands."""
-        name = f"/word/afchunk{next(chunk_numbers)}.docx"
-        return main.relate(pkg.add_part(name, CT.WML_DOCUMENT_MAIN, embedded.data), RT.ALT_CHUNK)
+        name = f"/word/afchunk{next(chunk_numbers)}.{embedded.format}"
+        content_type = CT.RTF if embedded.format == "rtf" else CT.WML_DOCUMENT_MAIN
+        return main.relate(pkg.add_part(name, content_type, embedded.data), RT.ALT_CHUNK)
 
     def header_footer(family: str, blocks: tuple[Block, ...]) -> str:
         part_counts[family] += 1

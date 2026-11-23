@@ -480,6 +480,10 @@ _command(
     body=STRING, body_required=True, body_doc="a file name",
 )  # fmt: skip
 _command(
+    "embed-rtf", BLOCK, "An .rtf file, which Word converts and puts in when it opens the document.",
+    body=STRING, body_required=True, body_doc="a file name",
+)  # fmt: skip
+_command(
     "raw", BOTH, "Raw WordprocessingML (block or inline, by its elements) or a whole equation.",
     _o("format", Choice.of("ooxml"), "the markup: ooxml"), positional="format",
     body=RAW, body_required=True, body_doc="XML",

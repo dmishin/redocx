@@ -717,6 +717,10 @@ Word. redocx does not look inside the embedded file, so the table of contents li
 updates the field, and `@label` references cannot point into it. It is a body block (not in tables, notes, headers or
 figures) and takes a .docx only, not a macro-enabled document or a template.
 
+`\embed-rtf{part.rtf}` does the same for an RTF file: it is stored as `afchunkN.rtf` and Word converts it with its
+own RTF reader when it opens the document, tables and pictures included. The same limits apply: only Word does
+the conversion, and redocx does not look inside the file. The file must start with `{\rtf`.
+
 ## 3.17 Collaboration and forms
 
 ```rdx
@@ -792,9 +796,9 @@ The \product is great.
 - **There is no scripting in the language.** There are no conditionals, loops or expressions. Programmability comes from
   generating the source (from Jinja or any program, with data escaped by `redocx.escape`; see the
   [generation guide](guide/generating.md)) or from building the IR directly. A source cannot run code. It can name any
-  file it can reach, though: `\include`, `\use`, `\image`, `\embed-docx`, `\bibliography` and `template=` paths are
-  relative to the document, and absolute paths and `..` work. `--root DIR` (`root=` in `redocx.compiler`) makes every
-  such file outside `DIR` an error (`RDX0313`), for sources that hold data from outside.
+  file it can reach, though: `\include`, `\use`, `\image`, `\embed-docx`, `\embed-rtf`, `\bibliography` and
+  `template=` paths are relative to the document, and absolute paths and `..` work. `--root DIR` (`root=` in
+  `redocx.compiler`) makes every such file outside `DIR` an error (`RDX0313`), for sources that hold data from outside.
 
 ### Standard macro library (prelude) (F-13)
 
@@ -867,7 +871,8 @@ uses a `Bibliography` paragraph style. Native Word citations (`CITATION` fields,
    (or a `w:sdt` holding them) is a block of its own; anything else goes inline. Run-level and block-level elements
    cannot be mixed. Whole equations (`m:oMath`, `m:oMathPara`) count as run-level.
 4. `\ooxml{…}` inside math: raw OMML elements in a formula (§3.14).
-5. `\embed-docx{part.docx}`: insert another document as `altChunk`. Word merges it on open (§3.16).
+5. `\embed-docx{part.docx}`, `\embed-rtf{part.rtf}`: insert another document as `altChunk`. Word merges it on open
+   (§3.16).
 
 Raw XML is checked when the document compiles: it must be well-formed WordprocessingML (`w:` elements or whole
 equations, and `m:` elements in `\ooxml`; the usual

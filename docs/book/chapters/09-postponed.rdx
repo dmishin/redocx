@@ -24,7 +24,7 @@ These are the parts of finished features that were left out to keep them simple.
 | Citations | Collapsing ("Smith, 2020a, b"; "\[4\]–\[6\]") and name-based disambiguation | §3.19 |
 | Index | Page ranges (`XE \r`) and sort keys that differ from the term | §3.12 |
 | SVG images | Rasterising the fallback picture: without `fallback=` it is a grey placeholder | §3.16 |
-| `\embed-docx` | Looking inside the embedded file: its headings join the contents only after Word updates the field, and `@label` cannot point into it | §3.16 |
+| `\embed-docx`, `\embed-rtf` | Looking inside the embedded file: its headings join the contents only after Word updates the field, and `@label` cannot point into it | §3.16 |
 | Cross-references | `form=relative` in full-context form; the "Table Table 3" lint | §3.11 |
 | Style sheets | The `ooxml.*` escape hatch; formatting `.rdxs` files with `redocx fmt` | §3.5, §3.21 |
 | `redocx fmt` | Re-wrapping paragraphs; aligning pipe tables | §3.21 |

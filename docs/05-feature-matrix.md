@@ -160,6 +160,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | updateFields on open | M2 ✓ | ● |
 | Embedded fonts | Later | ●● |
 | altChunk (embed docx) | M3 ✓ | ● |
+| altChunk (embed rtf) | ✓ | ● |
 | Glossary / building blocks | Later | ●● |
 | Finalize (update fields via Word / LibreOffice), PDF export | Later ([tooling ideas](ideas/tooling.md)) | ●● |
 

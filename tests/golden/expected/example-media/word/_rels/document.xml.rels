@@ -6,4 +6,5 @@
   <Relationship Id="rId5" Target="media/image1.png" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"/>
   <Relationship Id="rId6" Target="media/image2.svg" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"/>
   <Relationship Id="rId7" Target="afchunk1.docx" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/aFChunk"/>
+  <Relationship Id="rId8" Target="afchunk2.rtf" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/aFChunk"/>
 </Relationships>

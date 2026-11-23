@@ -34,7 +34,7 @@ are described in the [syntax guide](guide/syntax.md) and the [macro guide](guide
 - **Links, references and notes:** [`\link`](#cmd-link), [`\url`](#cmd-url), [`\ref`](#cmd-ref), [`\pageref`](#cmd-pageref), [`\footnote`](#cmd-footnote), [`\endnote`](#cmd-endnote), [`\cite`](#cmd-cite), [`\textcite`](#cmd-textcite), [`\comment`](#cmd-comment)
 - **Fields and counters:** [`\pagenum`](#cmd-pagenum), [`\numpages`](#cmd-numpages), [`\sectionpages`](#cmd-sectionpages), [`\date`](#cmd-date), [`\field`](#cmd-field), [`\seq`](#cmd-seq)
 - **Breaks:** [`\br`](#cmd-br), [`\tab`](#cmd-tab), [`\pagebreak`](#cmd-pagebreak), [`\columnbreak`](#cmd-columnbreak)
-- **Pictures, text boxes and forms:** [`\image`](#cmd-image), [`\textbox`](#cmd-textbox), [`\control`](#cmd-control), [`\embed-docx`](#cmd-embed-docx)
+- **Pictures, text boxes and forms:** [`\image`](#cmd-image), [`\textbox`](#cmd-textbox), [`\control`](#cmd-control), [`\embed-docx`](#cmd-embed-docx), [`\embed-rtf`](#cmd-embed-rtf)
 - **Math:** [`\math`](#cmd-math), [`\m`](#cmd-m)
 - **Escape hatches:** [`\raw`](#cmd-raw)
 - **Not implemented:** [`\ins`](#cmd-ins), [`\del`](#cmd-del)
@@ -916,6 +916,14 @@ A content control: a field to fill in Word (the body: its value).
 ### `\embed-docx`
 
 Another .docx, which Word merges in when it opens the document.
+
+- **Where:** a block of its own.
+- **Body:** a file name, read as is (only `\}` and `\\` are escapes).
+
+<a id="cmd-embed-rtf"></a>
+### `\embed-rtf`
+
+An .rtf file, which Word converts and puts in when it opens the document.
 
 - **Where:** a block of its own.
 - **Body:** a file name, read as is (only `\}` and `\\` are escapes).

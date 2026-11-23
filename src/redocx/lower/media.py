@@ -1,4 +1,4 @@
-r"""Images: \image, SVG included (design §3.16), and \embed-docx."""
+r"""Images: \image, SVG included (design §3.16), \embed-docx and \embed-rtf."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import re
 import zipfile
 from dataclasses import replace
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from lxml import etree
 from PIL import Image as PILImage
@@ -335,6 +335,21 @@ def _svg_length(value: str | None) -> Decimal | None:
 def embed_docx(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
     r"""\embed-docx{file.docx}: Word merges the file's body in here when it opens the
     document (w:altChunk)."""
+    help = "save it as a .docx; macro-enabled documents and templates are not merged"
+    return _alt_chunk(lw, command, "docx", "a Word document (.docx)", help)
+
+
+def embed_rtf(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
+    r"""\embed-rtf{file.rtf}: Word converts the RTF and puts it in here when it opens the
+    document (w:altChunk)."""
+    help = r"an RTF file starts with `{\rtf`; save it as Rich Text Format"
+    return _alt_chunk(lw, command, "rtf", "an RTF document", help)
+
+
+def _alt_chunk(
+    lw: Lowering, command: ast.Command, kind: Literal["docx", "rtf"], what: str, help: str
+) -> list[ir.Block]:
+    """The file the command names as a w:altChunk, after checking it is a `kind` file."""
     name = verbatim(command)
     if not name or not lw.in_body(command):
         return []
@@ -342,16 +357,15 @@ def embed_docx(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]
     if data is None:
         return []
     file_name = (lw.base_dir / name).name
-    if not _is_docx(data):
-        lw.report(
-            Code.INVALID_ARGUMENT,
-            f"`{file_name}` is not a Word document (.docx)",
-            command.span,
-            help="save it as a .docx; macro-enabled documents and templates are not merged",
-        )
+    if not (_is_docx(data) if kind == "docx" else _is_rtf(data)):
+        lw.report(Code.INVALID_ARGUMENT, f"`{file_name}` is not {what}", command.span, help=help)
         return []
     lw.has_content = True
-    return [ir.EmbeddedDocx(data, file_name)]
+    return [ir.AltChunk(data, file_name, kind)]
+
+
+def _is_rtf(data: bytes) -> bool:
+    return data.lstrip(b"\xef\xbb\xbf \t\r\n").startswith(b"{\\rtf")
 
 
 def _is_docx(data: bytes) -> bool:
@@ -378,4 +392,4 @@ def _near_integer(dpi: float) -> Decimal:
 
 
 INLINES: dict[str, InlineHandler] = {"image": image, "textbox": textbox}
-BLOCKS: dict[str, BlockHandler] = {"embed-docx": embed_docx}
+BLOCKS: dict[str, BlockHandler] = {"embed-docx": embed_docx, "embed-rtf": embed_rtf}

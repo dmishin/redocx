@@ -169,6 +169,7 @@ The tier is the milestone where a feature first ships (see roadmap). *Esc* means
 | updateFields on open | M2 ✓ | ● |
 | Embedded fonts | Later | ●● |
 | altChunk (embed docx) | M3 ✓ | ● |
+| altChunk (embed rtf) | ✓ | ● |
 | Glossary / building blocks | Later | ●● |
 | Finalize (update fields via Word / LibreOffice), PDF export | Later (tooling ideas) | ●● |
 }
