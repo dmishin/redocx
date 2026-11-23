@@ -161,6 +161,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Embedded fonts | Later | ●● |
 | altChunk (embed docx) | M3 ✓ | ● |
 | altChunk (embed rtf) | ✓ | ● |
+| `\include-rtf`: RTF text, formatting, tables and pictures as native content | ✓ | ●●● |
 | Glossary / building blocks | Later | ●● |
 | Finalize (update fields via Word / LibreOffice), PDF export | Later ([tooling ideas](ideas/tooling.md)) | ●● |
 
@@ -169,6 +170,7 @@ Difficulty: ● low · ●● medium · ●●● high. **✓** = implemented.
 | Feature | Tier | Diff. |
 |---------|------|-------|
 | `redocx import`: .docx → source, style sheet, pictures and a loss report | M6 ✓ | ●●● |
+| `redocx import` of .rtf (Word, WordPad, RichEdit): direct formatting, tables, pictures | ✓ | ●●● |
 | Import with sugar (headings, lists, pipe tables, labels, captions) or commands only | M6 ✓ | ●● |
 | `--keep-styles` (compile into the original's styles as a template) | M6 ✓ | ●● |
 | Import oracle (`--check`: compare the recompiled document with the original) | M6 ✓ | ●● |

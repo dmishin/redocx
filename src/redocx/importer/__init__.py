@@ -1,6 +1,6 @@
-"""docx -> redocx source (M6): the printer, and the import folder it writes.
+"""docx (or RTF) -> redocx source (M6): the printer, and the import folder it writes.
 
-`import_docx` reads a .docx, prints it as source (`printer`), writes the folder
+`import_docx` reads a .docx or an RTF file, prints it as source (`printer`), writes the folder
 (`doc.rdx`, `doc.rdxs`, `media/…`, `doc.import.txt`), compiles the printed source again
 and compares its text with the original's.
 """
@@ -20,6 +20,7 @@ from redocx.ooxml.constants import NS
 from redocx.ooxml.reader import ImportReport, NotADocxError, open_package, read_docx
 from redocx.ooxml.template import load_template
 from redocx.ooxml.xml import serialize
+from redocx.rtf import is_rtf, read_rtf
 
 __all__ = ["Imported", "import_docx", "styles_template", "text_difference", "visible_text"]
 
@@ -61,13 +62,19 @@ class Imported:
 def import_docx(
     docx: str | Path, out_dir: str | Path, *, keep_styles: bool = False, sugar: bool = True
 ) -> Imported:
-    """Import `docx` into the folder `out_dir` (created when missing). With `keep_styles`,
-    the original without its body becomes `doc.template.docx`, which the source compiles
-    into: its styles, theme, lists, defaults and settings are kept as they are. Without
-    `sugar`, the source has commands only (headings as \\p[style=...], ...)."""
+    """Import `docx` (a .docx, or an RTF file) into the folder `out_dir` (created when
+    missing). With `keep_styles`, the original without its body becomes
+    `doc.template.docx`, which the source compiles into: its styles, theme, lists, defaults
+    and settings are kept as they are. Without `sugar`, the source has commands only
+    (headings as \\p[style=...], ...)."""
     docx, folder = Path(docx), Path(out_dir)
     data = docx.read_bytes()
-    result = read_docx(data)
+    if is_rtf(data):
+        if keep_styles:
+            raise ValueError("`--keep-styles` needs a .docx: there is no template to keep")
+        result = read_rtf(data)
+    else:
+        result = read_docx(data)
     stem = re.sub(r"[^\w.-]+", "-", docx.stem).strip("-") or "document"
     folder.mkdir(parents=True, exist_ok=True)
     kept = None

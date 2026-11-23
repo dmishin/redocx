@@ -72,6 +72,7 @@ src/redocx/
   ooxml/         package (OPC) writer, namespaces, schema order, the writer and its part writers (parts/);
                  template.py + merge.py (compile into a .dotx/.docx); reader.py (.docx → IR, for
                  inspect and import); integrity.py (RDX0401 checks); validate.py (XSD validation)
+  rtf/           .rtf → IR: tokens.py, reader.py (text and formatting), tables.py, pictures.py
   importer/      .docx → .rdx: printer.py (IR → source, L1 and sugar), labels.py, check.py (the oracle)
   data/          schemas/ (ECMA-376 Transitional XSDs), csl/ (bundled citation styles)
 tests/
@@ -235,3 +236,11 @@ as a fallback). `redocx inspect` reports that structure and coverage. `redocx im
 `REF` fields in `importer/labels.py`), writes a style sheet or, with `--keep-styles`, a body-less template, then
 compiles the result and compares it with the original (`importer/check.py`, the oracle; `--check` fails on any
 difference). See the [import guide](guide/import.md).
+
+`rtf/reader.py` reads an RTF file into the same IR, with the same report of what it left out. `redocx import` takes
+it for a file that starts with `{\rtf`; everything after the reader is shared. `\include-rtf` (`lower/media.py`)
+puts the blocks it reads into the document. The reader keeps a stack of group states (destination, character and
+paragraph formatting) over the tokens of `rtf/tokens.py`; `rtf/tables.py` turns rows into an `ir.Table` and
+`rtf/pictures.py` turns picture data into an image file. It is checked against Word: `tools/corpus/make-rtf-corpus.ps1`
+writes RTF files from Word and a RichEdit control and has Word convert each one to .docx, and
+`tests/rtf/test_corpus.py` compares the reader's IR with Word's reading of the same file.

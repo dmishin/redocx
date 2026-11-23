@@ -88,7 +88,8 @@ Steps, in order:
    Chicago author-date.
 4. [x] **Index**: `\ix{term!sub}` as `XE` fields, `\index[columns=2]` as an `INDEX` field with pre-rendered entries.
 5. [x] **Images and embedding**: SVG (with a PNG fallback, as Word stores it: `fallback=` or a grey
-   placeholder), `\embed-docx` and `\embed-rtf` (altChunk, merged by Word on open).
+   placeholder), `\embed-docx` and `\embed-rtf` (altChunk, merged by Word on open), and `\include-rtf` (an RTF
+   file read into native content; the same reader imports .rtf).
 6. [x] **Tooling**: `redocx fmt` (CST-based formatter, `--check`, `--diff`; §3.21), `--emit-ir` (the IR as
    JSON, one-way).
 

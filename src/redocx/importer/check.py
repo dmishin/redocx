@@ -22,7 +22,7 @@ from redocx import ir
 from redocx.math.nodes import canonical
 from redocx.ooxml.style_names import stored_name
 from redocx.props import PropertySet, Target
-from redocx.values import Length, TabStop
+from redocx.values import Length, LineSpacing, TabStop
 
 _SHOWN = 8
 """Differences listed in the report (the rest are counted)."""
@@ -134,11 +134,14 @@ def blocks_of(document: ir.Document) -> list[Block]:
 
 
 def in_twips(props: PropertySet) -> dict[str, object]:
-    """Lengths as Word stores them (twips), so 1.02cm and 578 twips are the same."""
+    """Lengths as Word stores them (twips), so 1.02cm and 578 twips are the same; line
+    spacing too (240ths of a line), so 1.08 and 259/240 lines are the same."""
 
     def value(v: object) -> object:
         if isinstance(v, Length):
             return v.in_twips
+        if isinstance(v, LineSpacing):
+            return (v.rule, v.line_attr)
         if isinstance(v, tuple):  # tab stops
             stops = cast(tuple[TabStop, ...], v)
             return tuple((t.position.in_twips, t.align, t.leader) for t in stops)

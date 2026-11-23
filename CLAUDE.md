@@ -27,6 +27,7 @@ Old name wordgenx/.wgx; leftovers = bugs.
 - stylesheet/: .rdxs and \styles{}.
 - ir.py: IR dataclasses (Word-shaped). ir_json.py: --emit-ir.
 - ooxml/: writer + parts/, template merge, reader (.docx -> IR), integrity (RDX0401), XSD validate.
+- rtf/: .rtf reader -> IR (tokens, reader, tables, pictures); used by import and `\include-rtf`.
 - importer/: IR -> .rdx printer, labels, check.py (round-trip oracle).
 - escape.py: data -> safe .rdx text (public; importer uses it). math/ (LaTeX subset -> OMML), highlight.py (Pygments), bibliography.py (BibTeX/CSL), std/ (std: macro library, .rdx), explain.py.
 - data/: XSDs, CSL styles.

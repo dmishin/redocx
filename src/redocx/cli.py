@@ -482,11 +482,11 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     importer = commands.add_parser(
         "import",
-        help="turn a .docx into redocx source: a folder with the source, styles and pictures",
+        help="turn a .docx or .rtf into redocx source: a folder with source, styles and pictures",
     )
-    importer.add_argument("file", metavar="FILE.docx")
+    importer.add_argument("file", metavar="FILE.docx|FILE.rtf")
     importer.add_argument(
-        "-o", "--output", metavar="DIR", help="the folder (default: FILE without .docx)"
+        "-o", "--output", metavar="DIR", help="the folder (default: FILE without its extension)"
     )
     importer.add_argument(
         "--check",

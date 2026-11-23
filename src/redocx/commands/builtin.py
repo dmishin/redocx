@@ -484,6 +484,10 @@ _command(
     body=STRING, body_required=True, body_doc="a file name",
 )  # fmt: skip
 _command(
+    "include-rtf", BLOCK, "An .rtf file's text, formatting, tables and pictures, put in here.",
+    body=STRING, body_required=True, body_doc="a file name",
+)  # fmt: skip
+_command(
     "raw", BOTH, "Raw WordprocessingML (block or inline, by its elements) or a whole equation.",
     _o("format", Choice.of("ooxml"), "the markup: ooxml"), positional="format",
     body=RAW, body_required=True, body_doc="XML",

@@ -2,8 +2,8 @@
 
 ## `redocx import`
 
-`redocx import` turns a `.docx` into redocx source: a folder with the `.rdx` document, a `.rdxs` style sheet, the
-pictures, and a report of what could not be expressed.
+`redocx import` turns a `.docx` (or an `.rtf`, see below) into redocx source: a folder with the `.rdx` document,
+a `.rdxs` style sheet, the pictures, and a report of what could not be expressed.
 
 ```bash
 redocx import report.docx                  # writes report/report.rdx, report.rdxs, media/, report.import.txt
@@ -51,6 +51,13 @@ Paragraphs whose text looks the same: 64 of 64.
 and lists the first differences when there are any. `--check` makes any difference fail the command, for scripts
 and CI. Known losses are listed rather than counted: text effects, headers Word does not show,
 embedded objects kept as their pictures. Page layout is Word's and is not compared.
+
+### RTF files
+
+`redocx import note.rtf` works the same way on an RTF file, as written by Word, WordPad or a RichEdit control. It
+reads what `\include-rtf` reads ([images](images.md)): text with its direct formatting, tables and pictures. The
+source has no styles of its own, since RTF writers put the formatting on each paragraph; list numbers stay as
+text. The report names what was left out, such as footnotes or headers. `--keep-styles` needs a .docx.
 
 ## How a build is checked
 

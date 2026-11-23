@@ -3,7 +3,7 @@
 % Word 2016 and later show chart.svg itself; older versions show the fallback picture
 % (a grey placeholder unless fallback= names one). Word merges chapter.docx into the
 % body when it opens the file; the table of contents lists its headings after updating.
-% It converts note.rtf the same way.
+% It converts note.rtf the same way; \include-rtf reads the same file into the document itself.
 
 \document[lang=en-GB]
 
@@ -18,6 +18,10 @@ Flow by hour, as a vector graphic:
 \embed-docx{chapter.docx}
 
 \embed-rtf{note.rtf}
+
+The same note, read by redocx:
+
+\include-rtf{note.rtf}
 
 = Conclusion
 

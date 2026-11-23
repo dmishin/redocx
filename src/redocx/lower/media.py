@@ -1,4 +1,4 @@
-r"""Images: \image, SVG included (design §3.16), \embed-docx and \embed-rtf."""
+r"""Images: \image, SVG included (design §3.16); \embed-docx, \embed-rtf and \include-rtf."""
 
 from __future__ import annotations
 
@@ -17,9 +17,11 @@ from redocx import ir
 from redocx.commands.bind import Args
 from redocx.commands.types import Fields, Percent
 from redocx.lower.common import BlockHandler, Format, InlineHandler, Piece, markup, verbatim
+from redocx.props import PropertySet, Target
+from redocx.rtf import is_rtf, read_rtf
 from redocx.syntax import ast
 from redocx.syntax.diagnostics import Code
-from redocx.values import Border, Color, Length
+from redocx.values import Border, Color, Length, LineSpacing
 
 if TYPE_CHECKING:
     from redocx.lower.lowering import Lowering
@@ -357,15 +359,86 @@ def _alt_chunk(
     if data is None:
         return []
     file_name = (lw.base_dir / name).name
-    if not (_is_docx(data) if kind == "docx" else _is_rtf(data)):
+    if not (_is_docx(data) if kind == "docx" else is_rtf(data)):
         lw.report(Code.INVALID_ARGUMENT, f"`{file_name}` is not {what}", command.span, help=help)
         return []
     lw.has_content = True
     return [ir.AltChunk(data, file_name, kind)]
 
 
-def _is_rtf(data: bytes) -> bool:
-    return data.lstrip(b"\xef\xbb\xbf \t\r\n").startswith(b"{\\rtf")
+def include_rtf(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
+    r"""\include-rtf{file.rtf}: the file's text, formatting, tables and pictures as the
+    document's own paragraphs (design §3.16)."""
+    name = verbatim(command)
+    if not name:
+        return []
+    data = read_file(lw, command, name, "document")
+    if data is None:
+        return []
+    file_name = (lw.base_dir / name).name
+    if not is_rtf(data):
+        lw.report(
+            Code.INVALID_ARGUMENT,
+            f"`{file_name}` is not an RTF document",
+            command.span,
+            help=r"an RTF file starts with `{\rtf`; save it as Rich Text Format",
+        )
+        return []
+    result = read_rtf(data)
+    left_out = [(what, n) for what, n in result.report.unsupported if what not in _KEPT_AS_TEXT]
+    if left_out:
+        listed = ", ".join(f"{what} (x{n})" if n > 1 else what for what, n in left_out)
+        lw.warn(
+            Code.NOT_SUPPORTED_YET,
+            f"`{file_name}`: left out {listed}",
+            command.span,
+            help="`\\embed-rtf` keeps everything, converted by Word when it opens the document",
+        )
+    lw.has_content = True
+    return list(_with_rtf_defaults(result.document))
+
+
+_KEPT_AS_TEXT = frozenset({"list (its numbers kept as text)"})
+"""What the reader reports that looks the same in the document: not worth a warning."""
+_RTF_PARAGRAPH = {
+    "space-before": Length(0),
+    "space-after": Length(0),
+    "line-spacing": LineSpacing.lines(1),
+    "align": "left",
+    "indent-left": Length(0),
+    "indent-right": Length(0),
+}
+"""RTF's paragraph defaults, written on each paragraph so the document's Normal style does
+not change the inset."""
+
+
+def _with_rtf_defaults(document: ir.Document) -> tuple[ir.Block, ...]:
+    paragraph_defaults = PropertySet(Target.PARAGRAPH, _RTF_PARAGRAPH).merged(
+        document.default_paragraph
+    )
+    run_defaults = document.default_run
+
+    def run(item: ir.Run) -> ir.Run:
+        return replace(item, props=run_defaults.merged(item.props))
+
+    def inline(item: ir.Inline) -> ir.Inline:
+        if isinstance(item, ir.Run):
+            return run(item)
+        if isinstance(item, ir.Hyperlink):
+            return replace(
+                item,
+                content=tuple(run(r) if isinstance(r, ir.Run) else r for r in item.content),
+            )
+        return item
+
+    def paragraph(p: ir.Paragraph) -> ir.Paragraph:
+        return replace(
+            p,
+            props=paragraph_defaults.merged(p.props),
+            content=tuple(inline(item) for item in p.content),
+        )
+
+    return ir.map_paragraphs(document.body, paragraph)
 
 
 def _is_docx(data: bytes) -> bool:
@@ -392,4 +465,8 @@ def _near_integer(dpi: float) -> Decimal:
 
 
 INLINES: dict[str, InlineHandler] = {"image": image, "textbox": textbox}
-BLOCKS: dict[str, BlockHandler] = {"embed-docx": embed_docx, "embed-rtf": embed_rtf}
+BLOCKS: dict[str, BlockHandler] = {
+    "embed-docx": embed_docx,
+    "embed-rtf": embed_rtf,
+    "include-rtf": include_rtf,
+}

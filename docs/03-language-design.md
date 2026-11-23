@@ -721,6 +721,29 @@ figures) and takes a .docx only, not a macro-enabled document or a template.
 own RTF reader when it opens the document, tables and pictures included. The same limits apply: only Word does
 the conversion, and redocx does not look inside the file. The file must start with `{\rtf`.
 
+`\include-rtf{part.rtf}` reads the RTF file itself, when the document compiles, and puts its content in as the
+document's own blocks: paragraphs with their direct formatting, tables, pictures and hyperlinks. The result looks
+the same in every reader, the table of contents sees its headings, and the build is checked like any other. RTF's
+defaults (no space between paragraphs, single line spacing, the file's default font and size) are written on each
+paragraph and run, so the document's Normal style does not change the inset. What the reader reads:
+
+- Character formatting: font, size, bold, italic, underline kinds, strike, colours, highlight and shading,
+  super- and subscript, caps, small caps, hidden, spacing, scale, language, right-to-left text.
+- Paragraph formatting: alignment, indents, spacing, line spacing, tab stops, borders, shading, keep with next,
+  keep lines together, page break before.
+- Tables from `\trowd`…`\row`: column widths from the `\cellx` edges, merged cells across and down, cell borders,
+  shading and vertical alignment, header rows, row height, alignment and indent of the table.
+- Pictures: PNG, JPEG, EMF, WMF and device-independent bitmaps, with their size, scale and cropping; a picture in
+  a Word shape (`\shp`) is read as an inline picture.
+- Fields: `HYPERLINK` becomes a link; other fields keep their last result as text. Bookmarks are kept.
+- Text in any code page (`\ansicpg`, `\fcharset`, `\cpg`) and Unicode (`\u`).
+
+Styles (`\s`) are not kept: their effect is already in the direct formatting the writer puts on each paragraph.
+Lists keep their numbers and bullets as text (`\listtext`), with the list's indents. Left out, and named in a
+warning: footnotes, headers and footers, comments, shapes other than pictures, text boxes, section breaks (the text
+goes on), and nested tables (their text stays, in the outer cell). `\embed-rtf` keeps all of these, converted by
+Word. `redocx import part.rtf` uses the same reader to print an RTF file as redocx source.
+
 ## 3.17 Collaboration and forms
 
 ```rdx
@@ -872,7 +895,7 @@ uses a `Bibliography` paragraph style. Native Word citations (`CITATION` fields,
    cannot be mixed. Whole equations (`m:oMath`, `m:oMathPara`) count as run-level.
 4. `\ooxml{…}` inside math: raw OMML elements in a formula (§3.14).
 5. `\embed-docx{part.docx}`, `\embed-rtf{part.rtf}`: insert another document as `altChunk`. Word merges it on open
-   (§3.16).
+   (§3.16). `\include-rtf{part.rtf}` reads an RTF file into the document's own content instead.
 
 Raw XML is checked when the document compiles: it must be well-formed WordprocessingML (`w:` elements or whole
 equations, and `m:` elements in `\ooxml`; the usual

@@ -170,6 +170,7 @@ The tier is the milestone where a feature first ships (see roadmap). *Esc* means
 | Embedded fonts | Later | ●● |
 | altChunk (embed docx) | M3 ✓ | ● |
 | altChunk (embed rtf) | ✓ | ● |
+| `\include-rtf`: RTF text, formatting, tables and pictures as native content | ✓ | ●●● |
 | Glossary / building blocks | Later | ●● |
 | Finalize (update fields via Word / LibreOffice), PDF export | Later (tooling ideas) | ●● |
 }
@@ -179,6 +180,7 @@ The tier is the milestone where a feature first ships (see roadmap). *Esc* means
 \table[style="Book Table", header-rows=1, widths=(48fr, 21fr, 7fr)]{
 | Feature | Tier | Diff. |
 | `redocx import`: .docx → source, style sheet, pictures and a loss report | M6 ✓ | ●●● |
+| `redocx import` of .rtf (Word, WordPad, RichEdit): direct formatting, tables, pictures | ✓ | ●●● |
 | Import with sugar (headings, lists, pipe tables, labels, captions) or commands only | M6 ✓ | ●● |
 | `--keep-styles` (compile into the original's styles as a template) | M6 ✓ | ●● |
 | Import oracle (`--check`: compare the recompiled document with the original) | M6 ✓ | ●● |

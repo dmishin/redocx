@@ -92,6 +92,16 @@ is written the way Word's Design > Watermark writes it, so Word's *Remove Waterm
 - `\embed-docx{part.docx}` inserts another Word document, which Word merges in when it opens the file.
 - `\embed-rtf{part.rtf}` inserts an RTF file, which Word converts when it opens the file, tables and pictures
   included. Other programs may show nothing there until the file has been saved in Word.
+- `\include-rtf{part.rtf}` reads an RTF file when the document compiles and puts its paragraphs, tables and
+  pictures in as the document's own, with their direct formatting. It shows the same in every program. Footnotes,
+  headers, comments and shapes other than pictures are left out with a warning; use `\embed-rtf` when they matter.
+  Styles are not kept, and list numbers stay as text.
+
+```rdx
+The note from the measuring software:
+
+\include-rtf{media/note.rtf}
+```
 - Diagrams and charts go in as pictures: draw them with any tool, export SVG (with a PNG fallback) or PNG, and use
   `\image`. Native Word charts and shapes are not supported yet.
 - The callouts of `std:callout` are shaded one-cell tables, often a better choice than text boxes for boxed text

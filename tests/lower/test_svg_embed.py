@@ -1,4 +1,5 @@
-"""SVG images with a fallback picture, and \\embed-docx as a w:altChunk (design §3.16)."""
+r"""SVG images with a fallback picture, `\embed-docx` and `\embed-rtf` as a w:altChunk, and
+`\include-rtf` (design §3.16)."""
 
 from __future__ import annotations
 
@@ -180,3 +181,58 @@ def test_embed_rtf_errors(files: Path) -> None:
     assert errors("\\embed-rtf{notes.txt}", files) == ["`notes.txt` is not an RTF document"]
     assert errors("\\embed-rtf{part.docx}", files) == ["`part.docx` is not an RTF document"]
     assert errors("| \\embed-rtf{part.rtf} |\n|---|", files) != []
+
+
+INSET = (
+    rb"{\rtf1\ansi\deff0{\fonttbl{\f0 Arial;}}{\colortbl;\red255\green0\blue0;}"
+    rb"\pard\qc\fs20 Red {\cf1\b text}.\par"
+    rb"\trowd\trgaph100\cellx2000\cellx4000\intbl A\cell B\cell\row"
+    rb"\pard{\pict\pngblip\picwgoal1440\pichgoal720 PNG}\par}"
+)
+
+
+@pytest.fixture
+def inset(files: Path) -> Path:
+    png = io.BytesIO()
+    PILImage.new("RGB", (4, 2), "blue").save(png, "PNG")
+    (files / "inset.rtf").write_bytes(INSET.replace(b"PNG", png.getvalue().hex().encode()))
+    note = rb"{\rtf1\ansi Text{\footnote\pard A note.}.\par{\header\pard Head\par}}"
+    (files / "note.rtf").write_bytes(note)
+    return files
+
+
+def test_include_rtf_is_the_documents_own_content(inset: Path) -> None:
+    doc = compiled("Before.\n\n\\include-rtf{inset.rtf}\n\nAfter.", inset)
+    texts = [p.text() for p in doc.body if isinstance(p, ir.Paragraph)]
+    assert texts[0] == "Before."
+    assert texts[1] == "Red text."
+    assert texts[-1] == "After."
+    first = doc.body[1]
+    assert isinstance(first, ir.Paragraph)
+    assert first.props.get("align") == "center"
+    assert first.props.get("space-after") == Length(0)  # RTF's default, not Normal's
+    (bold,) = [r for r in first.runs() if r.props.get("bold")]
+    assert bold.text == "text"
+    assert bold.props.get("font") == "Arial"
+    assert bold.props.get("size") == Length.pt(10)
+    (table,) = [b for b in doc.body if isinstance(b, ir.Table)]
+    assert [w.in_twips for w in table.widths] == [2000, 2000]
+    image = the_image(doc)
+    assert (image.width.in_twips, image.height.in_twips) == (1440, 720)
+    data, result = build("\\include-rtf{inset.rtf}", inset)
+    assert data is not None, result.render_diagnostics()
+    assert validate_package(data) == {}
+
+
+def test_include_rtf_warns_about_what_it_leaves_out(inset: Path) -> None:
+    result = compile_source("\\include-rtf{note.rtf}", inset)
+    assert result.document is not None
+    (warning,) = [d.message for _, d in result.diagnostics]
+    assert warning.startswith("`note.rtf`: left out ")
+    assert "footnote" in warning
+    assert "header" in warning
+
+
+def test_include_rtf_errors(files: Path) -> None:
+    assert errors("\\include-rtf{notes.txt}", files) == ["`notes.txt` is not an RTF document"]
+    assert errors("\\include-rtf{missing.rtf}", files)[0].startswith("cannot read document")

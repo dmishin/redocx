@@ -326,6 +326,19 @@ def test_the_import_command_checks_the_result(tmp_path: Path) -> None:
     assert "Paragraphs whose text looks the same: 2 of 2." in report
 
 
+def test_the_import_command_reads_rtf(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    rtf = CORPUS_DIR / "rtf" / "word-tables.rtf"
+    assert main(["import", str(rtf), "-o", str(tmp_path / "a"), "--check"]) == 0
+    assert (tmp_path / "a" / "word-tables.rdx").is_file()
+    assert "The printed source compiles." in capsys.readouterr().out
+
+
+def test_keep_styles_needs_a_docx(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    rtf = CORPUS_DIR / "rtf" / "word-tables.rtf"
+    assert main(["import", str(rtf), "-o", str(tmp_path / "a"), "--keep-styles"]) == 1
+    assert "`--keep-styles` needs a .docx" in capsys.readouterr().err
+
+
 def test_a_link_without_the_hyperlink_look_stays_plain(tmp_path: Path) -> None:
     """redocx's own citations link to their entries without the Hyperlink style."""
     body = (

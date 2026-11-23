@@ -27,6 +27,7 @@ feature is documented. They are smaller than 9.1 and can be picked up whenever a
 | Index | Page ranges (`XE \r`) and sort keys that differ from the term | [§3.12](03-language-design.md) |
 | SVG images | Rasterising the fallback picture: without `fallback=` it is a grey placeholder | [§3.16](03-language-design.md) |
 | `\embed-docx`, `\embed-rtf` | Looking inside the embedded file: its headings join the contents only after Word updates the field, and `@label` cannot point into it | [§3.16](03-language-design.md) |
+| `\include-rtf`, RTF import | Styles (flattened to direct formatting), real lists (numbers stay text), footnotes, headers and footers, comments, shapes other than pictures, text boxes, sections, nested tables | [§3.16](03-language-design.md) |
 | Cross-references | `form=relative` in full-context form; the "Table Table 3" lint | [§3.11](03-language-design.md) |
 | Style sheets | The `ooxml.*` escape hatch; formatting `.rdxs` files with `redocx fmt` | [§3.5](03-language-design.md), [§3.21](03-language-design.md) |
 | `redocx fmt` | Re-wrapping paragraphs; aligning pipe tables | [§3.21](03-language-design.md) |
