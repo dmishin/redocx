@@ -44,6 +44,9 @@ class Code(Enum):
     MALFORMED_DEFINITION = "RDX0114"
     UNCLOSED_GROUP = "RDX0115"
     NESTING_TOO_DEEP = "RDX0116"
+    COMMENT_AFTER_NUMBER = "RDX0117"
+    MARKDOWN = "RDX0118"
+    LIST_SPLIT = "RDX0119"
 
     # Style sheets (RDX02xx)
     STYLESHEET_SYNTAX = "RDX0201"
@@ -67,6 +70,7 @@ class Code(Enum):
     MATH = "RDX0311"
     CITATION = "RDX0312"
     OUTSIDE_ROOT = "RDX0313"
+    LIST_START = "RDX0314"
 
     # Output: the written package (RDX04xx)
     INCONSISTENT_OUTPUT = "RDX0401"

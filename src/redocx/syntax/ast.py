@@ -36,6 +36,9 @@ class Label(AstNode):
 @dataclass(frozen=True)
 class Text(AstNode):
     text: str
+    literal: bool = False
+    """Escaped characters kept exactly as written (`\\"`, `\\'`, `\\-`, `\\ `): no smart
+    punctuation, no collapsing of spaces."""
 
 
 @dataclass(frozen=True)
@@ -357,7 +360,8 @@ def _inlines(children: Sequence[CstNode | Token]) -> tuple[Inline, ...]:
                 case K.TEXT | K.ERROR_TOKEN:
                     _append_text(out, child.text, child.span)
                 case K.ESCAPE:
-                    _append_text(out, child.text[1:], child.span)
+                    char = child.text[1:]
+                    _append_text(out, char, child.span, literal=char in LITERAL_ESCAPES)
                 case K.WHITESPACE:
                     if not after_newline:
                         _append_text(out, child.text, child.span)
@@ -384,12 +388,16 @@ def _inlines(children: Sequence[CstNode | Token]) -> tuple[Inline, ...]:
     return tuple(out)
 
 
-def _append_text(out: list[Inline], text: str, span: Span) -> None:
+LITERAL_ESCAPES = frozenset("\"'- ")
+"""Escaped characters that smart punctuation and space collapsing leave alone."""
+
+
+def _append_text(out: list[Inline], text: str, span: Span, *, literal: bool = False) -> None:
     last = out[-1] if out else None
-    if isinstance(last, Text) and last.span.end == span.start:
-        out[-1] = Text(last.text + text, span=last.span.cover(span))
+    if isinstance(last, Text) and last.literal == literal and last.span.end == span.start:
+        out[-1] = Text(last.text + text, span=last.span.cover(span), literal=literal)
     else:
-        out.append(Text(text, span=span))
+        out.append(Text(text, span=span, literal=literal))
 
 
 def _inline_node(node: CstNode) -> Inline:

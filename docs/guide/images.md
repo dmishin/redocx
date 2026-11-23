@@ -63,7 +63,7 @@ A text box holds blocks (paragraphs, lists, tables) in a frame, inline or floati
 as a picture:
 
 ```rdx
-\textbox[width=6cm, border=(single, 1pt, theme.accent1), fill=theme.accent1.lighter(80%), x=right, padding=0.3cm]{
+\textbox[width=6cm, border=(single, 1pt, theme.accent1), shading=theme.accent1.lighter(80%), x=right, padding=0.3cm]{
   *Key figure*
 
   Revenue grew 12% in the quarter.
@@ -71,7 +71,7 @@ as a picture:
 The text box floats at the right of the column, and this text flows around it.
 ```
 
-Its own options: `width` (default: the text width), `height` (default: as tall as its text), `fill`, `border`,
+Its own options: `width` (default: the text width), `height` (default: as tall as its text), `shading` (or `fill`), `border`,
 `padding`, `valign` and `rotate`. A text box cannot hold notes, or sit in a figure.
 
 ## Watermarks

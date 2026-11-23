@@ -32,6 +32,52 @@ def test_error_codes_and_spans(text: str, code: Code, marked: str) -> None:
     assert result.source.slice(matching[0].span) == marked
 
 
+WARNINGS = [
+    ("Growth was 50 % this year", Code.COMMENT_AFTER_NUMBER, "% this year"),
+    ("Total 3\t% of all", Code.COMMENT_AFTER_NUMBER, "% of all"),
+    ("| a | b |\n|---|:---:|\n| 1 | 2 |", Code.MARKDOWN, "|---|:---:|"),
+    ("# Heading", Code.MARKDOWN, "#"),
+    ("### Heading", Code.MARKDOWN, "###"),
+    ("> quoted", Code.MARKDOWN, ">"),
+    ("* item", Code.MARKDOWN, "*"),
+    ("+ item", Code.MARKDOWN, "+"),
+    ("Text\n> quoted", Code.MARKDOWN, ">"),
+    ("See ![logo](logo.png).", Code.MARKDOWN, "![logo](logo.png)"),
+    ("Very **bold** text", Code.MARKDOWN, "**"),
+    ("1. one\nmore text\n2. two", Code.LIST_SPLIT, "more text"),
+    ("- one\nmore text\n- two", Code.LIST_SPLIT, "more text"),
+]
+
+
+@pytest.mark.parametrize(("text", "code", "marked"), WARNINGS)
+def test_warnings_for_habits_from_other_markup(text: str, code: Code, marked: str) -> None:
+    result = parse(text)
+    assert result.ok, result.render_diagnostics()
+    assert [(d.code, d.severity) for d in result.diagnostics] == [(code, Severity.WARNING)]
+    assert result.source.slice(result.diagnostics[0].span) == marked
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "12% and 50\\% and a%b",
+        "% a comment\ntext % a comment after a word",
+        "snake_case and *strong* and 5 * 3",
+        "| a | b |\n| --- | 1 |",
+        "| a |\n| b |\n|---|",  # a row of dashes after the second row is data
+        "#hashtag and issue #42",
+        "Sum of a\n+ b",
+        "\\# not a heading\n\n\\> not a quote\n\n\\+ not an item",
+        "1. one\n2. two\n\ntext\n\n1. new list",
+        "- one\n\nmore text\n- two",
+        "1. one\nmore text\n\n- other kind",
+    ],
+)
+def test_no_warning_for_ordinary_text(text: str) -> None:
+    result = parse(text)
+    assert not result.diagnostics, result.render_diagnostics()
+
+
 def test_unclosed_delimiter_is_only_a_warning() -> None:
     result = parse("price *approx")
     assert result.ok

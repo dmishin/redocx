@@ -48,12 +48,12 @@ are left empty:
 \table[header-rows=1]{
   | Item    | Q1                        | Q2  |
   | Revenue | 10                        | 12  |
-  | Cost    | \cell[shade=#FFF2CC]{7}   | 8   |
+  | Cost    | \cell[shading=#FFF2CC]{7} | 8   |
   | \cell[colspan=3, align=center]{*Total: 7*} |||
 }
 ```
 
-Cell options: `colspan`, `rowspan`, `shade` (background), `valign=top|center|bottom`, `align`, and borders
+Cell options: `colspan`, `rowspan`, `shading` (background; `shade` is the older name), `valign=top|center|bottom`, `align`, and borders
 (`border-top=(single, 1pt, #C00000)`, `borders=none`).
 
 ## Rows and cells with blocks

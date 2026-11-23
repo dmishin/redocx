@@ -57,6 +57,9 @@ def resolve_size(lw: Lowering, size: Length | Percent) -> Length:
 
 
 def read_file(lw: Lowering, command: ast.Command, name: str, what: str) -> bytes | None:
+    """The bytes of a file the document names: one given in memory, else one on disk."""
+    if (data := lw.memory_file(name)) is not None:
+        return data
     path = lw.file(name, command.span)
     if path is None:
         return None
@@ -203,7 +206,14 @@ def textbox(lw: Lowering, command: ast.Command, args: Args, fmt: Format) -> list
             for side in sides if key == "all" else (key,):
                 sides[side] = value
         top, bottom, left, right = sides["top"], sides["bottom"], sides["left"], sides["right"]
-    fill = args.get("fill", Color)
+    fill = args.get("shading", Color) or args.get("fill", Color)
+    if "shading" in args and "fill" in args:
+        lw.report(
+            Code.INVALID_ARGUMENT,
+            "`shading` is given twice",
+            args.span_of("fill"),
+            help="`fill` is the older name of `shading`; keep one",
+        )
     if fill is not None and fill.rgb is None and fill.theme is None:
         fill = None  # auto: no fill
     try:

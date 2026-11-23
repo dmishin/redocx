@@ -4,6 +4,23 @@ Defects and rough edges that are known and not yet fixed. Each entry says what h
 take. Features left out on purpose are in [Postponed features](09-postponed.md), not here. When an issue is fixed,
 remove it from this list and say so in the commit and the [changelog](../CHANGELOG.md).
 
+## Macros
+
+### Parameters are not replaced in string and raw bodies
+
+A macro parameter is replaced in markup and in option values, but not in a body that is read as a string or as raw
+text. So `\define{logo}[file]{\image[width=2cm]{#file}}` reads a file called `#file`, and no macro can take a path,
+URL, label or citation key for `\image`, `\url`, `\include`, `\ref`, `\pageref`, `\cite` or `\field`. Nothing warns:
+the error, if any, is about the file or label `#file`. It is also why `std:latex` cannot define `\includegraphics`,
+`\eqref` or `\citep` ([Postponed features](09-postponed.md)).
+
+Why: the parser reads those bodies as verbatim text, so `#file` there is text, not a parameter token.
+
+Fix: replace `#name` in string and raw bodies inside `\define` too, with `\#` for a literal `#` there. Before that,
+check that no valid source has `#word` in such a body inside a `\define`, since its meaning would change (Q14).
+Until then, a warning when a string body inside `\define` holds `#name` of one of the macro's parameters would
+at least report it.
+
 ## Math
 
 ### `\&` in an aligned row is an alignment point in Word

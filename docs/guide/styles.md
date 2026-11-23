@@ -61,7 +61,7 @@ Useful values:
 | `space-before`, `space-after` | `12pt` |
 | borders | `border-bottom: (single, 1pt, theme.accent1);`, `borders: (all=(single, 0.5pt, #BFBFBF));` |
 | `shading` | `#F2F2F2`, `theme.accent1.lighter(80%)` |
-| `tabs` | `tabs: 8cm center, 16cm right leader=dot;` |
+| `tabs` | `tabs: (8cm, center), (16cm, right, leader=dot);`, as in `\tabs[…]` |
 
 **Built-in styles** (Heading 1–9, Title, Strong, Hyperlink, Caption, Table Grid, …) need no definition: redocx
 adds them as Word defines them when the document uses them. Any other undefined style is an error.

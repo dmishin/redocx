@@ -8,6 +8,9 @@ from pathlib import Path
 import pytest
 from docx import Document
 
+from redocx import escape, ir
+from redocx.compiler import compile_source
+
 ROOT = Path(__file__).resolve().parents[1]
 GUIDE = ROOT / "docs" / "guide" / "generating.md"
 INVOICE = ROOT / "examples" / "generated" / "invoice.py"
@@ -31,6 +34,21 @@ def test_invoice_example_keeps_its_data_as_text() -> None:
         "130.00",
     ):
         assert expected in text
+
+
+def test_guide_outline_example_compiles_cleanly() -> None:
+    blocks = re.findall(r"^```python\n(.*?)^```$", GUIDE.read_text("utf-8"), re.M | re.S)
+    (code,) = [b for b in blocks if "def outline" in b]
+    namespace: dict[str, object] = {"escape": escape}
+    exec(code, namespace)  # the guide's own example
+    outline = namespace["outline"]
+    assert callable(outline)
+    data = [("Scope *and* aims", ["Line one\nline two", "- not an item"]), ("Next", ["x"])]
+    result = compile_source(str(outline(data)))
+    assert not result.diagnostics, result.render_diagnostics()
+    assert result.document is not None
+    texts = [p.text() for p in result.document.body if isinstance(p, ir.Paragraph)]
+    assert texts == ["Scope *and* aims", "Line one line two", "- not an item", "Next", "x"]
 
 
 def test_guide_example_runs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

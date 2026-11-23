@@ -40,21 +40,57 @@ Text goes into three kinds of places, each with its own rules (see [Syntax](synt
 | Where the data goes | Function | For example |
 |---------------------|----------|-------------|
 | markup that may start a line: a paragraph, the body of `\p`, `\b`, `\cell`, `\footnote` | `escape.text(s)` | `\p{{escape.text(s)}}` |
-| markup in the middle of a line: after `= `, `- ` or `1. `, a pipe-table cell | `escape.inline(s)` | `= {escape.inline(s)}` |
+| the same, with each line break in the data a line break in the paragraph (an address) | `escape.lines(s)` | `\p{{escape.lines(s)}}` |
+| text after a list marker | `escape.text(s, indent=N)` | `1. {escape.text(s, indent=3)}` |
+| markup in the middle of a line: after `= `, a pipe-table cell | `escape.inline(s)` | `= {escape.inline(s)}` |
 | a string body: `\image`, `\url`, `\include` | `escape.string(s)` | `\url{{escape.string(s)}}` |
 | an option value | `escape.value(s)` | `alt={escape.value(s)}` (adds the quotes) |
 
-`escape.text` also makes literal what would start a block at the start of a line: `- `, `1. `, `a. `, `=`, `|`,
-`$$`. A line break in the data stays a line break in the source: one reads as a space, a blank line starts a new
-paragraph. For a line break inside the paragraph, replace `\n` with `\br` after escaping, as the invoice example
-does with the address.
+Escaped text reads back as exactly the data:
 
-Two things still apply to escaped text, as to any text:
-
-- Runs of spaces collapse to one.
-- Straight quotes and `--` become typographic quotes and dashes. `\document[smart-quotes=off]` keeps them as typed.
+- `escape.text` makes literal what would start a block at the start of a line: `- `, `1. `, `a. `, `=`, `|`,
+  `$$`, and the Markdown marks redocx warns about (`#`, `>`, `+`). A line break in the data stays a line break in
+  the source: one reads as a space, a blank line starts a new paragraph. `escape.lines` makes each one `\br`.
+- After a list marker, pass the marker's width as `indent` (3 for `1. `, 2 for `- `): the later lines of the data
+  are indented to the item's text, so they stay in the item instead of ending the list.
+- `escape.inline` writes line breaks as spaces, so the data stays on its line (a heading, a table row).
+- Spaces are kept: a run of them, and those at the start and end, are written `\ `.
+- Straight quotes and hyphens are kept as typed (`\"`, `\'`, `\-`). Smart punctuation still applies to the text
+  the template writes itself.
 
 `escape.value` turns line breaks into spaces, since an option value is one line.
+
+## Headings, lists and tables from data
+
+The command forms of headings and list items need no indentation, so they are the easiest to write from a loop:
+
+```python
+def outline(sections: list[tuple[str, list[str]]]) -> str:
+    parts: list[str] = []
+    for title, points in sections:
+        parts.append(f"\\heading[2]{{{escape.inline(title)}}}\n")
+        items = "\n".join(f"  \\item{{{escape.text(point)}}}" for point in points)
+        parts.append(f"\\list[Bullets]{{\n{items}\n}}\n")
+    return "\n".join(parts)
+```
+
+`\heading[level, id=…, unnumbered]` takes paragraph formatting too (`page-break-before`), and an `\item` inside
+another `\item` is one level deeper.
+
+In a pipe table, a cell that spans columns is followed by the empty cells it covers, and a cell that spans rows
+takes the place of the cells below it, which the rows below leave out:
+
+```rdx
+\table[header-rows=1, widths=(3cm, 1fr, 1fr)]{
+| Region | Q1 | Q2 |
+| \cell[rowspan=2]{North} | 10 | 12 |
+| 11 | 13 |
+| \cell[colspan=3]{No data for the South} |||
+}
+```
+
+So a generator writes `colspan=N` and then N-1 empty cells (`|||` for three columns), and for `rowspan=N` writes
+the next N-1 rows one cell shorter.
 
 ## With Jinja
 
@@ -66,7 +102,13 @@ import jinja2
 from redocx import escape
 
 env = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"), autoescape=False)
-env.filters.update(rdx=escape.text, rdx_inline=escape.inline, rdx_value=escape.value, rdx_string=escape.string)
+env.filters.update(
+    rdx=escape.text,
+    rdx_lines=escape.lines,
+    rdx_inline=escape.inline,
+    rdx_value=escape.value,
+    rdx_string=escape.string,
+)
 source = env.get_template("letter.rdx.j2").render(client=client, items=items)
 ```
 
@@ -92,6 +134,22 @@ Jinja reads `{#sec:intro}` as the start of a comment. Write the label as `{{ "{#
 there are errors) and the result with its diagnostics. Relative file names in the source (`\image`, `\include`,
 `\use`) are found from `base_dir`; it defaults to the current directory. `build(..., template="corp.dotx")`
 compiles into a template, as `redocx build -t` does.
+
+Pictures and documents the program makes itself need not go through files on disk. `files` gives them by the
+name the source uses, as bytes or as a function that returns the bytes (called once, when the document first
+needs them):
+
+```python
+def chart() -> bytes:
+    ...  # draw the chart and return its PNG bytes
+
+source = "\\image[width=12cm]{charts/q3.png}\n"
+data, result = build(source, files={"charts/q3.png": chart})
+```
+
+A name in `files` wins over a file on disk of the same name, and is inside `root` whatever its name. It works for
+`\image` (and its SVG `fallback`), `\embed-docx` and `\watermark[image=…]`; `\include`, `\use` and
+`\bibliography` read from disk.
 
 Treat any diagnostic as a failure in generated documents: a warning there usually means the data held something
 the template did not expect.

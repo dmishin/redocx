@@ -26,7 +26,7 @@ are described in the [syntax guide](guide/syntax.md) and the [macro guide](guide
 ## Commands by topic
 
 - **Preamble: the document as a whole:** [`\document`](#cmd-document), [`\meta`](#cmd-meta), [`\settings`](#cmd-settings), [`\use`](#cmd-use), [`\include`](#cmd-include), [`\styles`](#cmd-styles), [`\bibliography`](#cmd-bibliography)
-- **Paragraphs, lists and tab stops:** [`\p`](#cmd-p), [`\align`](#cmd-align), [`\list`](#cmd-list), [`\tabs`](#cmd-tabs)
+- **Paragraphs, lists and tab stops:** [`\p`](#cmd-p), [`\heading`](#cmd-heading), [`\align`](#cmd-align), [`\list`](#cmd-list), [`\item`](#cmd-item), [`\tabs`](#cmd-tabs)
 - **Sections, headers and footers:** [`\section`](#cmd-section), [`\header`](#cmd-header), [`\footer`](#cmd-footer), [`\watermark`](#cmd-watermark)
 - **Tables:** [`\table`](#cmd-table), [`\row`](#cmd-row), [`\cell`](#cmd-cell)
 - **Captions, contents and the index:** [`\caption`](#cmd-caption), [`\figure`](#cmd-figure), [`\toc`](#cmd-toc), [`\listof`](#cmd-listof), [`\index`](#cmd-index), [`\ix`](#cmd-ix), [`\printbibliography`](#cmd-printbibliography)
@@ -152,6 +152,22 @@ A paragraph with a style or direct paragraph formatting.
 | `id` | text | a label to refer to this with @label |
 | `drop-cap` | on \| off \| (lines=..., in-margin) | a large first letter over the first lines |
 
+<a id="cmd-heading"></a>
+### `\heading`
+
+A heading: the command form of `= Heading`.
+
+- **Where:** a block of its own.
+- **Body:** text and commands.
+- **Positional option:** `level`.
+- **Also takes** every one of the [paragraph properties](#paragraph-properties) as an option.
+
+| Option | Value | Meaning |
+|--------|-------|---------|
+| `level` | a whole number from 1 to 9 | the heading level, 1 to 9 (default 1) |
+| `id` | text | a label to refer to this with @label |
+| `unnumbered` | on \| off | no number, as `=* Heading` |
+
 <a id="cmd-align"></a>
 ### `\align`
 
@@ -176,9 +192,21 @@ A list with a named numbering definition.
 
 | Option | Value | Meaning |
 |--------|-------|---------|
-| `numbering` (required) | text | the numbering definition |
+| `numbering` | text | the numbering definition (default: Numbers) |
 | `continue` | on \| off | continue the previous list of this numbering |
 | `restart` | a whole number of at least 0 | the number to start at |
+
+<a id="cmd-item"></a>
+### `\item`
+
+A list item inside `\list`: the command form of `- ` and `1. ` items.
+
+- **Where:** a block of its own.
+- **Body:** text and commands.
+
+| Option | Value | Meaning |
+|--------|-------|---------|
+| `id` | text | a label to refer to this with @label |
 
 <a id="cmd-tabs"></a>
 ### `\tabs`
@@ -324,7 +352,7 @@ A table cell: any blocks.
 |--------|-------|---------|
 | `colspan` | a whole number of at least 1 | the number of columns it spans |
 | `rowspan` | a whole number of at least 1 | the number of rows it spans |
-| `shade` | #RRGGBB \| theme.<name> | the cell's background |
+| `shade` | #RRGGBB \| theme.<name> | the older name of `shading` |
 | `valign` | one of top \| center \| bottom | where the content sits in a taller cell |
 | `align` | one of left \| center \| right \| justify \| distribute | paragraph alignment |
 
@@ -846,7 +874,8 @@ A text box: blocks in a frame, inline or floating.
 |--------|-------|---------|
 | `width` | a length (12cm) or a percentage of the text width (50%) | default: the text width |
 | `height` | a length such as 12pt or 2.5cm | default: as tall as its text |
-| `fill` | #RRGGBB \| auto \| theme.<name> | the background colour |
+| `shading` | #RRGGBB \| auto \| theme.<name> | the background colour |
+| `fill` | #RRGGBB \| auto \| theme.<name> | the older name of `shading` |
 | `border` | (style, width, colour, space=…) \| none | a line around it |
 | `padding` | (all=..., top=..., bottom=..., left=..., right=...) | space between the frame and the text |
 | `valign` | one of top \| center \| bottom | where the text sits in a taller box |

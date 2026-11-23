@@ -102,8 +102,6 @@ LATEX: Mapping[str, LatexHint] = _hints(
     ("marginpar", "use a floating `\\textbox` or a `\\comment`", TEXT),
     ("href", 'write `[text](https://...)` or `\\link[to="https://..."]{text}`', TEXT),
     ("today", "write `\\date`", TEXT),
-    # Lists.
-    ("item", "start each item on its own line with `- ` or `1. `", LISTS),
     # Labels and references.
     ("label", "add `{#name}` after a heading or `$$ ... $$`, or `id=name` on a command", LABELS),
     ("autoref cref Cref eqref", 'write `@name`; it prints "Figure 3", "2.1" or "(4)"', LABELS),

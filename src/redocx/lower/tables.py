@@ -204,6 +204,13 @@ def _row(lw: Lowering, command: ast.Command) -> RowSpec:
 def _cell(lw: Lowering, command: ast.Command) -> CellSpec:
     args = lw.bind(command, COMMANDS["cell"])
     props = args.props or EMPTY_CELL
+    if "shade" in args and "shading" in props:
+        lw.report(
+            Code.INVALID_ARGUMENT,
+            "`shading` is given twice",
+            args.span_of("shade"),
+            help="`shade` is the older name of `shading`; keep one",
+        )
     for key, prop in (("shade", "shading"), ("valign", "valign")):
         if key in args:
             props = props.merged(PropertySet(Target.CELL, {prop: args.values[key]}))

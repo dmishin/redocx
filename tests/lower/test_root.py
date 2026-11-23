@@ -70,3 +70,27 @@ def test_cli_root(tree: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["check", str(doc), "--root", str(tree / "inside")]) == 1
     assert "error[RDX0313]" in capsys.readouterr().err
     assert main(["build", str(doc), "--root", str(tree)]) == 0
+
+
+def test_files_in_memory_need_no_disk(tmp_path: Path) -> None:
+    logo = (EXAMPLES / "img" / "logo.png").read_bytes()
+    calls: list[str] = []
+
+    def chart() -> bytes:
+        calls.append("chart")
+        return logo
+
+    source = "\\image{charts/q3.png}\n\n\\image{charts/q3.png}\n\n\\image{logo.png}\n"
+    result = compile_source(
+        source, tmp_path, root=tmp_path, files={"charts/q3.png": chart, "logo.png": logo}
+    )
+    assert not result.diagnostics, result.render_diagnostics()
+    assert result.document is not None
+    assert calls == ["chart"]  # called once, when first needed
+
+
+def test_files_in_memory_win_over_the_disk(tmp_path: Path) -> None:
+    (tmp_path / "logo.png").write_bytes(b"not a picture")
+    logo = (EXAMPLES / "img" / "logo.png").read_bytes()
+    result = compile_source("\\image{logo.png}\n", tmp_path, files={"logo.png": logo})
+    assert not result.diagnostics, result.render_diagnostics()

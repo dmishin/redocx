@@ -39,9 +39,54 @@ feature is documented. They are smaller than 9.1 and can be picked up whenever a
 | Comments | Replies and the resolved state (Word 2013's `commentsExtended.xml`); comments in headers, notes and text boxes | [§3.17](03-language-design.md) |
 | Content controls | Repeating sections (Word 2013's `w15:repeatingSection`); rich-text controls around whole paragraphs (block-level `w:sdt`); placeholders from building blocks | [§3.17](03-language-design.md) |
 | Import (reader) | Shapes without text; tracked changes are read as accepted (deletions dropped); emphasis marks; Word 2010 text effects (glow, shadow, 3-D, ligatures); embedded and linked objects keep only their picture; content controls are read as their text | [M6](06-roadmap.md) |
-| Import (printed source) | Repeated spaces collapse to one; a comment on text across paragraphs becomes a point comment; first-page and even-page headers that Word does not show; a list that skips a level, or resumes an earlier list; turning a column separator off in a later section; formatting a style sheet cannot route back (run shading in a paragraph style, cell borders at the top level of a table style) | [M6](06-roadmap.md) |
+| Import (printed source) | Spaces repeated across a change of formatting collapse to one; a comment on text across paragraphs becomes a point comment; first-page and even-page headers that Word does not show; a list that skips a level, or resumes an earlier list; turning a column separator off in a later section; formatting a style sheet cannot route back (run shading in a paragraph style, cell borders at the top level of a table style) | [M6](06-roadmap.md) |
 | Import (style sheet) | Table styles and list levels are printed in full, not as differences from redocx's; the theme's effects and East Asian or complex-script fonts (`--keep-styles` keeps them) | [M6](06-roadmap.md) |
 | Import (sugar) | `-` and `1.` lists outside `\list[Name]` (they need the Bullets and Numbers definitions); labels on other paragraphs, list items and numbered paragraphs (REF `\w`, `\r`); captions that are not `Kind {SEQ Kind}: text` in the Caption style; leaving out direct formatting in tables; `\ix` from XE fields; code spans | [M6](06-roadmap.md) |
 | Standard library | `std:theorem` (`\theorem`, `\lemma`, `\definition`, `\proof`) and `std:subfigure` (`\subfigures`); only `std:callout`, `std:signature` and `std:latex` exist | [§3.18](03-language-design.md) |
 | LaTeX compatibility | `\citep`, `\citet`, `\parencite`, `\eqref`, `\cref`, `\autoref`, `\includegraphics` in `std:latex`: they wrap commands whose body is a string (`\cite`, `\ref`, `\image`), and `#body` is substituted only in markup bodies | [§3.18](03-language-design.md) |
 | Right to left | Separate complex-script values for bold, italic and size (they follow the Latin ones); `start`/`end` alignment | [§3.4](03-language-design.md) |
+
+## 9.3 Language structure (noted 2026-11-23)
+
+Weak points of the language itself, found in a review of the syntax. Each works today and is not a defect in
+output, but each makes the language harder to extend or to read with other tools. They are recorded so that a
+later change can address them on purpose; most would change what valid sources mean and so fall under Q14.
+
+### A better macro system
+
+- **One namespace.** Built-in commands, `std:` macros and a document's own macros share one set of names, and a
+  built-in cannot be redefined. So a built-in added in a later version (allowed under Q14) turns a document's
+  macro of that name into an error. A document macro could shadow a built-in with a warning, as it already
+  shadows `std:` macros, or document macros could get a namespace of their own.
+- **Parameters only in markup.** A parameter is not replaced in string and raw bodies (see
+  [known issues](known-issues.md)), and a macro cannot declare that its own body is a string. Macros therefore
+  cannot wrap `\image`, `\url`, `\ref` or `\cite` with a parameter for the file, address, label or key.
+- **No choices.** Without conditionals, each variant is its own macro (`\note`, `\warning` instead of
+  `\callout[kind=…]`). This is by design (Q7): generators choose. A choice over a fixed set of words, such as
+  `kind=warning` picking one of several definitions, would cover the common case without becoming scripting.
+- **Constants in text options.** `\let` constants are not expanded in plain-text options
+  (`\toc[title={Contents of \product}]` is an error).
+
+### The parser
+
+- **Body kinds come from the command table.** Whether `{…}` holds markup, a string, raw text, math or a style
+  sheet depends on the command's name (`redocx.syntax.commands.body_kind`). So no grammar can be written without
+  the table: a syntax highlighter or a tree-sitter grammar must carry a copy, and changing a command's body kind
+  changes how existing sources parse. User macros cannot choose a body kind.
+- **Speculative inline marks.** `[text](url)`, `*…*` and `_…_` are tried and undone when they do not close. A
+  budget for the text that failed attempts read again (20 times the length of the source, plus 10,000
+  characters) keeps this linear on adversarial input; past it, openers are plain text without a diagnostic. Ordinary documents never reach it, but the rule is not
+  local: what a mark means could depend on text far before it.
+- **Context rules.** Several marks depend on their surroundings: `%` starts a comment only at the start of a line
+  or after whitespace; `#` and six hex digits are a colour even inside `\define`, so a parameter named like
+  `#facade` cannot be used as an option value; command names take hyphens greedily (`\brand-new` is one name);
+  `a.` is a list marker only inside a list item; `$$` is special only at the start of a block; `{` after a heading
+  is a label only when it reads `{#name}`. Each is small, and each was chosen so prose needs no escapes, but
+  together they make the hand-written parser the only full statement of the grammar.
+- **No written grammar.** Design §3.22 lists the rules in prose. A grammar in EBNF for the context-free part,
+  with the context rules above listed beside it, would make them visible and testable against the parser.
+- **Style sheets have a second parser** that is not lossless, so `redocx fmt` does not format `.rdxs` files
+  (§9.2).
+- **Option lists in three forms.** `[key=value]` after commands, `{#label, key=value}` after code fences and
+  `$$ … $$`, and `{#label}` after headings and list markers; elsewhere the label is `id=`. See the table in
+  [the syntax guide](guide/syntax.md#labels).

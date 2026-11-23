@@ -107,9 +107,9 @@ with a hint, which helps when converting a file to native redocx.
 
 | LaTeX | redocx |
 |-------|----------|
-| `itemize` with `\item` | lines starting `- ` |
-| `enumerate` with `\item` | lines starting `1. ` (nested: `a. `) |
-| nested environments | indented items |
+| `itemize` with `\item` | lines starting `- `, or `\list[Bullets]{\item{…} \item{…}}` |
+| `enumerate` with `\item` | lines starting `1. ` (nested: `a. `), or `\list{\item{…} \item{…}}` |
+| nested environments | indented items, or an `\item` inside an `\item` |
 | `enumitem` settings | a `numbering` definition in a style sheet, used with `\list[Name]{…}` |
 | `\setcounter{enumi}{4}` | `\list[Numbers, restart=5]{…}` |
 | resuming a list | `\list[Name, continue]{…}` |
@@ -165,7 +165,7 @@ with a hint, which helps when converting a file to native redocx.
 | `\multicolumn{3}{c}{x}` | `\cell[colspan=3, align=center]{x}` then two empty cells | |
 | `\multirow{2}{*}{x}` | `\cell[rowspan=2]{x}` | |
 | `longtable` with `\endhead` | `header-rows=1` | every Word table can break across pages |
-| `\rowcolor`, `\cellcolor` | a table style, or `\cell[shade=…]` | |
+| `\rowcolor`, `\cellcolor` | a table style, or `\cell[shading=…]` | |
 | `table` environment with `\caption` | `\caption{…}` right before the table | |
 
 ## Math

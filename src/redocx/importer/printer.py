@@ -460,6 +460,17 @@ class Printer:
         heading = _HEADING_RE.fullmatch(style) if style is not None else None
         label = self.labels.headings.get(id(p))
         tail = f" {{#{label}}}" if label else ""
+        if heading is not None and text.strip() and not opts:
+            if self.sugar and not p.props:
+                marker = "=" * int(heading.group(1)) + ("*" if p.unnumbered else "")
+                return f"{marker} {text}{tail}"
+            heading_opts = [heading.group(1)]
+            if p.unnumbered:
+                heading_opts.append("unnumbered")
+            if label is not None:
+                heading_opts.append(f"id={label}")
+            heading_opts.extend(options(Target.PARAGRAPH, p.props))
+            return f"\\heading{_opts(heading_opts)}{{{line_start(text)}}}"
         if heading is not None and p.unnumbered:
             if p.props or opts:
                 self.lost["formatting of an unnumbered heading"] += 1
@@ -790,8 +801,6 @@ class Printer:
         return []
 
     def run(self, run: ir.Run) -> list[_Tok]:
-        if "  " in run.text:
-            self.lost["repeated spaces (collapsed to one)"] += 1
         tokens: list[_Tok] = []
         for piece in re.split(r"([\t\n])", run.text):
             if piece == "\t":
@@ -799,7 +808,8 @@ class Printer:
             elif piece == "\n":
                 tokens.append(_Tok("\\br", bare=True))
             elif piece:
-                tokens.append(_Tok(inline(piece)))
+                # The document has smart-quotes=off, so quotes and dashes need no escape.
+                tokens.append(_Tok(inline(piece, punctuation=False, edges=False)))
         props = run.props
         if self.run_base is not None and run.style is None:
             props = _differences(props, self.run_base)  # what the paragraph style already gives
@@ -950,7 +960,7 @@ class Printer:
         if box.height is not None:
             opts.append(f"height={length(box.height, 'size')}")
         if box.fill is not None:
-            opts.append(f"fill={color(box.fill)}")
+            opts.append(f"shading={color(box.fill)}")
         if box.border is not None:
             opts.append(f"border={border(box.border)}")
         if box.padding != default.padding:

@@ -24,7 +24,7 @@ space; `\product{}` ends the name where text follows directly.
 
 \define{box}[title="Note", color=#E8F0FA]{
   \table[style=none, widths=(1fr)]{
-    \row[cant-split]{\cell[shade=#color]{
+    \row[cant-split]{\cell[shading=#color]{
       \p[keep-with-next]{\b{#title}}
 
       #body
@@ -39,7 +39,7 @@ A \term{queue} forms when arrivals outpace service.
 
 - `\define{name}[parameters]{definition}`. Parameters are named; `title="Note"` gives a default.
 - Inside the definition, `#title` is a parameter's value and `#body` the body the macro is called with.
-  Parameters work in text and as option values (`shade=#color`).
+  Parameters work in text and as option values (`shading=#color`).
 - A parameter without a default is optional: left out, it is empty, and an option whose value it is
   disappears, so `\ix[see=#see]` above has no `see` option when `\term` is called without one.
 - A macro whose definition is one paragraph works inside text; anything else stands alone as blocks.

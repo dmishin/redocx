@@ -49,7 +49,7 @@ Paragraphs whose text looks the same: 64 of 64.
 ```
 
 and lists the first differences when there are any. `--check` makes any difference fail the command, for scripts
-and CI. Known losses are listed rather than counted: repeated spaces, text effects, headers Word does not show,
+and CI. Known losses are listed rather than counted: text effects, headers Word does not show,
 embedded objects kept as their pictures. Page layout is Word's and is not compared.
 
 ## How a build is checked

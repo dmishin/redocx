@@ -83,7 +83,7 @@ def test_positional_value_and_flags() -> None:
 
 
 def test_required_options() -> None:
-    assert messages(r"\list{x}") == ["`\\list` needs `numbering`"]
+    assert messages(r"\style{x}") == ["`\\style` needs `style`"]
     assert messages(r"\link{x}") == ["`\\link` needs `to`"]
 
 

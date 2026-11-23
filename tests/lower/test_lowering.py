@@ -208,6 +208,88 @@ def test_named_lists_continue_and_restart() -> None:
     assert refs[2].start == 5
 
 
+@pytest.mark.parametrize(
+    ("text", "message", "help"),
+    [
+        ("5. five\n6. six", "from 1, not 5", "`\\list[restart=5]{...}`"),
+        ("\\list[Numbers]{\n3. c\n}", "from 1, not 3", "`\\list[restart=3]{...}`"),
+        ("\\list[Legal]{\n2. b\n}", "from 1, not 2", "`\\list[Legal, restart=2]{...}`"),
+        ("1. a\n   3. c", "from 1, not 3", "a nested list counts from 1"),
+    ],
+)
+def test_list_start_number_is_not_used(text: str, message: str, help: str) -> None:
+    styles = '\\styles{ numbering Legal { level 1 { text: "%1."; } } }\n\n'
+    found = [d for _, d in diagnostics(styles + text).diagnostics]
+    assert [(d.code, d.severity) for d in found] == [(Code.LIST_START, Severity.WARNING)]
+    assert message in found[0].message
+    assert help in (found[0].help or "")
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "1. a\n2. b",
+        "\\list[restart=5]{\n5. five\n}",
+        "\\list[restart=5]{\n1. five\n}",  # the marker only says "numbered"
+        "\\list{\n1. a\n}\n\n\\list[continue]{\n2. b\n}",
+        "\\list{\n1. a\n\nText.\n\n2. b\n}",  # one list, counting on
+    ],
+)
+def test_list_start_without_warning(text: str) -> None:
+    result = diagnostics(text)
+    assert not result.diagnostics, result.render_diagnostics()
+
+
+def test_list_without_a_name_uses_numbers() -> None:
+    refs = [p.list_item for p in paragraphs(compiled("\\list[restart=5]{\n5. five\n}"))]
+    assert refs[0] is not None
+    assert (refs[0].numbering, refs[0].start) == ("Numbers", 5)
+
+
+def _shape(document: ir.Document) -> list[tuple[object, ...]]:
+    """What a paragraph is, without where it came from."""
+    return [(p.text(), p.style, p.unnumbered, p.props, p.list_item) for p in paragraphs(document)]
+
+
+def test_heading_command_is_the_sugar() -> None:
+    sugar = compiled("= One {#sec:one}\n\n==* Two\n\nSee @sec:one.")
+    command = compiled(
+        "\\heading[id=sec:one]{One}\n\n\\heading[2, unnumbered]{Two}\n\nSee @sec:one."
+    )
+    assert _shape(command) == _shape(sugar)
+
+
+def test_heading_command_takes_paragraph_formatting() -> None:
+    (heading,) = paragraphs(compiled("\\heading[3, page-break-before, align=center]{Three}"))
+    assert heading.style == "Heading 3"
+    assert heading.props["page-break-before"] is True
+    assert heading.props["align"] == "center"
+
+
+def test_item_command_is_the_sugar() -> None:
+    sugar = compiled(
+        "\\list{\n1. One\n2. {#it:two} Two\n\n   More of two.\n   1. Nested\n}\n\nSee @it:two."
+    )
+    command = compiled(
+        "\\list{\n  \\item{One}\n  \\item[id=it:two]{Two\n\n    More of two.\n"
+        "    \\item{Nested}\n  }\n}\n\nSee @it:two."
+    )
+    assert _shape(command) == _shape(sugar)
+
+
+def test_item_inside_a_sugar_item_is_one_level_deeper() -> None:
+    refs = [p.list_item for p in paragraphs(compiled("- a\n\n  \\item{b}"))]
+    assert [(r.numbering, r.level) for r in refs if r is not None] == [
+        ("Bullets", 1),
+        ("Bullets", 2),
+    ]
+
+
+def test_item_outside_a_list_is_an_error() -> None:
+    result = diagnostics("\\item{x}")
+    assert [d.message for _, d in result.diagnostics] == ["`\\item` belongs inside `\\list`"]
+
+
 def test_list_level_style_from_numbering() -> None:
     doc = compiled(
         '\\styles{ paragraph "Clause 1" { bold; }\n numbering MSA { level 1 { style: "Clause 1"; } } }\n\n'

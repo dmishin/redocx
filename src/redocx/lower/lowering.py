@@ -19,7 +19,7 @@ read, so a \\styles block may appear anywhere. Built-in styles the markup relies
 from __future__ import annotations
 
 import difflib
-from collections.abc import Generator, Iterable, Sequence
+from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -119,12 +119,20 @@ class StyleUse:
     brings in a built-in style; a style that is missing was reported where it is named."""
 
 
+FileData = bytes | Callable[[], bytes]
+"""A file given in memory: its bytes, or a function that returns them when they are needed."""
+
+
 @dataclass
 class Lowering:
     source: Source
     base_dir: Path
     root: Path | None = None
     """The folder every file the document names must be in (`--root`); resolved."""
+    files: Mapping[str, FileData] = field(default_factory=lambda: {})
+    """Files given in memory (`build(files=...)`), by the name the document uses."""
+    file_cache: dict[str, bytes] = field(default_factory=lambda: {})
+    """The bytes of the in-memory files read so far (a function is called once)."""
     diagnostics: list[Located] = field(default_factory=lambda: [])
     stylesheets: StyleSheetCompiler = field(
         default_factory=lambda: StyleSheetCompiler(builtins=BUILTIN_STYLES)
@@ -158,6 +166,8 @@ class Lowering:
     style_uses: list[StyleUse] = field(default_factory=lambda: [])
     list_uses: list[tuple[str, Span, Source]] = field(default_factory=lambda: [])
     lists: text.ListState = field(default_factory=lambda: text.ListState())
+    item_context: text.ListContext | None = None
+    """The list or list item being lowered: an `\\item` in it is one level deeper."""
     links: int = 0
     macro_depth: int = 0
     include_stack: list[Path] = field(default_factory=lambda: [])
@@ -504,7 +514,7 @@ class Lowering:
     def inline(self, node: ast.Inline, fmt: Format) -> list[Piece]:
         match node:
             case ast.Text():
-                return [Piece(node.text, fmt)]
+                return [Piece(node.text, fmt, "code" if node.literal else "text")]
             case ast.SoftBreak():
                 return [Piece(" ", fmt)]
             case ast.NonBreakingSpace():
@@ -670,6 +680,17 @@ class Lowering:
             gaps = section.column_gap.emu * (section.columns - 1)
             return Length((section.page.text_width.emu - gaps) // section.columns)
         return section.page.text_width
+
+    def memory_file(self, name: str) -> bytes | None:
+        """The bytes of the in-memory file `name` (as the document writes it), if one was
+        given."""
+        key = name.replace("\\", "/")
+        if key not in self.files:
+            return None
+        if key not in self.file_cache:
+            data = self.files[key]
+            self.file_cache[key] = data() if callable(data) else bytes(data)
+        return self.file_cache[key]
 
     def file(self, name: str, span: Span) -> Path | None:
         """The file a document names, relative to the current folder; None, reported, when

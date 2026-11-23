@@ -28,6 +28,7 @@ def fmt(text: str) -> str:
         ("Text.\n\n\n", "Text.\n"),
         ("a\r\nb  \r\n\r\n\r\n\r\nc\r\n", "a\r\nb\r\n\r\nc\r\n"),
         ("% note   \ntext\n", "% note\ntext\n"),
+        ("kept:\\ \nspace\\  \n", "kept:\\ \nspace\\ \n"),  # `\ ` is a space that is kept
         ("\\p[ a = 1 ,b=2 ]{x}\n", "\\p[a=1, b=2]{x}\n"),
         ("\\p[a=( x , y ),]{x}\n", "\\p[a=(x, y),]{x}\n"),
         ('\\image[ alt = "a  b" ]{x.png}\n', '\\image[alt="a  b"]{x.png}\n'),

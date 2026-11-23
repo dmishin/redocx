@@ -181,7 +181,7 @@ def _layout(pieces: list[_Piece], newline: str) -> str:
                 pending_newlines = min(pending_newlines + 1, 2)
             continue
         text = piece.text
-        if _ends_line(pieces, i):
+        if _ends_line(pieces, i) and piece.kind is not K.ESCAPE:  # `\ ` is a kept space
             text = text.rstrip(" \t\r")  # a block-level CRLF's CR is a whitespace token
         if not text:
             continue
@@ -229,7 +229,7 @@ def _meaning(node: object) -> object:
 def _inline_whitespace(items: tuple[object, ...]) -> list[object]:
     out = list(items)
     for i, item in enumerate(out):
-        if not isinstance(item, ast.Text):
+        if not isinstance(item, ast.Text) or item.literal:  # `\ ` is a space that counts
             continue
         text = item.text
         if i + 1 == len(out) or isinstance(out[i + 1], ast.SoftBreak):

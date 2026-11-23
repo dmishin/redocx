@@ -24,7 +24,7 @@ from redocx.syntax.source import Source, Span
 
 K = SyntaxKind
 
-ESCAPABLE = frozenset("\\%{}[]*_`$#=|@~")
+ESCAPABLE = frozenset("\\%{}[]*_`$#=|@~>+<-\"' ")
 NAME_RE = re.compile(r"[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*")
 LABEL_NAME = r"[A-Za-z][A-Za-z0-9_-]*(?::[A-Za-z0-9_-]+)*"
 LABEL_RE = re.compile(r"\{#" + LABEL_NAME + r"\}")
@@ -42,6 +42,17 @@ FENCE_RE = re.compile(r"`{3,}")
 TICKS_RE = re.compile(r"`+")
 FENCE_LANG_RE = re.compile(r"[A-Za-z0-9_+.#-]+")
 KEY_RE = re.compile(r"[A-Za-z][A-Za-z0-9_.-]*")
+
+MARKDOWN_LINE_RE = re.compile(r"(?:#{1,6}|>|\*|\+)(?=[ \t])")
+"""Markdown block markers that are plain text in redocx: headings, quotes, bullets."""
+MARKDOWN_LINE_HINTS = {
+    "#": ("`#` does not start a heading", "write `= Heading` (`==` for level 2, and so on)"),
+    ">": ("`>` does not start a quotation", 'write `\\p[style="Quote"]{...}`'),
+    "*": ("`*` does not start a list item", "write `- item`"),
+    "+": ("`+` does not start a list item", "write `- item`"),
+}
+SEPARATOR_CELL_RE = re.compile(r"[ \t]*:?-{3,}:?[ \t]*")
+"""A cell of a Markdown table's header separator, `|---|:---:|`."""
 
 TEXT_SPECIAL = frozenset("\\%~*_`<[]@#{}|\n\r")
 """Characters that end a plain text run in inline mode."""
@@ -161,6 +172,14 @@ class Parser:
     def is_comment_start(self, pos: int) -> bool:
         return self.text.startswith("%", pos) and (pos == 0 or self.text[pos - 1] in " \t\r\n")
 
+    def after_number(self, pos: int) -> bool:
+        """Whether `pos` follows a digit and spaces on its line, as in `50 %`: typography in
+        many languages puts a space before the percent sign."""
+        i = pos - 1
+        while i >= 0 and self.text[i] in " \t":
+            i -= 1
+        return i >= 0 and self.text[i].isdigit()
+
     def comment(self) -> Token:
         return self.token(K.COMMENT, max(self.content_end(self.pos), self.pos + 1))
 
@@ -235,12 +254,66 @@ class Parser:
                     continue
                 block = self.block_start(min_indent, width)
                 if block is not None:
+                    if block.kind is K.LIST:
+                        self.check_list_split(out, block)
                     out.append(block)
                     continue
+                self.check_markdown_line()
             out.append(self.paragraph(min_indent))
             if self.pos == before:  # safety net: always make progress
                 out.append(self.token(K.ERROR_TOKEN, self.pos + 1))
         return out
+
+    def check_markdown_line(self) -> None:
+        """Warn about a Markdown block marker at the start of a paragraph: it is plain text here."""
+        m = MARKDOWN_LINE_RE.match(self.text, self.pos)
+        if m is None:
+            return
+        marker = m.group(0)
+        message, help = MARKDOWN_LINE_HINTS[marker[0]]
+        self.report(
+            warning(
+                Code.MARKDOWN,
+                message,
+                Span(self.pos, m.end()),
+                "this is plain text",
+                help=f"{help}; escape it as `\\{marker[0]}` to keep it as text",
+            )
+        )
+
+    def check_list_split(self, out: list[Node | Token], block: Node) -> None:
+        """Warn when one line without indentation splits a list in two, as in
+
+        1. first
+        more text for the first item
+        2. second   (numbered 1 again: it is a new list)
+        """
+        nodes = [(i, x) for i, x in enumerate(out) if isinstance(x, Node)]
+        if len(nodes) < 2:
+            return
+        (_, before), (j, between) = nodes[-2], nodes[-1]
+        if before.kind is not K.LIST or between.kind is not K.PARAGRAPH:
+            return
+        if _list_ordered(before) != _list_ordered(block):
+            return
+        newlines = [x for x in out[j + 1 :] if isinstance(x, Token) and x.kind is K.NEWLINE]
+        if len(newlines) > 1:
+            return  # a blank line before the new list
+        start = between.offset
+        previous_line = self.text[self.line_begin(start - 1) : start - 1] if start else ""
+        if not previous_line.strip(" \t\r"):
+            return  # a blank line after the first list
+        renumbered = ", numbered from 1" if _list_ordered(block) else ""
+        self.report(
+            warning(
+                Code.LIST_SPLIT,
+                "a line without indentation ends the list",
+                Span(start, self.content_end(start)),
+                f"so the list after it is a new list{renumbered}",
+                help="indent the line to the item's text to continue the item, "
+                "or put a blank line before it",
+            )
+        )
 
     def starts_block(self, pos: int, min_indent: int) -> bool:
         """Whether the text at `pos` (after indentation) starts a non-paragraph block."""
@@ -433,6 +506,7 @@ class Parser:
                 break
             node.children.append(self.token(K.NEWLINE, next_line))
             self.whitespace(node.children)
+        self.check_separator_row(node)
         return node
 
     def pipe_row(self) -> Node:
@@ -447,6 +521,23 @@ class Parser:
                 break
             node.children.append(self.token(K.PIPE, self.pos + 1))
         return node
+
+    def check_separator_row(self, table: Node) -> None:
+        """Warn about Markdown's header separator (`|---|---|`) as the second row of a table."""
+        rows = list(table.nodes(K.PIPE_ROW))
+        if len(rows) < 2:
+            return
+        cells = [c.text for c in rows[1].nodes(K.PIPE_CELL) if c.text.strip(" \t")]
+        if cells and all(SEPARATOR_CELL_RE.fullmatch(c) for c in cells):
+            self.report(
+                warning(
+                    Code.MARKDOWN,
+                    "a Markdown header separator is a row of dashes here",
+                    rows[1].span,
+                    "this row is part of the table",
+                    help="remove the row and write `\\table[header-rows=1]{...}`",
+                )
+            )
 
     # --- inline content ----------------------------------------------------------------
 
@@ -478,6 +569,8 @@ class Parser:
                     break
                 out.append(self.token(K.NEWLINE, self.newline_end(self.pos)))
                 self.whitespace(out)
+                if self.char() != "+":  # `+` starts wrapped lines of sums in prose
+                    self.check_markdown_line()
                 continue
             if context.label_stop and c == "{" and LABEL_RE.match(self.text, self.pos):
                 break
@@ -491,10 +584,29 @@ class Parser:
         if c == "\\":
             return self.backslash()
         if c == "%" and self.is_comment_start(pos):
+            if self.after_number(pos):
+                self.report(
+                    warning(
+                        Code.COMMENT_AFTER_NUMBER,
+                        "`%` after a number and a space starts a comment",
+                        Span(pos, self.content_end(pos)),
+                        "the rest of the line is left out",
+                        help="write `\\%` for a percent sign; put a comment on a line of its own",
+                    )
+                )
             return self.comment()
         if c == "~":
             return self.token(K.NBSP, pos + 1)
         if c in "*_" and self.can_open(pos):
+            if c == "*" and self.char(1) == "*" and (pos == 0 or text[pos - 1] != "*"):
+                self.report(
+                    warning(
+                        Code.MARKDOWN,
+                        "`**` is two marks for strong text",
+                        Span(pos, pos + 2),
+                        help="one `*` on each side is enough: `*bold*`",
+                    )
+                )
             return self.delimited(c, context)
         if c == "`":
             return self.code_span()
@@ -623,6 +735,15 @@ class Parser:
                     if close > self.pos:
                         target.children.append(self.token(K.VERBATIM, close))
                     target.children.append(self.token(K.R_PAREN, close + 1))
+                    if start > 0 and self.text[start - 1] == "!":
+                        self.report(
+                            warning(
+                                Code.MARKDOWN,
+                                "`![...](...)` is a `!` and a link, not a picture",
+                                Span(start - 1, self.pos),
+                                help='write `\\image[alt="..."]{file}`',
+                            )
+                        )
                     return Node(K.LINK, [label, target], offset=start)
             self.backtrack(key, saved)
         return self.token(K.TEXT, start + 1)
@@ -675,12 +796,16 @@ class Parser:
             return self.token(K.ESCAPE, pos + 2)
         if NAME_RE.match(self.text, pos + 1):
             return self.command()
+        at_line_end = nxt in ("", "\n", "\r")
         self.report(
             error(
                 Code.INVALID_ESCAPE,
                 "invalid escape or command",
-                Span(pos, min(pos + 2, self.n)),
-                help="write `\\\\` for a literal backslash",
+                Span(pos, min(pos + (1 if at_line_end else 2), self.n)),
+                help="a kept space `\\ ` at the end of a line loses its space when an editor "
+                "removes trailing spaces; put it before other text"
+                if at_line_end
+                else "write `\\\\` for a literal backslash",
             )
         )
         return self.token(K.ERROR_TOKEN, pos + 1)
@@ -979,6 +1104,13 @@ class Parser:
             )
         )
         return self.token(K.STRING, max(self.content_end(start), start + 1))
+
+
+def _list_ordered(node: Node) -> bool:
+    """Whether a list node's first marker is a number or letter (not `-`)."""
+    marker = node.first_node(K.LIST_ITEM)
+    token = marker.first_token(K.LIST_MARKER) if marker else None
+    return token is not None and token.text != "-"
 
 
 def _has_unclosed_string(option: Node) -> bool:

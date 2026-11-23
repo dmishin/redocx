@@ -7,14 +7,19 @@ The exact rules of a `.rdx` file. Files are UTF-8; style sheets (`.rdxs`) have t
 
 - A **paragraph** is text up to a blank line. Line breaks inside it become spaces, and runs of spaces collapse to one.
 - **Comments** run from `%` to the end of the line, when the `%` is at the start of a line or after whitespace.
-  `12%` and `a%20b` are text; `\%` is always a percent sign. There are no block comments.
+  `12%` and `a%20b` are text; `\%` is always a percent sign. There are no block comments. `50 %`, with a space
+  before the sign, is the number 50 and a comment; it is a warning (RDX0117), so write `50 \%`.
 - **Typography:** `--` is an en dash, `---` an em dash, and straight quotes become curly ones.
   `\document[smart-quotes=off]` keeps them as typed. `~` is a non-breaking space.
 - `$` is ordinary text (`$48.2M`). Only `$$` at the start of a line begins display math.
 
 ## Escapes
 
-A backslash before one of these characters makes it literal: `` \\ \% \{ \} \[ \] \* \_ \` \$ \# \= \| \@ \~ ``.
+A backslash before one of these characters makes it literal:
+`` \\ \% \{ \} \[ \] \* \_ \` \$ \# \= \| \@ \~ \> \+ \< \- \" \' ``.
+`\"`, `\'` and `\-` also stay as typed when smart punctuation is on: `5\'10\"` and `\-\-verbose`.
+A backslash before a space, `\ `, is a space that is kept: it does not collapse with the spaces next to it and is
+not dropped at the start or end of a paragraph.
 Most need no escape in ordinary prose, because each mark is recognised only where it could mean something:
 
 - `*` and `_` start emphasis only at the start of a word and end it only at the end of one, so `5 * 3`,
@@ -22,6 +27,11 @@ Most need no escape in ordinary prose, because each mark is recognised only wher
 - `@` starts a reference only after a space or opening bracket, and only before a label: `jane@example.com` is text.
 - `=`, `-`, `1.`, `|` and ` ``` ` mean something only at the start of a line.
 - A bare `{` in text is an error: write `\{`.
+
+**Coming from Markdown.** Some Markdown marks are plain text here, and each is a warning (RDX0118) that names the
+redocx form: `#` headings (write `= Heading`), `>` quotations, `*` and `+` bullets (write `- item`), `![alt](file)`
+pictures (write `\image`), `**bold**` (one `*` is enough) and the `|---|` row under a table's header (write
+`\table[header-rows=1]`). Escape the mark (`\#`, `\>`, `\+`) to keep it as text.
 
 ## Commands
 
@@ -85,9 +95,9 @@ Each short form has a command form, which is what `redocx import --commands-only
 
 | Short form | Command form |
 |------------|--------------|
-| `= Heading` … `========= Heading` | `\p[style="Heading 1"]{Heading}` … Heading 9 |
-| `=* Heading` | a heading with numbering turned off |
-| `- item`, `1. item`, `a. item` (nested) | `\list[Bullets]{…}`, `\list[Numbers]{…}` |
+| `= Heading {#sec:a}` … `========= Heading` | `\heading[1, id=sec:a]{Heading}` … `\heading[9]{…}` |
+| `=* Heading` | `\heading[1, unnumbered]{Heading}` |
+| `- item`, `1. item`, `a. item` (nested) | `\list[Bullets]{\item{…}}`, `\list{\item{… \item{nested}}}` |
 | `\| a \| b \|` rows | `\table{\row{\cell{a} \cell{b}}}` |
 | `*strong*`, `_emphasis_`, `` `code` `` | `\strong{…}`, `\emph{…}`, `\code{…}` |
 | `[text](https://…)`, `<https://…>` | `\link[to="https://…"]{text}`, `\url{https://…}` |
@@ -96,9 +106,30 @@ Each short form has a command form, which is what `redocx import --commands-only
 | ` ```python ` … ` ``` ` | a code block (see [math and code](math-and-code.md)) |
 
 **Lists.** `-` items are bullets, `1.` items are numbered; `a.` and `i.` markers are recognised inside a list item.
-The marker only says *bulleted* or *numbered*: the number format comes from the list's numbering definition. An
-item continues on lines indented to its text; a blank line followed by indented text is another paragraph of the
-same item. A nested list of the same kind is the next level of the same Word list.
+The marker only says *bulleted* or *numbered*: the number format comes from the list's numbering definition, and a
+list counts from 1. To start at another number, write `\list[restart=5]{…}` around it; a first marker other than `1.`
+without it is a warning (RDX0314). An item continues on lines indented to its text; a blank line followed by
+indented text is another paragraph of the same item. A line that is not indented ends the list, and a list after it
+is a new list that counts from 1 again (a warning, RDX0119, when no blank line marks the break). A nested list of
+the same kind is the next level of the same Word list.
+
+The command forms need no indentation, which suits generated source. `\heading` also takes paragraph formatting,
+and `\item` holds any blocks; an `\item` inside another is one level deeper:
+
+```rdx
+\heading[2, id=sec:terms, page-break-before]{Terms}
+
+\list{
+  \item{Delivery}
+  \item[id=it:pay]{Payment
+
+    Invoices are due in 30 days.
+    \item{Late payment}
+  }
+}
+
+See @it:pay.
+```
 
 ## Labels
 
@@ -107,6 +138,16 @@ or after display math, or `id=…` on commands (`\p`, `\caption`, `\figure`, `\s
 Labels are letters, digits, `-` and `_`, with `:` between parts: `fig:arch`, `cl:term`. A label becomes a Word
 bookmark; defining one twice, or referring to one that does not exist, is an error. Punctuation after `@label` is not
 part of it: `see @fig:arch.` works.
+
+Where labels and options go:
+
+| On | Label | Options |
+|----|-------|---------|
+| A command | `id=…` in its options | `\p[id=p:a, keep-with-next]{…}` |
+| A heading | `= Heading {#sec:a}` | none; use `\heading[1, id=sec:a, …]{Heading}` |
+| A list item | `1. {#cl:a} Text` | none; use `\item[id=cl:a]{…}` |
+| Display math | `$$ … $$ {#eq:a}` | none; use `\math[id=eq:a, …]{…}` |
+| A code block | ` ```python {#lst:a, …} ` | in the same braces: `{#lst:a, caption="…", line-numbers}` |
 
 ## Files
 

@@ -109,3 +109,15 @@ def test_text_box_errors() -> None:
     assert errors("\\textbox{A\\footnote{n}}") != []
     assert errors("\\textbox[valign=middle]{A}") != []
     assert errors("\\figure{\\textbox{A}\n\\caption{C}}") != []
+
+
+def test_shading_is_the_background_and_fill_its_older_name() -> None:
+    assert box("\\textbox[shading=#FFF2CC]{x}").fill == Color.parse("#FFF2CC")
+    assert box("\\textbox[fill=#FFF2CC]{x}").fill == Color.parse("#FFF2CC")
+    result = compile_source("\\textbox[shading=#FFF2CC, fill=#000000]{x}")
+    assert [d.message for _, d in result.diagnostics] == ["`shading` is given twice"]
+
+
+def test_cell_shading_and_its_older_name() -> None:
+    result = compile_source("| \\cell[shading=#FFF2CC, shade=#000000]{a} | b |")
+    assert [d.message for _, d in result.diagnostics] == ["`shading` is given twice"]

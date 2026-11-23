@@ -29,6 +29,16 @@ ALPHABET = [
     "https://x.y",
     " % c",
     "\r\n",
+    "\\ ",
+    "\\-",
+    "\\'",
+    "5 %",
+    "\n# ",
+    "\n> ",
+    "\n+ ",
+    "**",
+    "![",
+    "|---|",
 ]
 
 markup = st.lists(st.sampled_from(ALPHABET), max_size=60).map("".join)

@@ -31,7 +31,7 @@ CATEGORIES: dict[str, tuple[str, ...]] = {
     "Preamble: the document as a whole": (
         "document", "meta", "settings", "use", "include", "styles", "bibliography",
     ),
-    "Paragraphs, lists and tab stops": ("p", "align", "list", "tabs"),
+    "Paragraphs, lists and tab stops": ("p", "heading", "align", "list", "item", "tabs"),
     "Sections, headers and footers": ("section", "header", "footer", "watermark"),
     "Tables": ("table", "row", "cell"),
     "Captions, contents and the index": (

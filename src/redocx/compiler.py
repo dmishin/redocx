@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Collection
+from collections.abc import Collection, Mapping
 from dataclasses import dataclass, replace
 from os import PathLike
 from pathlib import Path
 
 from redocx import ir
 from redocx.lower import Located, lower
+from redocx.lower.lowering import FileData
 from redocx.ooxml.integrity import math_problems, package_problems
 from redocx.ooxml.parts.styles import StyleError
 from redocx.ooxml.template import Template, load_template
@@ -55,27 +56,35 @@ def compile_source(
     *,
     std: Collection[str] | None = None,
     root: str | PathLike[str] | None = None,
+    files: Mapping[str, FileData] | None = None,
 ) -> CompileResult:
     """Parse and lower a document; the IR is returned only when there are no errors.
     `template` (a .dotx or .docx, or one `load_template` read) overrides the document's
     \\document[template=...]; a file that is not one raises `TemplateError`. `std` names
     the standard library modules loaded before the document (None: all of them). With
     `root`, every file the document names (`\\include`, `\\image`, ...) must be inside that
-    folder: use it when the source holds data from outside."""
+    folder: use it when the source holds data from outside. `files` gives pictures and
+    documents in memory (`\\image`, `\\embed-docx`, `\\watermark[image=...]`), by the name the
+    document uses: bytes, or a function that returns them, called once when needed."""
     if template is not None and not isinstance(template, Template):
         template = load_template(template)
     if isinstance(source, str):
         source = Source("<input>", source)
         base_dir = base_dir or Path.cwd()
     document, diagnostics = lower(
-        parse(source), base_dir, template, std=std, root=None if root is None else Path(root)
+        parse(source),
+        base_dir,
+        template,
+        std=std,
+        root=None if root is None else Path(root),
+        files=files,
     )
     # By file (the document first, then the others in the order they were reported), then
     # by position.
-    files = {source.name: 0}
+    order = {source.name: 0}
     for file, _ in diagnostics:
-        files.setdefault(file.name, len(files))
-    ordered = tuple(sorted(diagnostics, key=lambda item: (files[item[0].name], item[1].span.start)))
+        order.setdefault(file.name, len(order))
+    ordered = tuple(sorted(diagnostics, key=lambda item: (order[item[0].name], item[1].span.start)))
     has_errors = any(d.severity is Severity.ERROR for _, d in ordered)
     return CompileResult(None if has_errors else document, ordered)
 
@@ -98,14 +107,16 @@ def build(
     as_template: bool = False,
     std: Collection[str] | None = None,
     root: str | PathLike[str] | None = None,
+    files: Mapping[str, FileData] | None = None,
 ) -> tuple[bytes | None, CompileResult]:
     """Compile to .docx bytes, or .dotx with `as_template` (None when there are errors).
+    `files` are pictures and documents in memory, as for `compile_source`.
     The written package is checked for consistency (`package_problems`); what is wrong is
     reported as warnings. Invalid math (`math_problems`) is an error, and nothing is written."""
     if isinstance(source, str):
         source = Source("<input>", source)
         base_dir = base_dir or Path.cwd()
-    result = compile_source(source, base_dir, template, std=std, root=root)
+    result = compile_source(source, base_dir, template, std=std, root=root, files=files)
     if result.document is None:
         return None, result
     try:

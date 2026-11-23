@@ -35,7 +35,7 @@
 | Tab | `\tab` | `w:tab` |
 | Page / column break | `\pagebreak`, `\columnbreak` | |
 | Comment | `%` to end of line, **only at the start of a line or after whitespace** | TeX-style (F-2). `12%` and `a%20b` are literal text. `\%` is always a literal percent sign. There are no block comments. |
-| Escape | `` \\ \% \{ \} \[ \] \* \_ \` \$ \# \= \| \@ \~ `` | Escapes the next character |
+| Escape | `` \\ \% \{ \} \[ \] \* \_ \` \$ \# \= \| \@ \~ \> \+ \< \- \" \' `` and `\ ` (backslash, space) | Escapes the next character. `\"`, `\'` and `\-` are kept as typed (no smart quotes or dashes); `\ ` is a space that is kept (not collapsed or trimmed) |
 | Non-breaking space | `~` | As in TeX |
 | Typographic | `--` en dash, `---` em dash, smart quotes | Smart punctuation can be turned off per document |
 | Label | `{#label}` after a heading, list-item marker or display block; or the `id=label` option | Creates a bookmark (§3.11) |
@@ -317,6 +317,10 @@ start with text. General text frames are not supported; text boxes (§3.16) do t
 
 `=` is heading sugar only at the start of a line and followed by a space.
 
+The command forms are `\heading[level, id=…, unnumbered]{…}`, which also takes paragraph formatting
+(`\heading[1, page-break-before]{…}`), and `\item[id=…]{blocks}` inside `\list`: an `\item` inside another item
+(written as sugar or as `\item`) is one level deeper. They need no indentation, so generators emit them.
+
 Lists use **Word multilevel numbering definitions** (`abstractNum` / `num`) declared in style sheets. A level can be
 **linked to a paragraph style**, as in Word:
 
@@ -351,7 +355,11 @@ gets that level's paragraph style automatically. A whole contract is one list, a
 }
 \list[MSA, continue]{ … }        % continue numbering after intervening content
 \list[MSA, restart=5]{ … }       % start at 5
+\list[restart=5]{ … }            % no name: the Numbers numbering of `1.` lists
 ```
+
+A list counts from 1 (or from `restart`), whatever number its first marker has. A first marker other than `1.`
+with no `restart` is a warning (`RDX0314`), with the `\list[restart=N]` to write.
 
 - An item continues across lines indented to its text column. A blank line followed by indented text adds another paragraph
   to the same item (unnumbered continuation, as Word's Shift+Enter or "continue list" would).
@@ -367,7 +375,7 @@ Pipe tables cover simple cases. The full command covers everything else.
 \table[style="Data Grid", header-rows=1, widths=(4cm, 1fr, 1fr), columns=(left, decimal, decimal), align=center]{
   | Item     | Q1    | Q2    |
   | Revenue  | 10.5  | 12.25 |
-  | Cost     | \cell[shade=#FFF2CC]{7} | 8 |
+  | Cost     | \cell[shading=#FFF2CC]{7} | 8 |
   | \cell[colspan=3, align=center]{*Total: 7*} |||
 }
 ```
@@ -651,7 +659,7 @@ the label.
 \image[width=5cm, wrap=square, x=(right, from=margin), y=(1cm, from=paragraph)]{img/photo.jpg}   % floating
 \image[width=21cm, height=29.7cm, wrap=behind, x=(0cm, from=page), y=(0cm, from=page)]{cover.jpg}  % full bleed
 \image[width=4cm, crop=(left=10%, right=10%), rotate=-5, border=(single, 1pt, theme.accent1)]{img/photo.jpg}
-\textbox[width=6cm, border=(single, 1pt, theme.accent1), fill=theme.accent1.lighter(80%), x=right]{Callout…}
+\textbox[width=6cm, border=(single, 1pt, theme.accent1), shading=theme.accent1.lighter(80%), x=right]{Callout…}
 \watermark[DRAFT]                                  % or [text=…, color=…, layout=horizontal], [image=logo.png]
 ```
 
@@ -675,8 +683,9 @@ of its own before the text that flows around it. It cannot float inside a `\figu
 Word 2010's text box (a `wps` shape in `mc:AlternateContent`; there is no VML fallback for Word 2007). It is inline
 unless it floats, with the same options as a picture: `float`, `wrap`, `wrap-side`, `x`, `y`, `distance`. Its own
 options: `width` (a length or a percentage of the text width; default the text width), `height` (default: as tall as
-its text, which Word works out when it lays the page out), `fill` and `border` (default neither), `padding` (the inner
-margins; default Word's 0.13cm top and bottom, 0.25cm left and right), `valign=top|center|bottom` and `rotate`. Theme
+its text, which Word works out when it lays the page out), `shading` (the older name `fill` works too) and
+`border` (default neither), `padding` (the inner margins; default Word's 0.13cm top and bottom, 0.25cm left and
+right), `valign=top|center|bottom` and `rotate`. Theme
 colours stay theme colours (`a:schemeClr` with Word's `lumMod`/`lumOff` for lighter and darker). Notes cannot be in a
 text box, and a text box cannot be in a `\figure`; references, styles and index marks inside it work as anywhere.
 
@@ -889,6 +898,12 @@ the redocx form as help and a note pointing to the section of the TeX guide (`do
 `redocx explain NAME`. The names come from a table, `redocx.commands.latex`, and match exactly; a macro of the same
 name is used as usual.
 
+Habits from Markdown are warnings (`RDX0118`) that name the redocx form, because the text they make is plain text
+here: `#`, `>`, `*` and `+` at the start of a paragraph or a line in one, `![alt](file)`, `**`, and a `|---|` row as
+the second row of a pipe table. A `%` after a number and a space (`50 %`, as typography in many languages writes it)
+starts a comment and is a warning too (`RDX0117`). So is a line without indentation between two lists of the same
+kind (`RDX0119`): it ends the first list, and the second counts from 1 again.
+
 Planned lints: a repeated label word before `@label` (§3.11); an unused label; for contracts, a defined term that is
 never used, or a capitalised term used but never defined.
 
@@ -978,7 +993,8 @@ Lowering (`redocx.lower`) turns the AST into the document IR. It fixes these beh
   the next level of the same list. A nested list of the other kind starts a new list one level deeper. Further paragraphs
   of an item are unnumbered and indented to the item's text. List paragraphs get the level's linked style, or
   `List Paragraph`. `\list[Name]{…}` uses a named numbering for everything inside, `\list[Name, continue]{…}` continues
-  the previous list of that numbering, and `\list[Name, restart=5]{…}` starts at 5.
+  the previous list of that numbering, and `\list[Name, restart=5]{…}` starts at 5. Without a name, `\list` uses
+  `Numbers`.
 - **Headings.** `=`…`=========` use `Heading 1`–`9`. `=*` adds an explicit "no numbering" so a style-numbered heading
   stays unnumbered.
 - **Macros** expand at the AST level when called. A body that is a single paragraph splices into the surrounding text.
@@ -995,8 +1011,8 @@ Lowering (`redocx.lower`) turns the AST into the document IR. It fixes these beh
   the cell (or `(decimal, tab=1.8cm)` from its left); header rows and merged cells are right-aligned instead.
   Tables also take `borders`, `border-*`, `cell-margins`, `table-indent` (overriding the style) and
   `look=(header-row, last-row, first-column, last-column, banded-rows, banded-columns)` or `look=none`.
-  Cells take `colspan`, `rowspan`, `shade` (RGB or theme colour), `valign`, `align`, `borders`/`border-*`, and any
-  block content, including lists and nested tables. Adjacent tables get a paragraph between them, as Word requires.
+  Cells take `colspan`, `rowspan`, `shading` (RGB or theme colour; `shade` is its older name), `valign`, `align`,
+  `borders`/`border-*`, and any block content, including lists and nested tables. Adjacent tables get a paragraph between them, as Word requires.
 - **Images.** `\image[width=…, height=…, alt="…"]{file}` embeds PNG, JPEG, GIF or BMP (and EMF or WMF, the
   pictures of embedded objects an import brings) as an inline picture. The size
   comes from the pixel size and resolution (96 dpi if unknown). Giving one dimension keeps the aspect ratio, and
@@ -1019,7 +1035,8 @@ Lowering (`redocx.lower`) turns the AST into the document IR. It fixes these beh
   `\date[kind=fixed|today|saved|created, format="d MMMM yyyy"]` takes Word date pictures. `fixed` is plain text at
   build time and honours `SOURCE_DATE_EPOCH`.
 - **Tab stops.** `\tabs[(8cm, center), (16cm, right, leader=dot)]{…}`, or the `tabs` property in style sheets and
-  `\p`: `tabs: 8cm center, 16cm right leader=dot;`.
+  `\p`, in the same form: `tabs: (8cm, center), (16cm, right, leader=dot);`. Style sheets also read the older
+  `tabs: 8cm center, 16cm right leader=dot;`.
 - **Text options** (`title`, `alt`, `style`, …) take a word, a `"string"` (which ends on its line), or plain text in
   braces, which may span lines: `alt={a long description …}`. In option values, `#` plus six hex digits is always a
   colour, even inside `\define`.

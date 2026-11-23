@@ -44,7 +44,7 @@ def source(invoice: Invoice) -> str:
 \\p[style=Title]{{Invoice {escape.text(invoice.number)}}}
 
 \\b{{{escape.text(invoice.customer)}}}\\br
-{escape.text(invoice.address).replace(chr(10), "\\br" + chr(10))}
+{escape.lines(invoice.address)}
 
 \\table[header-rows=1, widths=(1fr, 2cm, 3cm, 3cm),
        columns=(left, right, decimal, decimal)]{{

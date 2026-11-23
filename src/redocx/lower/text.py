@@ -24,6 +24,7 @@ from redocx.ooxml.xml import Element, parse_fragment
 from redocx.props import EMPTY_PARAGRAPH, PropertySet, Target
 from redocx.syntax import ast
 from redocx.syntax.diagnostics import Code
+from redocx.syntax.source import Span
 from redocx.values import InvalidValueError, Length, LineSpacing, TabStop
 
 if TYPE_CHECKING:
@@ -51,6 +52,8 @@ class ListContext:
     ordered: bool
     named: bool
     start: int | None
+    continued: bool = False
+    """The list continues the numbering of an earlier one (`\\list[Name, continue]`)."""
 
 
 @dataclass
@@ -70,12 +73,19 @@ class ListState:
 def list_block(lw: Lowering, block: ast.ListBlock, parent: ListContext | None) -> list[ir.Block]:
     if parent is not None and (parent.named or parent.ordered == block.ordered):
         context = replace(parent, level=parent.level + 1, ordered=block.ordered)
+        if parent.level == 0 and not parent.continued:
+            if parent.start is None:  # restart= says the number; the marker only says "numbered"
+                _check_start(lw, block, 1, parent.numbering)
+            parent.continued = True  # later lists in the same \list carry on counting
+        elif parent.level > 0:
+            _check_start(lw, block, 1, None)
     else:
         name = "Numbers" if block.ordered else "Bullets"
         lw.list_uses.append((name, block.span, lw.source_of(block.span)))
         level = parent.level + 1 if parent else 1
         instance = lw.lists.new_instance(name, None)
         context = ListContext(name, instance, level, block.ordered, False, None)
+        _check_start(lw, block, 1, "" if parent is None else None)
     if context.level > 9:
         lw.report(Code.INVALID_ARGUMENT, "lists nest at most 9 levels deep", block.span)
         context = replace(context, level=9)
@@ -85,7 +95,38 @@ def list_block(lw: Lowering, block: ast.ListBlock, parent: ListContext | None) -
     return out
 
 
+def _check_start(lw: Lowering, block: ast.ListBlock, expected: int, numbering: str | None) -> None:
+    """Warn when the first marker of a numbered list is not the number it will show.
+
+    `numbering` is the name for the help: "" for a list written with sugar alone, None for a
+    nested list, whose start cannot be set."""
+    marker = block.items[0].marker if block.items else ""
+    if not marker[:-1].isdigit() or (written := int(marker[:-1])) == expected:
+        return
+    start = block.items[0].span.start
+    if numbering is None:
+        help = "the number in a marker is not used; a nested list counts from 1"
+    else:
+        name = f"{numbering}, " if numbering and numbering != "Numbers" else ""
+        list_command = f"\\list[{name}restart={written}]{{...}}"
+        help = f"to start at {written}, write `{list_command}` around the list"
+    lw.warn(
+        Code.LIST_START,
+        f"this list is numbered from {expected}, not {written}",
+        Span(start, start + len(marker)),
+        help=help,
+    )
+
+
 def _list_item(lw: Lowering, item: ast.ListItem, context: ListContext) -> list[ir.Block]:
+    saved, lw.item_context = lw.item_context, context
+    try:
+        return _list_item_blocks(lw, item, context)
+    finally:
+        lw.item_context = saved
+
+
+def _list_item_blocks(lw: Lowering, item: ast.ListItem, context: ListContext) -> list[ir.Block]:
     ref = ir.ListItemRef(context.numbering, context.instance, context.level, context.start)
     out: list[ir.Block] = []
     numbered = False
@@ -97,7 +138,12 @@ def _list_item(lw: Lowering, item: ast.ListItem, context: ListContext) -> list[i
             out.extend(list_block(lw, block, context))
             continue
         for lowered in lw.block(block, context):
-            if not isinstance(lowered, ir.Paragraph):
+            if isinstance(lowered, ir.Paragraph) and lowered.list_item is not None:
+                if not numbered:  # an item of a nested \item comes first
+                    out.append(ir.Paragraph(list_item=ref))
+                    numbered = True
+                out.append(lowered)
+            elif not isinstance(lowered, ir.Paragraph):
                 if not numbered:  # an item starting with a table still gets its number
                     out.append(ir.Paragraph(list_item=ref))
                     numbered = True
@@ -247,25 +293,69 @@ def align(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
 
 
 def numbered_list(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
-    """\\list[Name, continue, restart=5]{...}: a list with a named numbering definition."""
-    name = args.text("numbering")
-    if name is None:
-        return lw.blocks(markup(command))
+    """\\list[Name, continue, restart=5]{...}: a list with a named numbering definition
+    (`Numbers` when none is named)."""
+    name = args.text("numbering") or "Numbers"
     lw.list_uses.append((name, command.span, lw.source_of(command.span)))
     start = args.number("restart")
-    if args.flag("continue") and start is None and name in lw.lists.last:
+    continued = args.flag("continue") and start is None and name in lw.lists.last
+    if continued:
         instance, start = lw.lists.last[name]
     else:
         instance = lw.lists.new_instance(name, start)
     context = ListContext(name, instance, 0, ordered=True, named=True, start=start)
+    context.continued = continued
     out: list[ir.Block] = []
-    for block in markup(command):
-        if isinstance(block, ast.ListBlock):
-            lw.has_content = True
-            out.extend(list_block(lw, block, context))
-        else:
-            out.extend(lw.block(block))
+    saved, lw.item_context = lw.item_context, context
+    try:
+        for block in markup(command):
+            if isinstance(block, ast.ListBlock):
+                lw.has_content = True
+                out.extend(list_block(lw, block, context))
+            else:
+                out.extend(lw.block(block))
+    finally:
+        lw.item_context = saved
     return out
+
+
+def heading_command(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
+    """\\heading[2, id=sec:x, unnumbered, page-break-before]{...}: the command form of `== ...`,
+    which also takes paragraph formatting."""
+    lw.has_content = True
+    name = f"Heading {args.number('level') or 1}"
+    lw.use_style(name, ir.StyleKind.PARAGRAPH, command.span)
+    content = lw.paragraph_content(command)
+    if (label := args.text("id")) is not None:
+        content = marked(lw.register_label(label, args.span_of("id"), "heading").bookmark, content)
+    props = args.props or EMPTY_PARAGRAPH
+    return [ir.Paragraph(content, name, props, unnumbered=args.flag("unnumbered"))]
+
+
+def item(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
+    """\\item[id=...]{...}: a list item, one level below the list or item it is in."""
+    parent = lw.item_context
+    if parent is None:
+        lw.report(
+            Code.MISPLACED,
+            "`\\item` belongs inside `\\list`",
+            command.span,
+            help="write `\\list{\\item{...} \\item{...}}` (`\\list[Bullets]{...}` for bullets)",
+        )
+        return lw.blocks(markup(command))
+    lw.has_content = True
+    context = replace(parent, level=parent.level + 1)
+    if context.level > 9:
+        lw.report(Code.INVALID_ARGUMENT, "lists nest at most 9 levels deep", command.span)
+        context = replace(context, level=9)
+    label = args.text("id")
+    node = ast.ListItem(
+        marker="1." if context.ordered else "-",
+        label=None if label is None else ast.Label(label, span=args.span_of("id")),
+        blocks=markup(command),
+        span=command.span,
+    )
+    return _list_item(lw, node, context)
 
 
 def tabs(lw: Lowering, command: ast.Command, args: Args) -> list[ir.Block]:
@@ -438,6 +528,8 @@ BLOCKS: dict[str, BlockHandler] = {
     "p": p,
     "align": align,
     "list": numbered_list,
+    "heading": heading_command,
+    "item": item,
     "tabs": tabs,
     "pagebreak": block_break,
     "columnbreak": block_break,

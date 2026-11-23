@@ -73,7 +73,7 @@ Inline math: \m{e^{i\pi} + 1 = 0}, and a literal \#{ is escaped.
 \table[style="Data Grid", header-rows=1, widths=(4cm, 1fr, 1fr), columns=(left, decimal, decimal)]{
   | Item     | Q1    | Q2    |
   | Revenue  | 10.5  | 12.25 |
-  | Cost     | \cell[shade=#FFF2CC]{7} | `a|b` |
+  | Cost     | \cell[shading=#FFF2CC]{7} | `a|b` |
   | \cell[colspan=3, align=center]{*Total: 7*} |||
 }
 

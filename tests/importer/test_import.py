@@ -14,7 +14,7 @@ import pytest
 
 from redocx import ir
 from redocx.cli import main
-from redocx.compiler import build, compile_file
+from redocx.compiler import build, compile_file, compile_source
 from redocx.importer import import_docx, visible_text
 from redocx.importer.check import Comparison, compare
 from redocx.importer.printer import display_name, print_document
@@ -79,11 +79,13 @@ def test_text_that_looks_like_markup_stays_text(tmp_path: Path) -> None:
         "100% sure % not a comment, {braces} [brackets] \\backslash `tick` ~tilde",
         "mail me@example.com or @not:a-ref, <https://not.a.link> and $$ 5",
         'smart "quotes" -- and --- dashes stay as typed',
+        "# not a heading, > not a quote and  two  spaces",
     ]
     document = ir.Document(body=tuple(ir.paragraph(text) for text in tricky))
     source, compiled = imported(document, tmp_path)
     assert [p.text() for p in compiled.body if isinstance(p, ir.Paragraph)] == tricky
-    assert "\\font{-} not a list" in source
+    assert "\\- not a list" in source
+    assert "1.\\ not a list" in source
 
 
 def test_formatting_and_paragraph_options_round_trip(tmp_path: Path) -> None:
@@ -189,10 +191,8 @@ def test_the_import_command_writes_the_folder(
 def test_what_cannot_be_printed_is_counted() -> None:
     first = ir.Section(headers=(("first", (ir.paragraph("unused"),)),))
     printed = print_document(ir.Document(body=(ir.paragraph("x  y"),), section=first), "s.rdxs")
-    assert printed.lost == {
-        "first-page header of a section without a different first page": 1,
-        "repeated spaces (collapsed to one)": 1,
-    }
+    assert printed.lost == {"first-page header of a section without a different first page": 1}
+    assert "x \\ y" in printed.source  # repeated spaces are kept
 
 
 def test_nested_fields_print_in_field_braces(tmp_path: Path) -> None:
@@ -363,9 +363,18 @@ def test_simple_formatting_and_pipe_tables_use_their_sugar(tmp_path: Path) -> No
     assert "header-rows=1]{\n  | Item | Q1 | Q2 |\n  | Revenue | 10.5 | 12.25 |\n  \\row{" in tables
 
 
+def test_unnumbered_heading_keeps_its_formatting(tmp_path: Path) -> None:
+    original = compile_source("\\heading[1, unnumbered, align=center]{Annex}\n").document
+    assert original is not None
+    source, compiled = imported(original, tmp_path)
+    assert "\\heading[1, unnumbered, align=center]{Annex}" in source
+    (back,) = [p for p in compiled.body if isinstance(p, ir.Paragraph)]
+    assert (back.style, back.unnumbered, back.props["align"]) == ("Heading 1", True, "center")
+
+
 def test_commands_only_prints_no_sugar(tmp_path: Path) -> None:
     source = _source("references", tmp_path, sugar=False)
-    assert '\\p[style="Heading 1"]{\\raw[ooxml]{<w:bookmarkStart' in source  # no labels
+    assert "\\heading[1]{\\raw[ooxml]{<w:bookmarkStart" in source  # no labels
     assert "= Introduction" not in source
     assert "@" not in source.replace("\\@", "")
 

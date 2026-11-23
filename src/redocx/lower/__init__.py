@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import difflib
-from collections.abc import Collection
+from collections.abc import Collection, Mapping
 from dataclasses import replace
 from pathlib import Path
 
@@ -13,7 +13,7 @@ from redocx.highlight import code_style
 from redocx.lower.builtins import BUILTIN_STYLES, DEFAULT_NUMBERING
 from redocx.lower.citations import expand as expand_citations
 from redocx.lower.index import expand as expand_index
-from redocx.lower.lowering import Located, Lowering, StyleUse
+from redocx.lower.lowering import FileData, Located, Lowering, StyleUse
 from redocx.lower.preamble import apply_template, load_std, std_modules
 from redocx.lower.references import report_to, resolve
 from redocx.lower.text import size_drop_caps
@@ -39,15 +39,22 @@ def lower(
     *,
     std: Collection[str] | None = None,
     root: Path | None = None,
+    files: Mapping[str, FileData] | None = None,
 ) -> tuple[ir.Document, list[Located]]:
     """Lower a parsed document. Diagnostics include the parse diagnostics; the document is
     only meaningful when none of them is an error. `template` (a loaded .dotx or .docx)
     takes precedence over a \\document[template=...] option. `std` names the standard
     library modules loaded before the document (None: all of them). With `root`, every file
-    the document names must be inside that folder."""
+    the document names must be inside that folder. `files` are pictures and documents given
+    in memory, by the name the document uses; they win over files on disk."""
     if base_dir is None:
         base_dir = Path(result.source.name).resolve().parent
-    lowering = Lowering(result.source, base_dir, None if root is None else root.resolve())
+    lowering = Lowering(
+        result.source,
+        base_dir,
+        None if root is None else root.resolve(),
+        files={name.replace("\\", "/"): data for name, data in (files or {}).items()},
+    )
     for module in std_modules() if std is None else std:
         load_std(lowering, module)
     if template is not None:

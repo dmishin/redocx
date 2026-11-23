@@ -202,16 +202,26 @@ _command(
     props=Target.PARAGRAPH, body_required=True,
 )  # fmt: skip
 _command(
+    "heading", BLOCK, "A heading: the command form of `= Heading`.",
+    _o("level", Int(1, 9), "the heading level, 1 to 9 (default 1)"), ID,
+    _o("unnumbered", FLAG, "no number, as `=* Heading`"),
+    positional="level", props=Target.PARAGRAPH, body_required=True,
+)  # fmt: skip
+_command(
     "align", BLOCK, "Aligns the paragraphs inside.",
     _o("align", Choice.of(*ALIGNMENTS), "the alignment", required=True),
     positional="align", body_required=True,
 )  # fmt: skip
 _command(
     "list", BLOCK, "A list with a named numbering definition.",
-    _o("numbering", TEXT, "the numbering definition", required=True),
+    _o("numbering", TEXT, "the numbering definition (default: Numbers)"),
     _o("continue", FLAG, "continue the previous list of this numbering"),
     _o("restart", Int(min=0), "the number to start at"),
     positional="numbering", body_required=True,
+)  # fmt: skip
+_command(
+    "item", BLOCK, "A list item inside `\\list`: the command form of `- ` and `1. ` items.",
+    ID, body_required=True, body_doc="the item's blocks; an `\\item` inside is one level deeper",
 )  # fmt: skip
 _command(
     "tabs", BLOCK, "Tab stops for the paragraphs inside.",
@@ -335,7 +345,7 @@ _command(
     "cell", Placement.PART, "A table cell: any blocks.",
     _o("colspan", Int(min=1), "the number of columns it spans"),
     _o("rowspan", Int(min=1), "the number of rows it spans"),
-    _o("shade", PropValue(Target.CELL, "shading"), "the cell's background"),
+    _o("shade", PropValue(Target.CELL, "shading"), "the older name of `shading`"),
     _o("valign", CELL_VALIGN, "where the content sits in a taller cell"),
     _o("align", Choice.of(*ALIGNMENTS), "paragraph alignment"),
     props=Target.CELL,
@@ -529,7 +539,8 @@ _command(
     "textbox", INLINE, "A text box: blocks in a frame, inline or floating.",
     _o("width", SizeValue(), "default: the text width"),
     _o("height", LengthValue(nonnegative=True), "default: as tall as its text"),
-    _o("fill", PropValue(Target.RUN, "color"), "the background colour"),
+    _o("shading", PropValue(Target.RUN, "color"), "the background colour"),
+    _o("fill", PropValue(Target.RUN, "color"), "the older name of `shading`"),
     _o("border", PropValue(Target.RUN, "border"), "a line around it"),
     _o("padding", Record({side: LengthValue(nonnegative=True)
                           for side in ("all", "top", "bottom", "left", "right")},

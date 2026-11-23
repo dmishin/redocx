@@ -216,6 +216,8 @@ class Converter:
 
     def list_block(self) -> None:
         stack: list[int] = []  # markdown indentation of each open level
+        begin = len(self.out)
+        start: str | None = None  # the first marker, which may set a start number
         while self.i < len(self.lines):
             line = self.lines[self.i]
             m = LIST_RE.match(line)
@@ -228,6 +230,7 @@ class Converter:
                 stack.append(indent)
             marker = m.group(2)
             marker = "-" if marker in "-*+" else marker.rstrip(".)") + "."
+            start = marker if start is None else start
             text = [m.group(3)]
             content_column = indent + len(m.group(2)) + 1
             self.i += 1
@@ -254,6 +257,10 @@ class Converter:
                 if not LIST_RE.match(nxt):
                     break
                 self.i += 1
+        if start is not None and start[:-1].isdigit() and start != "1.":
+            # Markdown starts a list at its first number; redocx needs it said.
+            self.out.insert(begin, f"\\list[restart={start[:-1]}]{{")
+            self.emit("}")
         self.emit("")
 
     def paragraph(self) -> None:

@@ -17,7 +17,7 @@ A pipe table is the quickest way to write a table:
   | Line item          | Q3 2026  | Q3 2025  |
   | Revenue            | 48,210   | 44,067   |
   | Cost of services   | (35,980) | (31,950) |
-  | \cell[colspan=3, align=center, shade=#FFF2CC]{*Operating income: 5,690*} |||
+  | \cell[colspan=3, align=center, shading=#FFF2CC]{*Operating income: 5,690*} |||
 }
 
 The block form takes any content in a cell, with merged cells, shading and row options:

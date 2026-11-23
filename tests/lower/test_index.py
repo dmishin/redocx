@@ -127,9 +127,7 @@ def test_index_options() -> None:
 
 
 def test_marks_in_notes_and_tables_count() -> None:
-    doc = compiled(
-        "A\\footnote{Note\\ix{in a note}.}\n\n| x\\ix{in a table} |\n|---|\n| y |\n\n\\index"
-    )
+    doc = compiled("A\\footnote{Note\\ix{in a note}.}\n\n| x\\ix{in a table} |\n| y |\n\n\\index")
     assert [text for _, text in entries(doc)] == ["in a note", "in a table"]
 
 

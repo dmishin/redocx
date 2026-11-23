@@ -47,7 +47,7 @@ against the flow, at about eighteen kilometres an hour. Drivers caught in it see
 lights appear from nowhere; drivers behind it never learn why the road suddenly slowed.}
 
 \textbox[width=7cm, wrap=square, x=(center, from=page), y=(19cm, from=page),
-         fill=theme.accent1.lighter(85%), border=(single, 1pt, theme.accent1), padding=0.3cm]{
+         shading=theme.accent1.lighter(85%), border=(single, 1pt, theme.accent1), padding=0.3cm]{
   \p[style="Pull Quote"]{"We used to read the road like yesterday's newspaper. Now we read it
   like a weather radar."}
 
@@ -88,7 +88,7 @@ The table shows the average error in vehicles per kilometre. In free flow both m
 the road is empty enough that little can go wrong. As traffic thickens, the detectors alone fall
 behind, because a queue can grow for minutes before it reaches a loop.
 
-\textbox[width=100%, fill=theme.accent3.lighter(70%), padding=0.3cm]{
+\textbox[width=100%, shading=theme.accent3.lighter(70%), padding=0.3cm]{
   \p[style=Sidebar]{\b{How a backward wave works.} When the car in front brakes, you brake a moment
   later, and the driver behind you a moment after that. The slowdown passes from car to car
   towards the back of the queue, so the wave moves upstream even though every car moves forward.}
